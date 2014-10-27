@@ -325,6 +325,11 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 	int iRoadLength = 0;
 	int iPlotsNeeded = 0;
 	CvAStarNode* pNode = GC.GetBuildRouteFinder().GetLastNode();
+
+#ifdef AUI_WORKER_INCA_HILLS
+	bool bIncaBonusActive = (m_pPlayer->GetPlayerTraits()->IsNoHillsImprovementMaintenance() && !m_pPlayer->isHuman());
+#endif // AUI_WORKER_INCA_HILLS
+
 	while(pNode)
 	{
 		pPlot = GC.getMap().plotCheckInvalid(pNode->m_iX, pNode->m_iY);
@@ -340,10 +345,30 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 			continue;
 		}
 
-		if(pPlot->getRouteType() == eRoute && !pPlot->IsRoutePillaged())
+#ifdef AUI_WORKER_INCA_HILLS
+		if (!(bIncaBonusActive && pPlot->getTerrainType() == TERRAIN_HILL))
+		{
+			if (pPlot->getRouteType() == eRoute && !pPlot->IsRoutePillaged())
+			{
+				// if this is already a trade route or someone else built it, we can count is as free
+				if (pPlot->IsTradeRoute(m_pPlayer->GetID()) || pPlot->GetPlayerResponsibleForRoute() != m_pPlayer->GetID())
+				{
+					continue;
+				}
+				iRoadLength++;
+			}
+			else
+			{
+				iRoadLength++;
+				iPlotsNeeded++;
+			}
+		}
+#else
+
+		if (pPlot->getRouteType() == eRoute && !pPlot->IsRoutePillaged())
 		{
 			// if this is already a trade route or someone else built it, we can count is as free
-			if(pPlot->IsTradeRoute(m_pPlayer->GetID()) || pPlot->GetPlayerResponsibleForRoute() != m_pPlayer->GetID())
+			if (pPlot->IsTradeRoute(m_pPlayer->GetID()) || pPlot->GetPlayerResponsibleForRoute() != m_pPlayer->GetID())
 			{
 				continue;
 			}
@@ -354,7 +379,24 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 			iRoadLength++;
 			iPlotsNeeded++;
 		}
+#endif // AUI_WORKER_INCA_HILLS
 	}
+
+#ifdef AUI_WORKER_INCA_HILLS
+	int iFreeIncaRoadLength = 0;
+	if (bIncaBonusActive)
+	{
+		if (iRoadLength == 0)
+		{
+			iRoadLength = 1;
+			iFreeIncaRoadLength = 1;
+		}
+		if (iPlotsNeeded == 0)
+		{
+			iPlotsNeeded = 1;
+		}
+	}
+#endif // AUI_WORKER_INCA_HILLS
 
 	// This is very odd
 	if(iRoadLength <= 0 || iPlotsNeeded <= 0)
@@ -364,7 +406,11 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 
 
 	short sValue = -1;
+#ifdef AUI_WORKER_INCA_HILLS
+	int iProfit = iGoldForRoute - ((iRoadLength - iFreeIncaRoadLength) * iMaintenancePerTile);
+#else
 	int iProfit = iGoldForRoute - (iRoadLength * iMaintenancePerTile);
+#endif
 	if(bIndustrialRoute)
 	{
 		if(iProfit >= 0)
@@ -393,7 +439,11 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 		}
 
 		int iValue = (iGoldForRoute * 100) / (iRoadLength * (iMaintenancePerTile + 1));
+#ifdef AUI_WORKER_INCA_HILLS
+		iValue = (iValue * iRoadLength * (1 + iFreeIncaRoadLength * iMaintenancePerTile)) / iPlotsNeeded;
+#else
 		iValue = (iValue * iRoadLength) / iPlotsNeeded;
+#endif
 		sValue = min(iValue, MAX_SHORT);
 	}
 
@@ -668,7 +718,7 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 	{
 		// can't build on plots others own
 		PlayerTypes eOwner = pUnit->plot()->getOwner();
-		if(eOwner == m_pPlayer->GetID())
+		if (eOwner == m_pPlayer->GetID())
 		{
 			m_aiPlots.push_back(pUnit->plot()->GetPlotIndex());
 		}
@@ -718,10 +768,15 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 
 		//AddRepairDirectives(pUnit, pPlot, iMoveTurnsAway);
 		AddRouteDirectives(pUnit, pPlot, iMoveTurnsAway);
+#ifdef AUI_WORKER_FIX_FALLOUT
+		AddScrubFalloutDirectives(pUnit, pPlot, iMoveTurnsAway);
+#endif // AUI_WORKER_FIX_FALLOUT
 		AddImprovingResourcesDirectives(pUnit, pPlot, iMoveTurnsAway);
 		AddImprovingPlotsDirectives(pUnit, pPlot, iMoveTurnsAway);
 		AddChopDirectives(pUnit, pPlot, iMoveTurnsAway);
+#ifndef AUI_WORKER_FIX_FALLOUT
 		AddScrubFalloutDirectives(pUnit, pPlot, iMoveTurnsAway);
+#endif // AUI_WORKER_FIX_FALLOUT
 		// only AIs have permission to remove roads
 		if(!m_pPlayer->isHuman())
 		{
@@ -1025,7 +1080,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 	}
 
 	// if it's not within a city radius
-	if(!pPlot->isWithinTeamCityRadius(pUnit->getTeam()))
+	if (!pPlot->isWithinTeamCityRadius(pUnit->getTeam()))
 	{
 		return;
 	}
@@ -1040,8 +1095,14 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 		}
 	}
 
+#ifdef AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL
+	// celtic rule: if this is a forest tile next to a city, do not improve this tile with a normal improvement (unless we're an AI in at least industrial)
+	if (m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest() && eExistingImprovement == NO_IMPROVEMENT && 
+		((m_pPlayer->GetCurrentEra() < GC.getInfoTypeForString("ERA_INDUSTRIAL")) || m_pPlayer->isHuman()))
+#else
 	// celtic rule: if this is a forest tile next to a city, do not improve this tile with a normal improvement
 	if (m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest() && eExistingImprovement == NO_IMPROVEMENT)
+#endif
 	{
 		CvCity* pNextCity = pPlot->GetAdjacentCity();
 		if (pNextCity && pNextCity->getOwner() == m_pPlayer->GetID())
@@ -1165,7 +1226,14 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 					strTemp.Format("Weight,Marsh Remove,%s,,,,%i, %i", GC.getBuildInfo(eBuild)->GetType(), pPlot->getX(), pPlot->getY());
 					LogInfo(strTemp, m_pPlayer);
 				}
+#ifdef AUI_WORKER_DUTCH_MARSH_RESOURCES
+				if (pPlot->getResourceType(m_pPlayer->getTeam()) == NO_RESOURCE)
+				{
+					continue;
+				}
+#else
 				continue;
+#endif
 			}
 		}
 
@@ -1284,10 +1352,18 @@ void CvBuilderTaskingAI::AddRouteDirectives(CvUnit* pUnit, CvPlot* pPlot, int iM
 
 	// the plot was not flagged this turn, so ignore
 	bool bShouldRoadThisTile = (pPlot->GetBuilderAIScratchPadTurn() == GC.getGame().getGameTurn()) && (pPlot->GetBuilderAIScratchPadPlayer() == pUnit->getOwner());
+#ifdef AUI_WORKER_INCA_HILLS
+	bool bIncaBonusActive = (m_pPlayer->GetPlayerTraits()->IsNoHillsImprovementMaintenance() && !m_pPlayer->isHuman() && pPlot->getTerrainType() == TERRAIN_HILL);
+	if(!bShouldRoadThisTile && !bIncaBonusActive)
+	{
+		return;
+	}
+#else
 	if(!bShouldRoadThisTile)
 	{
 		return;
 	}
+#endif
 
 	// find the route build
 	BuildTypes eRouteBuild = NO_BUILD;
@@ -1346,7 +1422,14 @@ void CvBuilderTaskingAI::AddRouteDirectives(CvUnit* pUnit, CvPlot* pPlot, int iM
 	iWeight = iWeight / (iMoveTurnsAway/*iTurnsAway*/ + 1);
 	iWeight = GetBuildCostWeight(iWeight, pPlot, eRouteBuild);
 	iWeight += GetBuildTimeWeight(pUnit, pPlot, eRouteBuild, false, iMoveTurnsAway);
+#ifdef AUI_WORKER_INCA_HILLS
+	if (!(bIncaBonusActive && pPlot->GetBuilderAIScratchPadValue() <= 0))
+	{
+		iWeight *= pPlot->GetBuilderAIScratchPadValue();
+	}
+#else
 	iWeight *= pPlot->GetBuilderAIScratchPadValue();
+#endif
 	iWeight = CorrectWeight(iWeight);
 
 	BuilderDirective directive;
@@ -1507,10 +1590,12 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 				}
 				break;
 			case YIELD_FAITH:
-				//if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_SCIENCE")
-				//{
-				//	iYieldDifferenceWeight += iDeltaYield * pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_SCIENCE();
-				//}
+#ifdef AUI_WORKER_EVALUATE_FAITH
+				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_RELIGION")
+				{
+					iYieldDifferenceWeight += iDeltaYield * pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
+				}
+#endif // AUI_WORKER_EVALUATE_FAITH
 				break;
 			}
 		}
@@ -1532,11 +1617,13 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 	{
 		iWeight = iWeight / 4;
 	}
+#ifndef AUI_WORKER_NO_CHOP_BIAS
 	// this doesn't actually help them, but adds some historical flavor
 	if (m_pPlayer->GetPlayerTraits()->IsEmbarkedAllWater() && (eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE))
 	{
 		iWeight = iWeight * 2;
 	}
+#endif // AUI_WORKER_NO_CHOP_BIAS
 
 	iWeight = CorrectWeight(iWeight);
 
@@ -1659,9 +1746,13 @@ void CvBuilderTaskingAI::AddScrubFalloutDirectives(CvUnit* pUnit, CvPlot* pPlot,
 		int iWeight = GC.getBUILDER_TASKING_BASELINE_SCRUB_FALLOUT();
 		//int iTurnsAway = FindTurnsAway(pUnit, pPlot);
 		iWeight = iWeight / (iMoveTurnsAway/*iTurnsAway*/ + 1);
+
+		// For scrubbing fallout, build times and build costs should be ignored because... well, it's fallout
+#ifndef AUI_WORKER_FIX_FALLOUT
 		iWeight = GetBuildCostWeight(iWeight, pPlot, m_eFalloutRemove);
 		int iBuildTimeWeight = GetBuildTimeWeight(pUnit, pPlot, m_eFalloutRemove, false, iMoveTurnsAway);
 		iWeight += iBuildTimeWeight;
+#endif // AUI_WORKER_FIX_FALLOUT
 
 		BuilderDirective directive;
 		directive.m_eDirective = BuilderDirective::CHOP;
@@ -1955,7 +2046,11 @@ int CvBuilderTaskingAI::GetResourceWeight(ResourceTypes eResource, ImprovementTy
 				else
 				{
 					// if we don't have any of it
+#ifdef AUI_WORKER_DONT_HAVE_MULTIPLIER
+					iMultiplyingAmount *= 6;
+#else
 					iMultiplyingAmount *= 4;
+#endif
 				}
 			}
 
