@@ -4354,6 +4354,38 @@ int CvGame::getNumSequentialHumans(PlayerTypes ignorePlayer)
 	return seqHumans;
 }
 
+#ifdef AUI_MINOR_CIV_RATIO
+//	--------------------------------------------------------------------------------
+float CvGame::getCurrentMinorCivRatio()
+{// returns the ratio of City States to Players.
+	float fPlayerCount = 0;
+	float fMinorCivCount = 0;
+	for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
+	{
+		CvPlayer &kPlayer = GET_PLAYER((PlayerTypes)iPlayerLoop);
+		if (kPlayer.isAlive() && !kPlayer.isBarbarian())
+		{
+			if (kPlayer.isMinorCiv())
+			{
+				fMinorCivCount++;
+			}
+			else
+			{
+				fPlayerCount++;
+			}
+		}
+	}
+	fPlayerCount = MAX(fPlayerCount, 1.0f);
+	return (fMinorCivCount / fPlayerCount);
+}
+
+//	--------------------------------------------------------------------------------
+float CvGame::getCurrentMinorCivDeviation()
+{// returns how much the ratio of City States to Players differs from the default.
+	return (getCurrentMinorCivRatio() / 2.0f);
+}
+#endif // AUI_MINOR_CIV_RATIO
+
 //	------------------------------------------------------------------------------------------------
 int CvGame::getGameTurn()
 {
@@ -8993,6 +9025,16 @@ int CvGame::getJonRandNum(int iNum, const char* pszLog)
 {
 	return m_jonRand.get(iNum, pszLog);
 }
+
+#ifdef AUI_BINOM_RNG
+//	--------------------------------------------------------------------------------
+/// Get a synchronous random number in the range of 0...iNum-1 with binomial distribution
+/// Allows for logging.
+int CvGame::getJonRandNumBinom(int iNum, const char* pszLog)
+{
+	return m_jonRand.getBinom(iNum, pszLog);
+}
+#endif // AUI_BINOM_RNG
 
 //	--------------------------------------------------------------------------------
 /// Get a synchronous random number in the range of 0...iNum-1

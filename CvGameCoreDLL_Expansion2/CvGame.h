@@ -144,6 +144,11 @@ public:
 	int getNumHumansInHumanWars(PlayerTypes ignorePlayer = NO_PLAYER);
 	int getNumSequentialHumans(PlayerTypes ignorePlayer = NO_PLAYER);
 
+#ifdef AUI_MINOR_CIV_RATIO
+	float getCurrentMinorCivRatio();
+	float getCurrentMinorCivDeviation();
+#endif // AUI_MINOR_CIV_RATIO
+
 	int getGameTurn();
 	void setGameTurn(int iNewValue);
 	void incrementGameTurn();
@@ -422,6 +427,9 @@ public:
 
 	CvRandom& getJonRand();
 	int getJonRandNum(int iNum, const char* pszLog);
+#ifdef AUI_BINOM_RNG
+	int getJonRandNumBinom(int iNum, const char* pszLog);
+#endif
 	int getJonRandNumVA(int iNum, const char* pszLog, ...);
 	int getAsyncRandNum(int iNum, const char* pszLog);
 
