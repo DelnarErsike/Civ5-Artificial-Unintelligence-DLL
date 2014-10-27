@@ -36,7 +36,9 @@ public:
 	CvAIGrandStrategyXMLEntries* GetAIGrandStrategies();
 
 	void DoTurn();
-
+#ifdef AUI_PUBLIC_HAS_MET_MAJOR
+	bool HasMetMajor();
+#endif // AUI_PUBLIC_HAS_MET_MAJOR
 	int GetConquestPriority();
 	int GetCulturePriority();
 	int GetUnitedNationsPriority();
@@ -53,6 +55,12 @@ public:
 	int GetGrandStrategyPriority(AIGrandStrategyTypes eGrandStrategy) const;
 	void SetGrandStrategyPriority(AIGrandStrategyTypes eGrandStrategy, int iValue);
 	void ChangeGrandStrategyPriority(AIGrandStrategyTypes eGrandStrategy, int iChange);
+
+#ifdef AUI_GS_PRIORITY_RATIO
+	float GetGrandStrategyPriorityRatio(AIGrandStrategyTypes eGrandStrategy) const;
+#endif // AUI_GS_PRIORITY_RATIO
+
+	int ScienceFlavorBoost() const;
 
 	int GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType);
 

@@ -13,6 +13,10 @@
 #include "CvMinorCivAI.h"
 #include "ICvDLLUserInterface.h"
 
+#ifdef AUI_GS_SPACESHIP_TECH_RATIO
+#include "CvTechAI.h"
+#endif // AUI_GS_SPACESHIP_TECH_RATIO
+
 // must be included after all other headers
 #include "LintFree.h"
 
@@ -284,7 +288,11 @@ void CvGrandStrategyAI::DoTurn()
 		}
 
 		// Random element
+#ifdef AUI_BINOM_RNG
+		iPriority += GC.getGame().getJonRandNumBinom(/*50*/ GC.getAI_GS_RAND_ROLL(), "Grand Strategy AI: GS rand roll.");
+#else
 		iPriority += GC.getGame().getJonRandNum(/*50*/ GC.getAI_GS_RAND_ROLL(), "Grand Strategy AI: GS rand roll.");
+#endif
 
 		// Give a boost to the current strategy so that small fluctuation doesn't cause a big change
 		if(GetActiveGrandStrategy() == eGrandStrategy && GetActiveGrandStrategy() != NO_AIGRANDSTRATEGY)
@@ -383,9 +391,205 @@ void CvGrandStrategyAI::DoTurn()
 	LogGrandStrategies(viGrandStrategyChangeForLogging);
 }
 
+#ifdef AUI_PUBLIC_HAS_MET_MAJOR
+/// True if one other major has been met, False otherwise
+bool CvGrandStrategyAI::HasMetMajor()
+{
+	bool bHasMetMajor = false;
+	CvTeam& pTeam = GET_TEAM(GetPlayer()->getTeam());
+
+	for (int iTeamLoop = 0; iTeamLoop < MAX_CIV_TEAMS; iTeamLoop++)
+	{
+		if (pTeam.GetID() != iTeamLoop && !GET_TEAM((TeamTypes)iTeamLoop).isMinorCiv())
+		{
+			if (pTeam.isHasMet((TeamTypes)iTeamLoop))
+			{
+				bHasMetMajor = true;
+				break;
+			}
+		}
+	}
+
+	return bHasMetMajor;
+}
+#endif
+
 /// Returns Priority for Conquest Grand Strategy
 int CvGrandStrategyAI::GetConquestPriority()
 {
+#ifdef AUI_GS_USE_FLOATS
+	float fPriority = 0.0f;
+
+	// If Conquest Victory isn't even available then don't bother with anything
+	VictoryTypes eVictory = (VictoryTypes) GC.getInfoTypeForString("VICTORY_DOMINATION", true);
+	if(eVictory == NO_VICTORY || !GC.getGame().isVictoryValid(eVictory))
+	{
+		if(!GC.getGame().areNoVictoriesValid())
+		{
+			return -100;
+		}
+	}
+
+	int iGeneralWarlikeness = GetPlayer()->GetDiplomacyAI()->GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_WAR);
+	int iGeneralHostility = GetPlayer()->GetDiplomacyAI()->GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_HOSTILE);
+	int iGeneralDeceptiveness = GetPlayer()->GetDiplomacyAI()->GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_DECEPTIVE);
+	int iGeneralFriendliness = GetPlayer()->GetDiplomacyAI()->GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_FRIENDLY);
+
+	int iGeneralApproachModifier = max(max(iGeneralDeceptiveness, iGeneralHostility),iGeneralWarlikeness) - iGeneralFriendliness;
+	// Boldness gives the base weight for Conquest (no flavors added earlier)
+#ifdef AUI_GS_CONQUEST_TWEAKED_ERAS
+	fPriority += (2.0f * (GetPlayer()->GetDiplomacyAI()->GetBoldness() + iGeneralApproachModifier) * (10.0f - sqrtf(m_pPlayer->GetCurrentEra() + 1.0f))); // make a little less likely as time goes on
+#else
+	fPriority += ((GetPlayer()->GetDiplomacyAI()->GetBoldness() + iGeneralApproachModifier) * (12 - m_pPlayer->GetCurrentEra())); // make a little less likely as time goes on
+#endif // AUI_GS_CONQUEST_TWEAKED_ERAS
+
+	CvTeam& pTeam = GET_TEAM(GetPlayer()->getTeam());
+
+	// How many turns must have passed before we test for having met nobody?
+	if(GC.getGame().getElapsedGameTurns() >= /*20*/ GC.getAI_GS_CONQUEST_NOBODY_MET_FIRST_TURN())
+	{
+		// If we haven't met any Major Civs yet, then we probably shouldn't be planning on conquering the world
+#ifdef AUI_PUBLIC_HAS_MET_MAJOR
+		if(!HasMetMajor())
+#else
+		bool bHasMetMajor = false;
+
+		for (int iTeamLoop = 0; iTeamLoop < MAX_CIV_TEAMS; iTeamLoop++)
+		{
+			if (pTeam.GetID() != iTeamLoop && !GET_TEAM((TeamTypes)iTeamLoop).isMinorCiv())
+			{
+				if (pTeam.isHasMet((TeamTypes)iTeamLoop))
+				{
+					bHasMetMajor = true;
+					break;
+				}
+			}
+		}
+		if (!bHasMetMajor)
+#endif // AUI_PUBLIC_HAS_MET_MAJOR
+		{
+			fPriority += /*-50*/ GC.getAI_GRAND_STRATEGY_CONQUEST_NOBODY_MET_WEIGHT();
+		}
+	}
+
+	// How many turns must have passed before we test for us having a weak military?
+	if(GC.getGame().getElapsedGameTurns() >= /*60*/ GC.getAI_GS_CONQUEST_MILITARY_STRENGTH_FIRST_TURN())
+	{
+		// Compare our military strength to the rest of the world
+		int iWorldMilitaryStrength = GC.getGame().GetWorldMilitaryStrengthAverage(GetPlayer()->GetID(), true, true);
+
+		if(iWorldMilitaryStrength > 0)
+		{
+#ifdef AUI_GS_CONQUEST_TWEAKED_MILITARY_RATIO
+			const int iRatioAbs = (GetPlayer()->GetMilitaryMight() - iWorldMilitaryStrength) < 0 ? -1 : 1;
+			float fMilitaryRatio = iRatioAbs * powf((GetPlayer()->GetMilitaryMight() - iWorldMilitaryStrength) / (float)iWorldMilitaryStrength, 2.0f)
+				* /*100*/ GC.getAI_GRAND_STRATEGY_CONQUEST_POWER_RATIO_MULTIPLIER();
+
+			// Make the likelihood of BECOMING a warmonger lower than dropping the bad behavior
+			if(fMilitaryRatio > 0)
+				fMilitaryRatio /= sqrtf(2.0f);
+#else
+			float fMilitaryRatio = (GetPlayer()->GetMilitaryMight() - iWorldMilitaryStrength) * /*100*/ GC.getAI_GRAND_STRATEGY_CONQUEST_POWER_RATIO_MULTIPLIER() / (float)iWorldMilitaryStrength;
+
+			// Make the likelihood of BECOMING a warmonger lower than dropping the bad behavior
+			if (fMilitaryRatio > 0)
+				fMilitaryRatio /= 2;
+#endif // AUI_GS_CONQUEST_TWEAKED_MILITARY_RATIO
+
+			fPriority += fMilitaryRatio;	// This will add between -100 and 100 depending on this player's MilitaryStrength relative the world average. The number will typically be near 0 though, as it's fairly hard to get away from the world average
+		}
+	}
+
+	// If we're at war, then boost the weight a bit
+	if(pTeam.getAtWarCount(/*bIgnoreMinors*/ false) > 0)
+	{
+		fPriority += /*10*/ GC.getAI_GRAND_STRATEGY_CONQUEST_AT_WAR_WEIGHT();
+	}
+
+	// If our neighbors are cramping our style, consider less... scrupulous means of obtaining more land
+	if(GetPlayer()->IsCramped())
+	{
+		PlayerTypes ePlayer;
+		int iNumPlayersMet = 1;	// Include 1 for me!
+		int iTotalLandMe = 0;
+		float fTotalLandPlayersMet = 0.0f;
+
+		// Count the number of Majors we know
+		for(int iMajorLoop = 0; iMajorLoop < MAX_MAJOR_CIVS; iMajorLoop++)
+		{
+			ePlayer = (PlayerTypes) iMajorLoop;
+
+			if(GET_PLAYER(ePlayer).isAlive() && iMajorLoop != GetPlayer()->GetID())
+			{
+				if(pTeam.isHasMet(GET_PLAYER(ePlayer).getTeam()))
+				{
+					iNumPlayersMet++;
+				}
+			}
+		}
+
+		if(iNumPlayersMet > 0)
+		{
+			// Check every plot for ownership
+			for(int iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
+			{
+				if(GC.getMap().plotByIndexUnchecked(iPlotLoop)->isOwned())
+				{
+					ePlayer = GC.getMap().plotByIndexUnchecked(iPlotLoop)->getOwner();
+
+					if(ePlayer == GetPlayer()->GetID())
+					{
+						fTotalLandPlayersMet++;
+						iTotalLandMe++;
+					}
+					else if(!GET_PLAYER(ePlayer).isMinorCiv() && pTeam.isHasMet(GET_PLAYER(ePlayer).getTeam()))
+					{
+						fTotalLandPlayersMet++;
+					}
+				}
+			}
+
+			fTotalLandPlayersMet /= (float)iNumPlayersMet;
+
+			if(iTotalLandMe > 0)
+			{
+#ifdef AUI_GS_CONQUEST_FIX_CRAMPED
+				if(fTotalLandPlayersMet / (float)iTotalLandMe > 1)
+#else
+				if(fTotalLandPlayersMet / (float)iTotalLandMe > 0)
+#endif // AUI_GS_CONQUEST_FIX_CRAMPED
+				{
+					fPriority += /*20*/ GC.getAI_GRAND_STRATEGY_CONQUEST_CRAMPED_WEIGHT();
+				}
+			}
+		}
+	}
+
+#ifndef AUI_GS_CONQUEST_IGNORE_ENEMY_NUKES
+	// if we do not have nukes and we know someone else who does...
+	if(GetPlayer()->getNumNukeUnits() == 0)
+	{
+		for(int iMajorLoop = 0; iMajorLoop < MAX_MAJOR_CIVS; iMajorLoop++)
+		{
+			PlayerTypes ePlayer = (PlayerTypes) iMajorLoop;
+
+			if(GET_PLAYER(ePlayer).isAlive() && iMajorLoop != GetPlayer()->GetID())
+			{
+				if(pTeam.isHasMet(GET_PLAYER(ePlayer).getTeam()))
+				{
+					if (GET_PLAYER(ePlayer).getNumNukeUnits() > 0)
+					{
+						fPriority -= 50;
+						break;
+					}
+				}
+			}
+		}
+	}
+#endif // AUI_GS_CONQUEST_IGNORE_ENEMY_NUKES
+
+	return (int)(fPriority + 0.5f);
+#else
 	int iPriority = 0;
 
 	// If Conquest Victory isn't even available then don't bother with anything
@@ -533,12 +737,14 @@ int CvGrandStrategyAI::GetConquestPriority()
 	}
 
 	return iPriority;
+#endif // AUI_GS_USE_FLOATS
 }
 
 /// Returns Priority for Culture Grand Strategy
 int CvGrandStrategyAI::GetCulturePriority()
 {
-	int iPriority = 0;
+#ifdef AUI_GS_USE_FLOATS
+	float fPriority = 0.0f;
 
 	// If Culture Victory isn't even available then don't bother with anything
 	VictoryTypes eVictory = (VictoryTypes) GC.getInfoTypeForString("VICTORY_CULTURAL", true);
@@ -549,7 +755,11 @@ int CvGrandStrategyAI::GetCulturePriority()
 
 	// Before tourism kicks in, add weight based on flavor
 	int iFlavorCulture =  m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CULTURE"));
-	iPriority += (10 - m_pPlayer->GetCurrentEra()) * iFlavorCulture * 200 / 100;
+#ifdef AUI_GS_CULTURE_TWEAKED_ERAS
+	fPriority += (10.0f - sqrtf(m_pPlayer->GetCurrentEra() + 1.0f)) * 5.0f * iFlavorCulture;
+#else
+	fPriority += (10 - m_pPlayer->GetCurrentEra()) * iFlavorCulture * 200.0f / 100.0f;
+#endif // AUI_GS_CULTURE_TWEAKED_ERAS
 
 	// Loop through Players to see how we are doing on Tourism and Culture
 	PlayerTypes eLoopPlayer;
@@ -590,6 +800,71 @@ int CvGrandStrategyAI::GetCulturePriority()
 
 	if (iNumCivsAlive > 0 && iNumCivsAheadCulture > iNumCivsBehindCulture)
 	{
+		fPriority += (GC.getAI_GS_CULTURE_AHEAD_WEIGHT() * (iNumCivsAheadCulture - iNumCivsBehindCulture) / (float)iNumCivsAlive);
+	}
+	if (iNumCivsAlive > 0 && iNumCivsAheadTourism > iNumCivsBehindTourism)
+	{
+		fPriority += (GC.getAI_GS_CULTURE_TOURISM_AHEAD_WEIGHT() * (iNumCivsAheadTourism - iNumCivsBehindTourism) / (float)iNumCivsAlive);
+	}
+
+	// for every civ we are Influential over increase this
+	int iNumInfluential = m_pPlayer->GetCulture()->GetNumCivsInfluentialOn();
+	fPriority += iNumInfluential * GC.getAI_GS_CULTURE_INFLUENTIAL_CIV_MOD();
+
+	return (int)(fPriority + 0.5f);
+#else
+	int iPriority = 0;
+
+	// If Culture Victory isn't even available then don't bother with anything
+	VictoryTypes eVictory = (VictoryTypes)GC.getInfoTypeForString("VICTORY_CULTURAL", true);
+	if (eVictory == NO_VICTORY || !GC.getGame().isVictoryValid(eVictory))
+	{
+		return -100;
+	}
+
+	// Before tourism kicks in, add weight based on flavor
+	int iFlavorCulture = m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CULTURE"));
+	iPriority += (10 - m_pPlayer->GetCurrentEra()) * iFlavorCulture * 200 / 100;
+
+	// Loop through Players to see how we are doing on Tourism and Culture
+	PlayerTypes eLoopPlayer;
+	int iOurCulture = m_pPlayer->GetTotalJONSCulturePerTurn();
+	int iOurTourism = m_pPlayer->GetCulture()->GetTourism();
+	int iNumCivsBehindCulture = 0;
+	int iNumCivsAheadCulture = 0;
+	int iNumCivsBehindTourism = 0;
+	int iNumCivsAheadTourism = 0;
+	int iNumCivsAlive = 0;
+
+	for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
+	{
+		eLoopPlayer = (PlayerTypes)iPlayerLoop;
+		CvPlayer &kPlayer = GET_PLAYER(eLoopPlayer);
+
+		if (kPlayer.isAlive() && !kPlayer.isMinorCiv() && !kPlayer.isBarbarian() && iPlayerLoop != m_pPlayer->GetID())
+		{
+			if (iOurCulture > kPlayer.GetTotalJONSCulturePerTurn())
+			{
+				iNumCivsAheadCulture++;
+			}
+			else
+			{
+				iNumCivsBehindCulture++;
+			}
+			if (iOurTourism > kPlayer.GetCulture()->GetTourism())
+			{
+				iNumCivsAheadTourism++;
+			}
+			else
+			{
+				iNumCivsBehindTourism++;
+			}
+			iNumCivsAlive++;
+		}
+	}
+
+	if (iNumCivsAlive > 0 && iNumCivsAheadCulture > iNumCivsBehindCulture)
+	{
 		iPriority += (GC.getAI_GS_CULTURE_AHEAD_WEIGHT() * (iNumCivsAheadCulture - iNumCivsBehindCulture) / iNumCivsAlive);
 	}
 	if (iNumCivsAlive > 0 && iNumCivsAheadTourism > iNumCivsBehindTourism)
@@ -602,11 +877,119 @@ int CvGrandStrategyAI::GetCulturePriority()
 	iPriority += iNumInfluential * GC.getAI_GS_CULTURE_INFLUENTIAL_CIV_MOD();
 
 	return iPriority;
+#endif // AUI_GS_USE_FLOATS
 }
 
 /// Returns Priority for United Nations Grand Strategy
 int CvGrandStrategyAI::GetUnitedNationsPriority()
 {
+#ifdef AUI_GS_USE_FLOATS
+	float fPriority = 0.0f;
+	PlayerTypes ePlayer = m_pPlayer->GetID();
+
+	// If UN Victory isn't even available then don't bother with anything
+	VictoryTypes eVictory = (VictoryTypes) GC.getInfoTypeForString("VICTORY_DIPLOMATIC", true);
+	if(eVictory == NO_VICTORY || !GC.getGame().isVictoryValid(eVictory))
+	{
+		return -100;
+	}
+
+	int iNumMinorsAttacked = GET_TEAM(GetPlayer()->getTeam()).GetNumMinorCivsAttacked();
+	fPriority += (iNumMinorsAttacked* /*-30*/ GC.getAI_GRAND_STRATEGY_UN_EACH_MINOR_ATTACKED_WEIGHT());
+
+	int iVotesNeededToWin = GC.getGame().GetVotesNeededForDiploVictory();
+
+	int iVotesControlled = 0;
+	int iVotesControlledDelta = 0;
+	int iUnalliedCityStates = 0;
+	if (GC.getGame().GetGameLeagues()->GetNumActiveLeagues() == 0)
+	{
+		// Before leagues kick in, add weight based on flavor
+		int iFlavorDiplo =  m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DIPLOMACY"));
+#ifdef AUI_GS_DIPLOMATIC_TWEAKED_ERAS
+		fPriority += (10.0f - sqrt(m_pPlayer->GetCurrentEra() + 1.0f)) * iFlavorDiplo * 4.0f;
+#else
+		fPriority += (10 - m_pPlayer->GetCurrentEra()) * iFlavorDiplo * 150.0f / 100.0f;
+#endif // AUI_GS_DIPLOMATIC_TWEAKED_ERAS
+	}
+	else
+	{
+		CvLeague* pLeague = GC.getGame().GetGameLeagues()->GetActiveLeague();
+		CvAssert(pLeague != NULL);
+		if (pLeague != NULL)
+		{
+			// Votes we control
+			iVotesControlled += pLeague->CalculateStartingVotesForMember(ePlayer);
+
+			// Votes other players control
+			int iHighestOtherPlayerVotes = 0;
+			for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
+			{
+				PlayerTypes eLoopPlayer = (PlayerTypes) iPlayerLoop;
+
+				if(eLoopPlayer != ePlayer && GET_PLAYER(eLoopPlayer).isAlive())
+				{
+					if (GET_PLAYER(eLoopPlayer).isMinorCiv())
+					{
+						if (GET_PLAYER(eLoopPlayer).GetMinorCivAI()->GetAlly() == NO_PLAYER)
+						{
+							iUnalliedCityStates++;
+						}
+					}
+					else
+					{
+						int iOtherPlayerVotes = pLeague->CalculateStartingVotesForMember(eLoopPlayer);
+						if (iOtherPlayerVotes > iHighestOtherPlayerVotes)
+						{
+							iHighestOtherPlayerVotes = iOtherPlayerVotes;
+						}
+					}
+				}
+			}
+
+			// How we compare
+			iVotesControlledDelta = iVotesControlled - iHighestOtherPlayerVotes;
+		}
+	}
+
+	// Are we close to winning?
+	if (iVotesControlled >= iVotesNeededToWin)
+	{
+		return 1000;
+	}
+	else if (iVotesControlled >= ((iVotesNeededToWin * 3) / 4))
+	{
+		fPriority += 40;
+	}
+
+	// We have the most votes
+	if (iVotesControlledDelta > 0)
+	{
+		fPriority += MAX(40, iVotesControlledDelta * 5);
+	}
+	// We are equal or behind in votes
+	else
+	{
+		// Could we make up the difference with currently unallied city-states?
+		int iPotentialCityStateVotes = iUnalliedCityStates * 2;
+		int iPotentialVotesDelta = iPotentialCityStateVotes + iVotesControlledDelta;
+		if (iPotentialVotesDelta > 0)
+		{
+			fPriority += MAX(20, iPotentialVotesDelta * 5);
+		}
+		else if (iPotentialVotesDelta < 0)
+		{
+			fPriority += MIN(-40, iPotentialVotesDelta * -5);
+		}
+	}
+
+	// factor in some traits that could be useful (or harmful)
+	fPriority += m_pPlayer->GetPlayerTraits()->GetCityStateFriendshipModifier();
+	fPriority += m_pPlayer->GetPlayerTraits()->GetCityStateBonusModifier();
+	fPriority -= m_pPlayer->GetPlayerTraits()->GetCityStateCombatModifier();
+
+	return (int)(fPriority + 0.5f);
+#else
 	int iPriority = 0;
 	PlayerTypes ePlayer = m_pPlayer->GetID();
 
@@ -708,12 +1091,14 @@ int CvGrandStrategyAI::GetUnitedNationsPriority()
 	iPriority -= m_pPlayer->GetPlayerTraits()->GetCityStateCombatModifier();
 
 	return iPriority;
+#endif // AUI_GS_USE_FLOATS
 }
 
 /// Returns Priority for Spaceship Grand Strategy
 int CvGrandStrategyAI::GetSpaceshipPriority()
 {
-	int iPriority = 0;
+#ifdef AUI_GS_USE_FLOATS
+	float fPriority = 0.0f;
 
 	// If SS Victory isn't even available then don't bother with anything
 	VictoryTypes eVictory = (VictoryTypes) GC.getInfoTypeForString("VICTORY_SPACE_RACE", true);
@@ -723,9 +1108,24 @@ int CvGrandStrategyAI::GetSpaceshipPriority()
 	}
 
 	int iFlavorScience =  m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"));
+#ifdef AUI_GS_SPACESHIP_TWEAKED_FLAVORS
+	// might not be scientific, but goals still suit victory type
+	iFlavorScience += (int)(sqrtf((float)(m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION")) *
+		max(m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH")), 
+		m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"))))) + 0.5f);
+#endif // AUI_GS_SPACESHIP_TWEAKED_FLAVORS
 
 	// the later the game the greater the chance
-	iPriority += m_pPlayer->GetCurrentEra() * iFlavorScience * 150 / 100;
+#ifdef AUI_GS_SPACESHIP_TWEAKED_ERAS
+	fPriority += sqrtf(m_pPlayer->GetCurrentEra() + 1.0f) * iFlavorScience * 6;
+#else
+	fPriority += m_pPlayer->GetCurrentEra() * iFlavorScience * 150.0f / 100.0f;
+#endif // AUI_GS_SPACESHIP_TWEAKED_ERAS
+
+#ifdef AUI_GS_SPACESHIP_TECH_RATIO
+	// Give between 0 and 100 priority based on tech ratio; scaling is exponential, so higher tech civs get more priority
+	fPriority += powf(101.0f, 1.0f - m_pPlayer->GetPlayerTechs()->GetTechAI()->GetTechRatio()) - 1;
+#endif // AUI_GS_SPACESHIP_TECH_RATIO
 
 	// if I already built the Apollo Program I am very likely to follow through
 	ProjectTypes eApolloProgram = (ProjectTypes) GC.getInfoTypeForString("PROJECT_APOLLO_PROGRAM", true);
@@ -733,11 +1133,13 @@ int CvGrandStrategyAI::GetSpaceshipPriority()
 	{
 		if(GET_TEAM(m_pPlayer->getTeam()).getProjectCount(eApolloProgram) > 0)
 		{
-			iPriority += /*150*/ GC.getAI_GS_SS_HAS_APOLLO_PROGRAM();
+			fPriority += /*150*/ GC.getAI_GS_SS_HAS_APOLLO_PROGRAM();
 		}
 	}
 
-	return iPriority;
+	return (int)(fPriority + 0.5f);
+#else
+#endif // AUI_GS_USE_FLOATS
 }
 
 /// Get the base Priority for a Grand Strategy; these are elements common to ALL Grand Strategies
@@ -759,17 +1161,182 @@ int CvGrandStrategyAI::GetBaseGrandStrategyPriority(AIGrandStrategyTypes eGrandS
 	return iPriority;
 }
 
-/// Get the base Priority for a Grand Strategy; these are elements common to ALL Grand Strategies
+/// Do we need a science boost? Ie. do we still have yet to acquire a crucial tech?
+int CvGrandStrategyAI::ScienceFlavorBoost() const
+{
+	int iMultiplier = 8;
+	bool bReturnHalf = false;
+	// Makes sure AIs don't overvalue libraries early on when they could build shrines, monuments, etc.
+	if ((int)m_pPlayer->GetCurrentEra() == GC.getInfoTypeForString("ERA_ANCIENT"))
+	{
+		return 1;
+	}
+	// Still need a bit of adjustment in Classical since Universities aren't enabled yet
+	if ((int)m_pPlayer->GetCurrentEra() == GC.getInfoTypeForString("ERA_CLASSICAL"))
+	{
+		iMultiplier /= 2;
+	}
+	// Conquest gives science boost if in lower quarter of players tech-wise, half boost if only in lower half but not in lower quarter
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST")) >= 0.75f)
+#else
+	if (GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"))
+#endif // AUI_GS_PRIORITY_RATIO
+	{
+		if (m_pPlayer->GetPlayerTechs()->GetTechAI()->GetTechRatio() <= 0.25f)
+		{
+			return iMultiplier;
+		}
+		if (m_pPlayer->GetPlayerTechs()->GetTechAI()->GetTechRatio() <= 0.5f)
+		{
+			bReturnHalf = true;
+		}
+	}
+	// Culture gives science boost if archaeology is still locked, half boost if we don't have Internet and wouldn't win a culture victory in time without it
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")) >= 0.75f)
+#else
+	if (GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
+#endif // AUI_GS_PRIORITY_RATIO
+	{
+		UnitTypes eArchaeologist = (UnitTypes)GC.getInfoTypeForString("UNIT_ARCHAEOLOGIST", true);
+		if (eArchaeologist != NO_UNIT)
+		{
+			if (!m_pPlayer->canTrain(eArchaeologist))
+			{
+				return iMultiplier;
+			}
+		}
+		// Are we missing a tech that would give us extra tourism
+		if (!m_pPlayer->GetPlayerTechs()->GetTechAI()->HaveAllInternetTechs())
+		{
+			bReturnHalf = true;
+		}
+	}
+	// Diplomacy gives science boost if diplomatic victory still locked, half boost if we don't have Globalization and are one of the two candidates in the lead
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) >= 0.75f)
+#else
+	if (GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"))
+#endif // AUI_GS_PRIORITY_RATIO
+	{
+		if (!GC.getGame().GetGameLeagues()->GetActiveLeague() || !GC.getGame().GetGameLeagues()->GetActiveLeague()->IsUnitedNations())
+		{
+			return iMultiplier;
+		}
+		else
+		{
+			CvLeague* pLeague = GC.getGame().GetGameLeagues()->GetActiveLeague();
+			CvAssert(pLeague != NULL);
+			// Are leagues active and are we missing a tech that would grant us extra votes?
+			if (pLeague != NULL && !m_pPlayer->GetPlayerTechs()->GetTechAI()->HaveAllUNTechs())
+			{
+				// Calculate the two highest vote counts
+				int iHighestPlayerVotes = 0;
+				int iSecondHighestPlayerVotes = 0;
+				for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
+				{
+					PlayerTypes eLoopPlayer = (PlayerTypes)iPlayerLoop;
+					if (GET_PLAYER(eLoopPlayer).isAlive() && !GET_PLAYER(eLoopPlayer).isMinorCiv())
+					{
+						int iOtherPlayerVotes = pLeague->CalculateStartingVotesForMember(eLoopPlayer);
+						if (iOtherPlayerVotes > iHighestPlayerVotes && iOtherPlayerVotes > iSecondHighestPlayerVotes)
+						{
+							iSecondHighestPlayerVotes = iHighestPlayerVotes;
+							iHighestPlayerVotes = iOtherPlayerVotes;
+						}
+						else if (iOtherPlayerVotes > iSecondHighestPlayerVotes)
+						{
+							iSecondHighestPlayerVotes = iOtherPlayerVotes;
+						}
+					}
+				}
+				// Are we one of the two people with the highest vote count?
+				if (pLeague->CalculateStartingVotesForMember(m_pPlayer->GetID()) >= iSecondHighestPlayerVotes)
+				{
+					bReturnHalf = true;
+				}
+			}
+		}
+	}
+	// Spaceship gives science boost if we don't have Rocketry, half boost otherwise
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP")) >= 0.75f)
+#else
+	if (GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"))
+#endif // AUI_GS_PRIORITY_RATIO
+	{
+		ProjectTypes eApolloProgram = (ProjectTypes)GC.getInfoTypeForString("PROJECT_APOLLO_PROGRAM", true);
+		if (eApolloProgram != NO_PROJECT)
+		{
+			if (!m_pPlayer->canCreate(eApolloProgram) && GET_TEAM(m_pPlayer->getTeam()).getProjectCount(eApolloProgram) == 0)
+			{
+				return iMultiplier;
+			}
+		}
+		bReturnHalf = true;
+	}
+	if (bReturnHalf)
+	{
+		return (iMultiplier / 2 + iMultiplier % 2);
+	}
+	// Always give at least a 2x multiplier if in last place for science (last two places if 12 or more players)
+	if (m_pPlayer->GetPlayerTechs()->GetTechAI()->GetTechRatio() <= 1.0f/12.0f)
+	{
+		return 2;
+	}
+	return 1;
+}
+
+/// Get AI Flavor based on Personality and Grand Strategy Ratios
 int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
 {
+#ifdef AUI_GS_USE_FLOATS
+	// Personality flavors set as initial values
+	float fModdedFlavor = (float)m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
+
+# ifdef AUI_GS_PRIORITY_RATIO
+#  ifdef AUI_GS_SINUSOID_PERSONALITY_INFLUENCE
+	// Percent techs researched acts as Science Flavor booster and as measure of how much grand strategy flavor influencers should activate
+	float fPercentTechsResearched = (float)GET_TEAM(m_pPlayer->getTeam()).GetTeamTechs()->GetNumTechsKnown();
+	if (m_pPlayer->GetPlayerTechs()->GetTechs()->GetNumTechs() > 0)
+	{
+		fPercentTechsResearched /= (float)m_pPlayer->GetPlayerTechs()->GetTechs()->GetNumTechs(); // remove divide by 0
+	}
+	fPercentTechsResearched = MAX(0.0f, MIN(1.0f, fPercentTechsResearched));
+#  else
+	const float fPercentTechsResearched = 1.0f;
+#  endif // AUI_GS_SINUSOID_PERSONALITY_INFLUENCE
+
+	const float pi = (float)(3.1415926535897932384626433832795); // needed because Grand Strategy factor for dPercentTechsResearched is sinusoid
+
+	// Loop through all Grand Strategies, adding their flavor values to the modded value
+	for (int iGrandStrategiesLoop = 0; iGrandStrategiesLoop < GetAIGrandStrategies()->GetNumAIGrandStrategies(); iGrandStrategiesLoop++)
+	{
+		// First line is just the Grand Strategy's base flavor, second line reduces its influence on modded flavor based on Priority Ratio (Active = 1.0)
+		fModdedFlavor += GetAIGrandStrategies()->GetEntry(iGrandStrategiesLoop)->GetFlavorModValue(eFlavorType) * sinf(fPercentTechsResearched * pi / 2.0f) *
+			GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iGrandStrategiesLoop);
+	}
+# else
+	if(m_eActiveGrandStrategy != NO_AIGRANDSTRATEGY)
+	{
+		CvAIGrandStrategyXMLEntry* pGrandStrategy = GetAIGrandStrategies()->GetEntry(m_eActiveGrandStrategy);
+		fModdedFlavor = pGrandStrategy->GetFlavorModValue(eFlavorType) + m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
+	}
+# endif // AUI_GS_PRIORITY_RATIO
+	// Modded flavor can't be negative
+	fModdedFlavor = MAX(0.0f, fModdedFlavor);
+	return (int)(fModdedFlavor + 0.5f);
+#else
 	if(m_eActiveGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
 		CvAIGrandStrategyXMLEntry* pGrandStrategy = GetAIGrandStrategies()->GetEntry(m_eActiveGrandStrategy);
 		int iModdedFlavor = pGrandStrategy->GetFlavorModValue(eFlavorType) + m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
-		iModdedFlavor = max(0,iModdedFlavor);
+		iModdedFlavor = max(0, iModdedFlavor);
 		return iModdedFlavor;
 	}
 	return m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
+#endif // AUI_GS_USE_FLOATS
 }
 
 /// Returns the Active Grand Strategy for this Player: how am I trying to win right now?
@@ -838,6 +1405,28 @@ void CvGrandStrategyAI::ChangeGrandStrategyPriority(AIGrandStrategyTypes eGrandS
 	}
 }
 
+#ifdef AUI_GS_PRIORITY_RATIO
+/// Returns Fraction of the Priority of a Grand Strategy over Active Grand Strategy's Priority (between 0 and 1) 
+float CvGrandStrategyAI::GetGrandStrategyPriorityRatio(AIGrandStrategyTypes eGrandStrategy) const
+{
+	if (m_pPlayer->isMinorCiv() || eGrandStrategy == NO_AIGRANDSTRATEGY)
+	{
+		return 0.0f;
+	}
+	else
+	{
+		if (eGrandStrategy == GetActiveGrandStrategy())
+		{
+			return 1.0f;
+		}
+		else
+		{
+			return (float)MAX(GetGrandStrategyPriority(eGrandStrategy), 0) / (float)GetGrandStrategyPriority(GetActiveGrandStrategy());
+		}
+	}
+
+}
+#endif
 
 
 // **********
@@ -1071,7 +1660,8 @@ int CvGrandStrategyAI::GetGuessOtherPlayerCulturePriority(PlayerTypes ePlayer, i
 		{
 			iCulturePriority += -GC.getAI_GS_TOURISM_RATIO_MULTIPLIER();
 		}
-		iCulturePriority += iRatio;	}
+		iCulturePriority += iRatio;
+	}
 
 	return iCulturePriority;
 }

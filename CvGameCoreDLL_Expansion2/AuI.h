@@ -13,6 +13,8 @@
 #define AUI_BINOM_RNG
 /// Minor Civ tracking (especially useful for cases with no minor civs or lots of minor civs relative to major civs)
 #define AUI_MINOR_CIV_RATIO
+/// Turns the "Has met Major Civ" check inside GS priority checks into a public function of CvGrandStrategyAI
+#define AUI_PUBLIC_HAS_MET_MAJOR
 
 // Worker Automation Stuff
 /// Automated Inca workers know that there is no maintenance on hills, so routines are adjusted as a result
@@ -28,7 +30,33 @@
 /// AI Celt workers will no longer leave forests unimproved once they enter the Industrial Era
 #define AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL
 /// Automated workers value strategic resources that a player has none of higher than strategic resources that the player has used all of
-#define AUI_WORKER_DONT_HAVE_MULTIPLIER
+#define AUI_WORKER_TWEAKED_DONT_HAVE_MULTIPLIER
+
+// Grand Strategy Stuff
+/// Enables use of Grand Strategy Priority; the function returns the ratio of the requested GS's priority to the active GS's priority (1.0 if the requested GS is the active GS)
+#define AUI_GS_PRIORITY_RATIO
+/// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division)
+#define AUI_GS_USE_FLOATS
+/// Uses tweaked algorithm for Conquest GS priority's increase depending on general approach and current era
+#define AUI_GS_CONQUEST_TWEAKED_ERAS
+/// Uses tweaked algorithm for military ratio's effect on Conquest GS
+#define AUI_GS_CONQUEST_TWEAKED_MILITARY_RATIO
+/// Fixes the code that checks for cramped status (it always triggered originally, now it only triggers if we really are cramped)
+#define AUI_GS_CONQUEST_FIX_CRAMPED
+/// Ignores the fact that the enemy has nukes when calculating Conquest GS priority
+#define AUI_GS_CONQUEST_IGNORE_ENEMY_NUKES
+/// Uses tweaked algorithm for Culture GS priority's increase depending on flavors and current era
+#define AUI_GS_CULTURE_TWEAKED_ERAS
+/// Uses tweaked algorithm for United Nations GS priority's increase depending on flavors and current era
+#define AUI_GS_DIPLOMATIC_TWEAKED_ERAS
+/// Uses tweaked algorithm for Spaceship GS priority's increase depending on flavors and current era
+#define AUI_GS_SPACESHIP_TWEAKED_ERAS
+/// For Spaceship GS, algorithm that processes additional flavors from Expansion, Production, and Growth gets added to Science flavor before final computation
+#define AUI_GS_SPACESHIP_TWEAKED_FLAVORS
+/// Additional Spaceship GS flavor based on Tech Ratio
+#define AUI_GS_SPACESHIP_TECH_RATIO
+/// GS does not instantly have full influence over this function until later into the game; increase is sinusoid
+#define AUI_GS_SINUSOID_PERSONALITY_INFLUENCE
 
 // GlobalDefines (GD) wrappers
 // INT
