@@ -47,6 +47,8 @@
 #define AUI_GS_CONQUEST_IGNORE_ENEMY_NUKES
 /// Uses tweaked algorithm for Culture GS priority's increase depending on flavors and current era
 #define AUI_GS_CULTURE_TWEAKED_ERAS
+/// Uses tweaked algorithm for calculating culture and tourism's effect on Culture GS
+#define AUI_GS_CULTURE_TWEAKED_CULTURE_TOURISM_AHEAD
 /// Uses tweaked algorithm for United Nations GS priority's increase depending on flavors and current era
 #define AUI_GS_DIPLOMATIC_TWEAKED_ERAS
 /// Uses tweaked algorithm for Spaceship GS priority's increase depending on flavors and current era
@@ -57,6 +59,26 @@
 #define AUI_GS_SPACESHIP_TECH_RATIO
 /// GS does not instantly have full influence over this function until later into the game; increase is sinusoid
 #define AUI_GS_SINUSOID_PERSONALITY_INFLUENCE
+
+// Voting/League Stuff
+/// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division)
+#define AUI_VOTING_USE_FLOATS
+/// Uses slightly modified algorithm for determining Diplomat Usefulness levels
+#define AUI_VOTING_TWEAKED_DIPLOMAT_USEFULNESS
+/// Uses a different algorithm for scoring voting on international projects
+#define AUI_VOTING_TWEAKED_INTERNATIONAL_PROJECTS
+/// Uses a different algorithm for scoring voting on embargoing city states
+#define AUI_VOTING_TWEAKED_EMBARGO_MINOR_CIVS
+/// Uses a different algorithm for scoring voting on banning a luxury
+#define AUI_VOTING_TWEAKED_BAN_LUXURY
+/// Uses a different algorithm for scoring voting on standing army tax
+#define AUI_VOTING_TWEAKED_STANDING_ARMY
+/// Uses a different algorithm for scoring voting on scholars in residence
+#define AUI_VOTING_TWEAKED_SCHOLARS_IN_RESIDENCE
+/// Uses a different algorithm for scoring voting on world religion
+#define AUI_VOTING_TWEAKED_WORLD_RELIGION
+/// Uses a different algorithm and unifies the code for scoring voting on arts funding and sciences funding
+#define AUI_VOTING_TWEAKED_ARTS_SCIENCES_FUNDING
 
 // GlobalDefines (GD) wrappers
 // INT

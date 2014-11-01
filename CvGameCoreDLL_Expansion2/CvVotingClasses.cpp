@@ -8245,6 +8245,33 @@ CvLeagueAI::DiplomatUsefulnessLevels CvLeagueAI::GetDiplomatUsefulnessAtCiv(Play
 	DiplomatUsefulnessLevels eUsefulness = DIPLOMAT_USEFULNESS_NONE;
 
 	int iScore = 0;
+#ifdef AUI_VOTING_TWEAKED_DIPLOMAT_USEFULNESS
+	if (EvaluateAlignment(ePlayer) >= ALIGNMENT_NEUTRAL)
+	{
+		iScore += 1;
+	}
+	if (GetPlayer()->GetDiplomacyAI()->IsGoingForCultureVictory())
+	{
+		iScore += 1;
+	}
+	if (GetExtraVotesPerDiplomat() > 0)
+	{
+		iScore = 3;
+	}
+
+	if (iScore >= 3)
+	{
+		eUsefulness = DIPLOMAT_USEFULNESS_HIGH;
+	}
+	else if (iScore >= 2)
+	{
+		eUsefulness = DIPLOMAT_USEFULNESS_MEDIUM;
+	}
+	else if (iScore >= 1)
+	{
+		eUsefulness = DIPLOMAT_USEFULNESS_LOW;
+	}
+#else
 	if (GetExtraVotesPerDiplomat() > 0)
 	{
 		iScore += 1;
@@ -8262,6 +8289,7 @@ CvLeagueAI::DiplomatUsefulnessLevels CvLeagueAI::GetDiplomatUsefulnessAtCiv(Play
 	{
 		eUsefulness = DIPLOMAT_USEFULNESS_LOW;
 	}
+#endif // AUI_VOTING_TWEAKED_DIPLOMAT_USEFULNESS
 	
 	return eUsefulness;
 }
@@ -8764,6 +8792,1281 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 
 	// How much do we like this choice for this proposal?  Positive is like, negative is dislike.
 	// Evaluate as if we are voting Yes to Enact the proposal.  Post-processing below to fit actual situation.
+#ifdef AUI_VOTING_USE_FLOATS
+	float fScore = 0;
+
+	// == Proposer Choice ==
+	ResolutionDecisionTypes eProposerDecision = pProposal->GetProposerDecision()->GetType();
+	PlayerTypes eTargetPlayer = NO_PLAYER;
+	if (eProposerDecision == RESOLUTION_DECISION_ANY_MEMBER ||
+		eProposerDecision == RESOLUTION_DECISION_MAJOR_CIV_MEMBER ||
+		eProposerDecision == RESOLUTION_DECISION_OTHER_MAJOR_CIV_MEMBER)
+	{
+		eTargetPlayer = (PlayerTypes) pProposal->GetProposerDecision()->GetDecision();
+	}
+	ResourceTypes eTargetLuxury = NO_RESOURCE;
+	if (eProposerDecision == RESOLUTION_DECISION_ANY_LUXURY_RESOURCE)
+	{
+		CvResourceInfo* pInfo = GC.getResourceInfo((ResourceTypes) pProposal->GetProposerDecision()->GetDecision());
+		if (pInfo && pInfo->getResourceUsage() == RESOURCEUSAGE_LUXURY)
+		{
+			eTargetLuxury = (ResourceTypes) pProposal->GetProposerDecision()->GetDecision();
+		}
+	}
+	ReligionTypes eTargetReligion = NO_RELIGION;
+	if (eProposerDecision == RESOLUTION_DECISION_RELIGION)
+	{
+		eTargetReligion = (ReligionTypes) pProposal->GetProposerDecision()->GetDecision();
+	}
+	PolicyBranchTypes eTargetIdeology = NO_POLICY_BRANCH_TYPE;
+	if (eProposerDecision == RESOLUTION_DECISION_IDEOLOGY)
+	{
+		eTargetIdeology = (PolicyBranchTypes) pProposal->GetProposerDecision()->GetDecision();
+	}
+
+	// == Grand Strategy ==
+#ifdef AUI_GS_PRIORITY_RATIO
+	float fDiploVictoryRatio = GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"));
+	float fConquestVictoryRatio = GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"));
+	float fCultureVictoryRatio = GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"));
+	float fScienceVictoryRatio = GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"));
+#else
+	AIGrandStrategyTypes eGrandStrategy = GetPlayer()->GetGrandStrategyAI()->GetActiveGrandStrategy();
+	bool bSeekingDiploVictory = eGrandStrategy == GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS");
+	bool bSeekingConquestVictory = eGrandStrategy == GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
+	bool bSeekingCultureVictory = eGrandStrategy == GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE");
+	bool bSeekingScienceVictory = eGrandStrategy == GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP");
+#endif // AUI_GS_PRIORITY_RATIO
+
+	// == Gameplay Effects ==
+	// International Projects
+	if (pProposal->GetEffects()->eLeagueProjectEnabled != NO_LEAGUE_PROJECT)
+	{
+		LeagueProjectTypes eWorldsFair = (LeagueProjectTypes) GC.getInfoTypeForString("LEAGUE_PROJECT_WORLD_FAIR", true);
+		LeagueProjectTypes eInternationalGames = (LeagueProjectTypes) GC.getInfoTypeForString("LEAGUE_PROJECT_WORLD_GAMES", true);
+		LeagueProjectTypes eInternationalSpaceStation = (LeagueProjectTypes) GC.getInfoTypeForString("LEAGUE_PROJECT_INTERNATIONAL_SPACE_STATION", true);
+
+#ifdef AUI_VOTING_TWEAKED_INTERNATIONAL_PROJECTS
+		// Production might
+		int iOurProductionMight = GetPlayer()->calculateProductionMight();
+		int iHighestProductionMight = iOurProductionMight;
+		for (int i = 0; i < MAX_MAJOR_CIVS; i++)
+		{
+			PlayerTypes e = (PlayerTypes) i;
+			if (GET_PLAYER(e).isAlive() && !GET_PLAYER(e).isMinorCiv() && !GET_PLAYER(e).isBarbarian())
+			{
+				if (GetPlayer()->GetID() != e)
+				{
+					int iMight = GET_PLAYER(e).calculateProductionMight();
+					if (iMight > iHighestProductionMight)
+					{
+						iHighestProductionMight = iMight;
+					}
+				}
+			}
+		}
+
+		// acts as a boolean
+		int iIsStrongProduction = 0;
+
+		float fProductionMightRatio = (float)iOurProductionMight / (float)MAX(iHighestProductionMight, 1);
+		CvAssertMsg(0.0f <= fProductionMightRatio && fProductionMightRatio <= 1.0f, "Error when evaluating delegates for an international project. Please send Anton your save file and version.");
+		fProductionMightRatio = MAX(fProductionMightRatio, 0.0f);
+		fProductionMightRatio = MIN(fProductionMightRatio, 1.0f);
+
+		if (fProductionMightRatio >= 0.50f)
+		{
+			iIsStrongProduction = 1;
+		}
+		if (fProductionMightRatio >= 0.75f)
+		{
+			fScore += 40;
+		}
+		else if (fProductionMightRatio < 0.25f)
+		{
+			fScore += -40;
+		}
+		else
+		{
+			fScore += -40 + (160.0f * (fProductionMightRatio - 0.25f));
+		}
+
+		// Project specific benefits
+#ifdef AUI_GS_PRIORITY_RATIO
+		if (eWorldsFair == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			fScore += -5.0f + (5.0f * fCultureVictoryRatio) + (15.0f * iIsStrongProduction) + (15.0f * fCultureVictoryRatio * iIsStrongProduction);
+		}
+		else if (eInternationalGames == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			fScore += -5.0f + (15.0f * fDiploVictoryRatio) + (15.0f * iIsStrongProduction) + (15.0f * fCultureVictoryRatio * iIsStrongProduction);
+		}
+		else if (eInternationalSpaceStation == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			fScore += -5.0f + (15.0f * fScienceVictoryRatio) + (15.0f * iIsStrongProduction) + (25.0f * fScienceVictoryRatio * iIsStrongProduction);
+		}
+#else
+		if (eWorldsFair == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			fScore += -5.0f + (bSeekingCultureVictory ? 5.0f : 0.0f) + (15.0f * iIsStrongProduction) + ((bSeekingCultureVictory ? 15.0f: 0.0f) * iIsStrongProduction);
+		}
+		else if (eInternationalGames == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			fScore += -5.0f + (bSeekingDiploVictory ? 15.0f : 0.0f) + (15.0f * iIsStrongProduction) + ((bSeekingCultureVictory ? 15.0f : 0.0f) * iIsStrongProduction);
+		}
+		else if (eInternationalSpaceStation == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			fScore += -5.0f + (bSeekingScienceVictory ? 15.0f: 0.0f) + (15.0f * iIsStrongProduction) + ((bSeekingScienceVictory ? 25.0f: 0.0f) * iIsStrongProduction);
+		}
+#endif // AUI_GS_PRIORITY_RATIO
+#else
+		// Production might
+		int iOurProductionMight = GetPlayer()->calculateProductionMight();
+		int iHigherProductionCivs = 0;
+		int iLowerProductionCivs = 0;
+		int iAliveCivs = 0;
+		for (int i = 0; i < MAX_MAJOR_CIVS; i++)
+		{
+			PlayerTypes e = (PlayerTypes) i;
+			if (GET_PLAYER(e).isAlive() && !GET_PLAYER(e).isMinorCiv() && !GET_PLAYER(e).isBarbarian())
+			{
+				iAliveCivs++;
+				if (GetPlayer()->GetID() != e)
+				{
+					int iMight = GET_PLAYER(e).calculateProductionMight();
+					if (iMight > iOurProductionMight)
+					{
+						iHigherProductionCivs++;
+					}
+					else
+					{
+						iLowerProductionCivs++; // Include civs with equal might
+					}
+				}
+			}
+		}
+		bool bStrongProduction = false;
+		if (iAliveCivs > 0)
+		{
+			float fProductionMightRatio = ((float)iAliveCivs - (float)iHigherProductionCivs) / ((float)iAliveCivs);
+			CvAssertMsg(0.0f <= fProductionMightRatio && fProductionMightRatio <= 1.0f, "Error when evaluating delegates for an international project. Please send Anton your save file and version.");
+			fProductionMightRatio = MAX(fProductionMightRatio, 0.0f);
+			fProductionMightRatio = MIN(fProductionMightRatio, 1.0f);
+
+			if (fProductionMightRatio >= 0.75f)
+			{
+				fScore += 40;
+				bStrongProduction = true;
+			}
+			else if (fProductionMightRatio >= 0.50f)
+			{
+				fScore += 20;
+				bStrongProduction = true;
+			}
+			else if (fProductionMightRatio >= 0.25f)
+			{
+				fScore += -20;
+			}
+			else
+			{
+				fScore += -40;
+			}
+		}
+
+		// Project specific benefits
+#ifdef AUI_GS_PRIORITY_RATIO
+		if (eWorldsFair == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			if (bStrongProduction)
+			{
+				fScore += 20.0f * fCultureVictoryRatio;
+			}
+
+			fScore += 10;
+		}
+		else if (eInternationalGames == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			if (bStrongProduction)
+			{
+				fScore += 30.0f * fCultureVictoryRatio;
+			}
+
+			fScore += 10;
+		}
+		else if (eInternationalSpaceStation == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			if (bStrongProduction)
+			{
+				fScore += 40.0f * fScienceVictoryRatio;
+			}
+
+			fScore += 10;
+		}
+#else
+		if (eWorldsFair == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			if (bSeekingCultureVictory && bStrongProduction)
+			{
+				fScore += 30;
+			}
+			else
+			{
+				fScore += 10;
+			}
+		}
+		else if (eInternationalGames == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			if (bSeekingCultureVictory && bStrongProduction)
+			{
+				fScore += 40;
+			}
+			else
+			{
+				fScore += 10;
+			}
+
+		}
+		else if (eInternationalSpaceStation == pProposal->GetEffects()->eLeagueProjectEnabled)
+		{
+			if (bSeekingScienceVictory && bStrongProduction)
+			{
+				fScore += 50;
+			}
+			else
+			{
+				fScore += 10;
+			}
+		}
+#endif // AUI_GS_PRIORITY_RATIO
+#endif // AUI_VOTING_TWEAKED_INTERNATIONAL_PROJECTS
+	}
+	// Embargo City-States
+	if (pProposal->GetEffects()->bEmbargoCityStates)
+	{
+		// Trade connections
+		int iCSDestinations = 0;
+		int iCSPartners = 0;
+		int iCivEmbargos = 0;
+		int iCivDestinations = 0;
+
+		for (int i = 0; i < MAX_CIV_PLAYERS; i++)
+		{
+			PlayerTypes e = (PlayerTypes) i;
+			if (e != GetPlayer()->GetID() && GET_PLAYER(e).isAlive())
+			{
+				if (GET_PLAYER(e).isMinorCiv())
+				{
+					iCSDestinations++;
+					if (GC.getGame().GetGameTrade()->IsPlayerConnectedToPlayer(GetPlayer()->GetID(), e))
+					{
+						iCSPartners++;
+					}
+				}
+				else if (GC.getGame().GetGameLeagues()->IsTradeEmbargoed(GetPlayer()->GetID(), e))
+				{
+					iCivEmbargos++;
+				}
+				else
+				{
+					iCivDestinations += GET_PLAYER(e).getNumCities();
+				}
+			}
+		}
+
+#ifdef AUI_VOTING_TWEAKED_EMBARGO_MINOR_CIVS
+		// Adjusts score change based on how many city states there are
+		float fCityStateCountModifier = 1.0f;
+#ifdef AUI_MINOR_CIV_RATIO
+		const float fCityStateDeviation = 1.0f + logf(GC.getGame().getCurrentMinorCivDeviation());
+		// Calculation is more complex than for Policies or Beliefs because we only ever want it to be 0 when there are no city states.
+		if (fCityStateDeviation >= expf(-1.0f))
+		{
+			fCityStateCountModifier = fCityStateDeviation;
+		}
+		else
+		{
+			fCityStateCountModifier = expf(fCityStateDeviation);
+		}
+#endif // AUI_MINOR_CIV_RATIO
+
+		// Would we lose active CS trade routes?
+		if (iCSPartners > 0)
+		{
+			fScore += MAX(-50, iCSPartners * -15) * fCityStateCountModifier;
+		}
+		else
+		{
+			// Make sure the player actually has some trade connections before applying the positive default score
+			CvGameTrade* pTrade = GC.getGame().GetGameTrade();
+			for (uint ui = 0; ui < pTrade->m_aTradeConnections.size(); ui++)
+			{
+				TradeConnection* pConnection = &(pTrade->m_aTradeConnections[ui]);
+
+				if (pConnection->m_eOriginOwner == m_pPlayer->GetID())
+				{
+					fScore += 25 * fCityStateCountModifier;
+					break;
+				}
+			}
+		}
+
+		// Can we trade with any major civs?
+		if (iCivDestinations <= 0)
+		{
+			fScore += -50 * fCityStateCountModifier;
+		}
+		else
+		{
+			// Based on estimates, would we still have enough valid trade routes if this passed?
+			int iPossibleRoutesAfter = iCivDestinations * GetPlayer()->getNumCities();
+			if ((iPossibleRoutesAfter / 3) < (int) GetPlayer()->GetTrade()->GetNumTradeRoutesPossible())
+			{
+				fScore += -40 * fCityStateCountModifier;
+			}
+		}
+
+		// Player Trait making routes to them valuable (Morocco)
+		for (int i = 0; i < NUM_YIELD_TYPES; i++)
+		{
+			YieldTypes e = (YieldTypes) i;
+			if (GetPlayer()->GetPlayerTraits()->GetYieldChangeIncomingTradeRoute(e) > 0)
+			{
+				fScore += -40 * fCityStateCountModifier;
+				break;
+			}
+		}
+
+		// Player Trait gives us extra routes, embargoes are bad for business (Venice)
+		if (GetPlayer()->GetPlayerTraits()->GetNumTradeRoutesModifier() > 0)
+		{
+			fScore += -20 * fCityStateCountModifier;
+		}
+
+		// Do we have a policy that benefits from CS trade routes?
+		int iPolicy;
+		CvPolicyEntry* entry;
+		int iDivider = 1;
+		for (iPolicy = 0; iPolicy < GetPlayer()->GetPlayerPolicies()->GetPolicies()->GetNumPolicies(); iPolicy++)
+		{
+			entry = GetPlayer()->GetPlayerPolicies()->GetPolicies()->GetPolicyEntry(iPolicy);
+			if ((entry) && (GetPlayer()->GetPlayerPolicies()->HasPolicy(static_cast<PolicyTypes>(iPolicy))
+				|| GetPlayer()->GetPlayerPolicies()->IsPolicyBranchUnlocked(static_cast<PolicyBranchTypes>(entry->GetPolicyBranchType()))))
+			{
+				// If the player doesn't have the policy, but has the policy's branch unlocked, score should still be adjusted, but by a much smaller amount
+				iDivider = 1;
+				if (!(GetPlayer()->GetPlayerPolicies()->HasPolicy(static_cast<PolicyTypes>(iPolicy))))
+				{
+					iDivider = 2;
+				}
+
+				if (entry->GetProtectedMinorPerTurnInfluence() > 0)
+				{
+#ifdef AUI_GS_PRIORITY_RATIO
+					fScore += (-20 - 40 * fDiploVictoryRatio) * fCityStateCountModifier / (float)iDivider;
+#else
+					fScore += (-20 - (bSeekingDiploVictory ? 40 : 0)) * fCityStateCountModifier / (float)iDivider;
+#endif // AUI_GS_PRIORITY_RATIO
+				}
+				if (entry->GetCityStateTradeChange() > 0)
+				{
+					fScore += -40 * fCityStateCountModifier / (float)iDivider;
+				}
+			}
+		}
+
+		// Can we build any buildings (or do we have any) that increase our CS trade route yield? (eg. Germany's Hanse)
+		for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+		{
+			BuildingTypes eBuilding = (BuildingTypes)m_pPlayer->getCivilizationInfo().getCivilizationBuildings(iI);
+			if(eBuilding != NO_BUILDING)
+			{
+				CvBuildingEntry* pBuildingEntry = GC.GetGameBuildings()->GetEntry(eBuilding);
+				if(pBuildingEntry && pBuildingEntry->GetCityStateTradeRouteProductionModifier() > 0)
+				{
+					// Necessary building has been found, loop through cities to see if we have any where we have it or can build it
+					int iLoop;
+					CvCity* pLoopCity;
+					for (pLoopCity = GET_PLAYER(m_pPlayer->GetID()).firstCity(&iLoop); pLoopCity != NULL; pLoopCity = GET_PLAYER(m_pPlayer->GetID()).nextCity(&iLoop))
+					{
+						if (pLoopCity->canConstruct(eBuilding, false, false, true) || (pLoopCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0))
+						{
+							fScore += -40 * fCityStateCountModifier;
+							goto loopEnd;
+						}
+					}
+				}
+			}
+		}
+	loopEnd:;
+#else
+		// Would we lose active CS trade routes?
+		if (iCSPartners > 0)
+		{
+			fScore += MAX(-50, iCSPartners * -15);
+		}
+		else
+		{
+			fScore += 25;
+
+		}
+
+		// Can we trade with any major civs?
+		if (iCivDestinations <= 0)
+		{
+			fScore += -50;
+		}
+		else
+		{
+			// Based on estimates, would we still have enough valid trade routes if this passed?
+			int iPossibleRoutesAfter = iCivDestinations * GetPlayer()->getNumCities();
+			if ((iPossibleRoutesAfter / 3) < (int) GetPlayer()->GetTrade()->GetNumTradeRoutesPossible())
+			{
+				fScore += -40;
+
+			}
+		}
+
+		// Player Trait making routes to them valuable (Morocco)
+		for (int i = 0; i < NUM_YIELD_TYPES; i++)
+		{
+			YieldTypes e = (YieldTypes) i;
+			if (GetPlayer()->GetPlayerTraits()->GetYieldChangeIncomingTradeRoute(e) > 0)
+			{
+				fScore += -40;
+
+				break;
+			}
+		}
+
+		// Player Trait gives us extra routes, embargoes are bad for business (Venice)
+		if (GetPlayer()->GetPlayerTraits()->GetNumTradeRoutesModifier() > 0)
+		{
+			fScore += -20;
+		}
+#endif // AUI_VOTING_TWEAKED_EMBARGO_MINOR_CIVS
+	}
+	// Embargo
+	if (pProposal->GetEffects()->bEmbargoPlayer)
+	{
+		CvAssertMsg(eTargetPlayer != NO_PLAYER, "Evaluating an embargo on NO_PLAYER. Please send Anton your save file and version.");
+		// Major Civ relations
+		if (eTargetPlayer == GetPlayer()->GetID())
+		{
+			fScore += -100;
+		}
+		else if (GET_PLAYER(eTargetPlayer).getTeam() == GetPlayer()->getTeam())
+		{
+			fScore += -70;
+		}
+		else if (!GET_PLAYER(eTargetPlayer).isMinorCiv())
+		{
+			ThreatTypes eWarmongerThreat = GetPlayer()->GetDiplomacyAI()->GetWarmongerThreat(eTargetPlayer);
+			MajorCivOpinionTypes eOpinion = GetPlayer()->GetDiplomacyAI()->GetMajorCivOpinion(eTargetPlayer);
+			MajorCivApproachTypes eApproach = GetPlayer()->GetDiplomacyAI()->GetMajorCivApproach(eTargetPlayer, /*bHideTrueFeelings*/ true);
+			if (GET_TEAM(GetPlayer()->getTeam()).isAtWar(GET_PLAYER(eTargetPlayer).getTeam()))
+			{
+				fScore += 70;
+			}
+			else if (eWarmongerThreat >= THREAT_SEVERE)
+			{
+				fScore += 40;
+			}
+			else if (eOpinion < MAJOR_CIV_OPINION_NEUTRAL || eApproach < MAJOR_CIV_APPROACH_GUARDED)
+			{
+				fScore += 20;
+			}
+			else
+			{
+				fScore += -30;
+			}
+
+			// Trade connections
+			if (GC.getGame().GetGameTrade()->IsPlayerConnectedToPlayer(GetPlayer()->GetID(), eTargetPlayer))
+			{
+				int iFactor = -10;
+				fScore += MAX(-40, GC.getGame().GetGameTrade()->CountNumPlayerConnectionsToPlayer(GetPlayer()->GetID(), eTargetPlayer) * iFactor);
+			}
+
+			// Player Trait making routes to them valuable (Morocco)
+			for (int i = 0; i < NUM_YIELD_TYPES; i++)
+			{
+				YieldTypes e = (YieldTypes) i;
+				if (GetPlayer()->GetPlayerTraits()->GetYieldChangeIncomingTradeRoute(e) > 0)
+				{
+					fScore += -20;
+					break;
+				}
+			}
+
+			// Player Trait gives us extra routes, embargoes are bad for business (Venice)
+			if (GetPlayer()->GetPlayerTraits()->GetNumTradeRoutesModifier() > 0)
+			{
+				fScore += -20;
+			}
+		}
+	}
+	// Ban Luxury
+	if (pProposal->GetEffects()->bNoResourceHappiness)
+	{
+		CvAssertMsg(eTargetLuxury != NO_RESOURCE, "Evaluating banning Happiness for NO_RESOURCE. Please send Anton your save file and version.");
+
+		// What other major civs have this resource?
+		int iOtherPlayerResourceFactor = 0;
+		bool bOwnedByAnyPlayer = false;
+		for (int i = 0; i < MAX_MAJOR_CIVS; i++)
+		{
+			PlayerTypes e = (PlayerTypes) i;
+			if (e != GetPlayer()->GetID() && GET_PLAYER(e).isAlive() && !GET_PLAYER(e).isMinorCiv() && GET_TEAM(GetPlayer()->getTeam()).isHasMet(GET_PLAYER(e).getTeam()))
+			{
+				if (GET_PLAYER(e).getNumResourceTotal(eTargetLuxury) > 0)
+				{
+					bOwnedByAnyPlayer = true;
+					MajorCivOpinionTypes eOpinion = GetPlayer()->GetDiplomacyAI()->GetMajorCivOpinion(e);
+					if (GET_TEAM(GetPlayer()->getTeam()).isAtWar(GET_PLAYER(e).getTeam()))
+					{
+						iOtherPlayerResourceFactor += -3;
+					}
+					else if (GetPlayer()->GetDiplomacyAI()->IsDoFAccepted(e) || GetPlayer()->getTeam() == GET_PLAYER(e).getTeam())
+					{
+						iOtherPlayerResourceFactor += 3;
+					}
+#ifdef AUI_VOTING_TWEAKED_BAN_LUXURY
+					else
+					{
+						iOtherPlayerResourceFactor += (int)eOpinion - 3;
+					}
+#else
+					else if (eOpinion <= MAJOR_CIV_OPINION_COMPETITOR)
+					{
+						if (eOpinion == MAJOR_CIV_OPINION_COMPETITOR)
+						{
+							iOtherPlayerResourceFactor += -1;
+						}
+						else
+						{
+							iOtherPlayerResourceFactor += -2;
+						}
+					}
+					else if (eOpinion >= MAJOR_CIV_OPINION_FAVORABLE)
+					{
+						if (eOpinion == MAJOR_CIV_OPINION_FAVORABLE)
+						{
+							iOtherPlayerResourceFactor += 1;
+						}
+						else
+						{
+							iOtherPlayerResourceFactor += 2;
+						}
+					}
+#endif // AUI_VOTING_TWEAKED_BAN_LUXURY
+				}
+			}
+		}
+#ifdef AUI_VOTING_TWEAKED_BAN_LUXURY
+		fScore += (iOtherPlayerResourceFactor < 0 ? 1 : -1) * 10.0f * sqrtf((float)abs(iOtherPlayerResourceFactor));
+
+		// Do we have this resource?
+		if (GetPlayer()->getNumResourceTotal(eTargetLuxury) > 0)
+		{
+			bOwnedByAnyPlayer = true;
+			fScore += -30;
+			if (GetPlayer()->getResourceInOwnedPlots(eTargetLuxury) > 0)
+			{
+				fScore += -20;
+			}
+			if (GetPlayer()->IsEmpireUnhappy())
+			{
+				fScore += -20;
+			}
+		}
+		else
+		{
+			if (GetPlayer()->getResourceInOwnedPlots(eTargetLuxury) > 0)
+			{
+				fScore += -20;
+			}
+			else
+			{
+				// This is the default score that gets added to Ban Luxury
+				fScore += 0;
+			}
+			if (GetPlayer()->IsEmpireUnhappy())
+			{
+				fScore += -10;
+			}
+		}
+#else
+		if (iOtherPlayerResourceFactor > 0)
+		{
+			// Our friends have this resource
+			fScore += -10;
+			if (iOtherPlayerResourceFactor > 3)
+			{
+				fScore += -10;
+			}
+		}
+		else if (iOtherPlayerResourceFactor < 0)
+		{
+			// Our enemies have this resource
+			fScore += 10;
+			if (iOtherPlayerResourceFactor < -3)
+			{
+				fScore += 10;
+			}
+		}
+
+		// Do we have this resource?
+		if (GetPlayer()->getNumResourceTotal(eTargetLuxury) > 0)
+		{
+			bOwnedByAnyPlayer = true;
+			fScore += -30;
+			if (GetPlayer()->getResourceInOwnedPlots(eTargetLuxury) > 0)
+			{
+				fScore += -20;
+
+			}
+			if (GetPlayer()->IsEmpireUnhappy())
+			{
+				fScore += -20;
+			}
+		}
+		else
+		{
+			if (GetPlayer()->getResourceInOwnedPlots(eTargetLuxury) > 0)
+			{
+				fScore += -20;
+			}
+			else
+			{
+				fScore += 15;
+			}
+		}
+#endif // AUI_VOTING_TWEAKED_BAN_LUXURY
+
+		if (!bOwnedByAnyPlayer)
+		{
+			// Hard set to 0 if nobody owns it.  No effect, so we don't care.
+			fScore = 0;
+		}
+	}
+	// Standing Army Tax
+	if (pProposal->GetEffects()->iUnitMaintenanceGoldPercent != 0)
+	{
+#ifndef AUI_VOTING_TWEAKED_STANDING_ARMY
+		int iFactor = (pProposal->GetEffects()->iUnitMaintenanceGoldPercent > 0) ? 1 : -1;
+#endif
+#ifdef AUI_GS_PRIORITY_RATIO
+		fScore += -40 * fConquestVictoryRatio;
+#else
+		if (bSeekingConquestVictory)
+		{
+			fScore += -40 * iFactor;
+		}
+#endif // AUI_GS_PRIORITY_RATIO
+
+		// What is the ratio of our current maintenance costs to our gross GPT?
+		int iUnitMaintenance = GetPlayer()->GetTreasury()->GetExpensePerTurnUnitMaintenance();
+		int iGPT = GetPlayer()->GetTreasury()->CalculateGrossGold();
+		float fRatio = ((float)iUnitMaintenance / (float)iGPT);
+#ifdef AUI_VOTING_TWEAKED_STANDING_ARMY
+		fScore += (-20 - 70.0f * sqrtf(fRatio)) * (float)pProposal->GetEffects()->iUnitMaintenanceGoldPercent / 25.0f;
+#else
+		if ((iGPT - iUnitMaintenance) < 0)
+		{
+			fScore += -50 * iFactor;
+		}
+		else if (fRatio >= 0.5f)
+		{
+			fScore += -40 * iFactor;
+		}
+		else if (fRatio >= 0.2f)
+		{
+			fScore += -15 * iFactor;
+		}
+		else
+		{
+			fScore += 15 * iFactor;
+		}
+#endif
+	}
+	// Scholars in Residence
+	if (pProposal->GetEffects()->iMemberDiscoveredTechMod != 0)
+	{
+		float fTechRatio = GetPlayer()->GetPlayerTechs()->GetTechAI()->GetTechRatio();
+		fTechRatio = (fTechRatio - 0.5f) * 2.0f; // -1.0 if in first, 1.0 if in last
+#ifdef AUI_VOTING_TWEAKED_SCHOLARS_IN_RESIDENCE
+
+		// adjust fTechRatio in case value is not the expected -20% cost
+		fTechRatio *= (float)pProposal->GetEffects()->iMemberDiscoveredTechMod / 20.0f;
+		// if AIs are behind in tech compared to planned progress, score gets boosted so future techs get researched faster
+		fTechRatio += -2.0f / 3.0f * logf((float)(GET_TEAM(m_pPlayer->getTeam()).GetTeamTechs()->GetNumTechsKnown() * GC.getGame().getMaxTurns()) / 
+			(float)(m_pPlayer->GetPlayerTechs()->GetTechs()->GetNumTechs() * GC.getGame().getElapsedGameTurns()));
+		// if congress is not the UN, add in extra score based on AI's plan for diplomatic victory
+		if (!GC.getGame().GetGameLeagues()->GetActiveLeague()->IsUnitedNations())
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			fTechRatio += 0.5f * MAX(0.0f, fDiploVictoryRatio - sqrtf(fConquestVictoryRatio * fScienceVictoryRatio));
+#else
+			fTechRatio += (bSeekingDiploVictory ? 0.5f : 0);
+#endif // AUI_GS_PRIORITY_RATIO
+		}
+
+		// Score difference is -30 at -1.0 tech ratio, 50 at 1.0 tech ratio; difference between vanilla is that it is now exponential instead of linear
+#ifdef AUI_GS_PRIORITY_RATIO
+		float fFactor = 30 * sqrtf(5.0f / 3.0f) * powf(sqrtf(5.0f / 3.0f), fTechRatio) * (1.0f + fScienceVictoryRatio);
+#else
+		float fFactor = 30 * sqrtf(5.0f / 3.0f) * powf(sqrtf(5.0f / 3.0f), fTechRatio);
+		fFactor *= (bSeekingScienceVictory ? 2 : 1);
+#endif // AUI_GS_PRIORITY_RATIO
+		fScore += fTechRatio * fFactor;
+#else
+
+		// We are better than average
+		if (fTechRatio < 0.0f)
+		{
+			int iFactor = 30;
+			fScore += fTechRatio * iFactor;
+			if (bSeekingScienceVictory)
+			{
+				fScore += -30;
+			}
+		}
+		// At or worse than average
+		else
+		{
+			int iFactor = 50;
+			fScore += fTechRatio * iFactor;
+			if (bSeekingScienceVictory)
+			{
+				fScore += 40;
+			}
+		}
+#endif // AUI_VOTING_TWEAKED_SCHOLARS_IN_RESIDENCE
+	}
+	// Cultural Heritage Sites
+	if (pProposal->GetEffects()->iCulturePerWonder != 0)
+	{
+		int iNumWonders = GetPlayer()->GetNumWonders();
+		float fTempScore = -50;
+		if (iNumWonders > 0)
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			float fFactor = 15 + 5 * fCultureVictoryRatio;
+#else
+			float fFactor = 15 + (bSeekingCultureVictory ? 5 : 0);
+#endif // AUI_GS_PRIORITY_RATIO
+			fTempScore += iNumWonders * fFactor;
+		}
+		fScore += fTempScore;
+		fScore = MIN(70.0f, fScore);
+	}
+	// Natural Heritage Sites
+	if (pProposal->GetEffects()->iCulturePerNaturalWonder != 0)
+	{
+		int iNumNaturalWonders = GetPlayer()->GetNumNaturalWondersInOwnedPlots();
+		float fTempScore = -35;
+		if (iNumNaturalWonders > 0)
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			float fFactor = 15 + 5 * fCultureVictoryRatio;
+#else
+			float fFactor = 15 + (bSeekingCultureVictory ? 5 : 0);
+#endif // AUI_GS_PRIORITY_RATIO
+			fTempScore += iNumNaturalWonders * fFactor;
+		}
+		fScore += fTempScore;
+		fScore = MIN(70.0f, fScore);
+	}
+	// Nuclear Non-Proliferation
+	if (pProposal->GetEffects()->bNoTrainingNuclearWeapons)
+	{
+#ifdef AUI_GS_PRIORITY_RATIO
+			fScore += 35 - 85 * fConquestVictoryRatio;
+#else
+		if (bSeekingConquestVictory)
+		{
+			fScore += -50;
+		}
+		else
+		{
+			fScore += 35;
+		}
+#endif // AUI_GS_PRIORITY_RATIO
+	}
+	// World Religion
+	if (pProposal->GetEffects()->iVotesForFollowingReligion != 0 ||
+		pProposal->GetEffects()->iHolyCityTourism != 0 ||
+		pProposal->GetEffects()->iReligionSpreadStrengthMod != 0)
+	{
+		CvAssertMsg(eTargetReligion != NO_RELIGION, "Evaluating World Religion for NO_RELIGION. Please send Anton your save file and version.");
+		bool bFoundedReligion = GetPlayer()->GetReligions()->GetReligionCreatedByPlayer() == eTargetReligion;
+		bool bMajorityReligion = GetPlayer()->GetReligions()->HasReligionInMostCities(eTargetReligion);
+
+		if (bMajorityReligion)
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			fScore += 40 + 20 * fDiploVictoryRatio;
+#else
+			fScore += 40;
+			if (bSeekingDiploVictory)
+			{
+				fScore += 20;
+			}
+#endif // AUI_GS_PRIORITY_RATIO
+		}
+		else
+		{
+			fScore += -30;
+		}
+
+		const CvReligion* pkTargetReligion = GC.getGame().GetGameReligions()->GetReligion(eTargetReligion, GetPlayer()->GetID());
+		CvAssertMsg(pkTargetReligion, "Evaluating World Religion for an invalid religion. Please send Anton your save file and version.");
+		if (pkTargetReligion)
+		{
+			CvPlot* pPlot = GC.getMap().plot(pkTargetReligion->m_iHolyCityX, pkTargetReligion->m_iHolyCityY);
+			if(pPlot)
+			{
+				CvCity* pHolyCity = pPlot->getPlotCity();
+				if (pHolyCity && pHolyCity->getOwner() == GetPlayer()->GetID())
+				{
+#ifdef AUI_GS_PRIORITY_RATIO
+					fScore += 10 + 30 * fCultureVictoryRatio;
+#else
+					fScore += 10;
+					if (bSeekingCultureVictory)
+					{
+						fScore += 30;
+					}
+#endif // AUI_GS_PRIORITY_RATIO
+				}
+#ifdef AUI_VOTING_TWEAKED_WORLD_RELIGION
+				else
+				{
+					// Don't let someone going for culture get away with a world religion easily
+					if (GetPlayer()->GetGrandStrategyAI()->GetGuessOtherPlayerActiveGrandStrategyConfidence(pHolyCity->getOwner()) > GUESS_CONFIDENCE_UNSURE)
+					{
+						if (GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE") == GetPlayer()->GetGrandStrategyAI()->GetGuessOtherPlayerActiveGrandStrategy(pHolyCity->getOwner()))
+						{
+							fScore -= 40;
+						}
+					}
+				}
+#endif // AUI_VOTING_TWEAKED_WORLD_RELIGION
+			}
+		}
+
+		if (bFoundedReligion)
+		{
+			fScore += 40;
+		}
+		else if (GetPlayer()->GetReligions()->GetReligionCreatedByPlayer() != NO_RELIGION && GetPlayer()->GetReligions()->GetReligionCreatedByPlayer() != eTargetReligion)
+		{
+			fScore += -20;
+		}
+	}
+	// World Ideology
+	if (pProposal->GetEffects()->iVotesForFollowingIdeology != 0 ||
+		pProposal->GetEffects()->iOtherIdeologyRebellionMod != 0)
+	{
+		CvAssertMsg(eTargetIdeology != NO_POLICY_BRANCH_TYPE, "Evaluating World Ideology for NO_POLICY_BRANCH_TYPE. Please send Anton your save file and version.");
+		PolicyBranchTypes eOurIdeology = GetPlayer()->GetPlayerPolicies()->GetLateGamePolicyTree();
+		bool bPublicOpinionUnhappiness = GetPlayer()->GetCulture()->GetPublicOpinionUnhappiness() > 0;
+		if (eOurIdeology != NO_POLICY_BRANCH_TYPE)
+		{
+			if (eOurIdeology == eTargetIdeology)
+			{
+#ifdef AUI_GS_PRIORITY_RATIO
+				fScore += 50 + 25 * fDiploVictoryRatio;
+#else
+				fScore += 50;
+				if (bSeekingDiploVictory)
+				{
+					fScore += 25;
+				}
+#endif // AUI_GS_PRIORITY_RATIO
+				if (bPublicOpinionUnhappiness)
+				{
+					fScore += 25;
+				}
+			}
+			else
+			{
+#ifdef AUI_GS_PRIORITY_RATIO
+				fScore += -50 - 25 * fDiploVictoryRatio;
+#else
+				fScore += -50;
+				if (bSeekingDiploVictory)
+				{
+					fScore += -25;
+				}
+#endif // AUI_GS_PRIORITY_RATIO
+				if (bPublicOpinionUnhappiness)
+				{
+					fScore += -25;
+				}
+			}
+		}
+	}
+
+#ifdef AUI_VOTING_TWEAKED_ARTS_SCIENCES_FUNDING
+	// Arts or Sciences Funding
+	if (pProposal->GetEffects()->iArtsyGreatPersonRateMod != 0 || pProposal->GetEffects()->iScienceyGreatPersonRateMod != 0)
+	{
+		const float fArtsyGreatPersonRateMod = pProposal->GetEffects()->iArtsyGreatPersonRateMod / 33.0f;
+		const float fScienceyGreatPersonRateMod = pProposal->GetEffects()->iScienceyGreatPersonRateMod / 33.0f;
+
+#ifdef AUI_GS_PRIORITY_RATIO
+		// Ranges from -80 to 80 depending on ratios between grand strategies; Due to Great Merchant, Diplo ratio replaces SS ratio when it is twice as big as SS ratio
+		fScore += 80.0f * (fCultureVictoryRatio * pProposal->GetEffects()->iArtsyGreatPersonRateMod / 33.0f
+			+ max(fScienceVictoryRatio, fDiploVictoryRatio / 2) * pProposal->GetEffects()->iScienceyGreatPersonRateMod / 33.0f);
+#else
+		if (bSeekingCultureVictory)
+		{
+			fScore += 80 * fArtsyGreatPersonRateMod;
+		}
+		else if (bSeekingScienceVictory)
+		{
+			fScore += 80 * fScienceyGreatPersonRateMod;
+		}
+#endif // AUI_GS_PRIORITY_RATIO
+
+		// Do we have a sciencey Great Person unique unit? (ie. Merchant of Venice)
+
+		bool bScienceyUniqueUnit = false;
+		UnitClassTypes eScienceyUnitClass = (UnitClassTypes) GC.getInfoTypeForString("UNITCLASS_MERCHANT", true);
+		if (eScienceyUnitClass != NO_UNITCLASS)
+		{
+			CvUnitClassInfo* pScienceyUnitClassInfo = GC.getUnitClassInfo(eScienceyUnitClass);
+			if (pScienceyUnitClassInfo)
+			{
+				UnitTypes eScienceyUnit = (UnitTypes) GetPlayer()->getCivilizationInfo().getCivilizationUnits(eScienceyUnitClass);
+				UnitTypes eDefault = (UnitTypes) pScienceyUnitClassInfo->getDefaultUnitIndex();
+				if (eScienceyUnit != eDefault)
+				{
+					bScienceyUniqueUnit = true;
+				}
+			}
+		}
+
+		// Check for other sciencey GP's
+		if (!bScienceyUniqueUnit)
+		{
+			UnitClassTypes eScienceyUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_SCIENTIST", true);
+			if (eScienceyUnitClass != NO_UNITCLASS)
+			{
+				CvUnitClassInfo* pScienceyUnitClassInfo = GC.getUnitClassInfo(eScienceyUnitClass);
+				if (pScienceyUnitClassInfo)
+				{
+					UnitTypes eScienceyUnit = (UnitTypes)GetPlayer()->getCivilizationInfo().getCivilizationUnits(eScienceyUnitClass);
+					UnitTypes eDefault = (UnitTypes)pScienceyUnitClassInfo->getDefaultUnitIndex();
+					if (eScienceyUnit != eDefault)
+					{
+						bScienceyUniqueUnit = true;
+					}
+				}
+			}
+		}
+		if (!bScienceyUniqueUnit)
+		{
+			UnitClassTypes eScienceyUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_ENGINEER", true);
+			if (eScienceyUnitClass != NO_UNITCLASS)
+			{
+				CvUnitClassInfo* pScienceyUnitClassInfo = GC.getUnitClassInfo(eScienceyUnitClass);
+				if (pScienceyUnitClassInfo)
+				{
+					UnitTypes eScienceyUnit = (UnitTypes)GetPlayer()->getCivilizationInfo().getCivilizationUnits(eScienceyUnitClass);
+					UnitTypes eDefault = (UnitTypes)pScienceyUnitClassInfo->getDefaultUnitIndex();
+					if (eScienceyUnit != eDefault)
+					{
+						bScienceyUniqueUnit = true;
+					}
+				}
+			}
+		}
+		
+		if (bScienceyUniqueUnit)
+		{
+			fScore += 60.0f * fScienceyGreatPersonRateMod;
+		}
+
+		bool bArtsyUniqueUnit = false;
+		UnitClassTypes eArtsyUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_ARTIST", true);
+		if (eArtsyUnitClass != NO_UNITCLASS)
+		{
+			CvUnitClassInfo* pArtsyUnitClassInfo = GC.getUnitClassInfo(eArtsyUnitClass);
+			if (pArtsyUnitClassInfo)
+			{
+				UnitTypes eArtsyUnit = (UnitTypes)GetPlayer()->getCivilizationInfo().getCivilizationUnits(eArtsyUnitClass);
+				UnitTypes eDefault = (UnitTypes)pArtsyUnitClassInfo->getDefaultUnitIndex();
+				if (eArtsyUnit != eDefault)
+				{
+					bArtsyUniqueUnit = true;
+				}
+			}
+		}
+		if (!bArtsyUniqueUnit)
+		{
+			UnitClassTypes eArtsyUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_MUSICIAN", true);
+			if (eArtsyUnitClass != NO_UNITCLASS)
+			{
+				CvUnitClassInfo* pArtsyUnitClassInfo = GC.getUnitClassInfo(eArtsyUnitClass);
+				if (pArtsyUnitClassInfo)
+				{
+					UnitTypes eArtsyUnit = (UnitTypes)GetPlayer()->getCivilizationInfo().getCivilizationUnits(eArtsyUnitClass);
+					UnitTypes eDefault = (UnitTypes)pArtsyUnitClassInfo->getDefaultUnitIndex();
+					if (eArtsyUnit != eDefault)
+					{
+						bArtsyUniqueUnit = true;
+					}
+				}
+			}
+		}
+		if (!bArtsyUniqueUnit)
+		{
+			UnitClassTypes eArtsyUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_WRITER", true);
+			if (eArtsyUnitClass != NO_UNITCLASS)
+			{
+				CvUnitClassInfo* pArtsyUnitClassInfo = GC.getUnitClassInfo(eArtsyUnitClass);
+				if (pArtsyUnitClassInfo)
+				{
+					UnitTypes eArtsyUnit = (UnitTypes)GetPlayer()->getCivilizationInfo().getCivilizationUnits(eArtsyUnitClass);
+					UnitTypes eDefault = (UnitTypes)pArtsyUnitClassInfo->getDefaultUnitIndex();
+					if (eArtsyUnit != eDefault)
+					{
+						bArtsyUniqueUnit = true;
+					}
+				}
+			}
+		}
+
+		if (bArtsyUniqueUnit)
+		{
+			fScore += 60.0f * fArtsyGreatPersonRateMod;
+		}
+
+		// Do we have a trait that alters sciencey Great Person rate?
+		if (GetPlayer()->GetPlayerTraits()->GetGreatScientistRateModifier() != 0)
+		{
+			fScore += (GetPlayer()->GetPlayerTraits()->GetGreatScientistRateModifier() > 0 ? 60.0f : -60.0f) * fScienceyGreatPersonRateMod;
+		}
+
+		// Do we have a trait that alters artsy Great Person rate?
+		if ((GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatWriterRateModifier() != 0)
+			|| (GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatMusicianRateModifier() != 0)
+			|| (GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatArtistRateModifier() != 0))
+		{
+			const int iGoldenAgeArtsyTotalBonus = GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatWriterRateModifier() 
+				+ GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatMusicianRateModifier()
+				+ GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatArtistRateModifier();
+			fScore += (iGoldenAgeArtsyTotalBonus > 0 ? 60 : -60) * fArtsyGreatPersonRateMod;
+		}
+
+		// Do we have any policies that alter sciency or artsy Great Person rate?
+		int iPolicy;
+		CvPolicyEntry* entry;
+		int iDivider = 1;
+		for (iPolicy = 0; iPolicy < GetPlayer()->GetPlayerPolicies()->GetPolicies()->GetNumPolicies(); iPolicy++)
+		{
+			entry = GetPlayer()->GetPlayerPolicies()->GetPolicies()->GetPolicyEntry(iPolicy);
+			if ((entry) && (GetPlayer()->GetPlayerPolicies()->HasPolicy(static_cast<PolicyTypes>(iPolicy))
+				|| GetPlayer()->GetPlayerPolicies()->IsPolicyBranchUnlocked(static_cast<PolicyBranchTypes>(entry->GetPolicyBranchType()))))
+			{
+				// If the player doesn't have the policy, but has the policy's branch unlocked, score should still be adjusted, but by a much smaller amount
+				iDivider = 1;
+				if (!(GetPlayer()->GetPlayerPolicies()->HasPolicy(static_cast<PolicyTypes>(iPolicy))))
+				{
+					iDivider = 2;
+				}
+
+				if (entry->GetGreatMerchantRateModifier() > 0)
+				{
+					fScore += 60 * fScienceyGreatPersonRateMod / (float)iDivider;
+				}
+				if (entry->GetGreatScientistRateModifier() > 0)
+				{
+					fScore += 60 * fScienceyGreatPersonRateMod / (float)iDivider;
+				}
+				// These are 20 because usually a single policy will modify all 3 at once
+				if (entry->GetGreatArtistRateModifier() > 0)
+				{
+					fScore += 20 * fArtsyGreatPersonRateMod / (float)iDivider;
+				}
+				if (entry->GetGreatMusicianRateModifier() > 0)
+				{
+					fScore += 20 * fArtsyGreatPersonRateMod / (float)iDivider;
+				}
+				if (entry->GetGreatWriterRateModifier() > 0)
+				{
+					fScore += 20 * fArtsyGreatPersonRateMod / (float)iDivider;
+				}
+			}
+		}
+	}
+#else
+	// Arts Funding
+	if (pProposal->GetEffects()->iArtsyGreatPersonRateMod > 0 ||
+		pProposal->GetEffects()->iScienceyGreatPersonRateMod < 0)
+	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		fScore += 80.0f * (fCultureVictoryRatio - fScienceVictoryRatio);
+#else
+		if (bSeekingCultureVictory)
+		{
+			fScore += 80;
+		}
+		else if (bSeekingScienceVictory)
+		{
+			fScore += -80;
+		}
+#endif // AUI_GS_PRIORITY_RATIO
+
+		// Do we have a sciencey Great Person unique unit? (ie. Merchant of Venice)
+		bool bScienceyUniqueUnit = false;
+		UnitClassTypes eScienceyUnitClass = (UnitClassTypes) GC.getInfoTypeForString("UNITCLASS_MERCHANT", true);
+		if (eScienceyUnitClass != NO_UNITCLASS)
+		{
+			CvUnitClassInfo* pScienceyUnitClassInfo = GC.getUnitClassInfo(eScienceyUnitClass);
+			if (pScienceyUnitClassInfo)
+			{
+				UnitTypes eScienceyUnit = (UnitTypes) GetPlayer()->getCivilizationInfo().getCivilizationUnits(eScienceyUnitClass);
+				UnitTypes eDefault = (UnitTypes) pScienceyUnitClassInfo->getDefaultUnitIndex();
+				if (eScienceyUnit != eDefault)
+				{
+					bScienceyUniqueUnit = true;
+				}
+			}
+		}
+		
+		if (bScienceyUniqueUnit)
+		{
+			fScore += -60;
+		}
+	}
+	// Sciences Funding
+	if (pProposal->GetEffects()->iScienceyGreatPersonRateMod > 0 ||
+		pProposal->GetEffects()->iArtsyGreatPersonRateMod < 0)
+	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		fScore += 80.0f * (fScienceVictoryRatio - fCultureVictoryRatio);
+#else
+		if (bSeekingScienceVictory)
+		{
+			fScore += 80;
+		}
+		else if (bSeekingCultureVictory)
+		{
+			fScore += -80;
+		}
+#endif // AUI_GS_PRIORITY_RATIO
+
+		// Do we have a sciencey Great Person unique unit? (ie. Merchant of Venice)
+		bool bScienceyUniqueUnit = false;
+		UnitClassTypes eScienceyUnitClass = (UnitClassTypes) GC.getInfoTypeForString("UNITCLASS_MERCHANT", true);
+		if (eScienceyUnitClass != NO_UNITCLASS)
+		{
+			CvUnitClassInfo* pScienceyUnitClassInfo = GC.getUnitClassInfo(eScienceyUnitClass);
+			if (pScienceyUnitClassInfo)
+			{
+				UnitTypes eScienceyUnit = (UnitTypes) GetPlayer()->getCivilizationInfo().getCivilizationUnits(eScienceyUnitClass);
+				UnitTypes eDefault = (UnitTypes) pScienceyUnitClassInfo->getDefaultUnitIndex();
+				if (eScienceyUnit != eDefault)
+				{
+					bScienceyUniqueUnit = true;
+				}
+			}
+		}
+
+		if (bScienceyUniqueUnit)
+		{
+			fScore += 60;
+		}
+	}
+#endif // AUI_VOTING_TWEAKED_ARTS_SCIENCES_FUNDING
+
+	// Historical Landmarks
+	if (pProposal->GetEffects()->iGreatPersonTileImprovementCulture != 0 ||
+		pProposal->GetEffects()->iLandmarkCulture != 0)
+	{
+		int iNumGPImprovements = GetPlayer()->getGreatPersonImprovementCount();
+		int iNumLandmarks = 0;
+		ImprovementTypes eLandmark = (ImprovementTypes)GC.getInfoTypeForString("IMPROVEMENT_LANDMARK");
+		if (eLandmark != NO_IMPROVEMENT)
+		{
+			iNumLandmarks += GetPlayer()->getImprovementCount(eLandmark);
+		}
+
+		float fTempScore = -50;
+		if (iNumGPImprovements > 0 || iNumLandmarks > 0)
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			float fGPImprovementFactor = 15 + 5 * fCultureVictoryRatio;
+			fTempScore += iNumGPImprovements * fGPImprovementFactor;
+			float fLandmarkFactor = 15 + 5 * fCultureVictoryRatio;
+			fTempScore += iNumLandmarks * fLandmarkFactor;
+#else
+			int iGPImprovementFactor = 15 + (bSeekingCultureVictory ? 5 : 0);
+			fTempScore += iNumGPImprovements * iGPImprovementFactor;
+			int iLandmarkFactor = 15 + (bSeekingCultureVictory ? 5 : 0);
+			fTempScore += iNumLandmarks * iLandmarkFactor;
+#endif
+			fScore += MIN(70.0f, fTempScore);
+		}
+		fScore += fTempScore;
+	}
+
+	// == Diplomat knowledge, Vote Commitments we secured ==
+
+	// == Alignment with Proposer ==
+	PlayerTypes eProposer = pProposal->GetProposalPlayer();
+	if (fScore > -20 || eProposer == GetPlayer()->GetID())
+	{
+		if (eProposer != NO_PLAYER)
+		{
+			AlignmentLevels eAlignment = EvaluateAlignment(eProposer);
+			switch (eAlignment)
+			{
+			case ALIGNMENT_SELF:
+				fScore += 40;
+				break;
+			case ALIGNMENT_LIBERATOR:
+			case ALIGNMENT_LEADER:
+			case ALIGNMENT_ALLY:
+				fScore += 30;
+				break;
+			case ALIGNMENT_CONFIDANT:
+				fScore += 20;
+				break;
+			case ALIGNMENT_FRIEND:
+				fScore += 10;
+				break;
+			case ALIGNMENT_RIVAL:
+				fScore += -10;
+				break;
+			case ALIGNMENT_HATRED:
+				fScore += -20;
+				break;
+			case ALIGNMENT_ENEMY:
+			case ALIGNMENT_WAR:
+				fScore += -30;
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	// == Post-Processing ==
+	if (iChoice == LeagueHelpers::CHOICE_NO)
+	{
+		fScore *= -1; // Flip the score when we are considering NO for these effects
+	}
+	if (!bEnact)
+	{
+		fScore *= -1; // Flip the score when the proposal is to repeal these effects
+	}
+
+	return (int)(fScore + 0.5f);
+#else
 	int iScore = 0;
 
 	// == Proposer Choice ==
@@ -9458,6 +10761,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 	}
 
 	return iScore;
+#endif // AUI_VOTING_USE_FLOATS
 }
 
 // Score a particular choice on a particular proposal which is a decision between players (ex. Choose Host, World Leader)
