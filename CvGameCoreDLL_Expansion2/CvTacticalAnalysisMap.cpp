@@ -336,11 +336,20 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 							}
 
 							// TEMPORARY OPTIMIZATION: Assumes can't use roads or RR
+#ifdef AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
+							else if (iDistance <= pUnit->baseMoves() + pUnit->GetRange())
+#else
 							else if(iDistance <= pUnit->baseMoves())
+#endif // AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
 							{
 								int iTurnsToReach;
 								iTurnsToReach = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, true /*bIgnoreUnits*/);	// Its ok to reuse paths because when ignoring units, we don't use the tactical analysis map (which we are building)
+#ifdef AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
+								// rough adjustment to account for ranged units
+								if (iTurnsToReach <= 1 || (pUnit->isRanged() && iTurnsToReach <= 2))
+#else
 								if(iTurnsToReach <= 1)
+#endif // AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
 								{
 									m_pPlots[iI].SetSubjectToAttack(true);
 								}
@@ -353,6 +362,40 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 						}
 					}
 
+#ifdef AUI_TACTICAL_MAP_ANALYSIS_MARKING_INCLUDE_CITIES
+					// Check adjacent plots for enemy citadels and nearby plots for enemy cities
+					if(!m_pPlots[iI].IsSubjectToAttack())
+					{
+						CvPlot* pAdjacentPlot;
+						int iCityRange = 2;
+						for (int iDX = -iCityRange; iDX <= iCityRange && !m_pPlots[iI].IsSubjectToAttack(); iDX++)
+						{
+							for (int iDY = -iCityRange; iDY <= iCityRange && !m_pPlots[iI].IsSubjectToAttack(); iDY++)
+							{
+								pAdjacentPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iCityRange);
+								if (pAdjacentPlot != NULL && pAdjacentPlot->getOwner() != NO_PLAYER)
+								{
+									if (atWar(m_pPlayer->getTeam(), GET_PLAYER(pAdjacentPlot->getOwner()).getTeam()))
+									{
+										if (pAdjacentPlot->isCity())
+										{
+											m_pPlots[iI].SetSubjectToAttack(true);
+										}
+										// Check adjacent plots for enemy citadels
+										if (plotDistance(pPlot->getX(), pPlot->getY(), pAdjacentPlot->getX(), pAdjacentPlot->getY()) <= 1)
+										{
+											ImprovementTypes eImprovement = pAdjacentPlot->getImprovementType();
+											if (eImprovement != NO_IMPROVEMENT && GC.getImprovementInfo(eImprovement)->GetNearbyEnemyDamage() > 0)
+											{
+												m_pPlots[iI].SetSubjectToAttack(true);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+#else
 					// Check adjacent plots for enemy citadels
 					if(!m_pPlots[iI].IsSubjectToAttack())
 					{
@@ -374,6 +417,7 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 							}
 						}
 					}
+#endif // AUI_TACTICAL_MAP_ANALYSIS_MARKING_INCLUDE_CITIES
 				}
 			}
 		}

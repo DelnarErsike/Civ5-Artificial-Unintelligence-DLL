@@ -96,6 +96,12 @@
 /// Checks all of player's cities for whether or not a city is within conversion target range, not just the player's capital
 #define AUI_RELIGION_CONVERSION_TARGET_NOT_JUST_CAPITAL
 
+// Tactical Analysis Map Stuff
+/// Enables a minor adjustment for ranged units to account for possibly being able to move and shoot at a tile
+#define AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
+/// Checks for cities in addition to citadel improvements
+#define AUI_TACTICAL_MAP_ANALYSIS_MARKING_INCLUDE_CITIES
+
 // Voting/League Stuff
 /// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division)
 #define AUI_VOTING_USE_FLOATS
