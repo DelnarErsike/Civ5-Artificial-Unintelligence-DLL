@@ -321,6 +321,9 @@ void CvMilitaryAI::Reset()
 
 	m_iTotalThreatWeight = 1;  // Don't ever assume there is no threat at all
 	m_eArmyTypeBeingBuilt = NO_ARMY_TYPE;
+#ifdef AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
+	m_iTurnsWithUpgradeRequest = 0;
+#endif // AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
 
 	m_iNumLandUnits = 0;
 	m_iNumRangedLandUnits = 0;
@@ -366,6 +369,10 @@ void CvMilitaryAI::Read(FDataStream& kStream)
 
 	kStream >> m_iNumberOfTimesOpsBuildSkippedOver;
 
+#ifdef AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
+	kStream >> m_iTurnsWithUpgradeRequest;
+#endif // AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
+
 	int iNumStrategies;
 	kStream >> iNumStrategies;
 #ifdef _MSC_VER
@@ -405,6 +412,9 @@ void CvMilitaryAI::Write(FDataStream& kStream)
 	kStream << m_iTotalThreatWeight;
 	kStream << (int)m_eArmyTypeBeingBuilt;
 	kStream << m_iNumberOfTimesOpsBuildSkippedOver;
+#ifdef AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
+	kStream << m_iTurnsWithUpgradeRequest;
+#endif // AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
 	kStream << GC.getNumMilitaryAIStrategyInfos();
 	kStream << ArrayWrapper<bool>(m_pAIStrategies->GetNumMilitaryAIStrategies(), m_pabUsingStrategy);
 	kStream << ArrayWrapper<int>(m_pAIStrategies->GetNumMilitaryAIStrategies(), m_paiTurnStrategyAdopted);
@@ -1051,6 +1061,9 @@ CvMilitaryTarget CvMilitaryAI::FindBestAttackTarget(AIOperationTypes eAIOperatio
 	// Build a list of all the possible start city/target city pairs
 	static CvWeightedVector<CvMilitaryTarget, SAFE_ESTIMATE_NUM_CITIES* 10, true> prelimWeightedTargetList;
 	prelimWeightedTargetList.clear();
+#ifdef AUI_MILITARY_ALWAYS_TARGET_CAPITALS
+	int iCapitalCount = 0;
+#endif
 	for(pFriendlyCity = m_pPlayer->firstCity(&iFriendlyLoop); pFriendlyCity != NULL; pFriendlyCity = m_pPlayer->nextCity(&iFriendlyLoop))
 	{
 		for(pEnemyCity = GET_PLAYER(eEnemy).firstCity(&iEnemyLoop); pEnemyCity != NULL; pEnemyCity = GET_PLAYER(eEnemy).nextCity(&iEnemyLoop))
@@ -1083,20 +1096,59 @@ CvMilitaryTarget CvMilitaryAI::FindBestAttackTarget(AIOperationTypes eAIOperatio
 					}
 				}
 
+#ifdef AUI_MILITARY_ALWAYS_TARGET_CAPITALS
+
+				VictoryTypes eVictory = (VictoryTypes)GC.getInfoTypeForString("VICTORY_DOMINATION", true);
+
+				// capitals are always added to the list if conquest victory enabled
+				if (eVictory != NO_VICTORY && GC.getGame().isVictoryValid(eVictory))
+				{
+					if (target.m_pTargetCity->IsOriginalCapital())
+					{
+						iWeight = 10000;
+						prelimWeightedTargetList.push_back(target, iWeight);
+						iCapitalCount++;
+					}
+					else
+					{
+						// proximity to enemy capital is also considered
+						if (target.m_iPathLength > 0)
+						{
+							iWeight = (10000 - target.m_iPathLength - 
+								(int)sqrt((float)plotDistance(GET_PLAYER(eEnemy).getCapitalCity()->getX(), GET_PLAYER(eEnemy).getCapitalCity()->getY(), target.m_pTargetCity->getX(), target.m_pTargetCity->getY())));
+							prelimWeightedTargetList.push_back(target, iWeight);
+						}
+					}
+				}
+				else if (target.m_iPathLength > 0)
+				{
+					iWeight = (10000 - target.m_iPathLength);   // Start by using the path length as the weight, shorter paths have higher weight
+					prelimWeightedTargetList.push_back(target, iWeight);
+				}
+
+#else
+
 				if(target.m_iPathLength > 0)
 				{
 					iWeight = (10000 - target.m_iPathLength);   // Start by using the path length as the weight, shorter paths have higher weight
 					prelimWeightedTargetList.push_back(target, iWeight);
 				}
+
+#endif // AUI_MILITARY_ALWAYS_TARGET_CAPITALS
 			}
 		}
 	}
 
 	// Let's score the 25 shortest paths ... anything more than that means there are too many interior cities from one (or both) sides being considered
+	// If running conquest victory, capitals are counted for free (ie. not included in the 25)
 	prelimWeightedTargetList.SortItems();
 	weightedTargetList.clear();
 	int iTargetsConsidered = 0;
+#ifdef AUI_MILITARY_ALWAYS_TARGET_CAPITALS
+	for (int iI = 0; iI < prelimWeightedTargetList.size() && iTargetsConsidered < (25 + iCapitalCount); iI++)
+#else
 	for (int iI = 0; iI < prelimWeightedTargetList.size() && iTargetsConsidered < 25; iI++)
+#endif // AUI_MILITARY_ALWAYS_TARGET_CAPITALS
 	{
 		CvMilitaryTarget target = prelimWeightedTargetList.GetElement(iI);
 		int iWeight;
@@ -1235,6 +1287,9 @@ int CvMilitaryAI::ScoreTarget(CvMilitaryTarget& target, AIOperationTypes eAIOper
 	// Take into account distance to target (and use higher multipliers for land paths)
 	if(!target.m_bAttackBySea)
 	{
+#ifdef AUI_MILITARY_TARGET_WEIGHT_DISTANCE_CONTINUUM
+		uliRtnValue *= MAX(2, int((128.0 / pow(2.0, target.m_iPathLength / 5.0) + 1.0) / 2.0));
+#else
 		if(target.m_iPathLength < 10)
 		{
 			uliRtnValue *= 16;
@@ -1251,6 +1306,7 @@ int CvMilitaryAI::ScoreTarget(CvMilitaryTarget& target, AIOperationTypes eAIOper
 		{
 			uliRtnValue *= 2;
 		}
+#endif // AUI_MILITARY_TARGET_WEIGHT_DISTANCE_CONTINUUM
 
 		// Double if we can assemble troops in muster city with airlifts
 		if (target.m_pMusterCity->CanAirlift())
@@ -1260,6 +1316,10 @@ int CvMilitaryAI::ScoreTarget(CvMilitaryTarget& target, AIOperationTypes eAIOper
 	}
 	else
 	{
+#ifdef AUI_MILITARY_TARGET_WEIGHT_DISTANCE_CONTINUUM
+		// Weird decimals in new method are to make sure old values are matched at thresholds
+		uliRtnValue *= MAX(1, (int)(18.42 / pow(947.0 / 900.0, target.m_iPathLength) + 1) / 2);
+#else
 		if(target.m_iPathLength < 12)
 		{
 			uliRtnValue *= 5;
@@ -1272,6 +1332,7 @@ int CvMilitaryAI::ScoreTarget(CvMilitaryTarget& target, AIOperationTypes eAIOper
 		{
 			uliRtnValue *= 2;
 		}
+#endif // AUI_MILITARY_TARGET_WEIGHT_DISTANCE_CONTINUUM
 
 		// If coming over sea, inland cities are trickier
 		if(!target.m_pTargetCity->plot()->isCoastalLand())
@@ -1360,6 +1421,36 @@ int CvMilitaryAI::ScoreTarget(CvMilitaryTarget& target, AIOperationTypes eAIOper
 	uliRtnValue /= 1000;
 
 	// Economic value of target
+#ifdef AUI_MILITARY_TARGET_WEIGHT_ECONOMIC_FLAVORED
+
+	double dEconomicValue = 1 + (target.m_pTargetCity->getPopulation() / 3.0);
+	// TODO: unhardcode this
+	// Yield types are weighed according to player flavor and citizen management values
+	CvFlavorManager* pFlavorManager = m_pPlayer->GetFlavorManager();
+	int iFlavorGrowth = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH"));
+	int iFlavorExpansion = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"));
+	int iFlavorCulture = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CULTURE"));
+	int iFlavorScience = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"));
+	int iFlavorProduction = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION"));
+	int iFlavorGold = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GOLD"));
+	int iFlavorDiplomacy = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DIPLOMACY"));
+	int iFlavorReligion = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"));
+	double dFoodValue = (1.0 + log10(sqrt((double)iFlavorExpansion * (double)iFlavorGrowth)) / 20.0) * log((double)GC.getAI_CITIZEN_VALUE_FOOD());
+	double dProductionValue = (1.0 + log10((double)iFlavorProduction / 20.0)) * log((double)GC.getAI_CITIZEN_VALUE_PRODUCTION());
+	double dScienceValue = (1.0 + log10((double)iFlavorScience) / 20.0) * log((double)GC.getAI_CITIZEN_VALUE_SCIENCE());
+	double dGoldValue = (1.0 + log10(sqrt((double)iFlavorGold * (double)iFlavorDiplomacy)) / 20.0) * log((double)GC.getAI_CITIZEN_VALUE_GOLD());
+	double dCultureValue = (1.0 + log10((double)iFlavorCulture) / 20.0) * log((double)GC.getAI_CITIZEN_VALUE_CULTURE());
+	double dFaithValue = (1.0 + log10((double)iFlavorReligion) / 20.0) * log((double)GC.getAI_CITIZEN_VALUE_FAITH());
+	// filter out all but the most productive
+	dEconomicValue += (double)target.m_pTargetCity->getYieldRateTimes100(YIELD_FOOD, false) / 10 * dFoodValue;
+	dEconomicValue += (double)target.m_pTargetCity->getYieldRateTimes100(YIELD_PRODUCTION, false) / 10 * dProductionValue;
+	dEconomicValue += (double)target.m_pTargetCity->getYieldRateTimes100(YIELD_SCIENCE, false) / 10 * dScienceValue;
+	dEconomicValue += (double)target.m_pTargetCity->getYieldRateTimes100(YIELD_GOLD, false) / 10 * dGoldValue;
+	dEconomicValue += (double)target.m_pTargetCity->getYieldRateTimes100(YIELD_CULTURE, false) / 10 * dCultureValue;
+	dEconomicValue += (double)target.m_pTargetCity->getYieldRateTimes100(YIELD_FAITH, false) / 10 * dFaithValue;
+
+	uliRtnValue = (unsigned long)(uliRtnValue * (dEconomicValue / 10.0));
+#else
 	unsigned long int iEconomicValue = 1 + (target.m_pTargetCity->getPopulation() / 3);
 	// TODO: unhardcode this
 	// filter out all but the most productive
@@ -1372,6 +1463,7 @@ int CvMilitaryAI::ScoreTarget(CvMilitaryTarget& target, AIOperationTypes eAIOper
 	uliRtnValue *= iEconomicValue;
 
 	uliRtnValue /= 10;
+#endif // AUI_MILITARY_TARGET_WEIGHT_ECONOMIC_FLAVORED
 
 	return min(10000000, (int)uliRtnValue & 0x7fffffff);
 }
@@ -1562,7 +1654,11 @@ int CvMilitaryAI::GetBarbarianThreatTotal()
 	iRtnValue += GC.getAI_MILITARY_THREAT_WEIGHT_MAJOR() * m_iBarbarianCampCount;
 
 	// One minor threat for every X barbarians
+#ifdef AUI_MILITARY_BARBARIAN_THREAT_FIX
+	iRtnValue += m_iVisibleBarbarianCount * GC.getAI_MILITARY_BARBARIANS_FOR_MINOR_THREAT();
+#else
 	iRtnValue += m_iVisibleBarbarianCount / GC.getAI_MILITARY_BARBARIANS_FOR_MINOR_THREAT();
+#endif // AUI_MILITARY_BARBARIAN_THREAT_FIX
 
 	return iRtnValue;
 }
@@ -2118,9 +2214,106 @@ void CvMilitaryAI::UpdateBaseData()
 	}
 
 	float fMultiplier;
-	int iNumUnitsWanted = 0;
+#ifdef AUI_MILITARY_USE_FLOATS
+	float fNumUnitsWanted = 0.0f;
 	bool bNavalMap = false;
 	EconomicAIStrategyTypes eStrategyNavalMap = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_NAVAL_MAP");
+	if (m_pPlayer->GetEconomicAI()->IsUsingStrategy(eStrategyNavalMap))
+	{
+		bNavalMap = true;
+	}
+	int iFlavorOffense = m_pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE"));
+	int iFlavorDefense = m_pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DEFENSE"));
+
+	// Scale up or down based on true threat level and a bit by flavors (multiplier should range from about 0.5 to about 1.5)
+#ifdef AUI_MILITARY_UNITS_WANTED_ADD_BARBARIAN_THREAT
+#ifdef AUI_MILITARY_UNITS_WANTED_SQUARE_THREATS
+	fMultiplier = 0.40f + (powf((float)m_pPlayer->GetMilitaryAI()->GetHighestThreat(), 2.0f) + powf((float)m_pPlayer->GetMilitaryAI()->GetBarbarianThreatTotal(), 2.0f) 
+		+ iFlavorOffense + iFlavorDefense) / 100.0f;
+#else
+	fMultiplier = 0.40f + (m_pPlayer->GetMilitaryAI()->GetHighestThreat() + m_pPlayer->GetMilitaryAI()->GetBarbarianThreatTotal() + iFlavorOffense + iFlavorDefense) / 100.0f;
+#endif // AUI_MILITARY_UNITS_WANTED_SQUARE_THREATS
+#else
+#ifdef AUI_MILITARY_UNITS_WANTED_SQUARE_THREATS
+	fMultiplier = 0.40f + (powf((float)m_pPlayer->GetMilitaryAI()->GetHighestThreat(), 2.0f) + iFlavorOffense + iFlavorDefense) / 100.0f;
+#else
+	fMultiplier = (float)0.40 + (((float)(m_pPlayer->GetMilitaryAI()->GetHighestThreat() + iFlavorOffense + iFlavorDefense)) / (float)100.0);
+#endif // AUI_MILITARY_UNITS_WANTED_SQUARE_THREATS
+#endif // AUI_MILITARY_UNITS_WANTED_ADD_BARBARIAN_THREAT
+
+	// first get the number of defenders that we think we need
+
+	// Start with 3, to protect the capital
+	fNumUnitsWanted = (float)GC.getAI_STRATEGY_DEFEND_MY_LANDS_BASE_UNITS();
+
+	// 1 Unit per City, 1 per Settler, and 1 Unit patrolling between 2 Cities + bonus if help is required with barbarians
+	fNumUnitsWanted += m_pPlayer->getNumCities() * /*1.0*/ GC.getAI_STRATEGY_DEFEND_MY_LANDS_UNITS_PER_CITY();
+	fNumUnitsWanted += m_pPlayer->GetNumUnitsWithUnitAI(UNITAI_SETTLE, true);
+
+	m_iMandatoryReserveSize = (int)(fNumUnitsWanted * fMultiplier + 0.5f);
+
+	// add in a few for the difficulty level (all above Chieftain are boosted)
+	int iDifficulty = max(0,GC.getGame().getHandicapInfo().GetID() - 1);
+	m_iMandatoryReserveSize += iDifficulty;
+
+	m_iMandatoryReserveSize = max(1,m_iMandatoryReserveSize);
+
+	// now we add in the strike forces we think we will need
+	if(m_pPlayer->isMinorCiv())
+	{
+		m_iMandatoryReserveSize = max(1,m_iMandatoryReserveSize/2);
+		fNumUnitsWanted = 0.0f;
+	}
+	else
+	{
+		fNumUnitsWanted = 7.0f; // size of a basic attack
+
+		// if we are going for conquest we want at least one more task force
+		bool bConquestGrandStrategy = false;
+		AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
+		if(eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
+		{
+			if(m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
+			{
+				bConquestGrandStrategy = true;
+			}
+		}
+		if(bConquestGrandStrategy)
+		{
+			fNumUnitsWanted *= 2;
+		}
+#ifdef AUI_GS_PRIORITY_RATIO
+		else
+		{
+			// even if we aren't running a conquest Grand Strategy, it still has influence over how many units we want
+			fNumUnitsWanted = fNumUnitsWanted * (1.0f + m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy));
+		}
+#endif // AUI_GS_PRIORITY_RATIO
+
+		// add in a few more if the player is bold
+		fNumUnitsWanted += m_pPlayer->GetDiplomacyAI()->GetBoldness();
+
+		// add in more if we are playing on a high difficulty
+		fNumUnitsWanted += iDifficulty;
+
+		fNumUnitsWanted = fNumUnitsWanted * fMultiplier;
+
+		fNumUnitsWanted = MAX(1.0f, fNumUnitsWanted);
+	}
+
+	if (bNavalMap)
+	{
+		fNumUnitsWanted *= 2.0f;
+		fNumUnitsWanted /= 3.0f;
+		m_iMandatoryReserveSize *= 2;
+		m_iMandatoryReserveSize /= 3;
+	}
+
+	m_iRecommendedMilitarySize = m_iMandatoryReserveSize + (int)(fNumUnitsWanted + 0.5f);
+#else
+	int iNumUnitsWanted = 0;
+	bool bNavalMap = false;
+	EconomicAIStrategyTypes eStrategyNavalMap = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_NAVAL_MAP");
 	if (m_pPlayer->GetEconomicAI()->IsUsingStrategy(eStrategyNavalMap))
 	{
 		bNavalMap = true;
@@ -2143,15 +2336,15 @@ void CvMilitaryAI::UpdateBaseData()
 	m_iMandatoryReserveSize = (int)((float)iNumUnitsWanted * fMultiplier);
 
 	// add in a few for the difficulty level (all above Chieftain are boosted)
-	int iDifficulty = max(0,GC.getGame().getHandicapInfo().GetID() - 1);
+	int iDifficulty = max(0, GC.getGame().getHandicapInfo().GetID() - 1);
 	m_iMandatoryReserveSize += iDifficulty;
 
-	m_iMandatoryReserveSize = max(1,m_iMandatoryReserveSize);
+	m_iMandatoryReserveSize = max(1, m_iMandatoryReserveSize);
 
 	// now we add in the strike forces we think we will need
-	if(m_pPlayer->isMinorCiv())
+	if (m_pPlayer->isMinorCiv())
 	{
-		m_iMandatoryReserveSize = max(1,m_iMandatoryReserveSize/2);
+		m_iMandatoryReserveSize = max(1, m_iMandatoryReserveSize / 2);
 		iNumUnitsWanted = 0;
 	}
 	else
@@ -2160,15 +2353,15 @@ void CvMilitaryAI::UpdateBaseData()
 
 		// if we are going for conquest we want at least one more task force
 		bool bConquestGrandStrategy = false;
-		AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
-		if(eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
+		AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
+		if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
 		{
-			if(m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
+			if (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
 			{
 				bConquestGrandStrategy = true;
 			}
 		}
-		if(bConquestGrandStrategy)
+		if (bConquestGrandStrategy)
 		{
 			iNumUnitsWanted *= 2;
 		}
@@ -2193,6 +2386,7 @@ void CvMilitaryAI::UpdateBaseData()
 	}
 
 	m_iRecommendedMilitarySize = m_iMandatoryReserveSize + iNumUnitsWanted;
+#endif // AUI_MILITARY_USE_FLOATS
 }
 
 /// Update how we're doing on defensive units
@@ -3385,6 +3579,101 @@ void CvMilitaryAI::DisbandObsoleteUnits()
 	int iNavalScore = MAX_INT;
 	int iLandScore = MAX_INT;
 
+#ifdef AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
+	bool bHasOutdatedUnit = false;
+	CvUnit* pLoopUnit;
+	int iUnitLoop;
+	for (pLoopUnit = m_pPlayer->firstUnit(&iUnitLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iUnitLoop))
+	{
+		if (!pLoopUnit->IsCombatUnit())
+		{
+			continue;
+		}
+		// Is this a unit who has an obsolete tech that I have researched?
+		CvUnitEntry& pUnitInfo = pLoopUnit->getUnitInfo();
+		if ((TechTypes)pUnitInfo.GetObsoleteTech() == NO_TECH)
+		{
+			continue;
+		}
+		if (GET_TEAM(m_pPlayer->getTeam()).GetTeamTechs()->HasTech((TechTypes)(pUnitInfo.GetObsoleteTech())))
+		{
+			bHasOutdatedUnit = true;
+			break;
+		}
+	}
+
+	// Have there been upgrade requests for a long time?
+	if (m_pPlayer->GetEconomicAI()->IsSavingForThisPurchase(PURCHASE_TYPE_UNIT_UPGRADE) || bHasOutdatedUnit)
+	{
+		m_iTurnsWithUpgradeRequest++;
+	}
+	else
+	{
+		m_iTurnsWithUpgradeRequest--;
+		m_iTurnsWithUpgradeRequest = max(0, min(m_iTurnsWithUpgradeRequest, GC.getGame().getMaxTurns() / 20));
+	}
+
+	// Don't do this if we're a minor civ
+	if(m_pPlayer->isMinorCiv())
+	{
+		return;
+	}
+
+	// Are we running at a deficit?
+	EconomicAIStrategyTypes eStrategyLosingMoney = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_LOSING_MONEY");
+	bInDeficit = m_pPlayer->GetEconomicAI()->IsUsingStrategy(eStrategyLosingMoney);
+
+	float fGoldSpentOnUnits = (float)m_pPlayer->GetTreasury()->GetExpensePerTurnUnitMaintenance();
+	float fAverageGoldPerUnit = fGoldSpentOnUnits / (float)MAX(1, m_pPlayer->getNumUnits());
+
+	// Don't do this if at war unless we're in a deficit primarily due to unit maintenance
+	if (GetNumberCivsAtWarWith() > 0 && !bInDeficit && m_eLandDefenseState > DEFENSE_STATE_NEUTRAL)
+	{
+		return;
+	}
+
+	AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
+	// Are we running anything other than the Conquest Grand Strategy?
+	if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
+	{
+		if (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
+		{
+			bConquestGrandStrategy = true;
+		}
+	}
+
+	// if our units maintenance cost is high we may want to scrap some obsolete stuff
+	bInDeficit = bInDeficit || fAverageGoldPerUnit > 5 || (m_iTurnsWithUpgradeRequest > GC.getGame().getMaxTurns() / 20);
+
+	// Look for obsolete land units if in deficit or have sufficient units
+	if ((bInDeficit && m_eLandDefenseState <= DEFENSE_STATE_NEEDED) || (m_eLandDefenseState <= DEFENSE_STATE_NEUTRAL && !bConquestGrandStrategy))
+	{
+		pLandUnit = FindBestUnitToScrap(true /*bLand*/, false /*bDeficitForcedDisband*/, iLandScore);
+	}
+
+	// Look for obsolete naval units if in deficit or have sufficient units
+	if ((bInDeficit && m_eNavalDefenseState <= DEFENSE_STATE_NEEDED) || (m_eNavalDefenseState <= DEFENSE_STATE_NEUTRAL && !bConquestGrandStrategy))
+	{
+		pNavalUnit = FindBestUnitToScrap(false /*bNaval*/, false /*bDeficitForcedDisband*/, iNavalScore);
+	}
+
+	if (iLandScore < MAX_INT && (m_eLandDefenseState <= m_eNavalDefenseState || iLandScore <= iNavalScore))
+	{
+		if (pLandUnit)
+		{
+			pLandUnit->scrap();
+			LogScrapUnit(pLandUnit, bInDeficit, bConquestGrandStrategy);
+		}
+	}
+	if (iNavalScore < MAX_INT)
+	{
+		if (pNavalUnit)
+		{
+			pNavalUnit->scrap();
+			LogScrapUnit(pNavalUnit, bInDeficit, bConquestGrandStrategy);
+		}
+	}
+#else
 	// Don't do this if at war
 	if(GetNumberCivsAtWarWith() > 0)
 	{
@@ -3445,6 +3734,7 @@ void CvMilitaryAI::DisbandObsoleteUnits()
 			LogScrapUnit(pNavalUnit, bInDeficit, bConquestGrandStrategy);
 		}
 	}
+#endif // AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
 }
 
 /// Do we have the forces at hand for an attack?
@@ -3491,10 +3781,16 @@ UnitHandle CvMilitaryAI::FindBestUnitToScrap(bool bLand, bool bDeficitForcedDisb
 	UnitHandle pBestUnit;
 	int iScore;
 	int iBestScore = MAX_INT;
+#ifdef AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
+	int iDivider;
+#endif // AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
 
 	for(pLoopUnit = m_pPlayer->firstUnit(&iUnitLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iUnitLoop))
 	{
 		bool bSkipThisOne = false;
+#ifdef AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
+		iDivider = 1;
+#endif // AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
 
 		if(!pLoopUnit->IsCombatUnit())
 		{
@@ -3523,6 +3819,38 @@ UnitHandle CvMilitaryAI::FindBestUnitToScrap(bool bLand, bool bDeficitForcedDisb
 				continue;
 			}
 
+#ifdef AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
+			// Can I still build this unit? If so too new to scrap
+			if(bLand && m_pPlayer->canTrain(pLoopUnit->getUnitType(), false /*bContinue*/, false /*bTestVisible*/, true /*bIgnoreCost*/))
+			{
+				// iDivider = 2;
+			}
+			
+
+			// Is this a unit who has an obsolete tech that I have researched?
+			CvUnitEntry& pUnitInfo = pLoopUnit->getUnitInfo();
+			if((TechTypes)pUnitInfo.GetObsoleteTech() == NO_TECH)
+			{
+				iDivider = 4;
+			}
+
+			if(!GET_TEAM(m_pPlayer->getTeam()).GetTeamTechs()->HasTech((TechTypes)(pUnitInfo.GetObsoleteTech())))
+			{
+				iDivider = 4;
+			}
+
+			// Is it in an army?
+			if (pLoopUnit->getArmyID() != FFreeList::INVALID_INDEX)
+			{
+				iDivider *= 2;
+			}
+
+			// Is this unit's INTRINSIC power less than half that of the best unit I can build for this domain?
+			if((pLoopUnit->getUnitInfo().GetPower() * 2) >= GetPowerOfStrongestBuildableUnit(pLoopUnit->getDomainType()))
+			{
+				iDivider *= 2;
+			}
+#else
 			// Is it in an army?
 			if(pLoopUnit->getArmyID() != FFreeList::INVALID_INDEX)
 			{
@@ -3552,6 +3880,7 @@ UnitHandle CvMilitaryAI::FindBestUnitToScrap(bool bLand, bool bDeficitForcedDisb
 			{
 				continue;
 			}
+#endif // AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
 
 			// Does this unit's upgrade require a resource?
 			UnitTypes eUpgradeUnit = pLoopUnit->GetUpgradeUnitType();
@@ -3587,7 +3916,11 @@ UnitHandle CvMilitaryAI::FindBestUnitToScrap(bool bLand, bool bDeficitForcedDisb
 		// Can I scrap this unit?
 		if(!bSkipThisOne && pLoopUnit->canScrap())
 		{
+#ifdef AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
+			iScore = pLoopUnit->GetPower() / iDivider;
+#else
 			iScore = pLoopUnit->GetPower();
+#endif
 
 			if(iScore < iBestScore)
 			{
@@ -3754,8 +4087,54 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 	return false;
 }
 
+#ifdef AUI_MILITARY_MAX_INTERCEPTS
+/// AMS: Get all possible interceptions on that plot, doesn't use visibility to offset AI inability to remember air attacks.
+int CvMilitaryAI::GetMaxPossibleInterceptions(CvPlot* pTargetPlot) const
+{
+	int iRtnValue = 0;
+
+	// Loop through all the players
+	for (int iI = 0; iI < MAX_PLAYERS; iI++)
+	{
+		CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iI);
+
+		if (kPlayer.isAlive() && kPlayer.GetID() != m_pPlayer->GetID())
+		{
+			if (atWar(kPlayer.getTeam(), m_pPlayer->getTeam()))
+			{
+				// Loop through their units looking for intercept capable units
+				int iLoopUnit;
+				CvUnit* pLoopUnit;
+				for (pLoopUnit = kPlayer.firstUnit(&iLoopUnit); pLoopUnit != NULL; pLoopUnit = kPlayer.nextUnit(&iLoopUnit))
+				{
+					// Must be able to intercept this turn
+					if (!pLoopUnit->isDelayedDeath() && pLoopUnit->canAirDefend() && !pLoopUnit->isInCombat() && !pLoopUnit->isOutOfInterceptions())
+					{
+						// Must either be a non-air Unit, or an air Unit that hasn't moved this turn and is on intercept duty
+						if ((pLoopUnit->getDomainType() != DOMAIN_AIR) || (!(pLoopUnit->hasMoved()) && pLoopUnit->GetActivityType() == ACTIVITY_INTERCEPT))
+						{
+							// Test range
+							if (plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pTargetPlot->getX(), pTargetPlot->getY()) <= pLoopUnit->getUnitInfo().GetAirInterceptRange())
+							{
+								if (pLoopUnit->currInterceptionProbability() > 0)
+								{
+									iRtnValue++;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return iRtnValue;
+}
+#endif // AUI_MILITARY_MAX_INTERCEPTS
+
 /// Assess nearby enemy air assets
-int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int /*iRange*/, bool bCountFighters, bool bCountBombers) const
+#ifdef AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
+int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int iRange, bool bCountFighters, bool bCountBombers) const
 {
 	int iRtnValue = 0;
 
@@ -3773,7 +4152,32 @@ int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int /*iRange*/
 				{
 					if (pLoopUnit->getDomainType() == DOMAIN_AIR)
 					{
+						// AMS: Just to keep fighters closer to high range bombers (stealth bombers)
+						int iMaxCheckRange = min(pLoopUnit->GetRange(), 12);
+						int iAcceptableDistance = iMaxCheckRange + (iRange / 2);
+
+						if (plotDistance(pCenterPlot->getX(), pCenterPlot->getY(), pLoopUnit->getX(), pLoopUnit->getY()) <= iAcceptableDistance)
+#else
+int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int /*iRange*/, bool bCountFighters, bool bCountBombers) const
+{
+	int iRtnValue = 0;
+
+	// Loop through all the players
+	for (int iI = 0; iI < MAX_PLAYERS; iI++)
+	{
+		CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iI);
+		if (kPlayer.isAlive() && kPlayer.GetID() != m_pPlayer->GetID())
+		{
+			if (atWar(kPlayer.getTeam(), m_pPlayer->getTeam()))
+			{
+				// Loop through their units looking for bombers (this will allow us to find bombers on carriers also
+				int iLoopUnit = 0;
+				for (CvUnit* pLoopUnit = kPlayer.firstUnit(&iLoopUnit); pLoopUnit != NULL; pLoopUnit = kPlayer.nextUnit(&iLoopUnit))
+				{
+					if (pLoopUnit->getDomainType() == DOMAIN_AIR)
+					{
 						if ( plotDistance(pCenterPlot->getX(), pCenterPlot->getY(), pLoopUnit->getX(), pLoopUnit->getY()) <= 10 )
+#endif // AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
 						{
 							// Let's not factor in revealed or visible - As a human I can remember past attacks and intuit whether a bomber could be in range of the city, AIs don't have great intuition...
 							if (pLoopUnit->IsAirSweepCapable() || pLoopUnit->canAirDefend())
@@ -3986,7 +4390,11 @@ void CvMilitaryAI::LogMilitaryStatus()
 		pLog = LOGFILEMGR.GetLog(GetLogFileName(playerName), FILogFile::kDontTimeStamp);
 
 		// Very first update (to write header row?)
+#ifdef AUI_MILITARY_BETTER_LOGGING
+		if (GC.getGame().getGameTurn() == 0 || (GC.getGame().getGameTurn() == 1 && m_pPlayer->GetID() == 0))
+#else
 		if(GC.getGame().getGameTurn() == 1 && m_pPlayer->GetID() == 0)
+#endif // AUI_MILITARY_BETTER_LOGGING
 		{
 			strTemp.Format("Turn, Player, Cities, Settlers, Civ Threat, Barb Threat, Land Units, Land In Armies, Rec Land Size, Land Reserve, Naval Units, Naval In Armies, Rec Naval Size, Most Threatened, Danger");
 			pLog->Msg(strTemp);
@@ -4401,6 +4809,12 @@ bool MilitaryAIHelpers::IsTestStrategy_WarMobilization(MilitaryAIStrategyTypes e
 		{
 			iCurrentWeight += 25;
 		}
+#ifdef AUI_GS_PRIORITY_RATIO
+		else
+		{
+			iCurrentWeight += (int)(25.0f * pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy) + 0.5f);
+		}
+#endif // AUI_GS_PRIORITY_RATIO
 	}
 
 	CvDiplomacyAI* pkDiplomacyAI = pPlayer->GetDiplomacyAI();
@@ -4755,6 +5169,65 @@ bool MilitaryAIHelpers::IsTestStrategy_NeedAirCarriers(CvPlayer* pPlayer)
 ///	How many military units should we have given current threats?
 int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 {
+#ifdef AUI_MILITARY_USE_FLOATS
+	// Start with 1
+	float fNumUnitsWanted = 1.0f;
+	int iFlavorNaval = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_NAVAL"));
+
+	float fMultiplier;
+
+	int iNumCoastalCities = 0;
+	int iLoop;
+	CvCity* pCity;
+	for (pCity = pPlayer->firstCity(&iLoop); pCity != NULL; pCity = pPlayer->nextCity(&iLoop))
+	{
+		if (pCity->isCoastal(-1))
+		{
+			iNumCoastalCities++;
+		}
+	}
+
+	fNumUnitsWanted += iNumCoastalCities;
+	// Scale up or down based on true threat level and a bit by flavors (multiplier should range from about 0.75 to 2.0)
+	fMultiplier = 0.75f + ((float)pPlayer->GetMilitaryAI()->GetHighestThreat() / 4.0f) + ((float)(iFlavorNaval) / 40.0f);
+	fNumUnitsWanted = fNumUnitsWanted * fMultiplier * /*0.67*/ GC.getAI_STRATEGY_NAVAL_UNITS_PER_CITY();
+
+	fNumUnitsWanted = MAX(1.0f, fNumUnitsWanted);
+
+	EconomicAIStrategyTypes eStrategyNavalMap = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_NAVAL_MAP");
+	EconomicAIStrategyTypes eExpandOtherContinents = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_EXPAND_TO_OTHER_CONTINENTS");
+	if (pPlayer->GetEconomicAI()->IsUsingStrategy(eStrategyNavalMap) || pPlayer->GetEconomicAI()->IsUsingStrategy(eExpandOtherContinents))
+	{
+		fNumUnitsWanted *= 3.0f;
+		fNumUnitsWanted /= 2.0f;
+	}
+
+	if (pPlayer->getCivilizationInfo().isCoastalCiv())
+	{
+		fNumUnitsWanted *= 3.0f;
+		fNumUnitsWanted /= 2.0f;
+	}
+
+	// if we are going for conquest we want at least one more task force
+	int iGT = GC.getGame().getGameTurn();
+	iGT = MIN(iGT, 200);
+	AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
+	if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
+	{
+		if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
+		{
+			fNumUnitsWanted += (10.0f * (float)iGT) / 200.0f;
+		}
+#ifdef AUI_GS_PRIORITY_RATIO
+		else
+		{
+			fNumUnitsWanted += 10.0f * (float)iGT * pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy) / 200.0f;
+		}
+#endif
+	}
+
+	return (int)(fNumUnitsWanted + 0.5f);
+#else
 	int iNumUnitsWanted = 0;
 	int iFlavorNaval = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_NAVAL"));
 	// cap at 10?
@@ -4806,9 +5279,16 @@ int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 		{
 			iNumUnitsWanted += (10 * iGT) / 200;
 		}
+#ifdef AUI_GS_PRIORITY_RATIO
+		else
+		{
+			iNumUnitsWanted += int(10 * iGT * pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy)) / 200;
+		}
+#endif
 	}
 
 	return iNumUnitsWanted;
+#endif
 }
 
 /// How many slots in this army can we fill right now with available units?

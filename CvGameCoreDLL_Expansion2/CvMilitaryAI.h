@@ -272,6 +272,11 @@ public:
 		m_iNumberOfTimesOpsBuildSkippedOver = 0;
 	}
 
+#ifdef AUI_MILITARY_MAX_INTERCEPTS
+	// AMS functions
+	int GetMaxPossibleInterceptions(CvPlot* pTargetPlot) const;
+#endif // AUI_MILITARY_MAX_INTERCEPTS
+
 	// Public logging functions
 	void LogDeclarationOfWar(PlayerTypes eOpponent);
 	void LogCivilizationDestroyed();
@@ -328,6 +333,9 @@ private:
 	int m_iTotalThreatWeight;
 	ArmyType m_eArmyTypeBeingBuilt;
 	int m_iNumberOfTimesOpsBuildSkippedOver;
+#ifdef AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
+	int m_iTurnsWithUpgradeRequest;
+#endif
 
 	// Data recomputed each turn (no need to serialize)
 	int m_iNumLandUnits;

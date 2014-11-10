@@ -37,6 +37,8 @@
 #define AUI_GS_PRIORITY_RATIO
 /// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division)
 #define AUI_GS_USE_FLOATS
+/// Uses a completely different system to calculate priorities for all Grand Strategies; WIP, XML hooks TBA
+//#define AUI_GS_PRIORITY_OVERHAUL
 /// Uses tweaked algorithm for Conquest GS priority's increase depending on general approach and current era
 #define AUI_GS_CONQUEST_TWEAKED_ERAS
 /// Uses tweaked algorithm for military ratio's effect on Conquest GS
@@ -59,6 +61,40 @@
 #define AUI_GS_SPACESHIP_TECH_RATIO
 /// GS does not instantly have full influence over this function until later into the game; increase is sinusoid
 #define AUI_GS_SINUSOID_PERSONALITY_INFLUENCE
+/// Boosts the science flavor of buildings, wonders, and techs depending on how well the tech requirements of significant GS's is met (eg. have Archaeology, have Internet, etc.)
+#define AUI_GS_SCIENCE_FLAVOR_BOOST
+/// Replaces the logging function with one that allows for easy creation of graphs within Excel
+#define AUI_GS_BETTER_LOGGING
+
+// Military AI Stuff
+/// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division); some double types are also replaced for increased speed
+#define AUI_MILITARY_USE_FLOATS
+/// Capitals will always be included in the list of potential targets if conquest victory is enabled
+#define AUI_MILITARY_ALWAYS_TARGET_CAPITALS
+/// When scoring targets by distance, use a continuum system instead of different tiers
+#define AUI_MILITARY_TARGET_WEIGHT_DISTANCE_CONTINUUM
+/// Applies flavor and current needs when checking the economic value of a target city
+#define AUI_MILITARY_TARGET_WEIGHT_ECONOMIC_FLAVORED
+/// Fixes bad code for visible barbarian units adding to "barbarian threat" value
+#define AUI_MILITARY_BARBARIAN_THREAT_FIX
+/// Adds barbarian threat to fMultiplier in addition to highest player threat and offense/defense flavors
+#define AUI_MILITARY_UNITS_WANTED_ADD_BARBARIAN_THREAT
+/// Squares the value added by player threat (and barbarian threat, if it's enabled) to fMultiplier
+#define AUI_MILITARY_UNITS_WANTED_SQUARE_THREATS
+/// Tweaks Disband Obsolete Units function to work more often, more intelligently, and also when player does not have negative GPT but still has obsolete units
+#define AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
+/// Tweaks Find Best Unit to Disband to work on more units and give higher priority to obsolete units
+#define AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
+/// Adds a function to calculate the maximum number of possible intercepts on a tile (originally from Ninakoru's Smart AI)
+#define AUI_MILITARY_MAX_INTERCEPTS
+/// No longer uses a fixed range for the GetNumEnemyAirUnitsInRange() function (originally from Ninakoru's Smart AI)
+#define AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
+/// Fixes a bug that would only put a log header in one AI's log, not all their logs
+#define AUI_MILITARY_BETTER_LOGGING
+
+// Religion/Belief Stuff
+/// Checks all of player's cities for whether or not a city is within conversion target range, not just the player's capital
+#define AUI_RELIGION_CONVERSION_TARGET_NOT_JUST_CAPITAL
 
 // Voting/League Stuff
 /// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division)
