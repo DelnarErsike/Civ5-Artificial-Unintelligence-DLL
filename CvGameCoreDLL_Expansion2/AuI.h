@@ -113,8 +113,30 @@
 #define AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_OVERLOAD
 /// Adds two new functions that return whether a unit can move and ranged strike at a plot; depends on previous two defines (originally from Ninakoru's Smart AI)
 #define AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+
+// Promition Stuff (within CvUnit.cpp)
 /// Use float instead of int for most variables (to retain information during division) inside AI_promotionValue()
 #define AUI_UNIT_PROMOTION_USE_FLOATS
+/// Instaheal promotion will only be taken if the unit is under threat in addition to being below 50% HP
+#define AUI_UNIT_PROMOTION_FIX_INSTAHEAL_ONLY_UNDER_THREAT
+/// Ranged units now value this promotion higher depending on ranged flavor, while Counter and Defense (melee) units no longer value this promotion higher than usual
+#define AUI_UNIT_PROMOTION_TWEAKED_CITY_DEFENSE
+/// Specialist units get higher flavor influence for heal rate adjusting promotions in addition to their flat boost
+#define AUI_UNIT_PROMOTION_TWEAKED_HEALRATE (3)
+/// Cavalry units get higher flavor influence for amphibious promotions in addition to their flat boost
+#define AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS (3)
+/// Specialist units get higher flavor influence for move rate adjusting promotions in addition to their flat boost
+#define AUI_UNIT_PROMOTION_TWEAKED_MOVECHANGE (3)
+/// More flavors considered for March promotion (always heal) and larger flavor influence for specialists
+#define AUI_UNIT_PROMOTION_TWEAKED_MARCH (3)
+/// More flavors considered for Blitz promotion (multiple attacks per turn) and larger flavor influence for specialists
+#define AUI_UNIT_PROMOTION_TWEAKED_BLITZ (3)
+/// Specialist units get higher flavor influence for promotions that let them move after attacking in addition to their flat boost
+#define AUI_UNIT_PROMOTION_TWEAKED_MOVE_AFTER_ATTACK (3)
+/// Fixes promotions that give a boost to fighting on a terrain type to not apply their value multiplication to other effects stacked with the promotion
+#define AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
+/// Uses a different randomization algorithm and also uses the binomial RNG instead of the standard one if it's enabled
+#define AUI_UNIT_PROMOTION_TWEAKED_RANDOM (17)
 
 // Voting/League Stuff
 /// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division)

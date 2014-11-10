@@ -1218,6 +1218,17 @@ public:
 
 	int GetNumGoodyHutsPopped() const;
 	void ChangeNumGoodyHutsPopped(int iValue);
+	
+#ifdef AUI_UNIT_RANGE_PLUS_MOVE
+	int GetRangePlusMoveToshot() const;
+#endif // AUI_UNIT_RANGE_PLUS_MOVE
+#ifdef AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
+	bool canEverRangeStrikeAtFromPlot(int iX, int iY, CvPlot* targetPlot) const;
+#endif // AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
+#ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+	bool canMoveAndRangedStrike(int iX, int iY);
+	void GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* plotTarget, bool exitOnFound);
+#endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 
 	// Ported in from old CvUnitAI class
 	int SearchRange(int iRange) const;

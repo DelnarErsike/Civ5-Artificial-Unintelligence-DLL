@@ -337,7 +337,11 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 
 							// TEMPORARY OPTIMIZATION: Assumes can't use roads or RR
 #ifdef AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
+#ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+							else if (iDistance <= pUnit->GetRangePlusMoveToshot())
+#else
 							else if (iDistance <= pUnit->baseMoves() + pUnit->GetRange())
+#endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 #else
 							else if(iDistance <= pUnit->baseMoves())
 #endif // AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
@@ -345,8 +349,13 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 								int iTurnsToReach;
 								iTurnsToReach = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, true /*bIgnoreUnits*/);	// Its ok to reuse paths because when ignoring units, we don't use the tactical analysis map (which we are building)
 #ifdef AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
+#ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+								// Pathfinder gets called twice for ranged units unfortunately: once for moving, second time for move and shoot calculation
+								if (iTurnsToReach <= 1 || (pUnit->isRanged() && pUnit->canMoveAndRangedStrike(pPlot->getX(), pPlot->getY())))
+#else
 								// rough adjustment to account for ranged units
 								if (iTurnsToReach <= 1 || (pUnit->isRanged() && iTurnsToReach <= 2))
+#endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 #else
 								if(iTurnsToReach <= 1)
 #endif // AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
