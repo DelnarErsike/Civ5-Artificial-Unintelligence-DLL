@@ -76,7 +76,7 @@
 /// Applies flavor and current needs when checking the economic value of a target city
 #define AUI_MILITARY_TARGET_WEIGHT_ECONOMIC_FLAVORED
 /// Fixes bad code for visible barbarian units adding to "barbarian threat" value
-#define AUI_MILITARY_BARBARIAN_THREAT_FIX
+#define AUI_MILITARY_FIX_BARBARIAN_THREAT
 /// Adds barbarian threat to fMultiplier in addition to highest player threat and offense/defense flavors
 #define AUI_MILITARY_UNITS_WANTED_ADD_BARBARIAN_THREAT
 /// Squares the value added by player threat (and barbarian threat, if it's enabled) to fMultiplier
@@ -101,6 +101,20 @@
 #define AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
 /// Checks for cities in addition to citadel improvements
 #define AUI_TACTICAL_MAP_ANALYSIS_MARKING_INCLUDE_CITIES
+
+// Unit Stuff
+/// Adds a function to return a unit's movement range if it can attack after a move + the unit's range (originally from Ninakoru's Smart AI)
+#define AUI_UNIT_RANGE_PLUS_MOVE
+/// Fixes the check for whether ranged damage would be more than heal rate to happen AFTER total damage has been calculated (so lots of tiny still counts)
+#define AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
+/// Adds a function to return whether a unit can range strike at a target from a plot (originally from Ninakoru's Smart AI)
+#define AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
+/// Overloads the vanilla canEverRangeStrikeAt() function to call the new canEverRangeStrikeAtFromPlot() function if it's enabled (originally from Ninakoru's Smart AI)
+#define AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_OVERLOAD
+/// Adds two new functions that return whether a unit can move and ranged strike at a plot; depends on previous two defines (originally from Ninakoru's Smart AI)
+#define AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+/// Use float instead of int for most variables (to retain information during division) inside AI_promotionValue()
+#define AUI_UNIT_PROMOTION_USE_FLOATS
 
 // Voting/League Stuff
 /// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division)
