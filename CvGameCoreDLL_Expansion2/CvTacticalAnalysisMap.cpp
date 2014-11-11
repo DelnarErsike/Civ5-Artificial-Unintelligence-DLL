@@ -376,7 +376,7 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 					if(!m_pPlots[iI].IsSubjectToAttack())
 					{
 						CvPlot* pAdjacentPlot;
-						int iCityRange = 2;
+						int iCityRange = GC.getCITY_ATTACK_RANGE();
 						for (int iDX = -iCityRange; iDX <= iCityRange && !m_pPlots[iI].IsSubjectToAttack(); iDX++)
 						{
 							for (int iDY = -iCityRange; iDY <= iCityRange && !m_pPlots[iI].IsSubjectToAttack(); iDY++)
