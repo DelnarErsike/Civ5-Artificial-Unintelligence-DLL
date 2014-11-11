@@ -16,6 +16,14 @@
 /// Turns the "Has met Major Civ" check inside GS priority checks into a public function of CvGrandStrategyAI
 #define AUI_PUBLIC_HAS_MET_MAJOR
 
+// AI Operations Stuff
+/// Tweaks the boldness check for whether a settler should proceed without escort
+#define AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS (8)
+/// Adds a random value to the boldness check so it doesn't always succeed or fail
+#define AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE (7)
+/// If it's available, opts for the binomial RNG for the boldness check's random factor instead of the flat RNG
+#define AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_BINOMIAL
+
 // Worker Automation Stuff
 /// Automated Inca workers know that there is no maintenance on hills, so routines are adjusted as a result
 #define AUI_WORKER_INCA_HILLS

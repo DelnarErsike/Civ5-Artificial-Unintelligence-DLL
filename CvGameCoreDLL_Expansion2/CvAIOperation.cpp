@@ -3043,7 +3043,19 @@ void CvAIOperationFoundCity::Init(int iID, PlayerTypes eOwner, PlayerTypes /*eEn
 				{
 					// There was no escort immediately available.  Let's look for a "safe" city site instead
 
+#ifdef AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS
+					if (eOwner == -1 || (GET_PLAYER(eOwner).getNumCities() > 1 && GET_PLAYER(eOwner).GetDiplomacyAI()->GetBoldness() 
+#ifdef AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE
+#ifdef AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_BINOMIAL
+						+ GC.getGame().getJonRandNumBinom(AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE, "Brave Settler Roll")
+#else
+						+ GC.getGame().getJonRandNum(AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE, "Brave Settler Roll")
+#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_BINOMIAL
+#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE
+						> AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS)) // unless we'd rather play it safe
+#else
 					if (eOwner == -1 || GET_PLAYER(eOwner).getNumCities() > 1 || GET_PLAYER(eOwner).GetDiplomacyAI()->GetBoldness() > 5) // unless we'd rather play it safe
+#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS
 					{
 						pNewTarget = FindBestTarget(pOurCivilian, true);
 					}
