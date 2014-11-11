@@ -32,6 +32,10 @@
 /// Automated workers value strategic resources that a player has none of higher than strategic resources that the player has used all of
 #define AUI_WORKER_TWEAKED_DONT_HAVE_MULTIPLIER
 
+// Danger Plots Stuff
+/// Better danger calculation for ranged units (originally from Ninakoru's Smart AI, but heavily modified since)
+#define AUI_DANGER_PLOTS_TWEAKED_RANGED
+
 // Grand Strategy Stuff
 /// Enables use of Grand Strategy Priority; the function returns the ratio of the requested GS's priority to the active GS's priority (1.0 if the requested GS is the active GS)
 #define AUI_GS_PRIORITY_RATIO

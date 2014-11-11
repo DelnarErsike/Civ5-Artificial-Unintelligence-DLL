@@ -148,7 +148,11 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 						continue;
 					}
 
+#ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+					if(!pLoopUnit->canMoveOrAttackInto(*pLoopPlot) && !pLoopUnit->canMoveAndRangedStrike(pLoopPlot->getX(),pLoopPlot->getY()))
+#else
 					if(!pLoopUnit->canMoveOrAttackInto(*pLoopPlot) && !pLoopUnit->canRangeStrikeAt(pLoopPlot->getX(),pLoopPlot->getY()))
+#endif
 					{
 						continue;
 					}
@@ -605,11 +609,46 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 			//int iRange = pUnit->baseMoves();
 			//FAssertMsg(iRange > 0, "0 range? Uh oh");
 
+#ifdef AUI_DANGER_PLOTS_TWEAKED_RANGED
+			int iTurnsAway = 0;
+#endif // AUI_DANGER_PLOTS_TWEAKED_RANGED
+
 			CvIgnoreUnitsPathFinder& kPathFinder = GC.getIgnoreUnitsPathFinder();
 			kPathFinder.SetData(pUnit);
 
 			int iPlotX = pPlot->getX();
 			int iPlotY = pPlot->getY();
+			
+#ifdef AUI_DANGER_PLOTS_TWEAKED_RANGED
+			// if unit is ranged, different algorithm must be used
+			if (pUnit->isRanged())
+			{
+				if (pUnit->canEverRangeStrikeAt(iPlotX, iPlotY))
+				{
+					iTurnsAway = 1;
+				}
+#ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+				else if (pUnit->canMoveAndRangedStrike(iPlotX, iPlotY))
+				{
+					iTurnsAway = 2;
+				}
+#endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+			}
+
+			// iTurnsAway is only still zero if isRanged adjustments weren't applied
+			if (iTurnsAway == 0)
+			{
+				// can the unit actually walk there
+				if (!kPathFinder.GeneratePath(pUnit->getX(), pUnit->getY(), iPlotX, iPlotY, 0, true /*bReuse*/))
+				{
+					return;
+				}
+
+				CvAStarNode* pNode = kPathFinder.GetLastNode();
+				iTurnsAway = pNode->m_iData2;
+				iTurnsAway = max(iTurnsAway, 1);
+			}
+#else
 			// can the unit actually walk there
 			if(!kPathFinder.GeneratePath(pUnit->getX(), pUnit->getY(), iPlotX, iPlotY, 0, true /*bReuse*/))
 			{
@@ -619,6 +658,7 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 			CvAStarNode* pNode = kPathFinder.GetLastNode();
 			int iTurnsAway = pNode->m_iData2;
 			iTurnsAway = max(iTurnsAway, 1);
+#endif // AUI_DANGER_PLOTS_TWEAKED_RANGED
 
 			int iUnitCombatValue = iBaseUnitCombatValue / iTurnsAway;
 			iUnitCombatValue = ModifyDangerByRelationship(pUnit->getOwner(), pPlot, iUnitCombatValue);
