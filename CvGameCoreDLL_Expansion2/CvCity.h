@@ -800,6 +800,11 @@ public:
 	void			clearCombat();
 	bool			isFighting() const;
 
+#ifdef AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+	bool IsCanGoldPurchase(OrderData* pOrder);
+	void PurchaseOrder(int iIndex = 0);
+#endif // AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+
 	int iScratch; // know the scope of your validity
 
 protected:

@@ -85,6 +85,8 @@
 // City Stuff
 /// Shifts the scout assignment code to EconomicAI
 #define AUI_CITY_FIX_CREATE_UNIT_EXPLORE_ASSIGNMENT_TO_ECONOMIC
+/// Reenables the purchasing of buildings with gold (originally from Ninakoru's Smart AI, but heavily modified since)
+#define AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
 
 // City Citizens Stuff
 /// Unhardcodes the value assigned to specialists for great person points (flat value is the base multiplier for value of a single GP point before modifications)

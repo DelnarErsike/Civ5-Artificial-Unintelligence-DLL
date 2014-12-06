@@ -12030,6 +12030,7 @@ int CvCity::CreateUnit(UnitTypes eUnitType, UnitAITypes eAIType, bool bUseToSati
 		m_unitBeingBuiltForOperation.Invalidate();
 	}
 
+#ifndef AUI_CITY_FIX_CREATE_UNIT_EXPLORE_ASSIGNMENT_TO_ECONOMIC
 	// Any AI unit with explore AI as a secondary unit AI (e.g. warriors) are assigned that unit AI if this AI player needs to explore more
 	else if(!pUnit->isHuman() && !thisPlayer.isMinorCiv())
 	{
@@ -12080,6 +12081,7 @@ int CvCity::CreateUnit(UnitTypes eUnitType, UnitAITypes eAIType, bool bUseToSati
 			}
 		}
 	}
+#endif // AUI_CITY_FIX_CREATE_UNIT_EXPLORE_ASSIGNMENT_TO_ECONOMIC
 	//Increment for stat tracking and achievements
 	if(pUnit->isHuman())
 	{
@@ -12290,6 +12292,36 @@ bool CvCity::CanPlaceUnitHere(UnitTypes eUnitType)
 	}
 	return true;
 }
+
+#ifdef AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+/// Can we purchase this production order with gold?
+bool CvCity::IsCanGoldPurchase(OrderData* pOrder)
+{
+	UnitTypes eUnitType = NO_UNIT;
+	BuildingTypes eBuildingType = NO_BUILDING;
+	ProjectTypes eProjectType = NO_PROJECT;
+
+	switch (pOrder->eOrderType)
+	{
+	case ORDER_TRAIN:
+		eUnitType = ((UnitTypes)(pOrder->iData1));
+		break;
+
+	case ORDER_CONSTRUCT:
+		eBuildingType = ((BuildingTypes)(pOrder->iData1));
+		break;
+
+	case ORDER_CREATE:
+		eProjectType = ((ProjectTypes)(pOrder->iData1));
+		break;
+
+	default:
+		return false;
+	}
+
+	return IsCanPurchase(true, true, eUnitType, eBuildingType, eProjectType, YIELD_GOLD);
+}
+#endif // AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
 
 //	--------------------------------------------------------------------------------
 // Is this city allowed to purchase something right now?
@@ -12539,6 +12571,40 @@ bool CvCity::IsCanPurchase(bool bTestPurchaseCost, bool bTestTrainable, UnitType
 
 	return true;
 }
+
+#ifdef AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+/// AMS: Purchase the order at the specified index (0 is what we're currently producing)
+void CvCity::PurchaseOrder(int iIndex)
+{	
+	UnitTypes eUnitType = NO_UNIT;
+	BuildingTypes eBuildingType = NO_BUILDING;
+	ProjectTypes eProjectType = NO_PROJECT;
+	OrderData* pOrder = getOrderFromQueue(iIndex);
+
+	if (pOrder)
+	{
+		switch (pOrder->eOrderType)
+		{
+		case ORDER_TRAIN:
+			eUnitType = ((UnitTypes)(pOrder->iData1));
+			break;
+
+		case ORDER_CONSTRUCT:
+			eBuildingType = ((BuildingTypes)(pOrder->iData1));
+			break;
+
+		case ORDER_CREATE:
+			eProjectType = ((ProjectTypes)(pOrder->iData1));
+			break;
+
+		default:
+			return;
+		}
+	}
+
+	Purchase(eUnitType, eBuildingType, eProjectType, YIELD_GOLD);
+}
+#endif // AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
 
 //	--------------------------------------------------------------------------------
 // purchase something at the city
