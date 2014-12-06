@@ -952,7 +952,11 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 	CvPlayer* pPlayer = m_pCity->GetPlayer();
 
 	// factor in the fact that specialists may need less food
+#ifdef AUI_CITIZENS_FIX_SPECIALIST_VALUE_HALF_FOOD_CONSUMPTION
+	int iFoodConsumptionBonus = (pPlayer->isHalfSpecialistFood()) ? GC.getFOOD_CONSUMPTION_PER_POPULATION() / 2 : 0;
+#else
 	int iFoodConsumptionBonus = (pPlayer->isHalfSpecialistFood()) ? 1 : 0;
+#endif // AUI_CITIZENS_FIX_SPECIALIST_VALUE_HALF_FOOD_CONSUMPTION
 
 	// Yield Values
 	int iFoodYieldValue = (GC.getAI_CITIZEN_VALUE_FOOD() * (pPlayer->specialistYield(eSpecialist, YIELD_FOOD) + iFoodConsumptionBonus));
@@ -961,12 +965,213 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 	int iScienceYieldValue = (GC.getAI_CITIZEN_VALUE_SCIENCE() * pPlayer->specialistYield(eSpecialist, YIELD_SCIENCE));
 	int iCultureYieldValue = (GC.getAI_CITIZEN_VALUE_CULTURE() * m_pCity->GetCultureFromSpecialist(eSpecialist)); 
 	int iFaithYieldValue = (GC.getAI_CITIZEN_VALUE_FAITH() * pPlayer->specialistYield(eSpecialist, YIELD_FAITH));
+#ifndef AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_GREAT_PERSON_POINTS
 	int iGPPYieldValue = pSpecialistInfo->getGreatPeopleRateChange() * 3; // TODO: un-hardcode this
+#endif // AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_GREAT_PERSON_POINTS
+#ifndef AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_HAPPINESS
 	int iHappinessYieldValue = (m_pCity->GetPlayer()->isHalfSpecialistUnhappiness()) ? 5 : 0; // TODO: un-hardcode this
 	iHappinessYieldValue = m_pCity->GetPlayer()->IsEmpireUnhappy() ? iHappinessYieldValue * 2 : iHappinessYieldValue; // TODO: un-hardcode this
+#endif // AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_HAPPINESS
 
 	// How much surplus food are we making?
 	int iExcessFoodTimes100 = m_pCity->getYieldRateTimes100(YIELD_FOOD, false) - (m_pCity->foodConsumption() * 100);
+
+#ifdef AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_GREAT_PERSON_POINTS
+	int iGPPYieldValue = pSpecialistInfo->getGreatPeopleRateChange() * AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_GREAT_PERSON_POINTS;
+	UnitClassTypes eGPUnitClass = (UnitClassTypes)pSpecialistInfo->getGreatPeopleUnitClass();
+	if (eGPUnitClass != NO_UNITCLASS)
+	{
+		// Multiplier based on flavor
+		double dFlavorMod = 1.0;
+		// Doubles GPP value if the great person we'd generate is unique to our civ
+		CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
+		if (pGPUnitClassInfo)
+		{
+			UnitTypes eGPUnitType = (UnitTypes)pPlayer->getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
+			UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
+			if (eGPUnitType != eDefault)
+			{
+				iGPPYieldValue *= 2;
+				// Venice compensation (since their unique merchant is only special in that it can acquire minors, so the AI no longer wants minors, boost is deactivated)
+				if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_MERCHANT", true) && GET_PLAYER(m_pCity->getOwner()).GreatMerchantWantsCash())
+				{
+					iGPPYieldValue /= 2;
+				}
+			}
+			CvUnitEntry *pkGPEntry = GC.GetGameUnits()->GetEntry(eGPUnitType);
+			if (pkGPEntry)
+			{
+				int iBestFlavor = 0;
+				for (int iFlavorLoop = 0; iFlavorLoop < GC.getNumFlavorTypes(); iFlavorLoop++)
+				{
+					if (pkGPEntry->GetFlavorValue(iFlavorLoop) > 0)
+					{
+						iBestFlavor = MAX(iBestFlavor, pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)iFlavorLoop));
+					}
+				}
+				if (iBestFlavor > 0)
+				{
+					dFlavorMod += log10((double)iBestFlavor);
+				}
+				else
+				{
+					dFlavorMod += log10((double)GC.getDEFAULT_FLAVOR_VALUE());
+				}
+			}
+		}
+		// Tweaking based on actual GP bonues and penalties
+		int iGPPModifier = pPlayer->getGreatPeopleRateModifier() + GetCity()->getGreatPeopleRateModifier();
+		// Multiplier based on how many of this unit do we already have
+		double dAlreadyHaveCountMod = 3.0;
+		// Tweaking based on grand strategy (ranges from 1 to 2)
+		double dGrandStrategyGPPMod = 1.0;
+		if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_WRITER", true))
+		{
+			iGPPModifier += pPlayer->getGreatWriterRateModifier();
+			dAlreadyHaveCountMod /= (dAlreadyHaveCountMod + pPlayer->GetNumUnitsWithUnitAI(UNITAI_WRITER));
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGrandStrategyGPPMod += pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"));
+#else
+			if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
+			{
+				fGrandStrategyGPPMod += 1.0f;
+			}
+#endif // AUI_GS_PRIORITY_RATIO
+		}
+		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_ARTIST", true))
+		{
+			iGPPModifier += pPlayer->getGreatArtistRateModifier();
+			dAlreadyHaveCountMod /= (dAlreadyHaveCountMod + pPlayer->GetNumUnitsWithUnitAI(UNITAI_ARTIST));
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGrandStrategyGPPMod += pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"));
+#else
+			if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
+			{
+				fGrandStrategyGPPMod += 1.0f;
+			}
+#endif // AUI_GS_PRIORITY_RATIO
+		}
+		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_MUSICIAN", true))
+		{
+			iGPPModifier += pPlayer->getGreatMusicianRateModifier();
+			dAlreadyHaveCountMod /= (dAlreadyHaveCountMod + pPlayer->GetNumUnitsWithUnitAI(UNITAI_MUSICIAN));
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGrandStrategyGPPMod += pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"));
+#else
+			if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
+			{
+				fGrandStrategyGPPMod += 1.0f;
+			}
+#endif // AUI_GS_PRIORITY_RATIO
+		}
+		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_SCIENTIST", true))
+		{
+			iGPPModifier += pPlayer->getGreatScientistRateModifier();
+			dAlreadyHaveCountMod /= (dAlreadyHaveCountMod + pPlayer->GetNumUnitsWithUnitAI(UNITAI_SCIENTIST));
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGrandStrategyGPPMod += pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"));
+#else
+			if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"))
+			{
+				fGrandStrategyGPPMod += 1.0f;
+			}
+#endif // AUI_GS_PRIORITY_RATIO
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
+			if (pPlayer->GetGrandStrategyAI()->ScienceFlavorBoost() >= AUI_GS_SCIENCE_FLAVOR_BOOST)
+				dGrandStrategyGPPMod *= 2;
+#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+		}
+		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_MERCHANT", true))
+		{
+			iGPPModifier += pPlayer->getGreatMerchantRateModifier();
+			dAlreadyHaveCountMod /= (dAlreadyHaveCountMod + pPlayer->GetNumUnitsWithUnitAI(UNITAI_MERCHANT));
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGrandStrategyGPPMod += pow((1.0 + pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")))
+				* (1.0 + pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")))
+				* (1.0 + pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP")))
+				* (1.0 + pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"))) / 2.0, 1.0/3.0);
+#else
+			if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"))
+			{
+				fGrandStrategyGPPMod += 1.0f;
+			}
+#endif // AUI_GS_PRIORITY_RATIO
+			if (pPlayer->GetTreasury()->AverageIncome(1) < 0)
+				dGrandStrategyGPPMod *= 2;
+		}
+		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_ENGINEER", true))
+		{
+			iGPPModifier += pPlayer->getGreatEngineerRateModifier();
+			dAlreadyHaveCountMod /= (dAlreadyHaveCountMod + pPlayer->GetNumUnitsWithUnitAI(UNITAI_ENGINEER));
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGrandStrategyGPPMod += pow((1.0 + pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")))
+				* (1.0 + pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")))
+				* (1.0 + pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP")))
+				* (1.0 + pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"))) / 2.0, 1.0 / 3.0);
+#else
+			if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"))
+			{
+				fGrandStrategyGPPMod += 1.0f;
+			}
+#endif // AUI_GS_PRIORITY_RATIO
+		}
+		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_GREAT_GENERAL", true))
+		{
+			iGPPModifier += pPlayer->getGreatAdmiralRateModifier();
+			dAlreadyHaveCountMod /= (dAlreadyHaveCountMod + pPlayer->GetNumUnitsWithUnitAI(UNITAI_GENERAL));
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGrandStrategyGPPMod += pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"));
+#else
+			if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"))
+			{
+				fGrandStrategyGPPMod += 1.0f;
+			}
+#endif // AUI_GS_PRIORITY_RATIO
+		}
+		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_GREAT_ADMIRAL", true))
+		{
+			iGPPModifier += pPlayer->getGreatGeneralRateModifier();
+			dAlreadyHaveCountMod /= (dAlreadyHaveCountMod + pPlayer->GetNumUnitsWithUnitAI(UNITAI_ADMIRAL));
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGrandStrategyGPPMod += pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"));
+#else
+			if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"))
+			{
+				fGrandStrategyGPPMod += 1.0f;
+			}
+#endif // AUI_GS_PRIORITY_RATIO
+		}
+
+		iGPPYieldValue = int(iGPPYieldValue * dGrandStrategyGPPMod * dAlreadyHaveCountMod * dFlavorMod * log(MAX(100.0 + iGPPModifier, 1.0)) / log(100.0) + 0.5);
+	}
+#endif // AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_GREAT_PERSON_POINTS
+#ifdef AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_HAPPINESS
+	int iHappinessYieldValue = 0;
+	if (pPlayer->isHalfSpecialistUnhappiness())
+	{
+		iHappinessYieldValue = GC.getUNHAPPINESS_PER_POPULATION() * 50 * AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_HAPPINESS;
+		if (pPlayer->GetCapitalUnhappinessMod() != 0 && m_pCity->isCapital())
+		{
+			iHappinessYieldValue *= 100;
+			iHappinessYieldValue /= (100 + pPlayer->GetCapitalUnhappinessMod());
+		}
+		iHappinessYieldValue *= 100;
+		iHappinessYieldValue /= (100 + pPlayer->GetUnhappinessMod());
+		iHappinessYieldValue *= 100;
+		iHappinessYieldValue /= (100 + pPlayer->GetPlayerTraits()->GetPopulationUnhappinessModifier());
+		// Handicap mod
+		iHappinessYieldValue *= 100;
+		iHappinessYieldValue /= pPlayer->getHandicapInfo().getPopulationUnhappinessMod();
+
+		if (pPlayer->IsEmpireUnhappy())
+		{
+			iHappinessYieldValue = int(iHappinessYieldValue * pow(2.0, 1.0 - (double)pPlayer->GetExcessHappiness() / 10.0) + 0.5);
+		}
+
+		// For the initial *50
+		iHappinessYieldValue /= 100;
+	}
+#endif // AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_HAPPINESS
 
 	bool bAvoidGrowth = IsAvoidGrowth();
 
