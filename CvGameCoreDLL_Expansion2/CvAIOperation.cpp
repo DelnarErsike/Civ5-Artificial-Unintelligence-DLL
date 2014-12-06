@@ -1596,6 +1596,9 @@ static CvUnit* GetClosestUnit(CvOperationSearchUnitList& kSearchList, CvPlot* pk
 		std::stable_sort(kSearchList.begin(), kSearchList.end());
 
 		int iBestDistance = MAX_INT;
+#ifdef AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
+		int iBestStrength = 0;
+#endif // AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
 		CvIgnoreUnitsPathFinder& kPathFinder = GC.getIgnoreUnitsPathFinder();
 		for (CvOperationSearchUnitList::iterator itr = kSearchList.begin(); itr != kSearchList.end(); ++itr)
 		{
@@ -1621,21 +1624,117 @@ static CvUnit* GetClosestUnit(CvOperationSearchUnitList& kSearchList, CvPlot* pk
 					iPathDistance = kPathFinder.GetPathLength();
 			}
 
+#ifdef AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+			if (pkLoopUnit->getDropRange() > 0)
+			{
+				if (pkMusterPlot != NULL && plotDistance(pkLoopUnit->getX(), pkLoopUnit->getY(), pkMusterPlot->getX(), pkMusterPlot->getY()) <= pkLoopUnit->getDropRange())
+				{
+					if (pkLoopUnit->canParadropAt(pkMusterPlot, pkMusterPlot->getX(), pkMusterPlot->getY()))
+					{
+						iPathDistance = 0;
+					}
+					else
+					{
+						CvPlot* pAdjacentPlot;
+						for (int jJ = 0; jJ < NUM_DIRECTION_TYPES; jJ++)
+						{
+							pAdjacentPlot = plotDirection(pkMusterPlot->getX(), pkMusterPlot->getY(), ((DirectionTypes)jJ));
+							if (pAdjacentPlot != NULL)
+							{
+								if (pkLoopUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY()))
+								{
+									iPathDistance = MIN(1, iPathDistance);
+									break;
+								}
+							}
+						}
+					}
+				}
+				else if (pkMusterPlot == NULL && pkTarget != NULL && plotDistance(pkLoopUnit->getX(), pkLoopUnit->getY(), pkTarget->getX(), pkTarget->getY()) <= pkLoopUnit->getDropRange())
+				{
+					if (pkLoopUnit->canParadropAt(pkTarget, pkTarget->getX(), pkTarget->getY()))
+					{
+						iPathDistance = 0;
+					}
+					else
+					{
+						CvPlot* pAdjacentPlot;
+						for (int jJ = 0; jJ < NUM_DIRECTION_TYPES; jJ++)
+						{
+							pAdjacentPlot = plotDirection(pkTarget->getX(), pkTarget->getY(), ((DirectionTypes)jJ));
+							if (pAdjacentPlot != NULL)
+							{
+								if (pkLoopUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY()))
+								{
+									iPathDistance = MIN(1, iPathDistance);
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+#endif // AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+
+#ifndef AUI_OPERATION_GET_CLOSEST_UNIT_NO_EARLY_BREAK
 			// Reasonably close?
+#ifdef AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+			if (iPathDistance <= iDistance && iPathDistance <= iBestDistance && pkLoopUnit->getDropRange() == 0)
+#else
 			if (iPathDistance <= iDistance && iPathDistance <= iBestDistance)
+#endif // AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
 			{
 				pkBestUnit = pkLoopUnit;
 				break;
 			}
+#endif // AUI_OPERATION_GET_CLOSEST_UNIT_NO_EARLY_BREAK
 
 			if (iPathDistance < iBestDistance)
 			{
 				pkBestUnit = pkLoopUnit;
 				iBestDistance = iPathDistance;
+#ifdef AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
+				iBestStrength = pkLoopUnit->GetBaseCombatStrengthConsideringDamage();
+#endif // AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
 			}
+#ifdef AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
+			else if (iPathDistance == iBestDistance)
+			{
+				if (pkBestUnit)
+				{
+					// Civilian units compare HP
+					if (!pkBestUnit->IsCombatUnit() && !pkLoopUnit->IsCombatUnit())
+					{
+						if (pkLoopUnit->GetCurrHitPoints() > pkBestUnit->GetCurrHitPoints())
+						{
+							pkBestUnit = pkLoopUnit;
+						}
+					}
+					// Military units compare strength
+					else
+					{
+						int iLoopStrength = pkLoopUnit->GetBaseCombatStrengthConsideringDamage();
+						if (iLoopStrength > iBestStrength)
+						{
+							pkBestUnit = pkLoopUnit;
+							iBestStrength = iLoopStrength;
+						}
+					}
+				}
+				else
+				{
+					pkBestUnit = pkLoopUnit;
+					iBestStrength = pkLoopUnit->GetBaseCombatStrengthConsideringDamage();
+				}
+			}
+#endif // AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
 
 			// Were we far away?  If so, this is probably the best we are going to do
+#ifdef AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+			if (iDistance >= GC.getAI_HOMELAND_ESTIMATE_TURNS_DISTANCE() && pkLoopUnit->getDropRange() == 0)
+#else
 			if (iDistance >= GC.getAI_HOMELAND_ESTIMATE_TURNS_DISTANCE())
+#endif // #ifdef AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
 				break;
 		}
 	}
@@ -1671,14 +1770,109 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 			const CvFormationSlotEntry& thisSlotEntry = thisFormation->getFormationSlotEntry(thisOperationSlot.m_iSlotID);
 			bool bMustBeDeepWaterNaval = GET_TEAM(ownerPlayer.getTeam()).canEmbarkAllWaterPassage() && thisFormation->IsRequiresNavalUnitConsistency();
 
+#ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CALCULATE_PERFECT_MATCH_FIRST
+			// PERFECT UNIT TYPE ONLY (Both primary and secondary match)
 			int iLoop = 0;
+			for (CvUnit* pLoopUnit = ownerPlayer.firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = ownerPlayer.nextUnit(&iLoop))
+			{
+				const UnitAITypes eLoopUnitAIType = pLoopUnit->AI_getUnitAIType();
+
+				// Make sure he's not needed by the tactical AI or already in an army or scouting
+				if (pLoopUnit->canRecruitFromTacticalAI() && pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX &&
+#ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
+					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA)
+#else
+					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
+#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
+				{
+					// Is this unit one of the requested types?
+					CvUnitEntry* unitInfo = GC.getUnitInfo(pLoopUnit->getUnitType());
+					if (unitInfo == NULL)
+						continue;
+
+					// PRIMARY UNIT TYPE (ONLY)
+
+					if (unitInfo->GetUnitAIType((UnitAITypes)thisSlotEntry.m_primaryUnitType) && unitInfo->GetUnitAIType((UnitAITypes)thisSlotEntry.m_secondaryUnitType))
+					{
+						// Is his health okay?
+						if (!pLoopUnit->IsCombatUnit() || pLoopUnit->GetCurrHitPoints() >= pLoopUnit->GetMaxHitPoints() * GC.getAI_OPERATIONAL_PERCENT_HEALTH_FOR_OPERATION() / 100)
+						{
+							// Not finishing up an operation?
+							if (pLoopUnit->GetDeployFromOperationTurn() + GC.getAI_TACTICAL_MAP_TEMP_ZONE_TURNS() < GC.getGame().getGameTurn())
+							{
+								if ((!IsAllNavalOperation() && !IsMixedLandNavalOperation()) || pLoopUnit->getDomainType() == DOMAIN_SEA || pLoopUnit->CanEverEmbark())
+								{
+									if (!bMustBeDeepWaterNaval || pLoopUnit->getDomainType() != DOMAIN_SEA || !pLoopUnit->isTerrainImpassable(TERRAIN_OCEAN))
+									{
+										// Get raw distance to the muster point or target
+										CvPlot* pkLoopUnitPlot = pLoopUnit->plot();
+										int iDistance;
+										if (pMusterPlot != NULL)
+										{
+											iDistance = plotDistance(pkLoopUnitPlot->getX(), pkLoopUnitPlot->getY(), pMusterPlot->getX(), pMusterPlot->getY());
+											// This define is needed because iDistance feeds into GetClosestUnit
+#ifdef AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+											// Double the distance if this is a land unit on a different landmass (it's dangerous to go over water!)
+											if (pMusterPlot != NULL && pLoopUnit->getDomainType() == DOMAIN_LAND && pkLoopUnitPlot->getArea() != pMusterPlot->getArea() && pLoopUnit->getDropRange() == 0)
+#else
+											// Double the distance if this is a land unit on a different landmass (it's dangerous to go over water!)
+											if (pMusterPlot != NULL && pLoopUnit->getDomainType() == DOMAIN_LAND && pkLoopUnitPlot->getArea() != pMusterPlot->getArea())
+#endif // AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+											{
+												iDistance *= 2;
+											}
+										}
+										else
+										{
+											if (pTargetToUse != NULL)
+												iDistance = plotDistance(pkLoopUnitPlot->getX(), pkLoopUnitPlot->getY(), pTargetToUse->getX(), pTargetToUse->getY());
+											else
+											{
+												CvAssertMsg(0, "No muster or target!");
+												iDistance = MAX_INT;
+											}
+										}
+
+										kSearchList.push_back(CvOperationSearchUnit(pLoopUnit, iDistance));
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			pBestUnit = GetClosestUnit(kSearchList, pMusterPlot, pTargetToUse, NeedToCheckPathToTarget());
+
+			// Did we find one?
+			if (pBestUnit != NULL)
+			{
+				pThisArmy->AddUnit(pBestUnit->GetID(), thisOperationSlot.m_iSlotID);
+				if (GC.getLogging() && GC.getAILogging())
+				{
+					strMsg.Format("Found perfect unit for muster at x=%d y=%d, target of x=%d y=%d", (pMusterPlot) ? pMusterPlot->getX() : -1, (pMusterPlot) ? pMusterPlot->getY() : -1, (pTargetToUse) ? pTargetToUse->getX() : -1, (pTargetToUse) ? pTargetToUse->getY() : -1);
+					LogOperationSpecialMessage(strMsg);
+				}
+				return true;
+			}
+
+			kSearchList.clear();
+
+			iLoop = 0;
+#else
+			int iLoop = 0;
+#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CALCULATE_PERFECT_MATCH_FIRST
 			for(CvUnit* pLoopUnit = ownerPlayer.firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = ownerPlayer.nextUnit(&iLoop))
 			{
 				const UnitAITypes eLoopUnitAIType = pLoopUnit->AI_getUnitAIType();
 
 				// Make sure he's not needed by the tactical AI or already in an army or scouting
 				if(pLoopUnit->canRecruitFromTacticalAI() && pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX &&
+#ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
+					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA)
+#else
 				        eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
+#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
 				{
 					// Is this unit one of the requested types?
 					CvUnitEntry* unitInfo = GC.getUnitInfo(pLoopUnit->getUnitType());
@@ -1705,8 +1899,14 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 										if(pMusterPlot != NULL)
 										{
 											iDistance = plotDistance(pkLoopUnitPlot->getX(), pkLoopUnitPlot->getY(), pMusterPlot->getX(), pMusterPlot->getY());
+// This define is needed because iDistance feeds into GetClosestUnit
+#ifdef AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+											// Double the distance if this is a land unit on a different landmass (it's dangerous to go over water!)
+											if(pMusterPlot != NULL && pLoopUnit->getDomainType() == DOMAIN_LAND && pkLoopUnitPlot->getArea() != pMusterPlot->getArea() && pLoopUnit->getDropRange() == 0)
+#else
 											// Double the distance if this is a land unit on a different landmass (it's dangerous to go over water!)
 											if(pMusterPlot != NULL && pLoopUnit->getDomainType() == DOMAIN_LAND && pkLoopUnitPlot->getArea() != pMusterPlot->getArea())
+#endif // AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
 											{
 												iDistance *= 2;
 											}
@@ -1749,6 +1949,9 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 			}
 
 			kSearchList.clear();
+#ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_ITERATOR
+			iLoop = 0;
+#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_ITERATOR
 			// Loop again this time through secondary units
 			for(CvUnit* pLoopUnit = ownerPlayer.firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = ownerPlayer.nextUnit(&iLoop))
 			{
@@ -1756,7 +1959,11 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 
 				// Make sure he's not needed by the tactical AI or already in an army or scouting
 				if(pLoopUnit->canRecruitFromTacticalAI() && pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX &&
+#ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
+					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA)
+#else
 				        eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
+#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
 				{
 					// Is this unit one of the requested types?
 					CvUnitEntry* unitInfo = GC.getUnitInfo(pLoopUnit->getUnitType());
@@ -1783,8 +1990,14 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 										if(pMusterPlot != NULL)
 										{
 											iDistance = plotDistance(pkLoopUnitPlot->getX(), pkLoopUnitPlot->getY(), pMusterPlot->getX(), pMusterPlot->getY());
+// This define is needed because iDistance feeds into GetClosestUnit
+#ifdef AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+											// Double the distance if this is a land unit on a different landmass (it's dangerous to go over water!)
+											if (pMusterPlot != NULL && pLoopUnit->getDomainType() == DOMAIN_LAND && pkLoopUnitPlot->getArea() != pMusterPlot->getArea() && pLoopUnit->getDropRange() == 0)
+#else
 											// Double the distance if this is a land unit on a different landmass (it's dangerous to go over water!)
 											if(pMusterPlot != NULL && pLoopUnit->getDomainType() == DOMAIN_LAND && pkLoopUnitPlot->getArea() != pMusterPlot->getArea())
+#endif // AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
 											{
 												iDistance *= 2;
 											}
@@ -3043,6 +3256,7 @@ void CvAIOperationFoundCity::Init(int iID, PlayerTypes eOwner, PlayerTypes /*eEn
 				{
 					// There was no escort immediately available.  Let's look for a "safe" city site instead
 
+#ifndef AUI_OPERATION_FOUND_CITY_ALWAYS_NO_ESCORT
 #ifdef AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS
 					if (eOwner == -1 || (GET_PLAYER(eOwner).getNumCities() > 1 && GET_PLAYER(eOwner).GetDiplomacyAI()->GetBoldness() 
 #ifdef AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE
@@ -3056,6 +3270,7 @@ void CvAIOperationFoundCity::Init(int iID, PlayerTypes eOwner, PlayerTypes /*eEn
 #else
 					if (eOwner == -1 || GET_PLAYER(eOwner).getNumCities() > 1 || GET_PLAYER(eOwner).GetDiplomacyAI()->GetBoldness() > 5) // unless we'd rather play it safe
 #endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS
+#endif // AUI_OPERATION_FOUND_CITY_ALWAYS_NO_ESCORT
 					{
 						pNewTarget = FindBestTarget(pOurCivilian, true);
 					}
@@ -5639,6 +5854,10 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 
 	int iBlastRadius = GC.getNUKE_BLAST_RADIUS();
 
+#ifdef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+	CvFeatureInfo* pkFalloutFeature = GC.getFeatureInfo(FEATURE_FALLOUT);
+#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+
 	// check all of our units to find the nukes
 	for(pLoopUnit = ownerPlayer.firstUnit(&iUnitLoop); pLoopUnit != NULL; pLoopUnit = ownerPlayer.nextUnit(&iUnitLoop))
 	{
@@ -5647,6 +5866,9 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 			int iUnitRange = pLoopUnit->GetRange();
 			// for all cities of this enemy
 			CvCity* pLoopCity;
+#ifdef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+			iCityLoop = 0;
+#endif // #ifdef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 			for(pLoopCity = enemyPlayer.firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = enemyPlayer.nextCity(&iCityLoop))
 			{
 				if(pLoopCity)
@@ -5673,9 +5895,22 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 									if(ePlotOwner == m_eOwner)
 									{
 										iThisCityValue -= 1;
+#ifdef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+										int iYieldChangeScore = 0;
+										for (int iI = 0; iI < NUM_YIELD_TYPES; iI++)
+										{
+											if (pLoopPlot->getYield((YieldTypes)iI) + pkFalloutFeature->getYieldChange(iI) != 0)
+											{
+												iYieldChangeScore -= MIN(pLoopPlot->getYield((YieldTypes)iI), -pkFalloutFeature->getYieldChange(iI));
+											}
+										}
+										iThisCityValue += iYieldChangeScore / 3;
+#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 										if(pLoopPlot->getImprovementType() != NO_IMPROVEMENT)
 										{
+#ifndef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 											if(!pLoopPlot->IsImprovementPillaged())
+#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 											{
 												iThisCityValue -= 5;
 												if(pLoopPlot->getResourceType(ePlotTeam) != NO_RESOURCE)  // we aren't nuking our own resources
@@ -5688,9 +5923,22 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 									else if(ePlotTeam != NO_TEAM && ourTeam.isAtWar(ePlotTeam))
 									{
 										iThisCityValue += 1;
+#ifdef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+										int iYieldChangeScore = 0;
+										for (int iI = 0; iI < NUM_YIELD_TYPES; iI++)
+										{
+											if (pLoopPlot->getYield((YieldTypes)iI) + pkFalloutFeature->getYieldChange(iI) != 0)
+											{
+												iYieldChangeScore += MIN(pLoopPlot->getYield((YieldTypes)iI), -pkFalloutFeature->getYieldChange(iI));
+											}
+										}
+										iThisCityValue += iYieldChangeScore / 3;
+#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 										if(pLoopPlot->getImprovementType() != NO_IMPROVEMENT)
 										{
+#ifndef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 											if(!pLoopPlot->IsImprovementPillaged())
+#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 											{
 												iThisCityValue += 2;
 												if(pLoopPlot->getResourceType(ePlotTeam) != NO_RESOURCE)  // we like nuking our their resources
@@ -5741,7 +5989,11 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 						// if this is the capital
 						if(pLoopCity->isCapital())
 						{
+#ifdef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+							iThisCityValue += 1;
+#else
 							iThisCityValue *= 2;
+#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 						}
 
 						if(iThisCityValue > iBestCity)
