@@ -3619,12 +3619,96 @@ int FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int da
 	return TRUE;
 }
 
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+// Each valid road or railroad within single maximum move distance of the unit lowers the cutoff by 1 and 2 respectively.
+// Check is fairly fast and is good enough for most cases.
+void AdjustDistanceFilterForRoads(UnitHandle pUnit, CvPlot* pTarget, int& iCutoffDistance)
+{
+	// Initial Range to check for roads around both target and unit 
+	const int iRange = MIN(pUnit->baseMoves() - 1 - (pUnit->isEmbarked() ? 1 : 0), iCutoffDistance);
+	// Filtering out units that don't need road optimization
+	if (iRange <= 0 || pUnit->getDomainType() != DOMAIN_LAND || pUnit->flatMovementCost() || (!pUnit->IsCombatUnit() && pUnit->getArmyID() == FFreeList::INVALID_INDEX))
+	{
+		return;
+	}
+	// Don't want to call this on each loop, so we'll call it once out of loop and be done with it
+	const bool bIsIroquois = GET_PLAYER(pUnit->getOwner()).GetPlayerTraits()->IsMoveFriendlyWoodsAsRoad();
+	int iRoadPlots = 0;
+	int iRailPlots = 0;
+	int iDX, iDY;
+	CvPlot* pLoopPlot;
+	for (iDX = -(iRange); iDX <= iRange; iDX++)
+	{
+		for (iDY = -(iRange); iDY <= iRange; iDY++)
+		{
+			pLoopPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
+			if (pLoopPlot && plotDistance(pLoopPlot->getX(), pLoopPlot->getY(), pTarget->getX(), pTarget->getY()) >= iCutoffDistance)
+			{
+				FeatureTypes eFeature = pLoopPlot->getFeatureType();
+				bool bIroquoisBonus = bIsIroquois && pUnit->getOwner() == pLoopPlot->getOwner() && (eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE);
+				if ((bIroquoisBonus || pLoopPlot->isValidRoute(pUnit.pointer())))
+				{
+					if (bIroquoisBonus)
+					{
+						// Iroquois don't need adjacent forests to use the road bonus (according to CvUnitMovement)
+						iRoadPlots++;
+					}
+					else
+					{
+						// Check for an adjacent road
+						CvPlot* pAdjacentPlot;
+						bool bCountPlot = false;
+						for (int jJ = 0; jJ < NUM_DIRECTION_TYPES; jJ++)
+						{
+							pAdjacentPlot = plotDirection(pLoopPlot->getX(), pLoopPlot->getY(), ((DirectionTypes)jJ));
+							if (pAdjacentPlot->isValidRoute(pUnit.pointer()))
+							{
+								bCountPlot = true;
+								break;
+							}
+						}
+						// If there's an adjacent road, unit might be able to use this road to its benefit
+						if (bCountPlot)
+						{
+							switch (pLoopPlot->getRouteType())
+							{
+							case (ROUTE_ROAD) :
+								iRoadPlots++;
+								break;
+							case (ROUTE_RAILROAD) :
+								iRailPlots++;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Extra move distance to take account of if there are nearby roads or railroads
+	iCutoffDistance = MAX(0, iCutoffDistance - iRoadPlots - 2 * iRailPlots);
+}
+
+// AdjustDistanceFilterForRoads() call for when the distance isn't being stored
+int GetAdjustedDistanceWithRoadFilter(UnitHandle pUnit, CvPlot* pTarget, int iDistance)
+{
+	int iAdjusted = iDistance;
+	AdjustDistanceFilterForRoads(pUnit, pTarget, iAdjusted);
+	return iAdjusted;
+}
+#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+
 //	--------------------------------------------------------------------------------
 /// Can a unit reach this destination in "X" turns of movement (pass in 0 if need to make it in 1 turn with movement left)?
 // ***
 // *** WARNING - The optimization below (so that TurnsToReachTarget() doesn't get called too often breaks down when we get to RR.  We need to address this!
 // ***
+#ifdef AUI_ASTAR_PARADROP
+bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnoreUnits, bool bIgnoreParadrop, int* piTurns /* = NULL */)
+#else
 bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnoreUnits, int* piTurns /* = NULL */)
+#endif // AUI_ASTAR_PARADROP
 {
 	int iDistance;
 
@@ -3633,8 +3717,41 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 		return false;
 	}
 
+#ifdef AUI_ASTAR_PARADROP
+	bool bCanParadropAdjacent = false;
+	if (!bIgnoreParadrop && pUnit->getDropRange() > 0)
+	{
+		if (pUnit->canParadropAt(pTarget, pTarget->getX(), pTarget->getY(), bIgnoreUnits))
+		{
+			int iTurnsCalculated = 0;
+			if (piTurns)
+				*piTurns = iTurnsCalculated;
+			return (iTurnsCalculated <= iTurns);
+		}
+		else
+		{
+			CvPlot* pAdjacentPlot;
+			for (int jJ = 0; jJ < NUM_DIRECTION_TYPES; jJ++)
+			{
+				pAdjacentPlot = plotDirection(pTarget->getX(), pTarget->getY(), ((DirectionTypes)jJ));
+				if (pAdjacentPlot != NULL)
+				{
+					if (pUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY(), bIgnoreUnits))
+					{
+						bCanParadropAdjacent = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+#endif // AUI_ASTAR_PARADROP
+
 	// Compare distance to movement rate
 	iDistance = plotDistance(pUnit->getX(), pUnit->getY(), pTarget->getX(), pTarget->getY());
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	AdjustDistanceFilterForRoads(pUnit, pTarget, iDistance);
+#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 	// KWG: If the unit is a land unit that can embark, baseMoves() is only going to give correct value if the starting and ending locations
 	//		are in the same domain (LAND vs. SEA) and no transition occurs.
 	if(iTurns == 0 && iDistance >= pUnit->baseMoves())
@@ -3644,6 +3761,15 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 
 	else if(iTurns > 0 && iDistance > (pUnit->baseMoves() * iTurns))
 	{
+#ifdef AUI_ASTAR_PARADROP
+		if (bCanParadropAdjacent)
+		{
+			int iTurnsCalculated = 1;
+			if (piTurns)
+				*piTurns = iTurnsCalculated;
+			return (iTurnsCalculated <= iTurns);
+		}
+#endif // AUI_ASTAR_PARADROP
 		return false;
 	}
 
@@ -3651,6 +3777,10 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 	else
 	{
 		int iTurnsCalculated = TurnsToReachTarget(pUnit, pTarget, false /*bReusePaths*/, bIgnoreUnits);
+#ifdef AUI_ASTAR_PARADROP
+		if (bCanParadropAdjacent)
+			iTurnsCalculated = MIN(1, iTurnsCalculated);
+#endif // AUI_ASTAR_PARADROP
 		if (piTurns)
 			*piTurns = iTurnsCalculated;
 		return (iTurnsCalculated <= iTurns);
