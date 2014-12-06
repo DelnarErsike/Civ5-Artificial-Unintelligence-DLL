@@ -4356,10 +4356,10 @@ int CvGame::getNumSequentialHumans(PlayerTypes ignorePlayer)
 
 #ifdef AUI_MINOR_CIV_RATIO
 //	--------------------------------------------------------------------------------
-float CvGame::getCurrentMinorCivRatio()
+double CvGame::getCurrentMinorCivRatio()
 {// returns the ratio of City States to Players.
-	float fPlayerCount = 0;
-	float fMinorCivCount = 0;
+	int iPlayerCount = 0;
+	int iMinorCivCount = 0;
 	for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
 	{
 		CvPlayer &kPlayer = GET_PLAYER((PlayerTypes)iPlayerLoop);
@@ -4367,22 +4367,22 @@ float CvGame::getCurrentMinorCivRatio()
 		{
 			if (kPlayer.isMinorCiv())
 			{
-				fMinorCivCount++;
+				iMinorCivCount++;
 			}
 			else
 			{
-				fPlayerCount++;
+				iPlayerCount++;
 			}
 		}
 	}
-	fPlayerCount = MAX(fPlayerCount, 1.0f);
-	return (fMinorCivCount / fPlayerCount);
+	iPlayerCount = MAX(iPlayerCount, 1);
+	return ((double)iMinorCivCount / (double)iPlayerCount);
 }
 
 //	--------------------------------------------------------------------------------
-float CvGame::getCurrentMinorCivDeviation()
+double CvGame::getCurrentMinorCivDeviation()
 {// returns how much the ratio of City States to Players differs from the default.
-	return (getCurrentMinorCivRatio() / 2.0f);
+	return (getCurrentMinorCivRatio() / 2.0);
 }
 #endif // AUI_MINOR_CIV_RATIO
 

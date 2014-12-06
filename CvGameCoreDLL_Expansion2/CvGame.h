@@ -145,8 +145,8 @@ public:
 	int getNumSequentialHumans(PlayerTypes ignorePlayer = NO_PLAYER);
 
 #ifdef AUI_MINOR_CIV_RATIO
-	float getCurrentMinorCivRatio();
-	float getCurrentMinorCivDeviation();
+	double getCurrentMinorCivRatio();
+	double getCurrentMinorCivDeviation();
 #endif // AUI_MINOR_CIV_RATIO
 
 	int getGameTurn();
