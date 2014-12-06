@@ -526,7 +526,11 @@ bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility)
 		return true;
 	}
 
+#ifdef AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
+	if(!pUnit->plot()->isVisible(GET_PLAYER(m_ePlayer).getTeam()) && (!GET_PLAYER(m_ePlayer).isMinorCiv() || !(pUnit->isBarbarian() && pUnit->plot()->isRevealed(GET_PLAYER(m_ePlayer).getTeam()))))
+#else
 	if(!pUnit->plot()->isVisible(GET_PLAYER(m_ePlayer).getTeam()))
+#endif // AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
 	{
 		return true;
 	}
