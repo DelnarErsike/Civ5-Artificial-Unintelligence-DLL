@@ -338,12 +338,24 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 							// TEMPORARY OPTIMIZATION: Assumes can't use roads or RR
 #ifdef AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+							else if (GetAdjustedDistanceWithRoadFilter(pUnit, pPlot, iDistance) <= pUnit->GetRangePlusMoveToshot())
+#else
 							else if (iDistance <= pUnit->GetRangePlusMoveToshot())
+#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+#else
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+							else if (GetAdjustedDistanceWithRoadFilter(pUnit, pPlot, iDistance) <= pUnit->baseMoves() + pUnit->GetRange())
 #else
 							else if (iDistance <= pUnit->baseMoves() + pUnit->GetRange())
+#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 #endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 #else
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+							else if (GetAdjustedDistanceWithRoadFilter(pUnit, pPlot, iDistance) <= pUnit->baseMoves())
+#else
 							else if(iDistance <= pUnit->baseMoves())
+#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 #endif // AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
 							{
 								int iTurnsToReach;
