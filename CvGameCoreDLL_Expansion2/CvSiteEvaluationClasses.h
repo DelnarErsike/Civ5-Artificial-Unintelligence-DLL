@@ -48,6 +48,9 @@ protected:
 	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+	virtual int ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer);
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 	virtual int ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeTradeableResourceValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeStrategicValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);

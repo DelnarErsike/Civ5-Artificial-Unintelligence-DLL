@@ -201,55 +201,122 @@ void CvCitySiteEvaluator::ComputeFlavorMultipliers(CvPlayer* pPlayer)
 		if(strFlavor == "FLAVOR_GROWTH" ||
 		        strFlavor == "FLAVOR_EXPANSION")
 		{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
+			m_iFlavorMultiplier[YIELD_FOOD] += pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy(eFlavor);
+#else
 			m_iFlavorMultiplier[YIELD_FOOD] += pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavor);
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
 			if(pkCitySpecializationEntry)
 			{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
+				m_iFlavorMultiplier[YIELD_FOOD] += pkCitySpecializationEntry->GetFlavorValue(eFlavor) * AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER;
+#else
 				m_iFlavorMultiplier[YIELD_FOOD] += pkCitySpecializationEntry->GetFlavorValue(eFlavor);
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
 			}
 		}
 		else if(strFlavor == "FLAVOR_GOLD" ||
 		        strFlavor == "FLAVOR_TILE_IMPROVEMENT")
 		{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
+			m_iFlavorMultiplier[YIELD_GOLD] += pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy(eFlavor);
+#else
 			m_iFlavorMultiplier[YIELD_GOLD] += pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavor);
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
 			if(pkCitySpecializationEntry)
 			{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
+				m_iFlavorMultiplier[YIELD_GOLD] += pkCitySpecializationEntry->GetFlavorValue(eFlavor) * AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER;
+#else
 				m_iFlavorMultiplier[YIELD_GOLD] += pkCitySpecializationEntry->GetFlavorValue(eFlavor);
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
 			}
 		}
 		else if(strFlavor == "FLAVOR_PRODUCTION" ||
 		        strFlavor == "FLAVOR_WONDER")
 		{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
+			m_iFlavorMultiplier[YIELD_PRODUCTION] += pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy(eFlavor);
+#else
 			m_iFlavorMultiplier[YIELD_PRODUCTION] += pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavor);
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
 			if(pkCitySpecializationEntry)
 			{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
+				m_iFlavorMultiplier[YIELD_PRODUCTION] += pkCitySpecializationEntry->GetFlavorValue(eFlavor) * AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER;
+#else
 				m_iFlavorMultiplier[YIELD_PRODUCTION] += pkCitySpecializationEntry->GetFlavorValue(eFlavor);
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
 			}
 		}
 		else if(strFlavor == "FLAVOR_SCIENCE")
 		{
 			// Doubled since only one flavor related to science
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
+			m_iFlavorMultiplier[YIELD_SCIENCE] += pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy(eFlavor) * 2;
+#else
 			m_iFlavorMultiplier[YIELD_SCIENCE] += pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavor) * 2;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
 			if(pkCitySpecializationEntry)
 			{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
+				m_iFlavorMultiplier[YIELD_SCIENCE] += pkCitySpecializationEntry->GetFlavorValue(eFlavor) * AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER;
+#else
 				m_iFlavorMultiplier[YIELD_SCIENCE] += pkCitySpecializationEntry->GetFlavorValue(eFlavor) * 2;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
 			}
 		}
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+		else if (strFlavor == "FLAVOR_CULTURE")
+		{
+			// Doubled since only one flavor related to culture
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
+			m_iFlavorMultiplier[YIELD_CULTURE] += pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy(eFlavor) * 2;
+#else
+			m_iFlavorMultiplier[YIELD_CULTURE] += pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavor) * 2;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
+			if (pkCitySpecializationEntry)
+			{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
+				m_iFlavorMultiplier[YIELD_CULTURE] += pkCitySpecializationEntry->GetFlavorValue(eFlavor) * 2 * AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER;
+#else
+				m_iFlavorMultiplier[YIELD_CULTURE] += pkCitySpecializationEntry->GetFlavorValue(eFlavor) * 2;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
+			}
+		}
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 		else if(strFlavor == "FLAVOR_HAPPINESS")
 		{
 			// Doubled since only one flavor related to Happiness
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
+			m_iFlavorMultiplier[SITE_EVALUATION_HAPPINESS] += pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy(eFlavor) * 2;
+#else
 			m_iFlavorMultiplier[SITE_EVALUATION_HAPPINESS] += pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavor) * 2;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
 			if(pkCitySpecializationEntry)
 			{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
+				m_iFlavorMultiplier[SITE_EVALUATION_HAPPINESS] += pkCitySpecializationEntry->GetFlavorValue(eFlavor) * 2 * AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER;
+#else
 				m_iFlavorMultiplier[SITE_EVALUATION_HAPPINESS] += pkCitySpecializationEntry->GetFlavorValue(eFlavor) * 2;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
 			}
 		}
 		else if(strFlavor == "FLAVOR_RELIGION")
 		{
 			// Doubled since only one flavor related to faith
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
+			m_iFlavorMultiplier[YIELD_FAITH] += pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy(eFlavor) * 2;
+#else
 			m_iFlavorMultiplier[YIELD_FAITH] += pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavor) * 2;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
 			if (pkCitySpecializationEntry)
 			{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
+				m_iFlavorMultiplier[YIELD_FAITH] += pkCitySpecializationEntry->GetFlavorValue(eFlavor) * 2 * AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER;
+#else
 				m_iFlavorMultiplier[YIELD_FAITH] += pkCitySpecializationEntry->GetFlavorValue(eFlavor) * 2;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER
 			}
 		}
 	}
@@ -288,6 +355,9 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 	int iProductionValue = 0;
 	int iGoldValue = 0;
 	int iScienceValue = 0;
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+	int iCultureValue = 0;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 	int iFaithValue = 0;
 	int iResourceValue = 0;
 	int iStrategicValue = 0;
@@ -365,6 +435,12 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							iProductionValue = 0;
 							iGoldValue = 0;
 							iScienceValue = 0;
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+							iCultureValue = 0;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#ifdef AUI_SITE_EVALUATION_FIX_PLOT_FOUND_VALUE_RESET_FAITH_VALUE_EACH_LOOP
+							iFaithValue = 0;
+#endif // AUI_SITE_EVALUATION_FIX_PLOT_FOUND_VALUE_RESET_FAITH_VALUE_EACH_LOOP
 							iHappinessValue = 0;
 							iResourceValue = 0;
 							iStrategicValue = 0;
@@ -387,6 +463,12 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 								{
 									iScienceValue = iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSETTLER_SCIENCE_MULTIPLIER();
 								}
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+								if (eYield == NO_YIELD || eYield == YIELD_CULTURE)
+								{
+									iCultureValue = iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
+								}
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 								if (eYield == NO_YIELD || eYield == YIELD_FAITH)
 								{
 									iFaithValue = iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
@@ -411,7 +493,11 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							iTotalResourceValue += iResourceValue;
 							iTotalStrategicValue += iStrategicValue;
 
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+							int iPlotValue = iFoodValue + iHappinessValue + iProductionValue + iGoldValue + iScienceValue + iCultureValue + iFaithValue + iResourceValue;
+#else
 							int iPlotValue = iFoodValue + iHappinessValue + iProductionValue + iGoldValue + iScienceValue + iFaithValue + iResourceValue;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 							
 							if (iPlotValue == 0)
 							{
@@ -430,7 +516,11 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							// lower value a lot if we already own this tile
 							if (iPlotValue > 0 && pLoopPlot->getOwner() == pPlayer->GetID())
 							{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_ALREADY_OWNED_DIVIDER
+								iPlotValue /= AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_ALREADY_OWNED_DIVIDER;
+#else
 								iPlotValue /= 4;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_ALREADY_OWNED_DIVIDER
 							}
 
 							// add this plot into the total
@@ -616,6 +706,23 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 			rtnValue += rtnValue > 0 ? 25 : 0;
 			rtnValue *= 2;
 		}
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FIRST_COASTAL_CITY_MULTIPLIER
+		int iCityLoop = 0;
+		CvCity* pLoopCity = NULL;
+		bool bHasCoastal = false || pPlayer->getCapitalCity() == NULL;
+		for (pLoopCity = pPlayer->firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = pPlayer->nextCity(&iCityLoop))
+		{
+			if (pLoopCity->isCoastal())
+			{
+				bHasCoastal = true;
+				break;
+			}
+		}
+		if (!bHasCoastal)
+		{
+			rtnValue *= AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FIRST_COASTAL_CITY_MULTIPLIER;
+		}
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FIRST_COASTAL_CITY_MULTIPLIER
 	}
 
 	// Nearby Cities?
@@ -639,7 +746,11 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		iSweetSpot += (iExpansionFlavor > 7) ?  -1 : 0;
 		iSweetSpot += (iGrowthFlavor < 4) ?  -1 : 0;
 		iSweetSpot += (iExpansionFlavor < 4) ?  1 : 0;
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT
+		iSweetSpot = max(AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT, iSweetSpot);
+#else
 		iSweetSpot = max(4,iSweetSpot);
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT
 		iSweetSpot = min(6,iSweetSpot);
 
 		if (iClosestCityOfMine == iSweetSpot) 
@@ -650,7 +761,11 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		}
 		else if (iClosestCityOfMine < iSweetSpot)
 		{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_CLOSER_THAN_SWEET_SPOT_MULTIPLIER
+			rtnValue = (rtnValue * AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_CLOSER_THAN_SWEET_SPOT_MULTIPLIER);
+#else
 			rtnValue /= 2;
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_CLOSER_THAN_SWEET_SPOT_MULTIPLIER
 		}
 		else if (iClosestCityOfMine > 7)
 		{
@@ -745,7 +860,11 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	}
 	else
 	{
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam(), false, pPlayer->GetID());
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam());
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 	}
 
 	// From resource
@@ -796,8 +915,19 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		// If we don't have this resource yet, increase it's value
 		if(pPlayer)
 		{
+#ifdef AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER
+			if (pPlayer->getNumResourceTotal(eResource, false) == 0)
+			{
+				rtnValue *= AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER;
+				if (pPlayer->getNumResourceTotal(eResource) == 0)
+				{
+					rtnValue *= AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER / 3;
+				}
+			}
+#else
 			if(pPlayer->getNumResourceTotal(eResource) == 0)
 				rtnValue *= 5;
+#endif // AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER
 		}
 	}
 
@@ -816,7 +946,11 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 	}
 	else
 	{
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+		rtnValue += pPlot->calculateNatureYield(YIELD_PRODUCTION, pPlayer->getTeam(), false, pPlayer->GetID());
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_PRODUCTION, pPlayer->getTeam());
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 	}
 
 	// From resource
@@ -854,7 +988,11 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	}
 	else
 	{
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+		rtnValue += pPlot->calculateNatureYield(YIELD_GOLD, pPlayer->getTeam(), false, pPlayer->GetID());
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_GOLD, pPlayer->getTeam());
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 	}
 
 	// From resource
@@ -895,7 +1033,11 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	}
 	else
 	{
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+		rtnValue += pPlot->calculateNatureYield(YIELD_SCIENCE, pPlayer->getTeam(), false, pPlayer->GetID());
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_SCIENCE, pPlayer->getTeam());
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 	}
 
 	// From resource
@@ -921,6 +1063,53 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	return rtnValue * m_iFlavorMultiplier[YIELD_SCIENCE];
 }
 
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+/// Value of plot for providing culture
+int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
+{
+	int rtnValue = 0;
+
+	CvAssert(pPlot);
+	if (!pPlot) return rtnValue;
+
+	// From tile yield
+	if (pPlayer == NULL)
+	{
+		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, NO_TEAM);
+	}
+	else
+	{
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, pPlayer->getTeam(), false, pPlayer->GetID());
+#else
+		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, pPlayer->getTeam());
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+	}
+
+	// From resource
+	TeamTypes eTeam = NO_TEAM;
+	if (pPlayer != NULL)
+	{
+		eTeam = pPlayer->getTeam();
+	}
+
+	ResourceTypes eResource;
+	eResource = pPlot->getResourceType(eTeam);
+	if (eResource != NO_RESOURCE)
+	{
+		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_CULTURE);
+
+		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
+		if (pImprovement)
+		{
+			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_CULTURE);
+		}
+	}
+
+	return rtnValue * m_iFlavorMultiplier[YIELD_CULTURE];
+}
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+
 /// Vale of plot for providing faith
 int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 {
@@ -936,7 +1125,11 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	}
 	else
 	{
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+		rtnValue += pPlot->calculateNatureYield(YIELD_FAITH, pPlayer->getTeam(), false, pPlayer->GetID());
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FAITH, pPlayer->getTeam());
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 	}
 
 	// From resource
@@ -1015,11 +1208,61 @@ int CvCitySiteEvaluator::ComputeStrategicValue(CvPlot* pPlot, CvPlayer* pPlayer,
 	CvAssert(pPlot);
 	if(!pPlot) return rtnValue;
 
+#ifdef AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_TWEAKED_CHOKEPOINT_CALCULATION
+	// Each neighboring plot where the tiles both CW and CCW to that plot have a different land type are considered "strategic"
+	// Eg. if the tiles surrounding this one are water-water-land*-water*-peak*-land*, this tile has four strategic plots indicated by the star
+	// Since this plot is a land choke point between southeastern and northwestern land tiles and a water choke point between the three neighboring water tiles
+	int iStrategicPlots = 0;
+	// "High Value" strategic plots are those where a primary plot type is choked off (Water for naval maps, land for non-naval maps)
+	int iHighValueStrategicPlots = 0;
+	for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+	{
+		CvPlot* pCheckPlot = plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)iI);
+		CvPlot* pCWPlot = plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)((iI + 1) % NUM_DIRECTION_TYPES));
+		CvPlot* pCCWPlot = plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)((NUM_DIRECTION_TYPES + iI - 1) % NUM_DIRECTION_TYPES));
+		if (pCheckPlot && pCWPlot && pCCWPlot)
+		{
+			if (pCheckPlot->isImpassable() || pCheckPlot->isMountain())
+			{
+				if (!(pCWPlot->isImpassable() || pCWPlot->isMountain()) && !(pCCWPlot->isImpassable() || pCCWPlot->isMountain()))
+					iStrategicPlots++;
+			}
+			else if (pCheckPlot->isWater())
+			{
+				if (!pCWPlot->isWater() && !pCCWPlot->isWater())
+				{
+					iStrategicPlots++;
+					if (GC.getMap().GetAIMapHint() & 1)
+					{
+						iHighValueStrategicPlots++;
+					}
+				}
+			}
+			else
+			{
+				if ((pCWPlot->isWater() || pCWPlot->isImpassable() || pCWPlot->isMountain()) && (pCCWPlot->isWater() || pCCWPlot->isImpassable() || pCCWPlot->isMountain()))
+				{
+					iStrategicPlots++;
+					if (!(GC.getMap().GetAIMapHint() & 1))
+					{
+						iHighValueStrategicPlots++;
+					}
+				}
+			}
+		}
+	}
+	// Plot is only a choke point if there are at least two strategic plots
+	if (iStrategicPlots > 1)
+	{
+		rtnValue += /*5*/ GC.getCHOKEPOINT_STRATEGIC_VALUE() * (iStrategicPlots + iHighValueStrategicPlots) / MAX(iPlotsFromCity, 1) * (iPlotsFromCity == 0 ? 2 : 1);
+	}
+#else
 	// Possible chokepoint if impassable terrain and exactly 2 plots from city
 	if(iPlotsFromCity == 2 && (pPlot->isImpassable() || pPlot->isMountain()))
 	{
 		rtnValue += /*5*/ GC.getCHOKEPOINT_STRATEGIC_VALUE();
 	}
+#endif // AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_TWEAKED_CHOKEPOINT_CALCULATION
 
 	// Hills in first ring are useful for defense and production
 	if(iPlotsFromCity == 1 && pPlot->isHills())

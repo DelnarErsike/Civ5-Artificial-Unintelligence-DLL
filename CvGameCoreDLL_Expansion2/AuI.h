@@ -312,6 +312,10 @@
 /// When updating the settle value of a landmass with a new plot, MAX() is used instead of addition
 #define AUI_PLAYERAI_FIX_UPDATE_FOUND_VALUES_NOT_ADDITIVE
 
+// Plot Stuff
+/// If a plot is unowned, CalculateNatureYield() will assume the plot is owned by a future player
+#define AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+
 // Policy Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
 #define AUI_POLICY_USE_DOUBLES
@@ -354,9 +358,25 @@
 
 // Site Evaluation Stuff
 /// Tweaks the multiplier given to the happiness score luxury resources that the player does not have (multiplier is applied once for importing, twice and divided by 3 for don't have at all)
-#define AUI_SITE_EVALUATION_TWEAKED_UNOWNED_LUXURY_MULTIPLIER (15)
+#define AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER (15)
 /// Multiplies the settling value of coastal plots if we do not have a coastal city yet
-#define AUI_SITE_EVALUATION_FIRST_COASTAL_CITY_MULTIPLIER (2)
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FIRST_COASTAL_CITY_MULTIPLIER (2)
+/// The flavor multiplier is now affected by grand strategies
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_MULTIPLIER_USES_GRAND_STRATEGY
+/// When calculating flavor multipliers, the flavor input for the next city specialization gets multiplied by this number
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_NEXT_CITY_SPECIALIZATION_FLAVOR_MULTIPLIER 1 / 2
+/// A tile's culture yield is also considered when scoring it
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+/// Changes the amount the plot value is divided by if we already own the tile (from 4)
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_ALREADY_OWNED_DIVIDER (2)
+/// The minimum "sweet spot" distance from another allied city is now this value (from 4); remember, the actual intercity distance will be this value minus one
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT (5)
+/// The value of a plot is now multiplied by this value if it is closer than the sweet spot (from 1/2)
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_CLOSER_THAN_SWEET_SPOT_MULTIPLIER 2 / 3
+/// Resets the faith value of a tile back to 0 (like for all other yields) at the start of each loop
+#define AUI_SITE_EVALUATION_FIX_PLOT_FOUND_VALUE_RESET_FAITH_VALUE_EACH_LOOP
+/// Identification of a possible choke point is now much more accurate
+#define AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_TWEAKED_CHOKEPOINT_CALCULATION
 
 // Tactical AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)

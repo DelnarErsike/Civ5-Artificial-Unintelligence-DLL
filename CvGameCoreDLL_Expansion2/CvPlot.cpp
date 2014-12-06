@@ -6870,7 +6870,11 @@ int CvPlot::getYield(YieldTypes eIndex) const
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnoreFeature, PlayerTypes eFutureOwner) const
+#else
 int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnoreFeature) const
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 {
 	ResourceTypes eResource;
 	int iYield;
@@ -6929,6 +6933,17 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 		iYield += kYield.getLakeChange();
 	}
 
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+	bool bOwnerFlipped = false;
+	PlayerTypes eOwner = (PlayerTypes)m_eOwner;
+	if (eFutureOwner != NO_PLAYER && eOwner == NO_PLAYER)
+	{
+		bOwnerFlipped = true;
+		eOwner == eFutureOwner;
+		pWorkingCity = GET_PLAYER(eFutureOwner).getCapitalCity();
+	}
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+
 	if(!bIgnoreFeature)
 	{
 		if(getFeatureType() != NO_FEATURE)
@@ -6939,9 +6954,15 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 			int iYieldChange = pFeatureInfo->getYieldChange(eYield);
 
 			// Player Trait
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+			if (eOwner != NO_PLAYER && getImprovementType() == NO_IMPROVEMENT)
+			{
+				iYieldChange += GET_PLAYER(eOwner).GetPlayerTraits()->GetUnimprovedFeatureYieldChange(getFeatureType(), eYield);
+#else
 			if(m_eOwner != NO_PLAYER && getImprovementType() == NO_IMPROVEMENT)
 			{
 				iYieldChange +=  GET_PLAYER((PlayerTypes)m_eOwner).GetPlayerTraits()->GetUnimprovedFeatureYieldChange(getFeatureType(), eYield);
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 			}
 
 			// Leagues
@@ -6965,7 +6986,11 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 				}
 			}
 			// Natural Wonders
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+			if(eOwner != NO_PLAYER && pFeatureInfo->IsNaturalWonder())
+#else
 			if(m_eOwner != NO_PLAYER && pFeatureInfo->IsNaturalWonder())
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 			{
 				int iMod = 0;
 
@@ -6991,9 +7016,15 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 					}
 				}
 
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+				iYieldChange += GET_PLAYER(eOwner).GetPlayerTraits()->GetYieldChangeNaturalWonder(eYield);
+
+				iMod += GET_PLAYER(eOwner).GetPlayerTraits()->GetNaturalWonderYieldModifier();
+#else
 				iYieldChange += GET_PLAYER((PlayerTypes)m_eOwner).GetPlayerTraits()->GetYieldChangeNaturalWonder(eYield);
 
 				iMod += GET_PLAYER((PlayerTypes)m_eOwner).GetPlayerTraits()->GetNaturalWonderYieldModifier();
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 				if(iMod > 0)
 				{
 					iYieldChange *= (100 + iMod);
