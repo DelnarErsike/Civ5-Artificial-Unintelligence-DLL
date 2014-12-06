@@ -1715,19 +1715,93 @@ void CvEconomicAI::DoHurry()
 
 	CvCity* pLoopCity = 0;
 	int iTurnsSaved = 0;
+#ifndef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
 	int iHurryAmount = 0;
 	int iHurryAmountAvailable = 0;
 	int iI = 0;
+#endif // AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
 
 	CvCity* pBestHurryCity = NULL;
 	int iBestHurryTurnsSaved = 0;
+#ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+	int iBestHurryIndex = 0;
+
+	// Exit if we don't have a set amount of gold, to avoid purchase overuse.
+	int comfortableGoldToHurry = GC.getAI_GOLD_PRIORITY_MINIMUM_PLOT_BUY_VALUE() / 2 + GC.getAI_GOLD_BALANCE_TO_HALVE_PLOT_BUY_MINIMUM() * (int)m_pPlayer->GetCurrentEra() / 7;
+	int playerGold = m_pPlayer->GetTreasury()->GetGold();
+
+	if (playerGold < comfortableGoldToHurry)
+	{
+		return;
+	}
+#else
 	int iBestHurryAmount = 0;
 	int iBestHurryAmountAvailable = 0;
 	HurryTypes eBestHurryType = NO_HURRY;
+#endif // AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
 
 	// Look at each of our cities
 	for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 	{
+#ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+		int iProdPercentRemaining = ((pLoopCity->getProductionNeeded() - pLoopCity->getProduction()) * 100) / pLoopCity->getProductionNeeded();
+
+		// Loop through all orders in the city
+		for (int iIndex = 0; iIndex < pLoopCity->getOrderQueueLength(); iIndex++)
+		{
+			// What are we currently looking at?
+			pOrder = pLoopCity->getOrderFromQueue(iIndex);
+
+			// Can we rush it?
+			if (pOrder && pLoopCity->IsCanGoldPurchase(pOrder))
+			{
+				// We skip if the build order is more than 2/3 done.
+				if (iIndex == 0 && iProdPercentRemaining < 33)
+				{
+					continue;
+				}
+				if (iIndex == 0)
+				{
+					iTurnsSaved = pLoopCity->getProductionTurnsLeft() - 1;
+				}
+				else
+				{
+					int iProductionNeeded = MAX_INT;
+					switch (pOrder->eOrderType)
+					{
+					case ORDER_TRAIN:
+						iProductionNeeded = m_pPlayer->getProductionNeeded((UnitTypes)pOrder->iData1) * 100 - pLoopCity->getUnitProductionTimes100((UnitTypes)pOrder->iData1);
+						break;
+					case ORDER_CONSTRUCT:
+						iProductionNeeded = m_pPlayer->getProductionNeeded((BuildingTypes)pOrder->iData1) * 100 - pLoopCity->GetCityBuildings()->GetBuildingProductionTimes100((BuildingTypes)pOrder->iData1);
+						break;
+					case ORDER_CREATE:
+						iProductionNeeded = m_pPlayer->getProductionNeeded((ProjectTypes)pOrder->iData1) * 100 - pLoopCity->getProjectProductionTimes100((ProjectTypes)pOrder->iData1);
+						break;
+					case ORDER_PREPARE:
+						iProductionNeeded = m_pPlayer->getProductionNeeded((SpecialistTypes)pOrder->iData1) * 100 - pLoopCity->getSpecialistProductionTimes100((SpecialistTypes)pOrder->iData1);
+						break;
+					}
+					iTurnsSaved = iProductionNeeded / pLoopCity->getRawProductionDifferenceTimes100(true, false);
+				}
+				// Also skip if we don't save any turns
+				if (iIndex == 0 && iTurnsSaved < 2)
+				{
+					continue;
+				}
+				if (iBestHurryTurnsSaved * MAX(1, iIndex) < iTurnsSaved)
+				{
+					iBestHurryTurnsSaved = iTurnsSaved;
+					pBestHurryCity = pLoopCity;
+					iBestHurryIndex = iIndex;
+					if (GC.getLogging() && GC.getAILogging())
+					{
+						static const char* orderTypeStrings[] = { "ORDER_TRAIN", "ORDER_CONSTRUCT", "ORDER_CREATE", "ORDER_PREPARE", "ORDER_MAINTAIN", "NO_ORDER" };
+						int orderIndex = ((pOrder->eOrderType < 0) || (pOrder->eOrderType > 4)) ? 5 : pOrder->eOrderType;
+						CvString strLogString;
+						strLogString.Format("DoHurry Option: order type %s, Index %d, Turns Saved: %d,remaining percent = %d", orderTypeStrings[orderIndex], iIndex, iTurnsSaved, (iIndex == 0 ? iProdPercentRemaining : 0));
+						m_pPlayer->GetHomelandAI()->LogHomelandMessage(strLogString);
+#else
 		// What are we currently working on?
 		pOrder = pLoopCity->getOrderFromQueue(0);
 
@@ -1739,7 +1813,7 @@ void CvEconomicAI::DoHurry()
 				iHurryAmount = 0;
 
 				if(pLoopCity->canHurry((HurryTypes)iI) &&
-				        pLoopCity->hurryProduction((HurryTypes)iI) > 0)
+					pLoopCity->hurryProduction((HurryTypes)iI) > 0)
 				{
 					iTurnsSaved = pLoopCity->getProductionTurnsLeft() - 1;
 					if(iTurnsSaved > 0)
@@ -1770,6 +1844,7 @@ void CvEconomicAI::DoHurry()
 							pBestHurryCity = pLoopCity;
 							eBestHurryType = (HurryTypes)iI;
 						}
+#endif // AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
 					}
 				}
 			}
@@ -1779,8 +1854,16 @@ void CvEconomicAI::DoHurry()
 	// Now enact the best hurry we've found (only hurry one item per turn for now)
 	if(pBestHurryCity != NULL)
 	{
+#ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+		pBestHurryCity->PurchaseOrder(iBestHurryIndex);
+		if (iBestHurryIndex == 0)
+		{
+			pBestHurryCity->AI_chooseProduction(false);
+		}
+#else
 		pBestHurryCity->hurry(eBestHurryType);
 		pBestHurryCity->GetCityStrategyAI()->LogHurry(eBestHurryType, iBestHurryAmount, iBestHurryAmountAvailable, iBestHurryTurnsSaved);
+#endif // AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
 	}
 }
 
@@ -1969,7 +2052,51 @@ void CvEconomicAI::DoReconState()
 
 	if(iStrategyWeight > iWeightThreshold)
 	{
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_EXPLORE_ASSIGNMENT_FROM_CITY
+#ifdef AUI_MILITARY_AITYPE_FLIP
+		int iExplorersNeeded = int(iNumExplorerDivisor * (sqrt((double)iStrategyWeight / (double)iWeightThreshold) - 1) + 0.5);
+		int iUnitsConverted = m_pPlayer->GetMilitaryAI()->DoUnitAITypeFlip(UNITAI_EXPLORE, false /*bRevert*/, iExplorersNeeded /*iMaxCount*/,
+			DEFENSE_STATE_CRITICAL /*eThresholdLandDefenseState*/, NO_DEFENSE_STATE /*eThresholdNavalDefenseState*/, THREAT_CRITICAL /*eThresholdThreatState*/);
+		if (iExplorersNeeded > iUnitsConverted)
+		{
+			m_eReconState = RECON_STATE_NEEDED;
+		}
+#else
+		if (m_pPlayer->GetMilitaryAI()->GetLandDefenseState() < DEFENSE_STATE_CRITICAL && 
+			m_pPlayer->GetMilitaryAI()->GetThreatTotal() < m_pPlayer->GetMilitaryAI()->GetThreatWeight(THREAT_CRITICAL))
+		{
+			iUnitLoop = 0;
+			for (pLoopUnit = m_pPlayer->firstUnit(&iUnitLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iUnitLoop))
+			{
+				if (pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX && pLoopUnit->AI_getUnitAIType() != UNITAI_EXPLORE && pLoopUnit->getUnitInfo().GetUnitAIType(UNITAI_EXPLORE))
+				{
+					pLoopUnit->AI_setUnitAIType(UNITAI_EXPLORE);
+					if (GC.getLogging() && GC.getAILogging())
+					{
+						CvString strLogString;
+						strLogString.Format("Assigning explore unit AI to %s, X: %d, Y: %d", pLoopUnit->getName().GetCString(), pLoopUnit->getX(), pLoopUnit->getY());
+						m_pPlayer->GetHomelandAI()->LogHomelandMessage(strLogString);
+					}
+					// Calculate the new amount of explorers we have
+					iStrategyWeight *= (iNumExplorerDivisor * iNumExplorerDivisor);
+					iNumExplorerDivisor++;
+					iStrategyWeight /= (iNumExplorerDivisor * iNumExplorerDivisor);
+					// If the new number is now enough, exit loop
+					if (iStrategyWeight <= iWeightThreshold)
+					{
+						break;
+					}
+				}
+			}
+		}
+		if (iStrategyWeight > iWeightThreshold)
+		{
+			m_eReconState = RECON_STATE_NEEDED;
+		}
+#endif // AUI_MILITARY_AITYPE_FLIP
+#else
 		m_eReconState = RECON_STATE_NEEDED;
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_EXPLORE_ASSIGNMENT_FROM_CITY
 	}
 	else
 	{
@@ -1982,10 +2109,34 @@ void CvEconomicAI::DoReconState()
 			m_eReconState = RECON_STATE_ENOUGH;
 
 			// Return all/most warriors/spears to normal unit AI since have enough recon.  Keep at least 1 explorer through Turn 100.
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_SKIP_FIRST_ONLY_IF_NO_EXPLORERS
+			bool bHaveDedicatedScout = false;
+			iUnitLoop = 0;
+			for (pLoopUnit = m_pPlayer->firstUnit(&iUnitLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iUnitLoop))
+			{
+				if (pLoopUnit->getUnitInfo().GetDefaultUnitAIType() == UNITAI_EXPLORE)
+				{
+					bHaveDedicatedScout = true;
+					break;
+				}
+			}
+			bool bSkipFirst = !bHaveDedicatedScout && GC.getGame().getGameTurn() < 100;
+#else
 			bool bSkipFirst = GC.getGame().getGameTurn() < 100;
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_SKIP_FIRST_ONLY_IF_NO_EXPLORERS
+#ifdef AUI_MILITARY_AITYPE_FLIP
+			m_pPlayer->GetMilitaryAI()->DoUnitAITypeFlip(UNITAI_EXPLORE, true /*bRevert*/, iNumExploringUnits - (bSkipFirst ? 1 : 0) /*iMaxCount*/);
+#else
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_ITERATOR
+			iUnitLoop = 0;
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_ITERATOR
 			for(pLoopUnit = m_pPlayer->firstUnit(&iUnitLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iUnitLoop))
 			{
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
+				if(pLoopUnit->AI_getUnitAIType() == UNITAI_EXPLORE && pLoopUnit->getUnitInfo().GetDefaultUnitAIType() != UNITAI_EXPLORE)
+#else
 				if(pLoopUnit->AI_getUnitAIType() == UNITAI_EXPLORE && pLoopUnit->getUnitInfo().GetUnitAIType(UNITAI_ATTACK))
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
 				{
 					if(bSkipFirst)
 					{
@@ -1993,16 +2144,25 @@ void CvEconomicAI::DoReconState()
 					}
 					else
 					{
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
+						pLoopUnit->AI_setUnitAIType((UnitAITypes)pLoopUnit->getUnitInfo().GetDefaultUnitAIType());
+#else
 						pLoopUnit->AI_setUnitAIType(UNITAI_ATTACK);
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
 						if(GC.getLogging() && GC.getAILogging())
 						{
 							CvString strLogString;
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
+							strLogString.Format("Assigning exploring %s back to its default AI, X: %d, Y: %d", pLoopUnit->getName().GetCString(), pLoopUnit->getX(), pLoopUnit->getY());
+#else
 							strLogString.Format("Assigning exploring %s back to attack AI, X: %d, Y: %d", pLoopUnit->getName().GetCString(), pLoopUnit->getX(), pLoopUnit->getY());
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
 							m_pPlayer->GetHomelandAI()->LogHomelandMessage(strLogString);
 						}
 					}
 				}
 			}
+#endif // AUI_MILITARY_AITYPE_FLIP
 		}
 	}
 
@@ -2047,7 +2207,50 @@ void CvEconomicAI::DoReconState()
 
 		if(iStrategyWeight > iWeightThreshold/* || iNumExploringUnits == 0 && iNumCoastalTilesWithAdjacentFog > 50*/)
 		{
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_EXPLORE_ASSIGNMENT_FROM_CITY
+#ifdef AUI_MILITARY_AITYPE_FLIP
+			int iExplorersNeeded = int(iNumExplorerDivisor * (sqrt((double)iStrategyWeight / (double)iWeightThreshold) - 1) + 0.5);
+			int iUnitsConverted = m_pPlayer->GetMilitaryAI()->DoUnitAITypeFlip(UNITAI_EXPLORE_SEA, false /*bRevert*/, iExplorersNeeded /*iMaxCount*/,
+				NO_DEFENSE_STATE /*eThresholdLandDefenseState*/, DEFENSE_STATE_CRITICAL /*eThresholdNavalDefenseState*/);
+			if (iExplorersNeeded > iUnitsConverted)
+			{
+				m_eNavalReconState = RECON_STATE_NEEDED;
+			}
+#else
+			if (m_pPlayer->GetMilitaryAI()->GetNavalDefenseState() < DEFENSE_STATE_CRITICAL)
+			{
+				iUnitLoop = 0;
+				for (pLoopUnit = m_pPlayer->firstUnit(&iUnitLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iUnitLoop))
+				{
+					if (pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX && pLoopUnit->AI_getUnitAIType() != UNITAI_EXPLORE_SEA && pLoopUnit->getUnitInfo().GetUnitAIType(UNITAI_EXPLORE_SEA))
+					{
+						pLoopUnit->AI_setUnitAIType(UNITAI_EXPLORE_SEA);
+						if (GC.getLogging() && GC.getAILogging())
+						{
+							CvString strLogString;
+							strLogString.Format("Assigning explore sea unit AI to %s, X: %d, Y: %d", pLoopUnit->getName().GetCString(), pLoopUnit->getX(), pLoopUnit->getY());
+							m_pPlayer->GetHomelandAI()->LogHomelandMessage(strLogString);
+						}
+						// Calculate the new amount of explorers we have
+						iStrategyWeight *= (iNumExplorerDivisor * iNumExplorerDivisor);
+						iNumExplorerDivisor++;
+						iStrategyWeight /= (iNumExplorerDivisor * iNumExplorerDivisor);
+						// If the new number is now enough, exit loop
+						if (iStrategyWeight <= iWeightThreshold)
+						{
+							break;
+						}
+					}
+				}
+			}
+			if (iStrategyWeight > iWeightThreshold)
+			{
+				m_eNavalReconState = RECON_STATE_NEEDED;
+			}
+#endif // AUI_MILITARY_AITYPE_FLIP
+#else
 			m_eNavalReconState = RECON_STATE_NEEDED;
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_EXPLORE_ASSIGNMENT_FROM_CITY
 		}
 		else
 		{
@@ -2061,9 +2264,19 @@ void CvEconomicAI::DoReconState()
 
 				// Return all/most boats to normal unit AI since have enough recon
 				bool bSkipFirst = (m_eNavalReconState == RECON_STATE_NEUTRAL);
+#ifdef AUI_MILITARY_AITYPE_FLIP
+				m_pPlayer->GetMilitaryAI()->DoUnitAITypeFlip(UNITAI_EXPLORE_SEA, true /*bRevert*/, iNumExploringUnits - (bSkipFirst ? 1 : 0) /*iMaxCount*/);
+#else
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_ITERATOR
+				iUnitLoop = 0;
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_ITERATOR
 				for(pLoopUnit = m_pPlayer->firstUnit(&iUnitLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iUnitLoop))
 				{
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
+					if(pLoopUnit->AI_getUnitAIType() == UNITAI_EXPLORE_SEA && pLoopUnit->getUnitInfo().GetDefaultUnitAIType() != UNITAI_EXPLORE_SEA)
+#else
 					if(pLoopUnit->AI_getUnitAIType() == UNITAI_EXPLORE_SEA && pLoopUnit->getUnitInfo().GetUnitAIType(UNITAI_ATTACK_SEA))
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
 					{
 						if(bSkipFirst)
 						{
@@ -2071,16 +2284,25 @@ void CvEconomicAI::DoReconState()
 						}
 						else
 						{
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
+							pLoopUnit->AI_setUnitAIType((UnitAITypes)pLoopUnit->getUnitInfo().GetDefaultUnitAIType());
+#else
 							pLoopUnit->AI_setUnitAIType(UNITAI_ATTACK_SEA);
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
 							if(GC.getLogging() && GC.getAILogging())
 							{
 								CvString strLogString;
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
+								strLogString.Format("Assigning naval explorer back to its default AI to %s, X: %d, Y: %d", pLoopUnit->getName().GetCString(), pLoopUnit->getX(), pLoopUnit->getY());
+#else
 								strLogString.Format("Assigning naval explorer back to attack sea AI to %s, X: %d, Y: %d", pLoopUnit->getName().GetCString(), pLoopUnit->getX(), pLoopUnit->getY());
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
 								m_pPlayer->GetHomelandAI()->LogHomelandMessage(strLogString);
 							}
 						}
 					}
 				}
+#endif // AUI_MILITARY_AITYPE_FLIP
 			}
 		}
 	}
@@ -3042,16 +3264,36 @@ bool EconomicAIHelpers::IsTestStrategy_TechLeader(CvPlayer* pPlayer)
 /// "Early Expansion" Player Strategy: An early Strategy simply designed to get player up to 3 Cities quickly.
 bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 {
+#ifdef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
+	// Make sure city specialization has gotten one chance to specialize the capital before we adopt this
+	if (pPlayer->getCapitalCity() == NULL || GC.getGame().getGameTurn() <= GC.getAI_CITY_SPECIALIZATION_EARLIEST_TURN() * GC.getGame().getEstimateEndTurn() / 500)
+	{
+		return false;
+	}
+	if (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE) && pPlayer->isHuman())
+	{
+		return false;
+	}
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
+
+#ifdef AUI_ECONOMIC_USE_DOUBLES
+	double dDesiredCities = pPlayer->GetEconomicAI()->GetEarlyCityNumberTarget();
+#else
 	int iDesiredCities;
+#endif // AUI_ECONOMIC_USE_DOUBLES
 	int iFlavorExpansion = 0;
 	int iFlavorGrowth = 0;
 
+#ifndef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
 	if(GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE) && pPlayer->isHuman())
 	{
 		return false;
 	}
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
 
+#ifndef AUI_ECONOMIC_USE_DOUBLES
 	iDesiredCities = pPlayer->GetEconomicAI()->GetEarlyCityNumberTarget();
+#endif // AUI_ECONOMIC_USE_DOUBLES
 	for(int iFlavorLoop = 0; iFlavorLoop < GC.getNumFlavorTypes() && (iFlavorExpansion == 0 || iFlavorGrowth == 0); iFlavorLoop++)
 	{
 		if(GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_EXPANSION")
@@ -3064,20 +3306,94 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 		}
 	}
 
+#ifdef AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
+	// If we're the only ones on our continent, increase effect of expansion flavor
+	bool bAloneInArea = true;
+	int iStartArea = 0;
+	CvPlot* pLoopPlot;
+	if (pPlayer->getStartingPlot())
+	{
+		iStartArea = pPlayer->getStartingPlot()->getArea();
+		for (int iI = 0; iI < GC.getMap().numPlots(); iI++)
+		{
+			pLoopPlot = GC.getMap().plotByIndexUnchecked(iI);
+			if (pLoopPlot->getArea() == iStartArea)
+			{
+				if (pLoopPlot->isOwned() && pLoopPlot->getOwner() != pPlayer->GetID() && !GET_PLAYER(pLoopPlot->getOwner()).isMinorCiv())
+				{
+					bAloneInArea = false;
+					break;
+				}
+			}
+		}
+	}
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
+
+#ifndef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_FLAVOR_APPLICATION
 	iDesiredCities = (iDesiredCities * iFlavorExpansion) / max(iFlavorGrowth, 1);
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_FLAVOR_APPLICATION
+
+#ifdef AUI_ECONOMIC_USE_DOUBLES
+	double dDifficulty = MAX(0, GC.getGame().getHandicapInfo().GetID() - 3);
+#else
 	int iDifficulty = max(0,GC.getGame().getHandicapInfo().GetID() - 3);
+#endif // AUI_ECONOMIC_USE_DOUBLES
+
+#ifdef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_FLAVOR_APPLICATION
+#ifdef AUI_ECONOMIC_USE_DOUBLES
+	dDifficulty /= 2.0;
+	dDifficulty += 1.0;
+#ifdef AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
+	dDesiredCities *= log(iFlavorExpansion * ((bAloneInArea ? iFlavorExpansion : 0) + pow(dDifficulty, 2.0))) / log((double)MAX(iFlavorGrowth, 2));
+#else
+	dDesiredCities *= log(iFlavorExpansion * pow(dDifficulty, 2.0)) / log((double)MAX(iFlavorGrowth, 2));
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
+#else
+#ifdef AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
+	iDesiredCities *= int(log(iFlavorExpansion * ((bAloneInArea ? iFlavorExpansion : 0) + pow((double)iDifficulty / 2.0 + 1.0, 2.0))) / log((double)MAX(iFlavorGrowth, 2)) + 0.5);
+#else
+	iDesiredCities *= int(log(iFlavorExpansion * pow((double)iDifficulty / 2.0 + 1.0, 2.0)) / log((double)MAX(iFlavorGrowth, 2)) + 0.5);
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
+#endif // AUI_ECONOMIC_USE_DOUBLES
+#else
+#ifdef AUI_ECONOMIC_USE_DOUBLES
+	dDesiredCities += dDifficulty;
+#else
 	iDesiredCities += iDifficulty;
+#endif // AUI_ECONOMIC_USE_DOUBLES
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_FLAVOR_APPLICATION
 
 	// scale this based on world size
 	const int iDefaultNumTiles = 80*52;
+#ifdef AUI_ECONOMIC_USE_DOUBLES
+	dDesiredCities = dDesiredCities * GC.getMap().numPlots() / iDefaultNumTiles + 1.0; // +1.0 for capital
+#else
 	iDesiredCities = (iDesiredCities * GC.getMap().numPlots()) / iDefaultNumTiles;
+#endif // AUI_ECONOMIC_USE_DOUBLES
+
+#ifdef AUI_ECONOMIC_EARLY_EXPANSION_SCALE_BY_PLAYER_COUNT
+	// adjustments for player count and minor civ count
+	const int iMajorCount = GC.getGame().countMajorCivsAlive();
+	const int iMinorCount = GC.getGame().countCivPlayersAlive() - iMajorCount;
+#ifdef AUI_ECONOMIC_USE_DOUBLES
+	const double dDefaultCityCount = MAX(16 + 8 * dDesiredCities, (double)GC.getGame().getNumCivCities());
+	const double dTargetCityCount = MAX(iMinorCount + iMajorCount * dDesiredCities, (double)GC.getGame().getNumCivCities());
+	dDesiredCities *= dDefaultCityCount / dTargetCityCount;
+#else
+	const int iDefaultCityCount = MAX(16 + 8 * iDesiredCities, GC.getGame().getNumCivCities());
+	const int iTargetCityCount = MAX(iMinorCount + iMajorCount * iDesiredCities, GC.getGame().getNumCivCities());
+	iDesiredCities = iDesiredCities * iDefaultCityCount / iTargetCityCount;
+#endif // AUI_ECONOMIC_USE_DOUBLES
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_SCALE_BY_PLAYER_COUNT
 
 	// See how many unowned Tiles there are on this player's landmass
+#ifndef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
 	if(pPlayer->getCapitalCity() != NULL)
 	{
 		// Make sure city specialization has gotten one chance to specialize the capital before we adopt this
 		//if(GC.getGame().getGameTurn() > GC.getAI_CITY_SPECIALIZATION_EARLIEST_TURN())
 		{
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
 			CvArea* pArea = GC.getMap().getArea(pPlayer->getCapitalCity()->getArea());
 
 			// Is this area still one of the best to settle?
@@ -3094,14 +3410,20 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 				int iSettlersOnMap = pPlayer->GetNumUnitsWithUnitAI(UNITAI_SETTLE, true);
 
 				if(iOwnageRatio < GC.getAI_STRATEGY_AREA_IS_FULL_PERCENT()
-				        && (iNumCities + iSettlersOnMap) < iDesiredCities
-				        && iNumUnownedTiles >= GC.getAI_STRATEGY_EARLY_EXPANSION_NUM_UNOWNED_TILES_REQUIRED())
+#ifdef AUI_ECONOMIC_USE_DOUBLES
+						&& (iNumCities + iSettlersOnMap) < int(dDesiredCities + 0.5)
+#else
+						&& (iNumCities + iSettlersOnMap) < iDesiredCities
+#endif // AUI_ECONOMIC_USE_DOUBLES
+						&& iNumUnownedTiles >= GC.getAI_STRATEGY_EARLY_EXPANSION_NUM_UNOWNED_TILES_REQUIRED())
 				{
 					return true;
 				}
 			}
+#ifndef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
 		}
 	}
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
 
 	return false;
 }
@@ -3892,6 +4214,7 @@ bool EconomicAIHelpers::IsTestStrategy_ExpandLikeCrazy(EconomicAIStrategyTypes e
 		return false;
 	}
 
+#ifndef AUI_ECONOMIC_FIX_EXPAND_LIKE_CRAZY_REMOVE_HOLDOVER_CULTURE_CHECK
 	// Never run this if we are going for a cultural victory since it will derail that
 	AIGrandStrategyTypes eGrandStrategy = (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE");
 	if(eGrandStrategy != NO_AIGRANDSTRATEGY)
@@ -3905,6 +4228,7 @@ bool EconomicAIHelpers::IsTestStrategy_ExpandLikeCrazy(EconomicAIStrategyTypes e
 			}
 		}
 	}
+#endif // AUI_ECONOMIC_FIX_EXPAND_LIKE_CRAZY_REMOVE_HOLDOVER_CULTURE_CHECK
 
 	int iFlavorExpansion = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"));
 	CvEconomicAIStrategyXMLEntry* pStrategy = pPlayer->GetEconomicAI()->GetEconomicAIStrategies()->GetEntry(eStrategy);
@@ -3938,7 +4262,11 @@ bool EconomicAIHelpers::IsTestStrategy_GS_Culture(CvPlayer* pPlayer)
 
 	if(eGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		if (pPlayer->GetGrandStrategyAI()->IsGrandStrategySignificant(eGrandStrategy))
+#else
 		if(pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eGrandStrategy)
+#endif // AUI_GS_PRIORITY_RATIO
 		{
 			return true;
 		}
@@ -3954,7 +4282,11 @@ bool EconomicAIHelpers::IsTestStrategy_GS_Conquest(CvPlayer* pPlayer)
 
 	if(eGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		if (pPlayer->GetGrandStrategyAI()->IsGrandStrategySignificant(eGrandStrategy))
+#else
 		if(pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eGrandStrategy)
+#endif // AUI_GS_PRIORITY_RATIO
 		{
 			return true;
 		}
@@ -3970,7 +4302,11 @@ bool EconomicAIHelpers::IsTestStrategy_GS_Diplomacy(CvPlayer* pPlayer)
 
 	if(eGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		if (pPlayer->GetGrandStrategyAI()->IsGrandStrategySignificant(eGrandStrategy))
+#else
 		if(pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eGrandStrategy)
+#endif // AUI_GS_PRIORITY_RATIO
 		{
 			return true;
 		}
@@ -3986,7 +4322,11 @@ bool EconomicAIHelpers::IsTestStrategy_GS_Spaceship(CvPlayer* pPlayer)
 
 	if(eGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		if (pPlayer->GetGrandStrategyAI()->IsGrandStrategySignificant(eGrandStrategy))
+#else
 		if(pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eGrandStrategy)
+#endif // AUI_GS_PRIORITY_RATIO
 		{
 			return true;
 		}

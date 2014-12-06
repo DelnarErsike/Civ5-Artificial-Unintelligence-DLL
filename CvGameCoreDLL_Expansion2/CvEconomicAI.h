@@ -214,6 +214,12 @@ public:
 	{
 		return m_iLastTurnWorkerDisbanded;
 	};
+#ifdef AUI_ECONOMIC_SETTER_LAST_TURN_WORKER_DISBANDED
+	void SetLastTurnWorkerDisbanded(int iTurn)
+	{
+		m_iLastTurnWorkerDisbanded = iTurn;
+	};
+#endif // AUI_ECONOMIC_SETTER_LAST_TURN_WORKER_DISBANDED
 	int GetVisibleAntiquitySites() const
 	{
 		return m_iVisibleAntiquitySites;

@@ -107,6 +107,8 @@
 #define AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
 
 // EconomicAI Stuff
+/// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division)
+#define AUI_ECONOMIC_USE_DOUBLES
 #ifdef AUI_CITY_FIX_CREATE_UNIT_EXPLORE_ASSIGNMENT_TO_ECONOMIC
 /// Assigning non-scout units to become explorers is now done in EconomicAI instead of at City
 #define AUI_ECONOMIC_FIX_DO_RECON_STATE_EXPLORE_ASSIGNMENT_FROM_CITY
@@ -119,6 +121,20 @@
 #define AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
 /// Adds a setter for m_iLastTurnWorkerDisbanded (so if a worker is disbanded in another class, they can reference this)
 #define AUI_ECONOMIC_SETTER_LAST_TURN_WORKER_DISBANDED
+/// Checks that would force the function to return false happen earlier in the function
+#define AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
+/// Squares the amount of expansion flavor applied to get the desired amount of cities if the AI is the only major on its starting landmass
+#define AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
+/// Multiplies the desired city count by the ratio of the natural logs of expansion and growth flavors, with difficulty acting as an extra multiplier to expansion flavor
+#define AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_FLAVOR_APPLICATION
+/// Scales the desired amount of cities by the amount of major and minor players on the map
+#define AUI_ECONOMIC_EARLY_EXPANSION_SCALE_BY_PLAYER_COUNT
+/// Removes the check for a cultural grand strategy that's a holdover from pre-BNW when cultural victories were won through policies, not tourism
+#define AUI_ECONOMIC_FIX_EXPAND_LIKE_CRAZY_REMOVE_HOLDOVER_CULTURE_CHECK
+#ifdef AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+/// Reenables the DoHurry() function, but using a reworked method instead of the original (originally from Ninakoru's Smart AI, but heavily modified since)
+#define AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+#endif // AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
 
 // Flavor Manager Stuff
 /// Players that start as human no longer load in default flavor values
