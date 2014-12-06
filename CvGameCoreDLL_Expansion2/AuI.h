@@ -106,6 +106,28 @@
 /// Majors will always "see" barbarians in tiles that have been revealed when plotting danger values (kind of a cheat, but it's a knowledge cheat, so it's OK-ish)
 #define AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
 
+// DiplomacyAI Stuff
+/// If the first adjusted value is out of bounds, keep rerolling with the amount with which it is out of bounds until we remain in bounds
+#define AUI_DIPLOMACY_GET_RANDOM_PERSONALITY_WEIGHT_USE_REROLLS
+#ifdef AUI_BINOM_RNG
+/// When modifying a personality value (eg. Boldness, Wonder Competitiveness), the AI will use the binomial RNG for a normal distribution instead of a flat one
+#define AUI_DIPLOMACY_GET_RANDOM_PERSONALITY_WEIGHT_USES_BINOM_RNG
+/// When rolling about whether to contact a player with a statement or not, the AI will use the binomial RNG for a normal distribution instead of a flat one
+#define AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG (7)
+/// When adding an extra, random value to the score of a possible cooperative war, the AI will use the binomial RNG for a normal distribution instead of a flat one
+#define AUI_DIPLOMACY_GET_COOP_WAR_SCORE_USES_BINOM_RNG (5)
+/// When adding an extra, random value to the score of a possible cooperative war, the maximum value added will be the AI's boldness instead of a set number
+#define AUI_DIPLOMACY_GET_COOP_WAR_SCORE_MAX_RANDOM_VALUE_IS_BOLDNESS
+/// When adding an extra, random value to the turns the AI will wait before submitting to another demand, the AI will use the binomial RNG for a normal distribution instead of a flat one
+#define AUI_DIPLOMACY_DO_DEMAND_MADE_USES_BINOM_RNG
+/// When adding an extra, random value to the score of whether a request not to settle near lands is acceptable, the AI will use the binomial RNG for a normal distribution instead of a flat one
+#define AUI_DIPLOMACY_IS_DONT_SETTLE_ACCEPTABLE_USES_BINOM_RNG
+/// When adding an extra, random value to the score of whether a DoF is acceptable, the AI will use the binomial RNG for a normal distribution instead of a flat one
+#define AUI_DIPLOMACY_IS_DOF_ACCEPTABLE_USES_BINOM_RNG (5)
+/// When adding an extra, random value to the score of whether to denounce a player, the AI will use the binomial RNG for a normal distribution instead of a flat one
+#define AUI_DIPLOMACY_GET_DENOUNCE_WEIGHT_USES_BINOM_RNG (5)
+#endif // AUI_BINOM_RNG
+
 // EconomicAI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division)
 #define AUI_ECONOMIC_USE_DOUBLES
