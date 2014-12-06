@@ -123,6 +123,20 @@
 // Flavor Manager Stuff
 /// Players that start as human no longer load in default flavor values
 #define AUI_FLAVOR_MANAGER_HUMANS_GET_FLAVOR
+/// Adds a new function that randomizes weights like at the start of the game, but at half the usual value
+#define AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+/// Randomization gets applied twice for all flavors that influence a Grand Strategy
+#define AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
+/// Fixes the "zero'ed out flavor" check to still accept 0 as a possible flavor value, but not accept negative values
+#define AUI_FLAVOR_MANAGER_FIX_RANDOMIZE_WEIGHTS_ZEROED_OUT_FLAVOR
+/// Fixes the function messing up and returning the wrong adjustment when the value to be added is actually negative (eg. for minor civs)
+#define AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
+/// If the first adjusted value is out of bounds, keep rerolling with the amount with which it is out of bounds until we remain in bounds
+#define AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+#ifdef AUI_BINOM_RNG
+/// When adding or subtracting flavor value, the binomial RNG is used to generate a normal distribution instead of a flat one
+#define AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USES_BINOM_RNG
+#endif // AUI_BINOM_RNG
 
 // Grand Strategy Stuff
 /// Enables use of Grand Strategy Priority; the function returns the ratio of the requested GS's priority to the active GS's priority (1.0 if the requested GS is the active GS)

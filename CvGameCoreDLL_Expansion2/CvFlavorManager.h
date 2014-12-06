@@ -87,9 +87,17 @@ public:
 
 	int GetAdjustedValue(int iOriginalValue, int iPlusMinus, int iMin, int iMax);
 
+#ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+	void RandomizeWeightsOnEraChange();
+#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+
 private:
 
+#ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+	void RandomizeWeights(bool bHalveRandom = false);
+#else
 	void RandomizeWeights();
+#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
 	void BroadcastFlavors(int* piDeltaFlavorValues, bool bDontUpdateCityFlavors);
 	void BroadcastBaseFlavors();
 

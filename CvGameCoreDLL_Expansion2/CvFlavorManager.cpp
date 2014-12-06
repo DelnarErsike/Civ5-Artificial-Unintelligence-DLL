@@ -12,6 +12,10 @@
 // must be included after all other headers
 #include "LintFree.h"
 
+#ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
+#include "CvGrandStrategyAI.h"
+#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
+
 /// Constructor
 CvFlavorRecipient::CvFlavorRecipient():
 	m_piLatestFlavorValues(NULL)
@@ -159,8 +163,10 @@ void CvFlavorManager::Init(CvPlayer* pPlayer)
 		SlotStatus s = CvPreGame::slotStatus(p);
 		if((s == SS_TAKEN || s == SS_COMPUTER) && !pPlayer->isBarbarian())
 		{
+#ifndef AUI_FLAVOR_MANAGER_HUMANS_GET_FLAVOR
 			// Copy over leaderhead defaults unless human
 			if(!pPlayer->isHuman())
+#endif // AUI_FLAVOR_MANAGER_HUMANS_GET_FLAVOR
 			{
 				LeaderHeadTypes type = pPlayer->getPersonalityType();
 				if(type != NO_LEADER)
@@ -197,6 +203,7 @@ void CvFlavorManager::Init(CvPlayer* pPlayer)
 				RandomizeWeights();
 			}
 
+#ifndef AUI_FLAVOR_MANAGER_HUMANS_GET_FLAVOR
 			// Human player, just set all flavors to average (5)
 			else
 			{
@@ -207,6 +214,7 @@ void CvFlavorManager::Init(CvPlayer* pPlayer)
 					m_piPersonalityFlavor[iI] = iDefaultFlavorValue;
 				}
 			}
+#endif // AUI_FLAVOR_MANAGER_HUMANS_GET_FLAVOR
 
 			// Send out updated values to all recipients
 			BroadcastBaseFlavors();
@@ -439,41 +447,139 @@ int* CvFlavorManager::GetAllPersonalityFlavors()
 	return m_piPersonalityFlavor;
 }
 
+#ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+void CvFlavorManager::RandomizeWeightsOnEraChange()
+{
+	RandomizeWeights(true);
+}
+#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+
 // PRIVATE METHODS
 
 /// Make a random adjustment to each flavor value for this leader so they don't play exactly the same
+#ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+void CvFlavorManager::RandomizeWeights(bool bHalveRandom)
+#else
 void CvFlavorManager::RandomizeWeights()
+#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
 {
 	int iI;
 	int iMin, iMax, iPlusMinus;
+#ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
+	bool bApplyTwice;
+#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
 
 	iMin = /*0*/ GC.getPERSONALITY_FLAVOR_MIN_VALUE();
 	iMax = /*20*/ GC.getPERSONALITY_FLAVOR_MAX_VALUE();
 	iPlusMinus = /*2*/ GC.getFLAVOR_RANDOMIZATION_RANGE();
+#ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+	// halves randomization range
+	if (bHalveRandom)
+	{
+		if (iPlusMinus % 2 != 0)
+		{
+			iPlusMinus += GC.getGame().getJonRandNum(2, "Rounding factor");
+		}
+		iPlusMinus /= 2;
+	}
+#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
 
 	for(iI = 0; iI < GC.getNumFlavorTypes(); iI++)
 	{
 		// Don't modify it if it's zero-ed out in the XML
+#ifdef AUI_FLAVOR_MANAGER_FIX_RANDOMIZE_WEIGHTS_ZEROED_OUT_FLAVOR
+		if (m_piPersonalityFlavor[iI] >= 0)
+#else
 		if(m_piPersonalityFlavor[iI] != 0)
+#endif // AUI_FLAVOR_MANAGER_FIX_RANDOMIZE_WEIGHTS_ZEROED_OUT_FLAVOR
 		{
 			m_piPersonalityFlavor[iI] = GetAdjustedValue(m_piPersonalityFlavor[iI], iPlusMinus, iMin, iMax);
 		}
+#ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
+		// modifications for flavors that govern grand strategy get applied twice
+		bApplyTwice = false;
+		for (int iGrandStrategiesLoop = 0; iGrandStrategiesLoop < GC.getNumAIGrandStrategyInfos(); iGrandStrategiesLoop++)
+		{
+			CvAIGrandStrategyXMLEntry* pGrandStrategy = GC.getAIGrandStrategyInfo((AIGrandStrategyTypes)iGrandStrategiesLoop);
+			if (pGrandStrategy && pGrandStrategy->GetFlavorValue(iI) != 0)
+			{
+				bApplyTwice = true;
+				break;
+			}
+		}
+		if (bApplyTwice)
+		{
+			// Don't modify it if it's zero-ed out in the XML
+#ifdef AUI_FLAVOR_MANAGER_FIX_RANDOMIZE_WEIGHTS_ZEROED_OUT_FLAVOR
+			if (m_piPersonalityFlavor[iI] >= 0)
+#else
+			if (m_piPersonalityFlavor[iI] != 0)
+#endif // AUI_FLAVOR_MANAGER_FIX_RANDOMIZE_WEIGHTS_ZEROED_OUT_FLAVOR
+			{
+				m_piPersonalityFlavor[iI] = GetAdjustedValue(m_piPersonalityFlavor[iI], iPlusMinus, iMin, iMax);
+			}
+		}
+#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
 	}
 }
 
+#ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USES_BINOM_RNG
+/// Add a random plus/minus to an integer (but keep it in range); distribution remains normal
+#else
 /// Add a random plus/minus to an integer (but keep it in range)
+#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USES_BINOM_RNG
 int CvFlavorManager::GetAdjustedValue(int iOriginalValue, int iPlusMinus, int iMin, int iMax)
 {
 	int iAdjust;
 	int iRtnValue;
 
+#ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+	int iReroll = 0;
+#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+#ifdef AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
+	int iSign = (iPlusMinus < 0 ? -1 : 1);
+#endif // AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
+
+#ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USES_BINOM_RNG
+#ifdef AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
+	iAdjust = iSign * GC.getGame().getJonRandNumBinom(2 * abs(iPlusMinus) + 1, "Adjusting Personality Flavor");
+#else
+	iAdjust = GC.getGame().getJonRandNumBinom((iPlusMinus * 2 + 1), "Adjusting Personality Flavor");
+#endif // AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
+#else
+#ifdef AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
+	iAdjust = iSign * GC.getGame().getJonRandNum(2 * abs(iPlusMinus) + 1, "Adjusting Personality Flavor");
+#else
 	iAdjust = GC.getGame().getJonRandNum((iPlusMinus * 2 + 1), "Adjusting Personality Flavor");
+#endif // AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
+#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USES_BINOM_RNG
 	iRtnValue = iOriginalValue + iAdjust - iPlusMinus;
 
 	if(iRtnValue < iMin)
+#ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+	{
+		iReroll = iMin - iRtnValue;
+#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 		iRtnValue = iMin;
+#ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+	}
+#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 	else if(iRtnValue > iMax)
+#ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+	{
+		iReroll = iMax - iRtnValue;
+#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 		iRtnValue = iMax;
+#ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+	}
+#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+
+#ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+	if (iReroll != 0)
+	{
+		iRtnValue = GetAdjustedValue(iRtnValue, iReroll, iMin, iMax);
+	}
+#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 
 	return iRtnValue;
 }
