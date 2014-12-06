@@ -173,6 +173,10 @@
 #define AUI_GS_BETTER_LOGGING
 
 // Homeland AI Stuff
+/// Adds a new function that lets aircraft go on intercept missions (originally from Ninakoru's Smart AI)
+#define AUI_HOMELAND_AIRCRAFT_INTERCEPTIONS
+/// Dials up priority for upgrading units by 50x every other turn primarily to help upgrade air units (originally from Ninakoru's Smart AI with slight modification)
+#define AUI_HOMELAND_ESTABLISH_HOMELAND_PRIORITIES_50X_UPGRADE_PRIORITY_EVERY_OTHER_TURN
 /// Disables the code that would start fortifying scouts if recon state was set as "enough"
 #define AUI_HOMELAND_ALWAYS_MOVE_SCOUTS
 /// Tweaks the algorithm for Plot Heal Moves to keep March promotions in mind and make sure we don't overheal if we're under threat
@@ -205,6 +209,14 @@
 #endif // AUI_ECONOMIC_SETTER_LAST_TURN_WORKER_DISBANDED
 /// This function is just filled with holes; I've now fixed (most of) them!
 #define AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
+/// Units in armies that are waiting around are now eligible for upgrading
+#define AUI_HOMELAND_FIX_PLOT_UPGRADE_MOVES_APPLIES_TO_WAITING_ARMIES
+/// The AI will no longer stop upgrading units once it has upgraded more units in a turn than its Military Training Flavor
+#define AUI_HOMELAND_PLOT_UPGRADE_MOVES_NO_COUNT_LIMIT
+/// Stops the AI from suiciding units by embarking them onto tiles that can be attacked
+#define AUI_HOMELAND_FIX_EXECUTE_MOVES_TO_SAFEST_PLOT_NO_EMBARK_SUICIDE
+/// Disbands archaeologists if there are no more sites available (originally from Ninakoru's Smart AI)
+#define AUI_HOMELAND_EXECUTE_ARCHAEOLOGIST_MOVES_DISBAND_IF_NO_AVAILABLE_SITES
 
 // Military AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division); some double types are also replaced for increased speed

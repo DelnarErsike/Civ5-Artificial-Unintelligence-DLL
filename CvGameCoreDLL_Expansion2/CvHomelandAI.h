@@ -307,6 +307,13 @@ private:
 	void ClearCurrentMoveUnits();
 	void ClearCurrentMoveHighPriorityUnits();
 
+#ifdef AUI_HOMELAND_AIRCRAFT_INTERCEPTIONS
+	void ExecuteAircraftInterceptions();
+#endif // AUI_HOMELAND_AIRCRAFT_INTERCEPTIONS
+#ifdef AUI_HOMELAND_PARATROOPERS_PARADROP
+	bool CheckAndExecuteParadrop(UnitHandle pUnit, CvPlot* pTarget, int iPathfindingTurns = MAX_INT);
+#endif // AUI_HOMELAND_PARATROOPERS_PARADROP
+
 	// Logging functions
 	CvString GetLogFileName(CvString& playerName) const;
 
