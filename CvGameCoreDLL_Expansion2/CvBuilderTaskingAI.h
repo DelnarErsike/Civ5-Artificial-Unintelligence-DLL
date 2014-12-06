@@ -95,7 +95,11 @@ public:
 	CvCity* GetWorkingCity(CvPlot* pPlot);
 	bool DoesBuildHelpRush(CvUnit* pUnit, CvPlot* pPlot, BuildTypes eBuild);
 
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+	int ScorePlot(bool bWillChop = false);
+#else
 	int ScorePlot();
+#endif // AUI_WORKER_SCORE_PLOT_CHOP
 
 	BuildTypes GetBuildTypeFromImprovement(ImprovementTypes eImprovement);
 	//static YieldTypes GetDeficientYield (CvCity* pCity, bool bIgnoreHappiness = false); // this is different from the CityStrategy one because it checks unhappiness before declaring a food emergency

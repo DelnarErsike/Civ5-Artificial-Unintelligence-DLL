@@ -19,6 +19,10 @@
 // include after all other headers
 #include "LintFree.h"
 
+#ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
+#include "CvEconomicAI.h"
+#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
+
 CvWeightedVector<BuilderDirective, 100, true> CvBuilderTaskingAI::m_aDirectives;
 FStaticVector<int, SAFE_ESTIMATE_NUM_EXTRA_PLOTS, true, c_eCiv5GameplayDLL, 0> CvBuilderTaskingAI::m_aiNonTerritoryPlots; // plots that we need to evaluate that are outside of our territory
 
@@ -768,15 +772,10 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 
 		//AddRepairDirectives(pUnit, pPlot, iMoveTurnsAway);
 		AddRouteDirectives(pUnit, pPlot, iMoveTurnsAway);
-#ifdef AUI_WORKER_FIX_FALLOUT
-		AddScrubFalloutDirectives(pUnit, pPlot, iMoveTurnsAway);
-#endif // AUI_WORKER_FIX_FALLOUT
 		AddImprovingResourcesDirectives(pUnit, pPlot, iMoveTurnsAway);
 		AddImprovingPlotsDirectives(pUnit, pPlot, iMoveTurnsAway);
 		AddChopDirectives(pUnit, pPlot, iMoveTurnsAway);
-#ifndef AUI_WORKER_FIX_FALLOUT
 		AddScrubFalloutDirectives(pUnit, pPlot, iMoveTurnsAway);
-#endif // AUI_WORKER_FIX_FALLOUT
 		// only AIs have permission to remove roads
 		if(!m_pPlayer->isHuman())
 		{
@@ -931,6 +930,10 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 		return;
 	}
 
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+	FeatureTypes eFeatureType = pPlot->getFeatureType();
+#endif // AUI_WORKER_SCORE_PLOT_CHOP
+
 	// loop through the build types to find one that we can use
 	BuildTypes eBuild;
 	BuildTypes eOriginalBuild;
@@ -1020,7 +1023,11 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 		iWeight = CorrectWeight(iWeight);
 
 		UpdateProjectedPlotYields(pPlot, eBuild);
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+		int iScore = ScorePlot(eFeatureType != NO_FEATURE && pkBuild->isFeatureRemove(eFeatureType));
+#else
 		int iScore = ScorePlot();
+#endif // AUI_WORKER_SCORE_PLOT_CHOP
 		if(iScore > 0)
 		{
 			iWeight *= iScore;
@@ -1098,7 +1105,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 #ifdef AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL
 	// celtic rule: if this is a forest tile next to a city, do not improve this tile with a normal improvement (unless we're an AI in at least industrial)
 	if (m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest() && eExistingImprovement == NO_IMPROVEMENT && 
-		((m_pPlayer->GetCurrentEra() < GC.getInfoTypeForString("ERA_INDUSTRIAL")) || m_pPlayer->isHuman()))
+		((m_pPlayer->GetCurrentEra() < GC.getInfoTypeForString(AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL)) || m_pPlayer->isHuman()))
 #else
 	// celtic rule: if this is a forest tile next to a city, do not improve this tile with a normal improvement
 	if (m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest() && eExistingImprovement == NO_IMPROVEMENT)
@@ -1271,7 +1278,11 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 		}
 
 		UpdateProjectedPlotYields(pPlot, eBuild);
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+		int iScore = ScorePlot(bWillRemoveForestOrJungle);
+#else
 		int iScore = ScorePlot();
+#endif // AUI_WORKER_SCORE_PLOT_CHOP
 
 		// if we're going backward, bail out!
 		if(iScore <= 0)
@@ -1418,6 +1429,13 @@ void CvBuilderTaskingAI::AddRouteDirectives(CvUnit* pUnit, CvPlot* pPlot, int iM
 		eDirectiveType = BuilderDirective::REPAIR;
 	}
 
+#ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
+#ifdef AUI_WORKER_LOGARITHMIC_FLAVOR
+	iWeight *= int(GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_PRODUCTION() * log((double)MAX(1, GC.getDEFAULT_FLAVOR_VALUE())) + 0.5);
+#else
+	iWeight *= GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_PRODUCTION() * MAX(1, GC.getDEFAULT_FLAVOR_VALUE());
+#endif // AUI_WORKER_LOGARITHMIC_FLAVOR
+#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
 	// int iTurnsAway = FindTurnsAway(pUnit, pPlot);
 	iWeight = iWeight / (iMoveTurnsAway/*iTurnsAway*/ + 1);
 	iWeight = GetBuildCostWeight(iWeight, pPlot, eRouteBuild);
@@ -1497,7 +1515,7 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 #ifdef AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL
 	// celtic rule: if this is a forest tile next to a city, do not chop the trees (unless we're an AI in at least industrial)
 	if (m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest() &&
-		((m_pPlayer->GetCurrentEra() < GC.getInfoTypeForString("ERA_INDUSTRIAL")) || m_pPlayer->isHuman()))
+		((m_pPlayer->GetCurrentEra() < GC.getInfoTypeForString(AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL)) || m_pPlayer->isHuman()))
 #else
 	// celtic rule: if this is a forest tile next to a city, do not chop the trees
 	if (m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest())
@@ -1561,10 +1579,50 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 			continue;
 		}
 
-		for(int iFlavorLoop = 0; iFlavorLoop < GC.getNumFlavorTypes(); iFlavorLoop++)
+		for (int iFlavorLoop = 0; iFlavorLoop < GC.getNumFlavorTypes(); iFlavorLoop++)
 		{
-			switch(ui)
+			switch (ui)
 			{
+#ifdef AUI_WORKER_LOGARITHMIC_FLAVOR
+			case YIELD_FOOD:
+				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_GROWTH")
+				{
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_FOOD() + 0.5);
+				}
+				break;
+			case YIELD_PRODUCTION:
+				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_PRODUCTION")
+				{
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_PRODUCTION() + 0.5);
+				}
+				break;
+			case YIELD_GOLD:
+				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_GOLD")
+				{
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_GOLD() + 0.5);
+				}
+				break;
+			case YIELD_SCIENCE:
+				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_SCIENCE")
+				{
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_SCIENCE() + 0.5);
+				}
+				break;
+			case YIELD_CULTURE:
+				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_CULTURE")
+				{
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE() + 0.5);
+				}
+				break;
+			case YIELD_FAITH:
+#ifdef AUI_WORKER_EVALUATE_FAITH
+				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_RELIGION")
+				{
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE() + 0.5);
+				}
+#endif // AUI_WORKER_EVALUATE_FAITH
+				break;
+#else
 			case YIELD_FOOD:
 				if(GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_GROWTH")
 				{
@@ -1608,6 +1666,7 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 				//}
 #endif // AUI_WORKER_EVALUATE_FAITH
 				break;
+#endif // AUI_WORKER_LOGARITHMIC_FLAVOR
 			}
 		}
 	}
@@ -1759,11 +1818,16 @@ void CvBuilderTaskingAI::AddScrubFalloutDirectives(CvUnit* pUnit, CvPlot* pPlot,
 		iWeight = iWeight / (iMoveTurnsAway/*iTurnsAway*/ + 1);
 
 		// For scrubbing fallout, build times and build costs should be ignored because... well, it's fallout
-#ifndef AUI_WORKER_FIX_FALLOUT
+#ifdef AUI_WORKER_FIX_FALLOUT
+		// Max values returned from BuildCostWeight and BuildTimeWeight
+		iWeight *= 100;
+		iWeight += 10000;
+#else
 		iWeight = GetBuildCostWeight(iWeight, pPlot, m_eFalloutRemove);
 		int iBuildTimeWeight = GetBuildTimeWeight(pUnit, pPlot, m_eFalloutRemove, false, iMoveTurnsAway);
 		iWeight += iBuildTimeWeight;
 #endif // AUI_WORKER_FIX_FALLOUT
+
 
 		BuilderDirective directive;
 		directive.m_eDirective = BuilderDirective::CHOP;
@@ -1875,7 +1939,11 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 		}
 	}
 
+#ifdef AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH
+	if((!pUnit->IsCombatUnit() && m_pPlayer->GetPlotDanger(*pPlot) > 0) || m_pPlayer->GetPlotDanger(*pPlot) > pUnit->GetBaseCombatStrengthConsideringDamage())
+#else
 	if(m_pPlayer->GetPlotDanger(*pPlot) > 0)
+#endif // AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH
 	{
 		if(m_bLogging)
 		{
@@ -1912,7 +1980,11 @@ int CvBuilderTaskingAI::FindTurnsAway(CvUnit* pUnit, CvPlot* pPlot)
 		return -1;
 	}
 
+#ifdef AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER
+	int iPlotDistance = TurnsToReachTarget(pUnit, pPlot, AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER /*bReusePaths*/, AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER /*bIgnoreUnits*/);
+#else
 	int iPlotDistance = plotDistance(pUnit->getX(), pUnit->getY(), pPlot->getX(), pPlot->getY());
+#endif // AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER
 #if 1
 	// Always return the raw distance
 	return iPlotDistance;
@@ -2058,10 +2130,10 @@ int CvBuilderTaskingAI::GetResourceWeight(ResourceTypes eResource, ImprovementTy
 				{
 					// if we don't have any of it
 #ifdef AUI_WORKER_TWEAKED_DONT_HAVE_MULTIPLIER
-					iMultiplyingAmount *= 6;
+					iMultiplyingAmount *= AUI_WORKER_TWEAKED_DONT_HAVE_MULTIPLIER;
 #else
 					iMultiplyingAmount *= 4;
-#endif
+#endif // AUI_WORKER_TWEAKED_DONT_HAVE_MULTIPLIER
 				}
 			}
 
@@ -2241,7 +2313,11 @@ bool CvBuilderTaskingAI::DoesBuildHelpRush(CvUnit* pUnit, CvPlot* pPlot, BuildTy
 	return true;
 }
 
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+int CvBuilderTaskingAI::ScorePlot(bool bWillChop)
+#else
 int CvBuilderTaskingAI::ScorePlot()
+#endif // AUI_WORKER_SCORE_PLOT_CHOP
 {
 	if(!m_pTargetPlot)
 	{
@@ -2249,7 +2325,11 @@ int CvBuilderTaskingAI::ScorePlot()
 	}
 
 	CvCity* pCity = m_pTargetPlot->getWorkingCity();
+#ifdef AUI_WORKER_SCORE_PLOT_NO_SCORE_FROM_RAZE
+	if(!pCity || pCity->IsRazing())
+#else
 	if(!pCity)
+#endif // AUI_WORKER_SCORE_PLOT_NO_SCORE_FROM_RAZE
 	{
 		return -1;
 	}
@@ -2263,18 +2343,172 @@ int CvBuilderTaskingAI::ScorePlot()
 	int iScore = 0;
 	bool bAnyNegativeMultiplier = false;
 	YieldTypes eFocusYield = pCityStrategy->GetFocusYield();
+#ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
+	CvFlavorManager* pFlavorManager = m_pPlayer->GetFlavorManager();
+	double dFoodFlavor, dProductionFlavor, dGoldFlavor, dScienceFlavor, dCultureFlavor, dFaithFlavor;
+	if (!pCity->GetPlayer()->isHuman())
+	{
+		dFoodFlavor = (double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH")));
+		dProductionFlavor = (double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION")));
+		dGoldFlavor = (double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GOLD")));
+		dScienceFlavor = (double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE")));
+		dCultureFlavor = (double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CULTURE")));
+		dFaithFlavor = (double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION")));
+		// Scalers
+		if (pCity->GetPlayer()->GetEconomicAI()->IsUsingStrategy((EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_LOSING_MONEY")))
+		{
+			dGoldFlavor *= sqrt(2.0);
+		}
+		if (pCity->GetPlayer()->GetTreasury()->GetGold() < 1)
+		{
+			dGoldFlavor *= sqrt(2.0);
+		}
+		if (pCity->getYieldRate(YIELD_FOOD, false) - pCity->foodConsumption() <= 0)
+		{
+			dFoodFlavor *= sqrt(2.0);
+		}
+		else if (pCity->GetPlayer()->GetExcessHappiness() <= 0 && !pCity->IsIgnoreCityForHappiness())
+		{
+			dFoodFlavor /= pow(2.0, 1.0 - (double)pCity->GetPlayer()->GetExcessHappiness() / 10.0);
+		}
+	}
+	else
+	{
+		dFoodFlavor = dProductionFlavor = dGoldFlavor = dScienceFlavor = dCultureFlavor = dFaithFlavor = (double)MAX(1, GC.getDEFAULT_FLAVOR_VALUE());
+	}
+#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
 	for(uint ui = 0; ui < NUM_YIELD_TYPES; ui++)
 	{
+#ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
+		double dYieldValue = AUI_WORKER_SCORE_PLOT_FLAVORS;
+		switch (ui)
+		{
+#ifdef AUI_WORKER_LOGARITHMIC_FLAVOR
+		case YIELD_FOOD:
+			dYieldValue *= log(dFoodFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_FOOD();
+			break;
+		case YIELD_PRODUCTION:
+			dYieldValue *= log(dProductionFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_PRODUCTION();
+			break;
+		case YIELD_GOLD:
+			dYieldValue *= log(dGoldFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_GOLD();
+			break;
+		case YIELD_SCIENCE:
+			dYieldValue *= log(dScienceFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_SCIENCE();
+			break;
+		case YIELD_CULTURE:
+			dYieldValue *= log(dCultureFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
+			break;
+		case YIELD_FAITH:
+#ifdef AUI_WORKER_EVALUATE_FAITH
+			dYieldValue *= log(dCultureFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
+#endif // AUI_WORKER_EVALUATE_FAITH
+			break;
+#else
+		case YIELD_FOOD:
+			dYieldValue = dFoodFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_FOOD();
+			break;
+		case YIELD_PRODUCTION:
+			dYieldValue = dProductionFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_PRODUCTION();
+			break;
+		case YIELD_GOLD:
+			dYieldValue = dGoldFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_GOLD();
+			break;
+		case YIELD_SCIENCE:
+			dYieldValue = dScienceFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_SCIENCE();
+			break;
+		case YIELD_CULTURE:
+			dYieldValue = dCultureFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
+			break;
+		case YIELD_FAITH:
+#ifdef AUI_WORKER_EVALUATE_FAITH
+			dYieldValue = dFaithFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
+#endif // AUI_WORKER_EVALUATE_FAITH
+			break;
+#endif // AUI_WORKER_LOGARITHMIC_FLAVOR
+		}
+#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
+
 		int iMultiplier = pCityStrategy->GetYieldDeltaTimes100((YieldTypes)ui);
 		int iAbsMultiplier = abs(iMultiplier);
 		int iYieldDelta = m_aiProjectedPlotYields[ui] - m_aiCurrentPlotYields[ui];
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+		double dFlatBonus = 0;
+		if (bWillChop && ui == YIELD_PRODUCTION && iYieldDelta >= 0)
+		{
+			dFlatBonus = AUI_WORKER_SCORE_PLOT_CHOP;
+		}
+#endif // AUI_WORKER_SCORE_PLOT_CHOP
 
+#ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
 		// the multiplier being lower than zero means that we need more of this resource
 		if(iMultiplier < 0)
 		{
 			bAnyNegativeMultiplier = true;
 			if(iYieldDelta > 0)  // this would be an improvement to the yield
 			{
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+				iScore += int((m_aiProjectedPlotYields[ui] + dFlatBonus) * iAbsMultiplier * dYieldValue + 0.5);
+			}
+			else if(iYieldDelta < 0)  // the yield would go down
+			{
+				iScore += int((iYieldDelta + dFlatBonus) * iAbsMultiplier * dYieldValue - 0.5);
+			}
+		}
+		else
+		{
+			if(iYieldDelta >= 0)
+			{
+				iScore += int((m_aiProjectedPlotYields[ui] + dFlatBonus) * dYieldValue + 0.5); // provide a nominal score to plots that improve anything
+			}
+			else if(iYieldDelta < 0)
+			{
+				iScore += int((iYieldDelta + dFlatBonus) * iAbsMultiplier * dYieldValue - 0.5);
+#else
+				iScore += int(m_aiProjectedPlotYields[ui] * iAbsMultiplier * dYieldValue + 0.5);
+			}
+			else if(iYieldDelta < 0)  // the yield would go down
+			{
+				iScore += int(iYieldDelta * iAbsMultiplier * dYieldValue - 0.5);
+			}
+		}
+		else
+		{
+			if(iYieldDelta >= 0)
+			{
+				iScore += int(m_aiProjectedPlotYields[ui] * dYieldValue + 0.5); // provide a nominal score to plots that improve anything
+			}
+			else if(iYieldDelta < 0)
+			{
+				iScore += int(iYieldDelta * iAbsMultiplier * dYieldValue - 0.5);
+#endif AUI_WORKER_SCORE_PLOT_CHOP
+			}
+		}
+#else
+		// the multiplier being lower than zero means that we need more of this resource
+		if(iMultiplier < 0)
+		{
+			bAnyNegativeMultiplier = true;
+			if(iYieldDelta > 0)  // this would be an improvement to the yield
+			{
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+				iScore += int((m_aiProjectedPlotYields[ui] + dFlatBonus) * iAbsMultiplier + 0.5);
+			}
+			else if(iYieldDelta < 0)  // the yield would go down
+			{
+				iScore += int((iYieldDelta + dFlatBonus) * iAbsMultiplier - 0.5);
+			}
+		}
+		else
+		{
+			if(iYieldDelta >= 0)
+			{
+				iScore += int(m_aiProjectedPlotYields[ui] + dFlatBonus + 0.5); // provide a nominal score to plots that improve anything
+			}
+			else if(iYieldDelta < 0)
+			{
+				iScore += int((iYieldDelta + dFlatBonus) * iAbsMultiplier - 0.5);
+#else
 				iScore += m_aiProjectedPlotYields[ui] * iAbsMultiplier;
 			}
 			else if(iYieldDelta < 0)  // the yield would go down
@@ -2291,16 +2525,79 @@ int CvBuilderTaskingAI::ScorePlot()
 			else if(iYieldDelta < 0)
 			{
 				iScore += iYieldDelta * iAbsMultiplier;
+#endif // AUI_WORKER_SCORE_PLOT_CHOP
 			}
 		}
+#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
 	}
 
 	if(!bAnyNegativeMultiplier && eFocusYield != NO_YIELD)
 	{
+#ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
+		double dYieldValue = AUI_WORKER_SCORE_PLOT_FLAVORS;
+		switch (eFocusYield)
+		{
+#ifdef AUI_WORKER_LOGARITHMIC_FLAVOR
+		case YIELD_FOOD:
+			dYieldValue *= log(dFoodFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_FOOD();
+			break;
+		case YIELD_PRODUCTION:
+			dYieldValue *= log(dProductionFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_PRODUCTION();
+			break;
+		case YIELD_GOLD:
+			dYieldValue *= log(dGoldFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_GOLD();
+			break;
+		case YIELD_SCIENCE:
+			dYieldValue *= log(dScienceFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_SCIENCE();
+			break;
+		case YIELD_CULTURE:
+			dYieldValue *= log(dCultureFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
+			break;
+		case YIELD_FAITH:
+#ifdef AUI_WORKER_EVALUATE_FAITH
+			dYieldValue *= log(dCultureFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
+#endif // AUI_WORKER_EVALUATE_FAITH
+			break;
+#else
+		case YIELD_FOOD:
+			dYieldValue *= dFoodFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_FOOD();
+			break;
+		case YIELD_PRODUCTION:
+			dYieldValue *= dProductionFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_PRODUCTION();
+			break;
+		case YIELD_GOLD:
+			dYieldValue *= dGoldFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_GOLD();
+			break;
+		case YIELD_SCIENCE:
+			dYieldValue *= dScienceFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_SCIENCE();
+			break;
+		case YIELD_CULTURE:
+			dYieldValue *= dCultureFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
+			break;
+		case YIELD_FAITH:
+#ifdef AUI_WORKER_EVALUATE_FAITH
+			dYieldValue *= dFaithFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
+#endif // AUI_WORKER_EVALUATE_FAITH
+			break;
+#endif // AUI_WORKER_LOGARITHMIC_FLAVOR
+		}
+#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
 		int iYieldDelta = m_aiProjectedPlotYields[eFocusYield] - m_aiCurrentPlotYields[eFocusYield];
 		if(iYieldDelta > 0)
 		{
+#ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
+#ifdef AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS
+			iScore += int(m_aiProjectedPlotYields[eFocusYield] * AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS * dYieldValue + 0.5);
+#else
+			iScore += int(m_aiProjectedPlotYields[eFocusYield] * 100 * dYieldValue + 0.5);
+#endif // AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS
+#else
+#ifdef AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS
+			iScore += m_aiProjectedPlotYields[eFocusYield] * AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS;
+#else
 			iScore += m_aiProjectedPlotYields[eFocusYield] * 100;
+#endif // AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS
+#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
 		}
 	}
 
@@ -2312,6 +2609,12 @@ int CvBuilderTaskingAI::ScorePlot()
 	{
 		iScore *= 2;
 	}
+#ifdef AUI_WORKER_SCORE_PLOT_REDUCED_PUPPET_SCORE
+	if (pCity->IsPuppet())
+	{
+		iScore /= AUI_WORKER_SCORE_PLOT_REDUCED_PUPPET_SCORE;
+	}
+#endif // AUI_WORKER_SCORE_PLOT_REDUCED_PUPPET_SCORE
 
 	return iScore;
 }
