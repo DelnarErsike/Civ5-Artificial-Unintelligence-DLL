@@ -20,6 +20,17 @@
 
 #include "LintFree.h"
 
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_TOURISM_SCORE_USES_GRAND_STRATEGY
+#include "CvGrandStrategyAI.h"
+#else
+#ifdef AUI_TRADE_SCORE_PRODUCTION_VALUE
+#include "CvGrandStrategyAI.h"
+#endif // AUI_TRADE_SCORE_PRODUCTION_VALUE
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_TOURISM_SCORE_USES_GRAND_STRATEGY
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+#include "CvEconomicAI.h"
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+
 //=====================================
 // CvGameTrade
 //=====================================
@@ -4018,6 +4029,35 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 		return 0;
 	}
 
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+	bool bIsToMinor = false;
+	if (GET_PLAYER(kTradeConnection.m_eDestOwner).isMinorCiv())
+	{
+		bIsToMinor = true;
+	}
+#else
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+	bool bIsToMinor = false;
+	if (GET_PLAYER(kTradeConnection.m_eDestOwner).isMinorCiv())
+	{
+		bIsToMinor = true;
+	}
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+	double dDiplomacyTaper = 1.0;
+	if (!bIsToMinor)
+	{
+		dDiplomacyTaper *= double(MAJOR_CIV_OPINION_NEUTRAL) / double(MAJOR_CIV_OPINION_ALLY +
+			MAX(m_pPlayer->GetDiplomacyAI()->GetMajorCivOpinion(kTradeConnection.m_eDestOwner) - MAJOR_CIV_OPINION_NEUTRAL, 0));
+	}
+	if (m_pPlayer->GetEconomicAI()->IsUsingStrategy((EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_LOSING_MONEY")))
+	{
+		dDiplomacyTaper *= double(m_pPlayer->GetTreasury()->GetGold() + m_pPlayer->GetTreasury()->AverageIncome(1)) / (double)MAX(m_pPlayer->GetTreasury()->GetGold(), 1);
+	}
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+
 	CvPlayerTrade* pPlayerTrade = m_pPlayer->GetTrade();
 	CvPlayerTrade* pOtherPlayerTrade = GET_PLAYER(kTradeConnection.m_eDestOwner).GetTrade();
 	int iDangerSum = 1; // can't be zero because we divide by zero!
@@ -4032,6 +4072,9 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot);
 		if (iDangerValue == 0)
 		{
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
+			iDangerValue += AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER;
+#endif // AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
 			if (!pPlot->isVisible(m_pPlayer->getTeam()))
 			{
 				iDangerValue += 1;
@@ -4048,6 +4091,26 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	// gold
 	int iGoldAmount = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_GOLD, true);
 	int iOtherGoldAmount = pOtherPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_GOLD, false);
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+	if (bIsToMinor)
+		iOtherGoldAmount = 0;
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+	double dGoldMod = log(MAX((m_pPlayer->GetTreasury()->AverageIncome(1) + (1.0 + log((double)m_pPlayer->getNumCities())) * iGoldAmount / 100.0), 1.0) /
+		MAX(m_pPlayer->GetTreasury()->AverageIncome(1), 1.0)) / log(2.0) / 100.0;
+	double dOtherGoldMod = dDiplomacyTaper * log(MAX((GET_PLAYER(kTradeConnection.m_eDestOwner).GetTreasury()->AverageIncome(1) + 
+		(1.0 + log((double)GET_PLAYER(kTradeConnection.m_eDestOwner).getNumCities())) * iOtherGoldAmount / 100.0), 1.0) /
+		MAX(GET_PLAYER(kTradeConnection.m_eDestOwner).GetTreasury()->AverageIncome(1), 1.0)) / log(2.0) / 100.0;
+	double dGoldDelta = iGoldAmount * dGoldMod - iOtherGoldAmount * dOtherGoldMod;
+
+	// getting out of a logjam at the beginning of the game on an archepeligo map
+	// if the player has made a trade unit but all the trade routes yields will be negative to the player
+	// still try to trade with some of the minor civs
+	if (dGoldDelta <= 0 && GET_PLAYER(kTradeConnection.m_eDestOwner).isMinorCiv())
+	{
+		dGoldDelta = 1;
+	}
+#else
 	int iGoldDelta = iGoldAmount - iOtherGoldAmount;
 
 	// getting out of a logjam at the beginning of the game on an archepeligo map
@@ -4057,11 +4120,37 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	{
 		iGoldDelta = 1;
 	}
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
 
 	// tech
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
+	double dTechDifferenceP1fromP2 = (double)GC.getGame().GetGameTrade()->GetTechDifference(kTradeConnection.m_eOriginOwner, kTradeConnection.m_eDestOwner);
+	double dTechDifferenceP2fromP1 = (double)GC.getGame().GetGameTrade()->GetTechDifference(kTradeConnection.m_eDestOwner, kTradeConnection.m_eOriginOwner);
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+	if (bIsToMinor)
+		dTechDifferenceP2fromP1 = 0;
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+	dTechDifferenceP2fromP1 *= dDiplomacyTaper;
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+
+	double dTechModP1 = log(MAX((m_pPlayer->GetScienceTimes100() + 200.0 * dTechDifferenceP1fromP2), 1.0) / (double)MAX(m_pPlayer->GetScienceTimes100(), 1)) / log(2.0);
+	double dTechModP2 = log(MAX((GET_PLAYER(kTradeConnection.m_eDestOwner).GetScienceTimes100() + 200.0 * dTechDifferenceP2fromP1), 1.0) /
+		(double)MAX(GET_PLAYER(kTradeConnection.m_eDestOwner).GetScienceTimes100(), 1)) / log(2.0);
+
+	double dTechDelta = dTechDifferenceP1fromP2 * dTechModP1 - dTechDifferenceP2fromP1 * dTechModP2;
+#else
 	int iTechDifferenceP1fromP2 = GC.getGame().GetGameTrade()->GetTechDifference(kTradeConnection.m_eOriginOwner, kTradeConnection.m_eDestOwner);
 	int iTechDifferenceP2fromP1 = GC.getGame().GetGameTrade()->GetTechDifference(kTradeConnection.m_eDestOwner,   kTradeConnection.m_eOriginOwner);
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+	if (bIsToMinor)
+		iTechDifferenceP2fromP1 = 0;
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+	iTechDifferenceP2fromP1 = int(iTechDifferenceP2fromP1 * dDiplomacyTaper + 0.5);
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
 	int iTechDelta = iTechDifferenceP1fromP2 - iTechDifferenceP2fromP1;
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
 
 	// religion
 	ReligionTypes eOwnerFoundedReligion = GC.getGame().GetGameReligions()->GetReligionCreatedByPlayer(m_pPlayer->GetID());
@@ -4080,9 +4169,11 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 			bool bAnyFromCityPressure = pFromCity->GetCityReligions()->WouldExertTradeRoutePressureToward(pToCity, eToReligion, iToPressure);
 			bool bAnyToCityPressure = pToCity->GetCityReligions()->WouldExertTradeRoutePressureToward(pFromCity, eFromReligion, iFromPressure);
 
+#ifndef AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_RELIGION_SCORING
 			// Internally pressure is now 10 times greater than what is shown to user
 			iToPressure /= GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER();
 			iFromPressure /= GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER();
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_RELIGION_SCORING
 
 			// if anyone is exerting pressure
 			if (bAnyFromCityPressure || bAnyToCityPressure)
@@ -4090,6 +4181,19 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 				// "to" and "from" religions need to be different for us to care
 				if (eToReligion != eFromReligion)
 				{
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_RELIGION_SCORING
+					int iExistingToPressureAtFrom = pFromCity->GetCityReligions()->GetPressure(eFromReligion);
+					int iExistingGoodPressureAtTo = pToCity->GetCityReligions()->GetPressure(eOwnerFoundedReligion);
+					if (eToReligion != eOwnerFoundedReligion)
+						iToPressure = 0;
+					if (eFromReligion == eOwnerFoundedReligion)
+						iFromPressure = 0;
+					double dExistingPressureModFrom = sqrt(log((double)MAX(1, iExistingToPressureAtFrom + iFromPressure) / (double)MAX(1, iExistingToPressureAtFrom)) / log(2.0));
+					double dExistingPressureModTo = sqrt(log((double)MAX(1, iExistingGoodPressureAtTo + iToPressure) / (double)MAX(1, iExistingGoodPressureAtTo)) / log(2.0));
+
+					iReligionDelta += int(iToPressure * dExistingPressureModTo / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
+					iReligionDelta -= int(iFromPressure * dExistingPressureModFrom / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
+#else
 					if (eToReligion == eOwnerFoundedReligion)
 					{
 						iReligionDelta += iToPressure;
@@ -4099,16 +4203,54 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 					{
 						iReligionDelta -= iFromPressure;
 					}
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_RELIGION_SCORING
 				}
 			}
 		}
 	}
 
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
+	double dScore = 0;
+	CvGrandStrategyAI* pGrandStrategyAI = m_pPlayer->GetGrandStrategyAI();
+	double dGoldValue = GC.getAI_CITIZEN_VALUE_GOLD() * log((double)MAX(1, pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GOLD"))));
+	double dScienceValue = GC.getAI_CITIZEN_VALUE_SCIENCE() * log((double)MAX(1, pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"))));
+	double dFaithValue = GC.getAI_CITIZEN_VALUE_FAITH() * log((double)MAX(1, pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"))));
+
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+	dScore += dGoldDelta * dGoldValue; // since original function returned gold yield times 100
+#else
+	dScore += iGoldDelta * dGoldValue / 100.0; // since original function returned gold yield times 100
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
+	dScore += dTechDelta * dScienceValue; 
+#else
+	dScore += iTechDelta * dScienceValue;
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
+	dScore += iReligionDelta * dFaithValue;
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
+	dScore = (dScore * 10) / log((double)iDangerSum) * log(AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER);
+#else
+	dScore = (dScore * 10) / (double)iDangerSum;
+#endif // AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
+#else
 	int iScore = 0;
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+	iScore += int(dGoldDelta + 0.5);
+#else
 	iScore += iGoldDelta;
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
+	iScore += dTechDelta * 3; // 3 science = 1 gold
+#else
 	iScore += iTechDelta * 3; // 3 science = 1 gold
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
 	iScore += iReligionDelta * 2; // 2 religion = 1 gold
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
+	iScore = int((iScore * 10 * log(AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER)) / log((double)iDangerSum) + 0.5);
+#else
 	iScore = (iScore * 10) / iDangerSum;
+#endif // AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
 	
 	// if we have any tourism and the destination owner is not a minor civ
 	if (m_pPlayer->GetCulture()->GetTourism() > 0 && !GET_PLAYER(kTradeConnection.m_eDestOwner).isMinorCiv())
@@ -4116,11 +4258,36 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 		// if we're not connected to a player, double the value to that player
 		if (!GC.getGame().GetGameTrade()->IsPlayerConnectedToPlayer(m_pPlayer->GetID(), kTradeConnection.m_eDestOwner))
 		{
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_TOURISM_SCORE_USES_GRAND_STRATEGY
+#ifdef AUI_GS_PRIORITY_RATIO
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
+			dScore *= (1 + 2.0 * (double)m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")));
+#else
+			iScore *= (1 + 2 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")));
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
+#else
+			if (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
+				dScore *= 3;
+#else
+				iScore *= 3;
+#endif
+#endif // AUI_GS_PRIORITY_RATIO
+#else
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
+			dScore *= 2;
+#else
 			iScore *= 2;
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_TOURISM_SCORE_USES_GRAND_STRATEGY
 		}
 	}
 
+#ifdef AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
+	return int(dScore + 0.5);
+#else
 	return iScore;
+#endif // AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
 }
 
 /// Score Food TR
@@ -4137,6 +4304,102 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 		return 0;
 	}
 
+#ifdef AUI_TRADE_SCORE_FOOD_VALUE
+	CvCity* pCity = GC.getMap().plot(kTradeConnection.m_iDestX, kTradeConnection.m_iDestY)->getPlotCity();
+
+	// if we're not going to a city we own, ignore
+	if (!pCity || pCity->getOwner() != m_pPlayer->GetID())
+	{
+		return 0;
+	}
+
+	CvPlayerTrade* pPlayerTrade = m_pPlayer->GetTrade();
+
+	int iDangerSum = 1; // can't be zero because we divide by zero!
+	for (uint uiPlotList = 0; uiPlotList < kTradeConnection.m_aPlotList.size(); uiPlotList++)
+	{
+		CvPlot* pPlot = GC.getMap().plot(kTradeConnection.m_aPlotList[uiPlotList].m_iX, kTradeConnection.m_aPlotList[uiPlotList].m_iY);
+		CvAssertMsg(pPlot, "pPlot is null when trying to evaluate the list");
+		if (pPlot == NULL)
+		{
+			break;
+		}
+		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot);
+		if (iDangerValue == 0)
+		{
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
+			iDangerValue += AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER;
+#endif // AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
+			if (!pPlot->isVisible(m_pPlayer->getTeam()))
+			{
+				iDangerValue += 1;
+			}
+
+			if (pPlot->getTeam() != NO_TEAM && GET_TEAM(m_pPlayer->getTeam()).isAtWar(pPlot->getTeam()))
+			{
+				iDangerValue += 1000;
+			}
+		}
+		iDangerSum += iDangerValue;
+	}
+
+	// food
+	double dFoodScore = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_FOOD, true) / 100.0;
+	dFoodScore *= log(MAX((pCity->getYieldRate(YIELD_FOOD, true) + dFoodScore), 1.0) / (double)MAX(pCity->getYieldRate(YIELD_FOOD, true), 1)) / log(2.0);
+
+	// religion
+	ReligionTypes eOwnerFoundedReligion = GC.getGame().GetGameReligions()->GetReligionCreatedByPlayer(m_pPlayer->GetID());
+	int iReligionDelta = 0;
+	if (eOwnerFoundedReligion != NO_RELIGION)
+	{
+		CvCity* pToCity = CvGameTrade::GetDestCity(kTradeConnection);
+		CvCity* pFromCity = CvGameTrade::GetOriginCity(kTradeConnection);
+		CvAssert(pToCity != NULL && pFromCity != NULL);
+		if (pToCity != NULL && pFromCity != NULL)
+		{
+			ReligionTypes eToReligion = NO_RELIGION;
+			int iToPressure = 0;
+			ReligionTypes eFromReligion = NO_RELIGION;
+			int iFromPressure = 0;
+			bool bAnyFromCityPressure = pFromCity->GetCityReligions()->WouldExertTradeRoutePressureToward(pToCity, eToReligion, iToPressure);
+			bool bAnyToCityPressure = pToCity->GetCityReligions()->WouldExertTradeRoutePressureToward(pFromCity, eFromReligion, iFromPressure);
+
+			// if anyone is exerting pressure
+			if (bAnyFromCityPressure || bAnyToCityPressure)
+			{
+				// "to" and "from" religions need to be different for us to care
+				if (eToReligion != eFromReligion)
+				{
+					int iExistingToPressureAtFrom = pFromCity->GetCityReligions()->GetPressure(eFromReligion);
+					int iExistingGoodPressureAtTo = pToCity->GetCityReligions()->GetPressure(eOwnerFoundedReligion);
+					if (eToReligion != eOwnerFoundedReligion)
+						iToPressure = 0;
+					if (eFromReligion == eOwnerFoundedReligion)
+						iFromPressure = 0;
+					double dExistingPressureModFrom = sqrt(log((double)MAX(1, iExistingToPressureAtFrom + iFromPressure) / (double)MAX(1, iExistingToPressureAtFrom)) / log(2.0));
+					double dExistingPressureModTo = sqrt(log((double)MAX(1, iExistingGoodPressureAtTo + iToPressure) / (double)MAX(1, iExistingGoodPressureAtTo)) / log(2.0));
+
+					iReligionDelta += int(iToPressure * dExistingPressureModTo / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
+					iReligionDelta -= int(iFromPressure * dExistingPressureModFrom / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
+				}
+			}
+		}
+	}
+
+	double dScore = 0;
+	CvGrandStrategyAI* pGrandStrategyAI = m_pPlayer->GetGrandStrategyAI();
+	double dFoodValue = GC.getAI_CITIZEN_VALUE_FOOD() / 2.0 * log((double)MAX(1, pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH"))));
+	double dFaithValue = GC.getAI_CITIZEN_VALUE_FAITH() * log((double)MAX(1, pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"))));
+	dScore += dFoodScore * dFoodValue;
+	dScore += iReligionDelta * dFaithValue;
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
+	dScore = (dScore * 10) / log((double)iDangerSum) * log(AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER);
+#else
+	dScore = (dScore * 10) / (double)iDangerSum;
+#endif // AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
+
+	return int(dScore + 0.5);
+#else
 	// if we're not going to the smallest city, ignore
 	if (kTradeConnection.m_iDestX != pSmallestCity->getX() && kTradeConnection.m_iDestY != pSmallestCity->getY())
 	{
@@ -4178,6 +4441,7 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 	}
 
 	return iDistanceScore - iDangerSum;
+#endif // AUI_TRADE_SCORE_FOOD_VALUE
 }
 
 /// Score Production TR
@@ -4197,9 +4461,23 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 
 	// if we're not going to a target production city, ignore
 	bool bValidTarget = false;
+#ifdef AUI_TRADE_SCORE_PRODUCTION_VALUE
+	CvCity* pCity = GC.getMap().plot(kTradeConnection.m_iDestX, kTradeConnection.m_iDestY)->getPlotCity();
+
+	// if we're not going to a city we own, ignore
+	if (!pCity || pCity->getOwner() != m_pPlayer->GetID())
+	{
+		return 0;
+	}
+
+	for (uint ui = 0; ui < aTargetCityList.size(); ui++)
+	{
+		if (pCity == aTargetCityList[ui])
+#else
 	for (uint ui = 0; ui < aTargetCityList.size(); ui++)
 	{
 		if (kTradeConnection.m_iDestX == aTargetCityList[ui]->getX() && kTradeConnection.m_iDestY == aTargetCityList[ui]->getY())
+#endif // AUI_TRADE_SCORE_PRODUCTION_VALUE
 		{
 			bValidTarget = true;
 			break;
@@ -4211,6 +4489,94 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 		return 0;
 	}
 
+#ifdef AUI_TRADE_SCORE_PRODUCTION_VALUE
+	CvPlayerTrade* pPlayerTrade = m_pPlayer->GetTrade();
+
+	int iDangerSum = 1; // can't be zero because we divide by zero!
+	for (uint uiPlotList = 0; uiPlotList < kTradeConnection.m_aPlotList.size(); uiPlotList++)
+	{
+		CvPlot* pPlot = GC.getMap().plot(kTradeConnection.m_aPlotList[uiPlotList].m_iX, kTradeConnection.m_aPlotList[uiPlotList].m_iY);
+		CvAssertMsg(pPlot, "pPlot is null when trying to evaluate the list");
+		if (pPlot == NULL)
+		{
+			break;
+		}
+		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot);
+		if (iDangerValue == 0)
+		{
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
+			iDangerValue += AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER;
+#endif // AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
+			if (!pPlot->isVisible(m_pPlayer->getTeam()))
+			{
+				iDangerValue += 1;
+			}
+
+			if (pPlot->getTeam() != NO_TEAM && GET_TEAM(m_pPlayer->getTeam()).isAtWar(pPlot->getTeam()))
+			{
+				iDangerValue += 1000;
+			}
+		}
+		iDangerSum += iDangerValue;
+	}
+
+	// food
+	double dProductionScore = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_PRODUCTION, true) / 100.0;
+	dProductionScore *= log(MAX((pCity->getYieldRate(YIELD_PRODUCTION, true) + (1.0 + log((double)m_pPlayer->getNumCities())) * dProductionScore), 1.0) / (double)MAX(pCity->getYieldRate(YIELD_PRODUCTION, true), 1)) / log(2.0);
+
+	// religion
+	ReligionTypes eOwnerFoundedReligion = GC.getGame().GetGameReligions()->GetReligionCreatedByPlayer(m_pPlayer->GetID());
+	int iReligionDelta = 0;
+	if (eOwnerFoundedReligion != NO_RELIGION)
+	{
+		CvCity* pToCity = CvGameTrade::GetDestCity(kTradeConnection);
+		CvCity* pFromCity = CvGameTrade::GetOriginCity(kTradeConnection);
+		CvAssert(pToCity != NULL && pFromCity != NULL);
+		if (pToCity != NULL && pFromCity != NULL)
+		{
+			ReligionTypes eToReligion = NO_RELIGION;
+			int iToPressure = 0;
+			ReligionTypes eFromReligion = NO_RELIGION;
+			int iFromPressure = 0;
+			bool bAnyFromCityPressure = pFromCity->GetCityReligions()->WouldExertTradeRoutePressureToward(pToCity, eToReligion, iToPressure);
+			bool bAnyToCityPressure = pToCity->GetCityReligions()->WouldExertTradeRoutePressureToward(pFromCity, eFromReligion, iFromPressure);
+
+			// if anyone is exerting pressure
+			if (bAnyFromCityPressure || bAnyToCityPressure)
+			{
+				// "to" and "from" religions need to be different for us to care
+				if (eToReligion != eFromReligion)
+				{
+					int iExistingToPressureAtFrom = pFromCity->GetCityReligions()->GetPressure(eFromReligion);
+					int iExistingGoodPressureAtTo = pToCity->GetCityReligions()->GetPressure(eOwnerFoundedReligion);
+					if (eToReligion != eOwnerFoundedReligion)
+						iToPressure = 0;
+					if (eFromReligion == eOwnerFoundedReligion)
+						iFromPressure = 0;
+					double dExistingPressureModFrom = sqrt(log((double)MAX(1, iExistingToPressureAtFrom + iFromPressure) / (double)MAX(1, iExistingToPressureAtFrom)) / log(2.0));
+					double dExistingPressureModTo = sqrt(log((double)MAX(1, iExistingGoodPressureAtTo + iToPressure) / (double)MAX(1, iExistingGoodPressureAtTo)) / log(2.0));
+
+					iReligionDelta += int(iToPressure * dExistingPressureModTo / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
+					iReligionDelta -= int(iFromPressure * dExistingPressureModFrom / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
+				}
+			}
+		}
+	}
+
+	double dScore = 0;
+	CvGrandStrategyAI* pGrandStrategyAI = m_pPlayer->GetGrandStrategyAI();
+	double dProductionValue = GC.getAI_CITIZEN_VALUE_PRODUCTION() * log((double)MAX(1, pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION"))));
+	double dFaithValue = GC.getAI_CITIZEN_VALUE_FAITH() * log((double)MAX(1, pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"))));
+	dScore += dProductionScore * dProductionValue;
+	dScore += iReligionDelta * dFaithValue;
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
+	dScore = (dScore * 10) / log((double)iDangerSum) * log(AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER);
+#else
+	dScore = (dScore * 10) / (double)iDangerSum;
+#endif // AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
+
+	return int(dScore + 0.5);
+#else
 	int iMaxDistance = 60;
 	int iDistance = kTradeConnection.m_aPlotList.size();
 	int iDistanceScore = iMaxDistance - iDistance;
@@ -4246,6 +4612,7 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 	}
 
 	return iDistanceScore - iDangerSum;
+#endif // AUI_TRADE_SCORE_PRODUCTION_VALUE
 }
 
 // sort player numbers
@@ -4384,6 +4751,37 @@ void CvTradeAI::PrioritizeTradeRoutes(TradeConnectionList& aTradeConnectionList)
 		aTradeConnectionList.push_back(aGoldSortedTR[ui].m_kTradeConnection);
 	}
 
+#ifdef AUI_TRADE_UNBIASED_PRIORITIZE
+	std::vector<TRSortElement> aTotalList;
+	aTotalList.clear();
+	for (uint ui = 0; ui < aGoldSortedTR.size(); ui++)
+	{
+		if (aGoldSortedTR[ui].m_iScore > 0)
+		{
+			aTotalList.push_back(aGoldSortedTR[ui]);
+		}
+	}
+	for (uint ui = 0; ui < aFoodSortedTR.size(); ui++)
+	{
+		if (aFoodSortedTR[ui].m_iScore > 0)
+		{
+			aTotalList.push_back(aFoodSortedTR[ui]);
+		}
+	}
+	for (uint ui = 0; ui < aProductionSortedTR.size(); ui++)
+	{
+		if (aProductionSortedTR[ui].m_iScore > 0)
+		{
+			aTotalList.push_back(aProductionSortedTR[ui]);
+		}
+	}
+	std::stable_sort(aTotalList.begin(), aTotalList.end(), SortTR());
+
+	for (uint ui = 0; ui < aTotalList.size(); ui++)
+	{
+		aTradeConnectionList.push_back(aTotalList[ui].m_kTradeConnection);
+	}
+#else
 	// add first food
 	if (aFoodSortedTR.size() > 0) 
 	{
@@ -4401,6 +4799,7 @@ void CvTradeAI::PrioritizeTradeRoutes(TradeConnectionList& aTradeConnectionList)
 	{
 		aTradeConnectionList.push_back(aGoldSortedTR[ui].m_kTradeConnection);
 	}
+#endif // AUI_TRADE_UNBIASED_PRIORITIZE
 }
 
 /// ChooseTradeUnitTargetPlot
