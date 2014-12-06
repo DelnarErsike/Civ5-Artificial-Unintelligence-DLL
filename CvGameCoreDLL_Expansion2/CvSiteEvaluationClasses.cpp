@@ -1215,37 +1215,47 @@ int CvCitySiteEvaluator::ComputeStrategicValue(CvPlot* pPlot, CvPlayer* pPlayer,
 	int iStrategicPlots = 0;
 	// "High Value" strategic plots are those where a primary plot type is choked off (Water for naval maps, land for non-naval maps)
 	int iHighValueStrategicPlots = 0;
-	for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+	// Only passable terrain can have strategic value now
+	if (!pPlot->isImpassable() && !pPlot->isMountain())
 	{
-		CvPlot* pCheckPlot = plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)iI);
-		CvPlot* pCWPlot = plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)((iI + 1) % NUM_DIRECTION_TYPES));
-		CvPlot* pCCWPlot = plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)((NUM_DIRECTION_TYPES + iI - 1) % NUM_DIRECTION_TYPES));
-		if (pCheckPlot && pCWPlot && pCCWPlot)
+		for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
 		{
-			if (pCheckPlot->isImpassable() || pCheckPlot->isMountain())
+			CvPlot* pCheckPlot = plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)iI);
+			CvPlot* pCWPlot = plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)((iI + 1) % NUM_DIRECTION_TYPES));
+			CvPlot* pCCWPlot = plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)((NUM_DIRECTION_TYPES + iI - 1) % NUM_DIRECTION_TYPES));
+			if (pCheckPlot && pCWPlot && pCCWPlot)
 			{
-				if (!(pCWPlot->isImpassable() || pCWPlot->isMountain()) && !(pCCWPlot->isImpassable() || pCCWPlot->isMountain()))
-					iStrategicPlots++;
-			}
-			else if (pCheckPlot->isWater())
-			{
-				if (!pCWPlot->isWater() && !pCCWPlot->isWater())
+				if (pCheckPlot->isImpassable() || pCheckPlot->isMountain())
 				{
-					iStrategicPlots++;
-					if (GC.getMap().GetAIMapHint() & 1)
+					if (!pCWPlot->isImpassable() && !pCWPlot->isMountain() && !pCCWPlot->isImpassable() && !pCCWPlot->isMountain() &&
+						(iPlotsFromCity == 0 || (pPlot->isWater() == pCWPlot->isWater() && pPlot->isWater() == pCCWPlot->isWater())))
 					{
+						iStrategicPlots++;
 						iHighValueStrategicPlots++;
 					}
 				}
-			}
-			else
-			{
-				if ((pCWPlot->isWater() || pCWPlot->isImpassable() || pCWPlot->isMountain()) && (pCCWPlot->isWater() || pCCWPlot->isImpassable() || pCCWPlot->isMountain()))
+				else if (pCheckPlot->isWater())
 				{
-					iStrategicPlots++;
-					if (!(GC.getMap().GetAIMapHint() & 1))
+					if (!pCWPlot->isWater() && !pCCWPlot->isWater() &&
+						(iPlotsFromCity == 0 || pPlot->isWater() || (!pCWPlot->isImpassable() && !pCWPlot->isMountain() && !pCCWPlot->isImpassable() && !pCCWPlot->isMountain())))
 					{
-						iHighValueStrategicPlots++;
+						iStrategicPlots++;
+						if (GC.getMap().GetAIMapHint() & 1)
+						{
+							iHighValueStrategicPlots++;
+						}
+					}
+				}
+				else
+				{
+					if ((pCWPlot->isWater() || pCWPlot->isImpassable() || pCWPlot->isMountain()) && (pCCWPlot->isWater() || pCCWPlot->isImpassable() || pCCWPlot->isMountain()) &&
+						(iPlotsFromCity == 0 || !pPlot->isWater()))
+					{
+						iStrategicPlots++;
+						if (!(GC.getMap().GetAIMapHint() & 1))
+						{
+							iHighValueStrategicPlots++;
+						}
 					}
 				}
 			}
