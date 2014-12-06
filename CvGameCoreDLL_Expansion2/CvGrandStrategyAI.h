@@ -44,7 +44,17 @@ public:
 	int GetUnitedNationsPriority();
 	int GetSpaceshipPriority();
 
+#ifdef AUI_GS_PRIORITY_OVERHAUL
+	double GetFlavorCurve(AIGrandStrategyTypes eGrandStrategy);
+
+	double GetBaseGrandStrategyPriority(AIGrandStrategyTypes eGrandStrategy);
+	double GetConquestETAPriority();
+	double GetCultureETAPriority();
+	double GetUnitedNationsETAPriority();
+	double GetSpaceshipETAPriority();
+#else
 	int GetBaseGrandStrategyPriority(AIGrandStrategyTypes eGrandStrategy);
+#endif // AUI_GS_PRIORITY_OVERHAUL
 
 	AIGrandStrategyTypes GetActiveGrandStrategy() const;
 	void SetActiveGrandStrategy(AIGrandStrategyTypes eGrandStrategy);
@@ -57,10 +67,16 @@ public:
 	void ChangeGrandStrategyPriority(AIGrandStrategyTypes eGrandStrategy, int iChange);
 
 #ifdef AUI_GS_PRIORITY_RATIO
-	float GetGrandStrategyPriorityRatio(AIGrandStrategyTypes eGrandStrategy) const;
+	double GetGrandStrategyPriorityRatio(AIGrandStrategyTypes eGrandStrategy) const;
+	bool IsGrandStrategySignificant(AIGrandStrategyTypes eGrandStrategy) const;
+#ifdef AUI_GS_PRIORITY_OVERHAUL
+	double GetGrandStrategyPriorityRatioSingle(AIGrandStrategyTypes eGrandStrategy) const;
+#endif // AUI_GS_PRIORITY_OVERHAUL
 #endif // AUI_GS_PRIORITY_RATIO
 
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
 	int ScienceFlavorBoost() const;
+#endif \\ AUI_GS_SCIENCE_FLAVOR_BOOST
 
 	int GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType);
 
