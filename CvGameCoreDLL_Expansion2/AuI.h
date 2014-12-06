@@ -546,6 +546,12 @@
 /// Checks for cities in addition to citadel improvements
 #define AUI_TACTICAL_MAP_ANALYSIS_MARKING_INCLUDE_CITIES
 
+// Team Stuff
+#ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+/// Randomizes weights by half their usual amount on each era change
+#define AUI_TEAM_SET_CURRENT_ERA_RANDOMIZE_WEIGHTS_BY_HALF_ON_ERA_CHANGE
+#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+
 // Trade Stuff
 /// Adds a minimum danger amount for each plot, to discourage long routes
 #define AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER (1)

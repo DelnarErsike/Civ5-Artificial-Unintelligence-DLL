@@ -6628,6 +6628,13 @@ void CvTeam::SetCurrentEra(EraTypes eNewValue)
 			CvPlayerAI& kPlayer = GET_PLAYER(ePlayer);
 			if(kPlayer.isAlive() && kPlayer.getTeam() == GetID() && !kPlayer.isMinorCiv() && !kPlayer.isBarbarian())
 			{
+#ifdef AUI_TEAM_SET_CURRENT_ERA_RANDOMIZE_WEIGHTS_BY_HALF_ON_ERA_CHANGE
+				// If AI, apply a bit of randomness to flavors on each era change
+				if (!kPlayer.isHuman())
+				{
+					kPlayer.GetFlavorManager()->RandomizeWeightsOnEraChange();
+				}
+#endif // AUI_TEAM_SET_CURRENT_ERA_RANDOMIZE_WEIGHTS_BY_HALF_ON_ERA_CHANGE
 				int iNumFreePolicies = kPlayer.GetPlayerTraits()->GetFreeSocialPoliciesPerEra() > 0;
 				if (iNumFreePolicies > 0)
 				{
@@ -6683,7 +6690,7 @@ void CvTeam::SetCurrentEra(EraTypes eNewValue)
 			CvLuaArgsHandle args;
 			args->Push(GetID());
 			args->Push(GetCurrentEra());
-			
+
 			bool bResult = false;
 			LuaSupport::CallHook(pkScriptSystem, "TeamSetEra", args.get(), bResult);
 		}
