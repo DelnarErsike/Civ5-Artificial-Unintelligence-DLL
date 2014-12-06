@@ -219,7 +219,7 @@
 #define AUI_HOMELAND_EXECUTE_ARCHAEOLOGIST_MOVES_DISBAND_IF_NO_AVAILABLE_SITES
 
 // Military AI Stuff
-/// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division); some double types are also replaced for increased speed
+/// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
 #define AUI_MILITARY_USE_DOUBLES
 /// Capitals will always be included in the list of potential targets if conquest victory is enabled
 #define AUI_MILITARY_ALWAYS_TARGET_CAPITALS
@@ -313,6 +313,14 @@
 #define AUI_PLAYERAI_FIX_UPDATE_FOUND_VALUES_NOT_ADDITIVE
 
 // Policy Stuff
+/// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
+#define AUI_POLICY_USE_DOUBLES
+/// When weighing a branch for unlocking, the difference between the player's era and the branch's prerequisite era is taken into account
+#define AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+/// When weighing a branch for unlocking, the wonder the branch unlocks is also weighed into the branch flavor, but only if the wonder can still be constructed
+#define AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
+/// When weighing a branch for unlocking, all policies in the branch will be considered, not just ones without prerequisites
+#define AUI_POLICY_WEIGH_BRANCH_COUNT_POLICIES_WITH_PREREQ
 /// Doubles Happiness flavor weight if the civ is currently unhappy
 #define AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY (2)
 /// If we have a great person UU, boost all the weights of any policy with effects that up its generation, including policies that are in branches that enable its faith purchase
@@ -321,6 +329,20 @@
 #define AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION (2)
 /// Divides the weight of military flavors (offense, defense, military training) by this number if we do not have any policies
 #define AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER (4)
+/// Replaces the divider for opening new branches with a "determination" divider based on the geometric mean of grand strategy ratios (old one was a holdover from pre-BNW)
+#define AUI_POLICY_CHOOSE_NEXT_POLICY_TWEAKED_OPEN_NEW_BRANCH
+/// Slight tweak to logic of ClearPrefs part to make the function's mathematics more accurate
+#define AUI_POLICY_DO_CHOOSE_IDEOLOGY_TWEAKED_CLEAR_PREFS
+#ifdef AUI_BINOM_RNG
+/// The binomial RNG is used for the extra random score given to all ideologies; value is the maximum amount an ideology can receive from the random portion
+#define AUI_POLICY_DO_CHOOSE_IDEOLOGY_USES_BINOM_RNG (10)
+#endif // AUI_BINOM_RNG
+/// Implements a tiebreaker that adds random values to all ideologies until there is a clear winner
+#define AUI_POLICY_DO_CHOOSE_IDEOLOGY_TIEBREAKER
+/// Slight tweak to logic of ClearPrefs part to make the function's mathematics more accurate; ClearPrefs also gets overwritten if empire is very unhappy
+#define AUI_POLICY_DO_CONSIDER_IDEOLOGY_SWITCH_TWEAKED_CLEAR_PREFS
+/// Gets all possible happiness sources the branch can give, not just building-based ones (eg. specialists, trade routes, luxuries, etc.)
+#define AUI_POLICY_GET_BRANCH_BUILDING_HAPPINESS_GET_ALL_HAPPINESS_SOURCES
 
 // Religion/Belief Stuff
 /// Checks all of player's cities for whether or not a city is within conversion target range, not just the player's capital

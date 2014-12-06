@@ -52,8 +52,32 @@ private:
 	// Internal methods
 	void WeightPrereqs(int* paiTempWeightst, int iPropagationPercent);
 	void PropagateWeights(int iPolicy, int iWeight, int iPropagationPercent, int iPropagationLevel);
+#ifdef AUI_POLICY_USE_DOUBLES
+#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+	double WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch);
+#else
+#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
+	double WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch);
+#else
+	double WeighBranch(PolicyBranchTypes eBranch);
+#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
+#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#else
+#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+	int WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch);
+#else
+#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
+	int WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch);
+#else
 	int WeighBranch(PolicyBranchTypes eBranch);
+#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
+#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif // AUI_POLICY_USE_DOUBLES
 	bool IsBranchEffectiveInGame(PolicyBranchTypes eBranch);
+#ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
+	double BoostFlavorDueToUniqueGP(CvPolicyEntry* pEntry);
+	void UpdateUniqueGPVector(bool bAlwaysUpdate = true);
+#endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 
 	// Logging functions
 	void LogPossiblePolicies();
@@ -65,6 +89,10 @@ private:
 	// Private data
 	CvPlayerPolicies* m_pCurrentPolicies;
 	CvWeightedVector<int, SAFE_ESTIMATE_NUM_POLICIES, true> m_PolicyAIWeights;
+#ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
+	// vector index = Great Person type; true/false value = is it unique?
+	std::vector<bool> m_bUniqueGreatPersons;
+#endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 
 	// First NUM_POLICY_BRANCH_TYPE entries are branches; policies start after that
 	CvWeightedVector<int, SAFE_ESTIMATE_NUM_POLICIES, true> m_AdoptablePolicies;
