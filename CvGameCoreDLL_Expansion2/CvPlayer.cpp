@@ -3632,7 +3632,11 @@ int CvPlayer::GetNumUnitsWithUnitAI(UnitAITypes eUnitAIType, bool bIncludeBeingT
 		// Don't include Water Units if we don't want them
 		if(pLoopUnit->getDomainType() != DOMAIN_SEA || bIncludeWater)
 		{
+#ifdef AUI_PLAYER_FIX_GET_NUM_UNITS_WITH_UNITAI_NO_DEAD
+			if (!pLoopUnit->IsDead() && !pLoopUnit->isDelayedDeath() && pLoopUnit->AI_getUnitAIType() == eUnitAIType)
+#else
 			if(pLoopUnit->AI_getUnitAIType() == eUnitAIType)
+#endif // AUI_PLAYER_FIX_GET_NUM_UNITS_WITH_UNITAI_NO_DEAD
 			{
 				iNumUnits++;
 			}
@@ -6519,9 +6523,14 @@ void CvPlayer::doGoody(CvPlot* pPlot, CvUnit* pUnit)
 			// Any valid Goodies?
 			if(avValidGoodies.size() > 0)
 			{
+#ifdef AUI_PLAYER_FIX_GOODY_HUT_PICKER
+				if (pUnit && GC.getGame().getActivePlayer() == GetID() && pUnit->isHasPromotion((PromotionTypes)GC.getPROMOTION_GOODY_HUT_PICKER()))
+				{
+#else
 				if (pUnit && pUnit->isHasPromotion((PromotionTypes)GC.getPROMOTION_GOODY_HUT_PICKER()))
 				{
 					if(GC.getGame().getActivePlayer() == GetID())
+#endif // AUI_PLAYER_FIX_GOODY_HUT_PICKER
 					{
 						CvPopupInfo kPopupInfo(BUTTONPOPUP_CHOOSE_GOODY_HUT_REWARD, GetID(), pUnit->GetID());
 						GC.GetEngineUserInterface()->AddPopup(kPopupInfo);
@@ -23638,9 +23647,15 @@ int CvPlayer::GetBestSettleAreas(int iMinScore, int& iFirstArea, int& iSecondAre
 
 			if(iScore >= iMinScore)
 			{
+#ifdef AUI_PLAYER_FIX_BEST_SETTLE_AREAS_NAVAL_EXPAND_HINT
+				if ((GC.getMap().GetAIMapHint() & 4) && (EconomicAIHelpers::IsAreaSafeForQuickColony(pLoopArea->GetID(), this)))
+				{
+					iScore *= AUI_PLAYER_FIX_BEST_SETTLE_AREAS_NAVAL_EXPAND_HINT;
+#else
 				if(!(GC.getMap().GetAIMapHint() & 4) && !(EconomicAIHelpers::IsAreaSafeForQuickColony(pLoopArea->GetID(), this)))
 				{
 					iScore /= 3;
+#endif // AUI_PLAYER_FIX_BEST_SETTLE_AREAS_NAVAL_EXPAND_HINT
 				}
 
 				if(iScore > iBestScore)
@@ -23692,6 +23707,12 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 	PlayerTypes eOwner = pUnit->getOwner();
 	TeamTypes eTeam = pUnit->getTeam();
 
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
+	int iLoop, iBestDistance, iCurDistance;
+	const CvCity* pClosestCity = NULL;
+	const CvCity* pLoopCity;
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
+
 	int iBestFoundValue = 0;
 	CvPlot* pBestFoundPlot = NULL;
 
@@ -23714,8 +23735,13 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 	// Stay close to home if don't have an escort (unless we were going offshore which doesn't use escorts anymore)
 	else if(!bEscorted)
 	{
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_NO_ESCORT_BOLDNESS
+		iEvalDistance *= MIN(int(5.5 + sqrt(MAX(GetDiplomacyAI()->GetBoldness() + (double)GetCurrentEra(), 0.0))), 12);
+		iEvalDistance /= 12;
+#else
 		iEvalDistance *= 2;
 		iEvalDistance /= 3;
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_NO_ESCORT_BOLDNESS
 	}
 
 	CvMap& kMap = GC.getMap();
@@ -23758,6 +23784,19 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 		{
 			continue;
 		}
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_CHECK_ADJACENT_FOR_CITY_TARGET
+		bool bAdjacentTargettedForCity = false;
+		for (int jJ = 0; jJ < NUM_DIRECTION_TYPES; jJ++)
+		{
+			if (IsPlotTargetedForCity(plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)jJ)))
+			{
+				bAdjacentTargettedForCity = true;
+				break;
+			}
+		}
+		if (bAdjacentTargettedForCity)
+			continue;
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_CHECK_ADJACENT_FOR_CITY_TARGET
 
 		// Do we have to check if this is a safe place to go?
 		if(bEscorted || (!pPlot->isVisibleEnemyUnit(eOwner)))
@@ -23765,10 +23804,40 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 			int iValue = pPlot->getFoundValue(eOwner);
 			if(iValue > 5000)
 			{
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
+				int iTurnsToDestination = TurnsToReachTarget(pUnit, pPlot, false, bEscorted);
+				if (iTurnsToDestination == MAX_INT)
+				{
+					continue;
+				}
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
+				iLoop = 0;
+				iBestDistance = MAX_INT;
+				for (pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
+				{
+					iCurDistance = plotDistance(iSettlerX, iSettlerY, pLoopCity->getX(), pLoopCity->getY());
+					if (iCurDistance < iBestDistance)
+					{
+						iBestDistance = iCurDistance;
+						pClosestCity = pLoopCity;
+					}
+				}
 				int iSettlerDistance = ::plotDistance(pPlot->getX(), pPlot->getY(), iSettlerX, iSettlerY);
+				if (pClosestCity)
+				{
+					iSettlerDistance = ::plotDistance(pPlot->getX(), pPlot->getY(), pClosestCity->getX(), pClosestCity->getY());
+				}
+#else
+				int iSettlerDistance = ::plotDistance(pPlot->getX(), pPlot->getY(), iSettlerX, iSettlerY);
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
 				int iDistanceDropoff = min(99,(iDistanceDropoffMod * iSettlerDistance) / iEvalDistance);
 				iDistanceDropoff = max(0,iDistanceDropoff);
 				iValue = iValue * (100 - iDistanceDropoff) / 100;
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
+				if (iTurnsToDestination > iEvalDistance)
+					iValue = int(iValue / (1.0 + log(1.0 + iTurnsToDestination - iEvalDistance)) + 0.5);
+#else
 				if(pPlot->getArea() != iUnitArea)
 				{
 					if(GC.getMap().GetAIMapHint() & 5)  // this is primarily a naval map (or an offshore map like terra)
@@ -23782,6 +23851,7 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 						iValue /= 3;
 					}
 				}
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
 				if(iValue > iBestFoundValue)
 				{
 					iBestFoundValue = iValue;
