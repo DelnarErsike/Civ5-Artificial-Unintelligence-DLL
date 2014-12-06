@@ -5408,7 +5408,11 @@ bool CvUnit::canParadrop(const CvPlot* pPlot, bool bOnlyTestVisibility) const
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_ASTAR_PARADROP
+bool CvUnit::canParadropAt(const CvPlot* pPlot, int iX, int iY, bool bIgnoreUnits) const
+#else
 bool CvUnit::canParadropAt(const CvPlot* pPlot, int iX, int iY) const
+#endif // AUI_ASTAR_PARADROP
 {
 	VALIDATE_OBJECT
 	if(!canParadrop(pPlot, false))
@@ -5427,7 +5431,11 @@ bool CvUnit::canParadropAt(const CvPlot* pPlot, int iX, int iY) const
 		return false;
 	}
 
+#ifdef AUI_ASTAR_PARADROP
+	if (!canMoveInto(*pTargetPlot, MOVEFLAG_DESTINATION | (bIgnoreUnits ? MOVEFLAG_IGNORE_STACKING : 0)))
+#else
 	if(!canMoveInto(*pTargetPlot, MOVEFLAG_DESTINATION))
+#endif // AUI_ASTAR_PARADROP
 	{
 		return false;
 	}
@@ -9677,7 +9685,7 @@ int CvUnit::GetRange() const
 int CvUnit::GetRangePlusMoveToshot() const
 {
 	VALIDATE_OBJECT
-		return ((getDomainType() == DOMAIN_AIR) ? GetRange() : (GetRange() + baseMoves() - (isMustSetUpToRangedAttack() ? 1 : 0)));
+	return ((getDomainType() == DOMAIN_AIR) ? GetRange() : (MIN(GetRange(), 1) + baseMoves() - 1 - (isMustSetUpToRangedAttack() ? 1 : 0)));
 }
 #endif // AUI_UNIT_RANGE_PLUS_MOVE
 
@@ -14121,7 +14129,11 @@ bool CvUnit::IsInFriendlyTerritory() const
 bool CvUnit::IsUnderEnemyRangedAttack() const
 {
 	PlayerTypes eLoopPlayer;
+#ifdef AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
+	int iTotalDamage = AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE;
+#else
 	int iTotalDamage = 0;
+#endif // AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
 
 	for(int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
 	{
@@ -14137,7 +14149,15 @@ bool CvUnit::IsUnderEnemyRangedAttack() const
 				{
 					if(pLoopCity->canRangeStrikeAt(getX(), getY()))
 					{
+#ifdef AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
+						iTotalDamage += pLoopCity->rangeCombatDamage(this, NULL, false);
+						if (iTotalDamage >= healRate(plot()) || GetCurrHitPoints() - iTotalDamage <= 0)
+						{
+							return true;
+						}
+#else
 						return true;
+#endif // AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
 					}
 				}
 
@@ -14160,12 +14180,14 @@ bool CvUnit::IsUnderEnemyRangedAttack() const
 								// Will we do any damage
 								int iExpectedDamage = pLoopUnit->GetRangeCombatDamage(this, NULL, false);
 								iTotalDamage += iExpectedDamage;
-#ifndef AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
+#ifdef AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
+								if (iTotalDamage >= healRate(plot()) || GetCurrHitPoints() - iTotalDamage <= 0)
+#else
 								if (iTotalDamage > healRate(plot()))
+#endif // AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
 								{
 									return true;
 								}
-#endif // AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
 							}
 #else
 							// Are we in range?
@@ -14177,12 +14199,14 @@ bool CvUnit::IsUnderEnemyRangedAttack() const
 									// Will we do any damage
 									int iExpectedDamage = pLoopUnit->GetRangeCombatDamage(this, NULL, false);
 									iTotalDamage += iExpectedDamage;
-#ifndef AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
+#ifdef AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
+									if (iTotalDamage >= healRate(plot()))
+#else
 									if (iTotalDamage > healRate(plot()))
+#endif // AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
 									{
 										return true;
 									}
-#endif // AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
 								}
 							}
 #endif // AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_OVERLOAD
@@ -14193,19 +14217,7 @@ bool CvUnit::IsUnderEnemyRangedAttack() const
 		}
 	}
 
-#ifdef AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
-	// Would total damage be more than our heal rate OR would we overheal while under fire?
-	if (iTotalDamage > healRate(plot()) || ((GetCurrHitPoints() + healRate(plot()) > GetMaxHitPoints()) && iTotalDamage > 0))
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-#else
 	return false;
-#endif // AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
 }
 
 //	--------------------------------------------------------------------------------
@@ -18049,7 +18061,7 @@ bool CvUnit::canRangeStrike() const
 bool CvUnit::canEverRangeStrikeAtFromPlot(int iX, int iY, CvPlot* targetPlot) const
 {
 	VALIDATE_OBJECT
-		CvPlot* pSourcePlot = targetPlot;
+	CvPlot* pSourcePlot = targetPlot;
 	CvPlot* pTargetPlot = GC.getMap().plot(iX, iY);
 
 	// Plot null?
@@ -18104,7 +18116,7 @@ bool CvUnit::canEverRangeStrikeAtFromPlot(int iX, int iY, CvPlot* targetPlot) co
 bool CvUnit::canEverRangeStrikeAt(int iX, int iY) const
 {
 	VALIDATE_OBJECT
-		return canEverRangeStrikeAtFromPlot(iX, iY, plot());
+	return canEverRangeStrikeAtFromPlot(iX, iY, plot());
 }
 #else
 bool CvUnit::canEverRangeStrikeAt(int iX, int iY) const
@@ -18249,23 +18261,26 @@ bool CvUnit::canRangeStrikeAt(int iX, int iY, bool bNeedWar, bool bNoncombatAllo
 bool CvUnit::canMoveAndRangedStrike(int iX, int iY)
 {
 	VALIDATE_OBJECT
-
-	// We only compute if distance is reasonable.
-	if (GetRangePlusMoveToshot() > plotDistance(getX(), getY(), iX, iY))
-	{
-		return false;
-	}
-
 	// If unit can already strike without moving is always true
 	if (canEverRangeStrikeAt(iX, iY))
 	{
 		return true;
 	}
 
+	// We only compute if distance is reasonable.
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	if (GetRangePlusMoveToshot() < GetAdjustedDistanceWithRoadFilter(this, GC.getMap().plot(iX, iY), plotDistance(getX(), getY(), iX, iY)))
+#else
+	if (GetRangePlusMoveToshot() < plotDistance(getX(), getY(), iX, iY))
+#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	{
+		return false;
+	}
+
 	int initTime = timeGetTime();
+
 	std::vector<CvPlot*> movePlotTest;
 	CvPlot* plotTarget = GC.getMap().plotCheckInvalid(iX, iY);
-
 	if (plotTarget != NULL)
 	{
 		GetMovablePlotListOpt(movePlotTest, plotTarget, true);
@@ -18284,15 +18299,19 @@ bool CvUnit::canMoveAndRangedStrike(int iX, int iY)
 }
 
 //AMS: Optimized function to evaluate free plots for move and fire.
-void CvUnit::GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* plotTarget, bool exitOnFound)
+void CvUnit::GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* pTarget, bool bExitOnFound)
 {
 	VALIDATE_OBJECT
-	int xVariance = max(abs((getX() - plotTarget->getX()) / 2), 1);
-	int yVariance = max(abs((getY() - plotTarget->getY()) / 2), 1);
-	int xMin = min(getX(), plotTarget->getX()) - yVariance;
-	int xMax = max(getX(), plotTarget->getX()) + yVariance;
-	int yMin = min(getY(), plotTarget->getY()) - xVariance;
-	int yMax = max(getY(), plotTarget->getY()) + xVariance;
+	int xVariance = max(abs((getX() - pTarget->getX()) / 2), 1);
+	int yVariance = max(abs((getY() - pTarget->getY()) / 2), 1);
+	int xMin = min(getX(), pTarget->getX()) - yVariance;
+	int xMax = max(getX(), pTarget->getX()) + yVariance;
+	int yMin = min(getY(), pTarget->getY()) - xVariance;
+	int yMax = max(getY(), pTarget->getY()) + xVariance;
+
+	// Dirty trick to account for having to set up to attack
+	if (canSetUpForRangedAttack(NULL))
+		m_iMoves--;
 
 	for (int iDX = xMin; iDX <= xMax; iDX++)
 	{
@@ -18300,25 +18319,24 @@ void CvUnit::GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* plotTarget
 		{
 			if (GC.getMap().isPlot(iDX, iDY))
 			{
-				CvPlot* currentPlot = GC.getMap().plotCheckInvalid(iDX, iDY);
+				CvPlot* pCurrentPlot = GC.getMap().plotCheckInvalid(iDX, iDY);
 
 				// Check is empty plot
-				if ((currentPlot != NULL) && !currentPlot->isImpassable() && !currentPlot->isUnit() && (!currentPlot->isCity() || getOwner() == currentPlot->getOwner()))
+				if (pCurrentPlot && canEnterTerrain(*pCurrentPlot))
 				{
-					//Check plot is in unit range
-					if (GetRange() >= plotDistance(currentPlot->getX(), currentPlot->getY(), plotTarget->getX(), plotTarget->getY()))
+					// Can shoot to the target from plot?
+					if (canEverRangeStrikeAtFromPlot(pTarget->getX(), pTarget->getY(), pCurrentPlot))
 					{
-						if (TurnsToReachTarget(this, currentPlot, false /*bReusePaths*/, false /*bIgnoreUnits*/, true /*bIgnoreStacking*/) == 0)
+						// Run pathfinder to see if we can get to plot with movement left
+						if (TurnsToReachTarget(this, pCurrentPlot, true /*bReusePaths*/, false) == 0)
 						{
-							// Can shoot to the target from plot?
-							if (canEverRangeStrikeAtFromPlot(plotTarget->getX(), plotTarget->getY(), currentPlot))
-							{
-								plotData.push_back(currentPlot);
+							plotData.push_back(pCurrentPlot);
 
-								if (exitOnFound)
-								{
-									return;
-								}
+							if (bExitOnFound)
+							{
+								if (canSetUpForRangedAttack(NULL))
+									m_iMoves++;
+								return;
 							}
 						}
 					}
@@ -18326,8 +18344,67 @@ void CvUnit::GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* plotTarget
 			}
 		}
 	}
+
+	if (canSetUpForRangedAttack(NULL))
+		m_iMoves++;
 }
 #endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+
+#ifdef AUI_UNIT_DO_AITYPE_FLIP
+bool CvUnit::DoSingleUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert, bool bForceOff)
+{
+	if (bRevert)
+	{
+		if (AI_getUnitAIType() != eUnitAIType && getUnitInfo().GetUnitAIType(eUnitAIType))
+		{
+			AI_setUnitAIType(eUnitAIType);
+			if (GC.getLogging() && GC.getAILogging())
+			{
+				CvString strLogString;
+				strLogString.Format("Assigning new unit AI (%d) to %s, X: %d, Y: %d", (int)eUnitAIType, getName().GetCString(), getX(), getY());
+				GET_PLAYER(getOwner()).GetHomelandAI()->LogHomelandMessage(strLogString);
+			}
+			return true;
+		}
+	}
+	else
+	{
+		if (AI_getUnitAIType() == eUnitAIType)
+		{
+			if (getUnitInfo().GetDefaultUnitAIType() != eUnitAIType)
+			{
+				AI_setUnitAIType((UnitAITypes)getUnitInfo().GetDefaultUnitAIType());
+				if (GC.getLogging() && GC.getAILogging())
+				{
+					CvString strLogString;
+					strLogString.Format("Reverting to default unit AI for %s, X: %d, Y: %d", getName().GetCString(), getX(), getY());
+					GET_PLAYER(getOwner()).GetHomelandAI()->LogHomelandMessage(strLogString);
+				}
+				return true;
+			}
+			else if (bForceOff)
+			{
+				for (int iI = 0; iI < NUM_UNITAI_TYPES; iI++)
+				{
+					if (getUnitInfo().GetUnitAIType((UnitAITypes)iI) && eUnitAIType != (UnitAITypes)iI)
+					{
+						AI_setUnitAIType((UnitAITypes)iI);
+						if (GC.getLogging() && GC.getAILogging())
+						{
+							CvString strLogString;
+							strLogString.Format("Assigning new unit AI (%d) to %s, X: %d, Y: %d", iI, getName().GetCString(), getX(), getY());
+							GET_PLAYER(getOwner()).GetHomelandAI()->LogHomelandMessage(strLogString);
+						}
+						return true;
+					}
+				}
+			}
+		}
+	}
+
+	return false;
+}
+#endif // AUI_UNIT_DO_AITYPE_FLIP
 
 //	--------------------------------------------------------------------------------
 /// Can this Unit air sweep to eliminate interceptors?
@@ -20656,9 +20733,9 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		return 0;
 	}
 
-#ifdef AUI_UNIT_PROMOTION_USE_FLOATS
-	float fValue = 0;
-	float fTemp;
+#ifdef AUI_UNIT_PROMOTION_USE_DOUBLES
+	double dValue = 0;
+	double dTemp;
 	int iExtra;
 	int iI;
 
@@ -20683,200 +20760,200 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		if (getDamage() > (GetMaxHitPoints() / 2))
 #endif // AUI_UNIT_PROMOTION_FIX_INSTAHEAL_ONLY_UNDER_THREAT
 		{
-			fValue += 1000;   // Enough to lock this one up
+			dValue += 1000;   // Enough to lock this one up
 		}
 	}
 
-	fTemp = (float)pkPromotionInfo->GetOpenAttackPercent();
-	if(fTemp != 0.0f)
+	dTemp = (double)pkPromotionInfo->GetOpenAttackPercent();
+	if(dTemp != 0)
 	{
 		iExtra = getExtraOpenAttackPercent();
-		fTemp *= (100 + iExtra * 2);
-		fTemp /= 100.0f;
+		dTemp *= (100 + iExtra * 2);
+		dTemp /= 100.0;
 		if(noDefensiveBonus())
 		{
-			fTemp *= 2;
+			dTemp *= 2;
 		}
-		fValue += fTemp + iFlavorOffense * 2;
+		dValue += dTemp + iFlavorOffense * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetOpenDefensePercent();
-	if(fTemp != 0.0f)
+	dTemp = (double)pkPromotionInfo->GetOpenDefensePercent();
+	if(dTemp != 0)
 	{
 		iExtra = getExtraOpenDefensePercent() * 2;
-		fTemp *= (100 + iExtra);
-		fTemp /= 100.0f;
+		dTemp *= (100 + iExtra);
+		dTemp /= 100.0;
 		if(noDefensiveBonus())
 		{
-			fTemp *= 2;
+			dTemp *= 2;
 		}
-		fValue += fTemp + iFlavorDefense * 2;
+		dValue += dTemp + iFlavorDefense * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetRoughAttackPercent();
-	if(fTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetRoughAttackPercent();
+	if(dTemp != 0)
 	{
 		iExtra = getExtraRoughAttackPercent();
-		fTemp *= (100 + iExtra * 2);
-		fTemp /= 100;
+		dTemp *= (100 + iExtra * 2);
+		dTemp /= 100.0;
 		if(!noDefensiveBonus())
 		{
-			fTemp *= 2;
+			dTemp *= 2;
 		}
-		fValue += fTemp + iFlavorOffense * 2;
+		dValue += dTemp + iFlavorOffense * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetRoughDefensePercent();
-	if(fTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetRoughDefensePercent();
+	if(dTemp != 0)
 	{
 		iExtra = getExtraRoughDefensePercent() * 2;
-		fTemp *= (100 + iExtra);
-		fTemp /= 100;
+		dTemp *= (100 + iExtra);
+		dTemp /= 100.0;
 		if(!noDefensiveBonus())
 		{
-			fTemp *= 2;
+			dTemp *= 2;
 		}
-		fValue += fTemp + iFlavorDefense * 2;
+		dValue += dTemp + iFlavorDefense * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetOpenRangedAttackMod();
-	if(fTemp != 0 && isRanged())
+	dTemp = (double)pkPromotionInfo->GetOpenRangedAttackMod();
+	if(dTemp != 0 && isRanged())
 	{
 		iExtra = getExtraOpenRangedAttackMod();
-		fTemp *= (100 + iExtra * 2);
-		fTemp /= 100;
+		dTemp *= (100 + iExtra * 2);
+		dTemp /= 100.0;
 		if(noDefensiveBonus())
 		{
-			fTemp *= 2;
+			dTemp *= 2;
 		}
-		fValue += fTemp + iFlavorRanged * 2;
+		dValue += dTemp + iFlavorRanged * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetRoughRangedAttackMod();
-	if(fTemp != 0 && isRanged())
+	dTemp = (double)pkPromotionInfo->GetRoughRangedAttackMod();
+	if(dTemp != 0 && isRanged())
 	{
 		iExtra = getExtraRoughRangedAttackMod() * 2;
-		fTemp *= (100 + iExtra);
-		fTemp /= 100;
+		dTemp *= (100 + iExtra);
+		dTemp /= 100.0;
 		if(!noDefensiveBonus())
 		{
-			fTemp *= 2;
+			dTemp *= 2;
 		}
-		fValue += fTemp + iFlavorRanged * 2;
+		dValue += dTemp + iFlavorRanged * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetVisibilityChange();
+	dTemp = (double)pkPromotionInfo->GetVisibilityChange();
 	if((AI_getUnitAIType() == UNITAI_EXPLORE_SEA) ||
 	        (AI_getUnitAIType() == UNITAI_EXPLORE))
 	{
-		fValue += fTemp * (50 + iFlavorRecon * 3);
+		dValue += dTemp * (50 + iFlavorRecon * 3);
 	}
 	else
 	{
-		fValue += fTemp * (10 + iFlavorRecon * 2);
+		dValue += dTemp * (10 + iFlavorRecon * 2);
 	}
 
-	fTemp = (float)pkPromotionInfo->GetCityAttackPercent();
-	if(fTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetCityAttackPercent();
+	if(dTemp != 0)
 	{
 		iExtra = getExtraCityAttackPercent();
-		fTemp *= (100 + iExtra * 2);
-		fTemp /= 100;
-		fValue += fTemp + iFlavorOffense * 2;
+		dTemp *= (100 + iExtra * 2);
+		dTemp /= 100.0;
+		dValue += dTemp + iFlavorOffense * 2;
 		if(isRanged())
 		{
-			fValue += iFlavorRanged * 2;
+			dValue += iFlavorRanged * 2;
 		}
 	}
 
-	fTemp = (float)pkPromotionInfo->GetCityDefensePercent();
-	if(fTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetCityDefensePercent();
+	if(dTemp != 0)
 	{
 		iExtra = getExtraCityDefensePercent();
-		fTemp *= (100 + iExtra * 2);
-		fTemp /= 100;
-		fValue += fTemp + iFlavorDefense * 2;
+		dTemp *= (100 + iExtra * 2);
+		dTemp /= 100.0;
+		dValue += dTemp + iFlavorDefense * 2;
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_CITY_DEFENSE
 		if (isRanged())
 		{
-			fValue += iFlavorRanged * 2;
+			dValue += iFlavorRanged * 2;
 		}
 #else
 		if((AI_getUnitAIType() == UNITAI_DEFENSE) ||
 		        (AI_getUnitAIType() == UNITAI_COUNTER))
 		{
-			fValue *= 2;
+			dValue *= 2;
 		}
 #endif // AUI_UNIT_PROMOTION_TWEAKED_CITY_DEFENSE
 	}
 
-	fTemp = (float)pkPromotionInfo->GetAttackFortifiedMod();
-	if(fTemp != 0 && isRanged())
+	dTemp = (double)pkPromotionInfo->GetAttackFortifiedMod();
+	if(dTemp != 0 && isRanged())
 	{
 		iExtra = getExtraAttackFortifiedMod() * 2;
-		fTemp *= (100 + iExtra);
-		fTemp /= 100;
-		fValue += fTemp + (iFlavorOffense * iFlavorRanged) * 2;
+		dTemp *= (100 + iExtra);
+		dTemp /= 100.0;
+		dValue += dTemp + (iFlavorOffense * iFlavorRanged) * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetEnemyHealChange();
+	dTemp = (double)pkPromotionInfo->GetEnemyHealChange();
 	if((AI_getUnitAIType() == UNITAI_PARADROP) ||
 	        (AI_getUnitAIType() == UNITAI_PIRATE_SEA))
 	{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
-		fValue += fTemp * (50 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
+		dValue += dTemp * (50 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
 		fValue += fTemp * (50 + iFlavorOffense * 2);
 #endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
 	}
 	else
 	{
-		fValue += fTemp * (10 + iFlavorOffense * 2);
+		dValue += dTemp * (10 + iFlavorOffense * 2);
 	}
 
-	fTemp = (float)pkPromotionInfo->GetNeutralHealChange();
+	dTemp = (double)pkPromotionInfo->GetNeutralHealChange();
 	if((AI_getUnitAIType() == UNITAI_EXPLORE) ||
 	        (AI_getUnitAIType() == UNITAI_EXPLORE_SEA))
 	{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
-		fValue += fTemp * (40 + iFlavorRecon * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
+		dValue += dTemp * (40 + iFlavorRecon * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
-		fValue += fTemp * (40 + iFlavorRecon * 2);
+		dValue += dTemp * (40 + iFlavorRecon * 2);
 #endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
 	}
 	else
 	{
-		fValue += fTemp * (10 + iFlavorRecon * 2);
+		dValue += dTemp * (10 + iFlavorRecon * 2);
 	}
 
-	fTemp = (float)pkPromotionInfo->GetFriendlyHealChange();
+	dTemp = (double)pkPromotionInfo->GetFriendlyHealChange();
 	if((AI_getUnitAIType() == UNITAI_DEFENSE) ||
 	        (AI_getUnitAIType() == UNITAI_COUNTER))
 	{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
-		fValue += fTemp * (20 + iFlavorDefense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
+		dValue += dTemp * (20 + iFlavorDefense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
-		fValue += fTemp * (20 + iFlavorDefense * 2);
+		dValue += dTemp * (20 + iFlavorDefense * 2);
 #endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
 	}
 	else
 	{
-		fValue += fTemp * (10 + iFlavorDefense * 2);
+		dValue += dTemp * (10 + iFlavorDefense * 2);
 	}
 
-	fTemp = (float)pkPromotionInfo->GetAdjacentTileHealChange();
+	dTemp = (double)pkPromotionInfo->GetAdjacentTileHealChange();
 	if((AI_getUnitAIType() == UNITAI_DEFENSE) ||
 	        (AI_getUnitAIType() == UNITAI_COUNTER))
 	{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
-		fValue += fTemp * (20 + iFlavorDefense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
+		dValue += dTemp * (20 + iFlavorDefense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
 		fValue += fTemp * (40 + iFlavorDefense * 2);
 #endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
 	}
 	else
 	{
-		fValue += fTemp * (10 + iFlavorDefense * 2);
+		dValue += dTemp * (10 + iFlavorDefense * 2);
 	}
 
 	if(pkPromotionInfo->IsAmphib())
@@ -20885,14 +20962,14 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		        (AI_getUnitAIType() == UNITAI_ATTACK))
 		{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS
-			fValue += 40 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS;
+			dValue += 40 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS;
 #else
 			fValue += 40 + iFlavorOffense * 2;
 #endif // AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS
 		}
 		else
 		{
-			fValue += 10 + iFlavorOffense * 2;
+			dValue += 10 + iFlavorOffense * 2;
 		}
 	}
 
@@ -20902,62 +20979,62 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		        (AI_getUnitAIType() == UNITAI_ATTACK))
 		{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS
-			fValue += 40 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS;
+			dValue += 40 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS;
 #else
 			fValue += 40 + iFlavorOffense * 2;
 #endif // AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS
 		}
 		else
 		{
-			fValue += 10 + iFlavorOffense * 2;
+			dValue += 10 + iFlavorOffense * 2;
 		}
 	}
 
-	fTemp = (float)pkPromotionInfo->GetRangedDefenseMod();
-	if(fTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetRangedDefenseMod();
+	if(dTemp != 0)
 	{
 		iExtra = getExtraRangedDefenseModifier() * 2;
-		fTemp *= (100 + iExtra);
-		fTemp /= 100;
+		dTemp *= (100 + iExtra);
+		dTemp /= 100.0;
 		// likely not a ranged unit
 		if((AI_getUnitAIType() == UNITAI_DEFENSE) || (AI_getUnitAIType() == UNITAI_COUNTER) || (AI_getUnitAIType() == UNITAI_ATTACK))
 		{
-			fTemp *= 2;
+			dTemp *= 2;
 		}
 		// a slow unit
 		if (maxMoves() / GC.getMOVE_DENOMINATOR() <= 2)
 		{
-			fTemp *= 2;
+			dTemp *= 2;
 		}
-		fValue += fTemp + iFlavorDefense * 2;
+		dValue += dTemp + iFlavorDefense * 2;
 	}
 
 	if(pkPromotionInfo->IsRangeAttackIgnoreLOS() && isRanged())
 	{
-		fValue += 75 + iFlavorRanged * 2;
+		dValue += 75 + iFlavorRanged * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetAttackWoundedMod();
-	if(fTemp != 0 && isRanged())
+	dTemp = (double)pkPromotionInfo->GetAttackWoundedMod();
+	if(dTemp != 0 && isRanged())
 	{
 		iExtra = getExtraAttackWoundedMod() * 2;
-		fTemp *= (100 + iExtra);
-		fTemp /= 100;
-		fValue += fTemp + (iFlavorOffense * iFlavorRanged) * 2;
+		dTemp *= (100 + iExtra);
+		dTemp /= 100.0;
+		dValue += dTemp + (iFlavorOffense * iFlavorRanged) * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetFlankAttackModifier();
-	if(fTemp > 0)
+	dTemp = (double)pkPromotionInfo->GetFlankAttackModifier();
+	if(dTemp > 0)
 	{
-		fValue += ((2 * iFlavorOffense + iFlavorMobile) * maxMoves() / (float)GC.getMOVE_DENOMINATOR() * fTemp / 100.0f);
+		dValue += ((2 * iFlavorOffense + iFlavorMobile) * maxMoves() / (double)GC.getMOVE_DENOMINATOR() * dTemp / 100.0);
 	}
 
 	if(GC.getPromotionInfo(ePromotion)->IsHealOutsideFriendly() && getDomainType() == DOMAIN_SEA)
 	{
-		fValue += 50 + iFlavorNaval * 2;
+		dValue += 50 + iFlavorNaval * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetMovesChange();
+	dTemp = (double)pkPromotionInfo->GetMovesChange();
 	if((AI_getUnitAIType() == UNITAI_ATTACK_SEA) ||
 	        (AI_getUnitAIType() == UNITAI_PIRATE_SEA) ||
 	        (AI_getUnitAIType() == UNITAI_RESERVE_SEA) ||
@@ -20970,14 +21047,14 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	        (AI_getUnitAIType() == UNITAI_PARADROP))
 	{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_MOVECHANGE
-		fValue += fTemp * (50 + iFlavorMobile * AUI_UNIT_PROMOTION_TWEAKED_MOVECHANGE);
+		dValue += dTemp * (50 + iFlavorMobile * AUI_UNIT_PROMOTION_TWEAKED_MOVECHANGE);
 #else
-		fValue += fTemp * (50 + iFlavorMobile * 2);
+		dValue += dTemp * (50 + iFlavorMobile * 2);
 #endif // AUI_UNIT_PROMOTION_TWEAKED_MOVECHANGE
 	}
 	else
 	{
-		fValue += fTemp * (30 + iFlavorMobile * 2);
+		dValue += dTemp * (30 + iFlavorMobile * 2);
 	}
 
 	if(pkPromotionInfo->IsAlwaysHeal())
@@ -20992,17 +21069,17 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		        (AI_getUnitAIType() == UNITAI_PARADROP))
 		{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_MARCH
-			fValue += 50 + (iFlavorMobile + iFlavorDefense + MAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_MARCH;
+			dValue += 50 + (iFlavorMobile + iFlavorDefense + MAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_MARCH;
 		}
 		else
 		{
-			fValue += 30 + (iFlavorMobile + iFlavorDefense + MAX(iFlavorDefense, iFlavorOffense)) * 2;
+			dValue += 30 + (iFlavorMobile + iFlavorDefense + MAX(iFlavorDefense, iFlavorOffense)) * 2;
 #else
-			fValue += 50 + iFlavorMobile * 2;
+			dValue += 50 + iFlavorMobile * 2;
 		}
 		else
 		{
-			fValue += 30 + iFlavorMobile * 2;
+			dValue += 30 + iFlavorMobile * 2;
 #endif // AUI_UNIT_PROMOTION_TWEAKED_MARCH
 		}
 	}
@@ -21019,17 +21096,17 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		        (AI_getUnitAIType() == UNITAI_PARADROP))
 		{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_BLITZ
-			fValue += 50 + (iFlavorMobile + iFlavorOffense + MAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_BLITZ;
+			dValue += 50 + (iFlavorMobile + iFlavorOffense + MAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_BLITZ;
 		}
 		else
 		{
-			fValue += 20 + (iFlavorMobile + iFlavorOffense + MAX(iFlavorDefense, iFlavorOffense)) * 2;
+			dValue += 20 + (iFlavorMobile + iFlavorOffense + MAX(iFlavorDefense, iFlavorOffense)) * 2;
 #else
-			fValue += 50 + iFlavorMobile * 2;
+			dValue += 50 + iFlavorMobile * 2;
 		}
 		else
 		{
-			fValue += 20 + iFlavorMobile * 2;
+			dValue += 20 + iFlavorMobile * 2;
 #endif // AUI_UNIT_PROMOTION_TWEAKED_BLITZ
 		}
 	}
@@ -21046,69 +21123,69 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		        (AI_getUnitAIType() == UNITAI_PARADROP))
 		{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_MOVE_AFTER_ATTACK
-			fValue += 30 + (iFlavorMobile + iFlavorOffense) * AUI_UNIT_PROMOTION_TWEAKED_MOVE_AFTER_ATTACK;
+			dValue += 30 + (iFlavorMobile + iFlavorOffense) * AUI_UNIT_PROMOTION_TWEAKED_MOVE_AFTER_ATTACK;
 #else
-			fValue += 30 + (iFlavorMobile + iFlavorOffense) * 2;
+			dValue += 30 + (iFlavorMobile + iFlavorOffense) * 2;
 #endif // AUI_UNIT_PROMOTION_TWEAKED_MOVE_AFTER_ATTACK
 		}
 		else
 		{
-			fValue += 10 + (iFlavorMobile + iFlavorOffense) * 2;
+			dValue += 10 + (iFlavorMobile + iFlavorOffense) * 2;
 		}
 	}
 
-	fTemp = (float)pkPromotionInfo->GetExtraAttacks();
-	if(fTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetExtraAttacks();
+	if(dTemp != 0)
 	{
-		fValue += (fTemp * 200);
+		dValue += (dTemp * 200);
 	}
 
-	fTemp = (float)pkPromotionInfo->GetRangeChange();
+	dTemp = (double)pkPromotionInfo->GetRangeChange();
 	if(isRanged())
 	{
-		fValue += (fTemp * 200);
+		dValue += (dTemp * 200);
 	}
 
-	fTemp = (float)pkPromotionInfo->GetInterceptionCombatModifier();
-	if(fTemp != 0 && canAirPatrol(NULL))
+	dTemp = (double)pkPromotionInfo->GetInterceptionCombatModifier();
+	if(dTemp != 0 && canAirPatrol(NULL))
 	{
 		iExtra = GetInterceptionCombatModifier() * 2;
-		fTemp *= (100 + iExtra);
-		fTemp /= 100;
-		fValue += fTemp + iFlavorAir * 2;
+		dTemp *= (100 + iExtra);
+		dTemp /= 100.0;
+		dValue += dTemp + iFlavorAir * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetAirSweepCombatModifier();
-	if(fTemp != 0 && canAirSweep())
+	dTemp = (double)pkPromotionInfo->GetAirSweepCombatModifier();
+	if(dTemp != 0 && canAirSweep())
 	{
 		iExtra = GetAirSweepCombatModifier() * 2;
-		fTemp *= (100 + iExtra);
-		fTemp /= 100;
-		fValue += fTemp + iFlavorAir * 2;
+		dTemp *= (100 + iExtra);
+		dTemp /= 100.0;
+		dValue += dTemp + iFlavorAir * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetNumInterceptionChange();
-	if(fTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetNumInterceptionChange();
+	if(dTemp != 0)
 	{
-		fValue += (fTemp * 200);
+		dValue += (dTemp * 200);
 	}
 
-	fTemp = (float)pkPromotionInfo->GetInterceptionDefenseDamageModifier();
-	if(fTemp != 0 && getDomainType() == DOMAIN_AIR)
+	dTemp = (double)pkPromotionInfo->GetInterceptionDefenseDamageModifier();
+	if(dTemp != 0 && getDomainType() == DOMAIN_AIR)
 	{
 		iExtra = GetInterceptionDefenseDamageModifier() * 2;
-		fTemp *= (100 + iExtra);
-		fTemp /= 100;
-		fValue += fTemp + iFlavorAir * 2;
+		dTemp *= (100 + iExtra);
+		dTemp /= 100.0;
+		dValue += dTemp + iFlavorAir * 2;
 	}
 
-	fTemp = (float)pkPromotionInfo->GetDefenseMod();
-	if(fTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetDefenseMod();
+	if(dTemp != 0)
 	{
 		iExtra = getDefenseModifier() * 2;
-		fTemp *= (100 + iExtra);
-		fTemp /= 100;
-		fValue += fTemp + iFlavorDefense * 2;
+		dTemp *= (100 + iExtra);
+		dTemp /= 100.0;
+		dValue += dTemp + iFlavorDefense * 2;
 	}
 
 	for(iI = 0; iI < GC.getNumTerrainInfos(); iI++)
@@ -21117,47 +21194,47 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		CvTerrainInfo* pkTerrainInfo = GC.getTerrainInfo(eTerrain);
 		if(pkTerrainInfo)
 		{
-			fTemp = (float)pkPromotionInfo->GetTerrainAttackPercent(iI);
-			if(fTemp != 0)
+			dTemp = (double)pkPromotionInfo->GetTerrainAttackPercent(iI);
+			if(dTemp != 0)
 			{
 				iExtra = getExtraTerrainAttackPercent(eTerrain);
-				fTemp *= (100 + iExtra * 2);
-				fTemp /= 100;
+				dTemp *= (100 + iExtra * 2);
+				dTemp /= 100.0;
 #ifdef AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
 				if((AI_getUnitAIType() == UNITAI_ATTACK) ||
 				        (AI_getUnitAIType() == UNITAI_FAST_ATTACK))
 				{
-					fValue += fTemp * 2 + iFlavorOffense * 4;
+					dValue += dTemp * 2 + iFlavorOffense * 4;
 				}
 				else
 				{
-					fValue += fTemp + iFlavorOffense * 2;
+					dValue += dTemp + iFlavorOffense * 2;
 				}
 #else
-				fValue += fTemp + iFlavorOffense * 2;
+				dValue += dTemp + iFlavorOffense * 2;
 				if ((AI_getUnitAIType() == UNITAI_ATTACK) ||
 					(AI_getUnitAIType() == UNITAI_FAST_ATTACK))
 				{
-					fValue *= 2;
+					dValue *= 2;
 				}
 #endif // AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
 			}
 
-			fTemp = (float)pkPromotionInfo->GetTerrainDefensePercent(iI);
-			if(fTemp != 0)
+			dTemp = (double)pkPromotionInfo->GetTerrainDefensePercent(iI);
+			if(dTemp != 0)
 			{
 				iExtra =  getExtraTerrainDefensePercent(eTerrain);
-				fTemp *= (100 + iExtra);
-				fTemp /= 100;
+				dTemp *= (100 + iExtra);
+				dTemp /= 100.0;
 #ifdef AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
 				if((AI_getUnitAIType() == UNITAI_DEFENSE) ||
 				        (AI_getUnitAIType() == UNITAI_COUNTER))
 				{
-					fValue += fTemp * 2 + iFlavorDefense * 4;
+					dValue += dTemp * 2 + iFlavorDefense * 4;
 				}
 				else
 				{
-					fValue += fTemp + iFlavorDefense * 2;
+					dValue += dTemp + iFlavorDefense * 2;
 				}
 #else
 				fValue += fTemp + iFlavorDefense * 2;
@@ -21173,15 +21250,15 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			{
 				if(AI_getUnitAIType() == UNITAI_EXPLORE)
 				{
-					fValue += 5 * (iFlavorRecon + iFlavorMobile);
+					dValue += 5 * (iFlavorRecon + iFlavorMobile);
 				}
 				else if((AI_getUnitAIType() == UNITAI_ATTACK) || (AI_getUnitAIType() == UNITAI_FAST_ATTACK))
 				{
-					fValue += 3 * (iFlavorOffense + iFlavorMobile);
+					dValue += 3 * (iFlavorOffense + iFlavorMobile);
 				}
 				else
 				{
-					fValue += 3 * iFlavorMobile;
+					dValue += 3 * iFlavorMobile;
 				}
 			}
 		}
@@ -21193,21 +21270,21 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		CvFeatureInfo* pkFeatureInfo = GC.getFeatureInfo(eFeature);
 		if(pkFeatureInfo)
 		{
-			fTemp = (float)pkPromotionInfo->GetFeatureAttackPercent(iI);
-			if(fTemp != 0)
+			dTemp = (double)pkPromotionInfo->GetFeatureAttackPercent(iI);
+			if(dTemp != 0)
 			{
 				iExtra = getExtraFeatureAttackPercent(eFeature);
-				fTemp *= (100 + iExtra * 2);
-				fTemp /= 100;
+				dTemp *= (100 + iExtra * 2);
+				dTemp /= 100.0;
 #ifdef AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
 				if((AI_getUnitAIType() == UNITAI_ATTACK) ||
 				        (AI_getUnitAIType() == UNITAI_FAST_ATTACK))
 				{
-					fValue += fTemp * 2 + iFlavorOffense * 4;
+					dValue += dTemp * 2 + iFlavorOffense * 4;
 				}
 				else
 				{
-					fValue += fTemp + iFlavorOffense * 2;
+					dValue += dTemp + iFlavorOffense * 2;
 				}
 #else
 				fValue += fTemp + iFlavorOffense * 2;
@@ -21219,21 +21296,21 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 #endif // AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
 			}
 
-			fTemp = (float)pkPromotionInfo->GetFeatureDefensePercent(iI);;
-			if(fTemp != 0)
+			dTemp = (double)pkPromotionInfo->GetFeatureDefensePercent(iI);;
+			if(dTemp != 0)
 			{
 				iExtra = getExtraFeatureDefensePercent(eFeature);
-				fTemp *= (100 + iExtra * 2);
-				fTemp /= 100;
+				dTemp *= (100 + iExtra * 2);
+				dTemp /= 100.0;
 #ifdef AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
 				if((AI_getUnitAIType() == UNITAI_DEFENSE) ||
 				        (AI_getUnitAIType() == UNITAI_COUNTER))
 				{
-					fValue += fTemp * 2 + iFlavorDefense * 4;
+					dValue += dTemp * 2 + iFlavorDefense * 4;
 				}
 				else
 				{
-					fValue += fTemp + iFlavorDefense * 2;
+					dValue += dTemp + iFlavorDefense * 2;
 				}
 #else
 				fValue += fTemp + iFlavorDefense * 2;
@@ -21249,22 +21326,22 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			{
 				if(AI_getUnitAIType() == UNITAI_EXPLORE)
 				{
-					fValue += 5 * (iFlavorRecon + iFlavorMobile);
+					dValue += 5 * (iFlavorRecon + iFlavorMobile);
 				}
 				else if((AI_getUnitAIType() == UNITAI_ATTACK) || (AI_getUnitAIType() == UNITAI_FAST_ATTACK))
 				{
-					fValue += 3 * (iFlavorOffense + iFlavorMobile);
+					dValue += 3 * (iFlavorOffense + iFlavorMobile);
 				}
 				else
 				{
-					fValue += 3 * iFlavorMobile;
+					dValue += 3 * iFlavorMobile;
 				}
 			}
 		}
 	}
 
-	float iOtherCombat = 0;
-	float iSameCombat = 0;
+	int iOtherCombat = 0;
+	int iSameCombat = 0;
 
 	for(iI = 0; iI < GC.getNumUnitCombatClassInfos(); iI++)
 	{
@@ -21289,7 +21366,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		CvBaseInfo* pkUnitCombatInfo = GC.getUnitCombatClassInfo(eUnitCombat);
 		if(pkUnitCombatInfo)
 		{
-			fTemp = (float)pkPromotionInfo->GetUnitCombatModifierPercent(iI);
+			dTemp = (double)pkPromotionInfo->GetUnitCombatModifierPercent(iI);
 			int iCombatWeight = 0;
 			//Fighting their own kind
 			if((UnitCombatTypes)iI == getUnitCombatType())
@@ -21318,50 +21395,50 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 
 			if((AI_getUnitAIType() == UNITAI_COUNTER) || (AI_getUnitAIType() == UNITAI_RANGED))
 			{
-				fValue += (fTemp * iCombatWeight) / 25.0f;
+				dValue += (dTemp * iCombatWeight) / 25.0;
 			}
 			else if((AI_getUnitAIType() == UNITAI_ATTACK) ||
 			        (AI_getUnitAIType() == UNITAI_DEFENSE))
 			{
-				fValue += (fTemp * iCombatWeight) / 50.0f;
+				dValue += (dTemp * iCombatWeight) / 50.0;
 			}
 			else
 			{
-				fValue += (fTemp * iCombatWeight) / 100.0f;
+				dValue += (dTemp * iCombatWeight) / 100.0;
 			}
 		}
 	}
 
 	for(iI = 0; iI < NUM_DOMAIN_TYPES; iI++)
 	{
-		fTemp = (float)pkPromotionInfo->GetDomainModifierPercent(iI);
+		dTemp = (double)pkPromotionInfo->GetDomainModifierPercent(iI);
 		if(AI_getUnitAIType() == UNITAI_COUNTER)
 		{
-			fValue += (fTemp * 2);
+			dValue += (dTemp * 2);
 		}
 		else if((AI_getUnitAIType() == UNITAI_ATTACK) ||
 		        (AI_getUnitAIType() == UNITAI_DEFENSE))
 		{
-			fValue += fTemp;
+			dValue += dTemp;
 		}
 		else
 		{
-			fValue += (fTemp / 2.0f);
+			dValue += (dTemp / 2.0);
 		}
 	}
 
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_RANDOM
-	if(fValue > 0)
+	if(dValue > 0)
 	{
 #ifdef AUI_BINOM_RNG
-		fValue += GC.getGame().getJonRandNumBinom(AUI_UNIT_PROMOTION_TWEAKED_RANDOM, "AI Promote");
+		dValue += GC.getGame().getJonRandNumBinom(AUI_UNIT_PROMOTION_TWEAKED_RANDOM, "AI Promote");
 #else
-		fValue += GC.getGame().getJonRandNum(AUI_UNIT_PROMOTION_TWEAKED_RANDOM, "AI Promote");
+		dValue += GC.getGame().getJonRandNum(AUI_UNIT_PROMOTION_TWEAKED_RANDOM, "AI Promote");
 #endif // AUI_BINOM_RNG
 	}
 
 	// Randomizer borrowed from CvReligionAI::ScoreBelief()
-	fValue *= (1 + (float)pow((double)GC.getGame().getJonRandNumBinom(257, "Promotion score randomizer.") / 128.0 - 1.0, 3.0));
+	dValue *= (1 + pow((double)GC.getGame().getJonRandNumBinom(257, "Promotion score randomizer.") / 128.0 - 1.0, 3.0));
 #else
 	if(fValue > 0)
 	{
@@ -21369,7 +21446,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	}
 #endif // AUI_UNIT_PROMOTION_TWEAKED_RANDOM
 
-	return (int)(fValue + 0.5);
+	return (int)(dValue + 0.5);
 #else
 	int iValue = 0;
 	int iTemp;
@@ -22068,7 +22145,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	}
 
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_RANDOM
-	if(fValue > 0)
+	if(iValue > 0)
 	{
 #ifdef AUI_BINOM_RNG
 		iValue += GC.getGame().getJonRandNumBinom(AUI_UNIT_PROMOTION_TWEAKED_RANDOM, "AI Promote");
@@ -22078,7 +22155,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	}
 
 	// Randomizer borrowed from CvReligionAI::ScoreBelief()
-	iValue *= (1 + (float)pow((double)GC.getGame().getJonRandNumBinom(257, "Promotion score randomizer.") / 128.0 - 1.0, 3.0));
+	iValue *= (1.5 + pow((double)GC.getGame().getJonRandNumBinom(257, "Promotion score randomizer.") / 128.0 - 1.0, 3.0));
 #else
 	if(iValue > 0)
 	{
@@ -22087,7 +22164,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 #endif // AUI_UNIT_PROMOTION_TWEAKED_RANDOM
 
 	return iValue;
-#endif
+#endif // AUI_UNIT_PROMOTION_USE_DOUBLES
 }
 
 //	--------------------------------------------------------------------------------

@@ -262,7 +262,11 @@ public:
 	bool canNukeAt(const CvPlot* pPlot, int iX, int iY) const;
 
 	bool canParadrop(const CvPlot* pPlot, bool bOnlyTestVisibility) const;
+#ifdef AUI_ASTAR_PARADROP
+	bool canParadropAt(const CvPlot* pPlot, int iX, int iY, bool bIgnoreUnits = false) const;
+#else
 	bool canParadropAt(const CvPlot* pPlot, int iX, int iY) const;
+#endif // AUI_ASTAR_PARADROP
 	bool paradrop(int iX, int iY);
 
 	bool canMakeTradeRoute(const CvPlot* pPlot) const;
@@ -1227,8 +1231,11 @@ public:
 #endif // AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 	bool canMoveAndRangedStrike(int iX, int iY);
-	void GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* plotTarget, bool exitOnFound);
+	void GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* pTarget, bool bExitOnFound);
 #endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+#ifdef AUI_UNIT_DO_AITYPE_FLIP
+	bool DoSingleUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert = false, bool bForceOff = false);
+#endif // AUI_UNIT_DO_AITYPE_FLIP
 
 	// Ported in from old CvUnitAI class
 	int SearchRange(int iRange) const;
