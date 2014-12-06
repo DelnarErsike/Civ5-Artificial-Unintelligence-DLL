@@ -34,6 +34,10 @@
 // Include this after all other headers.
 #include "LintFree.h"
 
+#ifdef AUI_PLAYERAI_FREE_GP_CULTURE
+#include "CvTypes.h"
+#endif // AUI_PLAYERAI_FREE_GP_CULTURE
+
 #define DANGER_RANGE				(6)
 
 // statics
@@ -196,7 +200,11 @@ void CvPlayerAI::AI_updateFoundValues(bool bStartingLoc)
 					CvArea* pLoopArea = GC.getMap().getArea(pLoopPlot->getArea());
 					if(pLoopArea && !pLoopArea->isWater())
 					{
+#ifdef AUI_PLAYERAI_FIX_UPDATE_FOUND_VALUES_NOT_ADDITIVE
+						pLoopArea->setTotalFoundValue(MAX(pLoopArea->getTotalFoundValue(), iValue));
+#else
 						pLoopArea->setTotalFoundValue(pLoopArea->getTotalFoundValue() + iValue);
+#endif // AUI_PLAYERAI_FIX_UPDATE_FOUND_VALUES_NOT_ADDITIVE
 					}
 				}
 			}
@@ -284,6 +292,48 @@ void CvPlayerAI::AI_conquerCity(CvCity* pCity, PlayerTypes eOldOwner)
 	PlayerTypes eOriginalOwner = pCity->getOriginalOwner();
 	TeamTypes eOldOwnerTeam = GET_PLAYER(eOldOwner).getTeam();
 
+#ifdef AUI_PLAYERAI_CONQUER_CITY_TWEAKED_RAZE
+	bool bGetsFreeCourthouse = false;
+	bool bGetsFasterCourthouse = false;
+	BuildingTypes eCourthouseBuildingType = NO_BUILDING;
+	BuildingClassTypes eCourthouseType = NO_BUILDINGCLASS;
+	// find courthouse
+	for (int eBuildingType = 0; eBuildingType < GC.getNumBuildingInfos(); eBuildingType++)
+	{
+		const BuildingTypes eBuilding = static_cast<BuildingTypes>(eBuildingType);
+		CvBuildingEntry* buildingInfo = GC.getBuildingInfo(eBuilding);
+
+		if (buildingInfo)
+		{
+			if (buildingInfo->IsNoOccupiedUnhappiness())
+			{
+				eCourthouseBuildingType = eBuilding;
+				eCourthouseType = (BuildingClassTypes)buildingInfo->GetBuildingClassType();
+				break;
+			}
+		}
+	}
+	if (eCourthouseBuildingType != NO_BUILDING)
+	{
+		std::vector<BuildingTypes> freeBuildings = GetPlayerPolicies()->GetFreeBuildingsOnConquest();
+		for (std::vector<BuildingTypes>::iterator it = freeBuildings.begin(); it != freeBuildings.end(); ++it)
+		{
+			if ((*it) == eCourthouseBuildingType)
+			{
+				bGetsFreeCourthouse = true;
+				break;
+			}
+		}
+	}
+	if (eCourthouseType != NO_BUILDINGCLASS)
+	{
+		if (GetPlayerPolicies()->GetBuildingClassProductionModifier(eCourthouseType) > 0)
+		{
+			bGetsFasterCourthouse = true;
+		}
+	}
+#endif // AUI_PLAYERAI_CONQUER_CITY_TWEAKED_RAZE
+
 	// Liberate a city?
 	if(eOriginalOwner != eOldOwner && eOriginalOwner != GetID() && CanLiberatePlayerCity(eOriginalOwner))
 	{
@@ -307,13 +357,23 @@ void CvPlayerAI::AI_conquerCity(CvCity* pCity, PlayerTypes eOldOwner)
 					bLiberate = true;
 				}
 				// if the player is a friend and we're going for diplo victory, then liberate to score some friend points
+#ifdef AUI_GS_PRIORITY_RATIO
+				else if (GetDiplomacyAI()->IsDoFAccepted(eOriginalOwner) && 
+					GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")))
+#else
 				else if (GetDiplomacyAI()->IsDoFAccepted(eOriginalOwner) && GetDiplomacyAI()->IsGoingForDiploVictory())
+#endif // AUI_GS_PRIORITY_RATIO
 				{
 					bLiberate = true;
 				}
 			}
 			// if the player isn't human and we're going for diplo victory, resurrect players to get super diplo bonuses
+#ifdef AUI_GS_PRIORITY_RATIO
+			else if (!GET_PLAYER(eOriginalOwner).isHuman() && 
+				GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")))
+#else
 			else if (!GET_PLAYER(eOriginalOwner).isHuman() && GetDiplomacyAI()->IsGoingForDiploVictory())
+#endif // AUI_GS_PRIORITY_RATIO
 			{
 				bLiberate = true;
 			}
@@ -331,7 +391,13 @@ void CvPlayerAI::AI_conquerCity(CvCity* pCity, PlayerTypes eOldOwner)
 	{
 		// Burn the city if the empire is unhappy - keeping the city will only make things worse or if map hint dictates
 		// Huns will burn down everything possible once they have a core of a few cities (was 3, but this put Attila out of the running long term as a conqueror)
+#ifdef AUI_PLAYERAI_CONQUER_CITY_TWEAKED_RAZE
+		if (GetHappiness() - GetUnhappiness(NULL, pCity) <= GC.getSUPER_UNHAPPY_THRESHOLD() || (GC.getMap().GetAIMapHint() & 2) ||
+			(!bGetsFreeCourthouse && !bGetsFasterCourthouse && GetHappiness() - GetUnhappiness(NULL, pCity) <= GC.getVERY_UNHAPPY_THRESHOLD()) ||
+			(GetPlayerTraits()->GetRazeSpeedModifier() > 0 && GetHappiness() - GetUnhappiness(pCity, NULL) <= GC.getVERY_UNHAPPY_THRESHOLD() && !bGetsFreeCourthouse && !bGetsFasterCourthouse))
+#else
 		if (IsEmpireUnhappy() || (GC.getMap().GetAIMapHint() & 2) || (GetPlayerTraits()->GetRazeSpeedModifier() > 0 && getNumCities() >= 3 + (GC.getGame().getGameTurn() / 100)) )
+#endif // AUI_PLAYERAI_CONQUER_CITY_TWEAKED_RAZE
 		{
 			pCity->doTask(TASK_RAZE);
 			return;
@@ -414,8 +480,60 @@ void CvPlayerAI::AI_chooseFreeGreatPerson()
 	{
 		UnitTypes eDesiredGreatPerson = NO_UNIT;
 
+#ifdef AUI_PLAYERAI_FREE_GP_EARLY_PROPHET
+		if (!GetReligions()->HasCreatedReligion() && GC.getGame().GetGameReligions()->GetNumReligionsStillToFound() > 0)
+		{
+			eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_PROPHET");
+		}
+#ifdef AUI_PLAYERAI_FREE_GP_VENETIAN_MERCHANT
+		// Venice often chooses Great Merchant after early prophet is ruled out
+		else if (!GET_PLAYER(GetID()).GreatMerchantWantsCash())
+		{
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
+			if (AUI_GS_SCIENCE_FLAVOR_BOOST > GetGrandStrategyAI()->ScienceFlavorBoost())
+			{
+				eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_MERCHANT");
+			}
+#else
+			eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_MERCHANT");
+#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+		}
+#endif // AUI_PLAYERAI_FREE_GP_VENETIAN_MERCHANT
 		// Highly wonder competitive and still early in game?
+#ifdef AUI_PLAYERAI_FREE_GP_DYNAMIC_WONDER_COMPETITIVENESS
+		else if (GetDiplomacyAI()->GetWonderCompetitiveness() >= int(double(GC.getGame().getGameTurn() * AUI_PLAYERAI_FREE_GP_DYNAMIC_WONDER_COMPETITIVENESS) / (double)GC.getGame().getEstimateEndTurn() + 0.5))
+#else
+		else if (GetDiplomacyAI()->GetWonderCompetitiveness() >= 8 && GC.getGame().getGameTurn() <= (GC.getGame().getEstimateEndTurn() / 2))
+#endif // AUI_PLAYERAI_FREE_GP_DYNAMIC_WONDER_COMPETITIVENESS
+#else
+#ifdef AUI_PLAYERAI_FREE_GP_VENETIAN_MERCHANT
+		// Venice often chooses Great Merchant after early prophet is ruled out
+		else if (GET_PLAYER(m_eID).GetPlayerTraits()->IsNoAnnexing())
+		{
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
+			if (AUI_GS_SCIENCE_FLAVOR_BOOST > GetGrandStrategyAI()->ScienceFlavorBoost())
+			{
+				eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_MERCHANT");
+			}
+#else
+			eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_MERCHANT");
+#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+		}
+		// Highly wonder competitive and still early in game?
+#ifdef AUI_PLAYERAI_FREE_GP_DYNAMIC_WONDER_COMPETITIVENESS
+		else if (GetDiplomacyAI()->GetWonderCompetitiveness() >= int(double(GC.getGame().getGameTurn() * AUI_PLAYERAI_FREE_GP_DYNAMIC_WONDER_COMPETITIVENESS) / (double)GC.getGame().getEstimateEndTurn() + 0.5))
+#else
+		else if (GetDiplomacyAI()->GetWonderCompetitiveness() >= 8 && GC.getGame().getGameTurn() <= (GC.getGame().getEstimateEndTurn() / 2))
+#endif // AUI_PLAYERAI_FREE_GP_DYNAMIC_WONDER_COMPETITIVENESS
+#else
+		// Highly wonder competitive and still early in game?
+#ifdef AUI_PLAYERAI_FREE_GP_DYNAMIC_WONDER_COMPETITIVENESS
+		else if (GetDiplomacyAI()->GetWonderCompetitiveness() >= int(double(GC.getGame().getGameTurn() * AUI_PLAYERAI_FREE_GP_DYNAMIC_WONDER_COMPETITIVENESS) / (double)GC.getGame().getEstimateEndTurn() + 0.5))
+#else
 		if(GetDiplomacyAI()->GetWonderCompetitiveness() >= 8 && GC.getGame().getGameTurn() <= (GC.getGame().getEstimateEndTurn() / 2))
+#endif // AUI_PLAYERAI_FREE_GP_DYNAMIC_WONDER_COMPETITIVENESS
+#endif // AUI_PLAYERAI_FREE_GP_VENETIAN_MERCHANT
+#endif // AUI_PLAYERAI_FREE_GP_EARLY_PROPHET
 		{
 			eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_ENGINEER");
 		}
@@ -423,13 +541,112 @@ void CvPlayerAI::AI_chooseFreeGreatPerson()
 		{
 			// Pick the person based on our victory method
 			AIGrandStrategyTypes eVictoryStrategy = GetGrandStrategyAI()->GetActiveGrandStrategy();
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
+			if (eVictoryStrategy == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP") || 
+				AUI_GS_SCIENCE_FLAVOR_BOOST == GetGrandStrategyAI()->ScienceFlavorBoost())
+			{
+				eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_SCIENTIST");
+			}
+			else if (eVictoryStrategy == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
+			{
+#ifdef AUI_PLAYERAI_FREE_GP_CULTURE
+				if (GetCulture()->HasAvailableGreatWorkSlot(CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT()))
+				{
+					eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_ARTIST");
+				}
+				else if (GetCulture()->HasAvailableGreatWorkSlot(CvTypes::getGREAT_WORK_SLOT_MUSIC()))
+				{
+					eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_MUSICIAN");
+				}
+				else if (GetCulture()->HasAvailableGreatWorkSlot(CvTypes::getGREAT_WORK_SLOT_LITERATURE()))
+				{
+					eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_WRITER");
+				}
+				else
+				{
+					int iArtistCount = GetNumUnitsWithUnitAI(UNITAI_ARTIST);
+					int iMusicianCount = GetNumUnitsWithUnitAI(UNITAI_MUSICIAN);
+					int iWriterCount = GetNumUnitsWithUnitAI(UNITAI_WRITER);
+					if (iArtistCount < MAX(iWriterCount, iMusicianCount))
+					{
+						eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_ARTIST");
+					}
+					else if (iWriterCount < MAX(iArtistCount, iMusicianCount))
+					{
+						eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_WRITER");
+					}
+					else
+					{
+						eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_MUSICIAN");
+					}
+				}
+#else
+				eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_ARTIST");
+#endif // AUI_PLAYERAI_FREE_GP_CULTURE
+			}
+			else if (eVictoryStrategy == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"))
+			{
+				if (GetGrandStrategyAI()->ScienceFlavorBoost() > 1)
+				{
+					eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_SCIENTIST");
+				}
+				else
+				{
+					eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_MERCHANT");
+				}
+			}
+			else if(eVictoryStrategy == (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"))
+			{
+				if (GetGrandStrategyAI()->ScienceFlavorBoost() > 1 && GetNumUnitsWithUnitAI(UNITAI_GENERAL) > 1)
+				{
+					eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_SCIENTIST");
+				}
+				else
+				{
+					eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_GREAT_GENERAL");
+				}
+			}
+#else
 			if(eVictoryStrategy == (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"))
 			{
 				eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_GREAT_GENERAL");
 			}
 			else if(eVictoryStrategy == (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
 			{
+#ifdef AUI_PLAYERAI_FREE_GP_CULTURE
+				if (GetCulture()->HasAvailableGreatWorkSlot(CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT()))
+				{
+					eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_ARTIST");
+				}
+				else if (GetCulture()->HasAvailableGreatWorkSlot(CvTypes::getGREAT_WORK_SLOT_MUSIC()))
+				{
+					eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_MUSICIAN");
+				}
+				else if (GetCulture()->HasAvailableGreatWorkSlot(CvTypes::getGREAT_WORK_SLOT_LITERATURE()))
+				{
+					eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_WRITER");
+				}
+				else
+				{
+					int iArtistCount = GetNumUnitsWithUnitAI(UNITAI_ARTIST);
+					int iMusicianCount = GetNumUnitsWithUnitAI(UNITAI_MUSICIAN);
+					int iWriterCount = GetNumUnitsWithUnitAI(UNITAI_WRITER);
+					if (iArtistCount < MAX(iWriterCount, iMusicianCount))
+					{
+						eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_ARTIST");
+					}
+					else if (iWriterCount < MAX(iArtistCount, iMusicianCount))
+					{
+						eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_WRITER");
+					}
+					else
+					{
+						eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_MUSICIAN");
+					}
+				}
+#else
 				eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_ARTIST");
+#endif // AUI_PLAYERAI_FREE_GP_CULTURE
 			}
 			else if(eVictoryStrategy == (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"))
 			{
@@ -439,6 +656,7 @@ void CvPlayerAI::AI_chooseFreeGreatPerson()
 			{
 				eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_SCIENTIST");
 			}
+#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
 		}
 
 		if(eDesiredGreatPerson != NO_UNIT)
@@ -541,23 +759,117 @@ void CvPlayerAI::AI_considerAnnex()
 {
 	AI_PERF("AI-perf.csv", "AI_ considerAnnex");
 
+#ifdef AUI_PLAYERAI_DO_ANNEX_QUICK_FILTER
+	// for Venice and City States
+	if (GetPlayerTraits()->IsNoAnnexing() || isMinorCiv())
+	{
+		return;
+	}
+#endif // AUI_PLAYERAI_DO_ANNEX_QUICK_FILTER
+
+#ifdef AUI_PLAYERAI_DO_ANNEX_CONSIDERS_FREE_COURTHOUSE
+	bool bGetsFreeCourthouse = false;
+	bool bGetsFasterCourthouse = false;
+	std::vector<BuildingTypes> aeCourthouseBuildingTypes;
+	std::vector<BuildingClassTypes> aeCourthouseTypes;
+	// find courthouse
+	for (int eBuildingType = 0; eBuildingType < GC.getNumBuildingInfos(); eBuildingType++)
+	{
+		const BuildingTypes eBuilding = static_cast<BuildingTypes>(eBuildingType);
+		CvBuildingEntry* buildingInfo = GC.getBuildingInfo(eBuilding);
+
+		if (buildingInfo)
+		{
+			if (buildingInfo->IsNoOccupiedUnhappiness())
+			{
+				aeCourthouseBuildingTypes.push_back(eBuilding);
+				aeCourthouseTypes.push_back((BuildingClassTypes)buildingInfo->GetBuildingClassType());
+			}
+		}
+	}
+	if (aeCourthouseBuildingTypes.size() > 0)
+	{
+		std::vector<BuildingTypes> freeBuildings = GetPlayerPolicies()->GetFreeBuildingsOnConquest();
+		for (std::vector<BuildingTypes>::iterator it = freeBuildings.begin(); it != freeBuildings.end(); ++it)
+		{
+			for (std::vector<BuildingTypes>::iterator jt = aeCourthouseBuildingTypes.begin(); jt != aeCourthouseBuildingTypes.end(); ++jt)
+			{
+				if ((*it) == (*jt))
+				{
+					bGetsFreeCourthouse = true;
+					goto skipRestCourthouseBuildingTypes;
+				}		
+			}
+		}
+	}
+	skipRestCourthouseBuildingTypes:
+	if (aeCourthouseTypes.size() > 0)
+	{
+		for (std::vector<BuildingClassTypes>::iterator it = aeCourthouseTypes.begin(); it != aeCourthouseTypes.end(); ++it)
+		{
+			if (GetPlayerPolicies()->GetBuildingClassProductionModifier((*it)) > 0)
+			{
+				bGetsFasterCourthouse = true;
+				break;
+			}
+		}
+	}
+
 	// if the empire is unhappy, don't consider annexing
+#ifdef AUI_PLAYERAI_DO_ANNEX_MORE_AGGRESSIVE
+	if (!bGetsFreeCourthouse && IsEmpireVeryUnhappy())
+#else
+	if (!bGetsFreeCourthouse && IsEmpireUnhappy())
+#endif // AUI_PLAYERAI_DO_ANNEX_MORE_AGGRESSIVE
+#else
+	// if the empire is unhappy, don't consider annexing
+#ifdef AUI_PLAYERAI_DO_ANNEX_MORE_AGGRESSIVE
+	if (IsEmpireVeryUnhappy())
+#else
 	if (IsEmpireUnhappy())
+#endif // AUI_PLAYERAI_DO_ANNEX_MORE_AGGRESSIVE
+#endif // AUI_PLAYERAI_DO_ANNEX_CONSIDERS_FREE_COURTHOUSE
 	{
 		return;
 	}
 
+#ifndef AUI_PLAYERAI_DO_ANNEX_IGNORES_CULTURAL_STRATEGY
 	// if we're going for a culture victory, don't consider annexing
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")))
+#else
 	if (GetDiplomacyAI()->IsGoingForCultureVictory())
+#endif // AUI_GS_PRIORITY_RATIO
 	{
 		return;
 	}
+#endif // AUI_PLAYERAI_DO_ANNEX_IGNORES_CULTURAL_STRATEGY
 
+#ifndef AUI_PLAYERAI_DO_ANNEX_QUICK_FILTER
 	// for Venice
 	if (GetPlayerTraits()->IsNoAnnexing())
 	{
 		return;
 	}
+#endif // AUI_PLAYERAI_DO_ANNEX_QUICK_FILTER
+
+#ifdef AUI_PLAYERAI_DO_ANNEX_CONSIDERS_FREE_COURTHOUSE
+	if (bGetsFreeCourthouse)
+	{
+		// Annex all the cities!
+		int iLoop;
+		CvCity* pLoopCity;
+		for (pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
+		{
+			if (pLoopCity && pLoopCity->IsPuppet() && !pLoopCity->IsResistance())
+			{
+				pLoopCity->DoAnnex();
+			}
+		}
+		// All eligible puppet cities are now annexed
+		return;
+	}
+#endif // AUI_PLAYERAI_DO_ANNEX_CONSIDERS_FREE_COURTHOUSE
 
 	// if their capital city is puppeted, annex it
 	CvCity* pCity = getCapitalCity();
@@ -565,7 +877,9 @@ void CvPlayerAI::AI_considerAnnex()
 	{
 		// we should only annex one city a turn, and sense this is one, we're done!
 		pCity->DoAnnex();
+#ifndef AUI_PLAYERAI_FIX_DO_ANNEX_NO_STOP_AFTER_CAPITAL_ANNEX
 		return;
+#endif // AUI_PLAYERAI_FIX_DO_ANNEX_NO_STOP_AFTER_CAPITAL_ANNEX
 	}
 
 	std::vector<CityAndProduction> aCityAndProductions;
@@ -585,6 +899,9 @@ void CvPlayerAI::AI_considerAnnex()
 	
 	CvCity* pTargetCity = NULL;
 	float fCutoffValue = GC.getNORMAL_ANNEX();
+#ifdef AUI_PLAYERAI_DO_ANNEX_CONSIDERS_FREE_COURTHOUSE
+	if (bGetsFasterCourthouse)
+#else
 	BuildingClassTypes eCourthouseType = NO_BUILDINGCLASS;
 	// find courthouse
 	for(int eBuildingType = 0; eBuildingType < GC.getNumBuildingInfos(); eBuildingType++)
@@ -612,6 +929,7 @@ void CvPlayerAI::AI_considerAnnex()
 	}
 
 	if (bCourthouseImprovement)
+#endif // AUI_PLAYERAI_DO_ANNEX_CONSIDERS_FREE_COURTHOUSE
 	{
 		fCutoffValue = GC.getAGGRESIVE_ANNEX();
 	}
@@ -619,7 +937,19 @@ void CvPlayerAI::AI_considerAnnex()
 	uint uiCutOff = (uint)(aCityAndProductions.size() * fCutoffValue);
 	for (uint ui = 0; ui < uiCutOff; ui++)
 	{
+#ifdef AUI_PLAYERAI_DO_ANNEX_MORE_AGGRESSIVE
+#ifdef AUI_PLAYERAI_FIX_DO_ANNEX_CHECK_FOR_RESISTANCE
+		if (aCityAndProductions[ui].pCity->IsPuppet() && !aCityAndProductions[ui].pCity->IsResistance() && GetHappiness() - GetUnhappiness(aCityAndProductions[ui].pCity) >= GC.getVERY_UNHAPPY_THRESHOLD())
+#else
+		if (aCityAndProductions[ui].pCity->IsPuppet() && GetHappiness() - GetUnhappiness(aCityAndProductions[ui].pCity) >= GC.getVERY_UNHAPPY_THRESHOLD())
+#endif // AUI_PLAYERAI_FIX_DO_ANNEX_CHECK_FOR_RESISTANCE
+#else
+#ifdef AUI_PLAYERAI_FIX_DO_ANNEX_CHECK_FOR_RESISTANCE
+		if (aCityAndProductions[ui].pCity->IsPuppet() && !aCityAndProductions[ui].pCity->IsResistance())
+#else
 		if (aCityAndProductions[ui].pCity->IsPuppet())
+#endif // AUI_PLAYERAI_FIX_DO_ANNEX_CHECK_FOR_RESISTANCE
+#endif // AUI_PLAYERAI_DO_ANNEX_MORE_AGGRESSIVE
 		{
 			pTargetCity = aCityAndProductions[ui].pCity;
 			break;
@@ -628,7 +958,9 @@ void CvPlayerAI::AI_considerAnnex()
 
 	if (pTargetCity)
 	{
+#ifndef AUI_PLAYERAI_FIX_DO_ANNEX_CHECK_FOR_RESISTANCE
 		if (!pTargetCity->IsResistance())
+#endif
 		{
 			pTargetCity->DoAnnex();
 		}
@@ -916,13 +1248,25 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveWriter(CvUnit* pGreatWriter)
 	GreatPeopleDirectiveTypes eDirective = NO_GREAT_PEOPLE_DIRECTIVE_TYPE;
 
 	// Defend against ideology pressure if not going for culture win
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE &&
+		!GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")) &&
+		GetCulture()->GetPublicOpinionUnhappiness() > 10)
+#else
 	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && !GetDiplomacyAI()->IsGoingForCultureVictory() && GetCulture()->GetPublicOpinionUnhappiness() > 10)
+#endif // AUI_GS_PRIORITY_RATIO
 	{
 		eDirective = GREAT_PEOPLE_DIRECTIVE_CULTURE_BLAST;
 	}
 
 	// If not going for culture win and a Level 2 or 3 Tenet is available, try to snag it
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && 
+		!GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))  &&
+		GetPlayerPolicies()->CanGetAdvancedTenet())
+#else
 	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && !GetDiplomacyAI()->IsGoingForCultureVictory() && GetPlayerPolicies()->CanGetAdvancedTenet())
+#endif // AUI_GS_PRIORITY_RATIO
 	{
 		eDirective = GREAT_PEOPLE_DIRECTIVE_CULTURE_BLAST;
 	}
@@ -946,19 +1290,36 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveArtist(CvUnit* pGreatArtist)
 	GreatPeopleDirectiveTypes eDirective = NO_GREAT_PEOPLE_DIRECTIVE_TYPE;
 
 	// Defend against ideology pressure if not going for culture win
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && 
+		!GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
+		&& GetCulture()->GetPublicOpinionUnhappiness() > 10)
+#else
 	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && !GetDiplomacyAI()->IsGoingForCultureVictory() && GetCulture()->GetPublicOpinionUnhappiness() > 10)
+#endif // AUI_GS_PRIORITY_RATIO
 	{
 		eDirective = GREAT_PEOPLE_DIRECTIVE_GOLDEN_AGE;
 	}
 
 	// If prepping for war, Golden Age will build units quickly
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && 
+		!GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")) && PreparingForWar(this))
+#else
 	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && !GetDiplomacyAI()->IsGoingForCultureVictory() && PreparingForWar(this))
+#endif // AUI_GS_PRIORITY_RATIO
 	{
 		eDirective = GREAT_PEOPLE_DIRECTIVE_GOLDEN_AGE;
 	}
 
 	// If finishing up spaceship parts, Golden Age will help build those quickly
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && 
+		GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"))
+		&& EconomicAIHelpers::IsTestStrategy_GS_SpaceshipHomestretch(this))
+#else
 	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && GetDiplomacyAI()->IsGoingForSpaceshipVictory() && EconomicAIHelpers::IsTestStrategy_GS_SpaceshipHomestretch(this))
+#endif // AUI_GS_PRIORITY_RATIO
 	{
 		eDirective = GREAT_PEOPLE_DIRECTIVE_GOLDEN_AGE;
 	}
@@ -1001,7 +1362,24 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveMusician(CvUnit* pGreatMusicia
 	}
 
 	// If closing in on a Culture win, go for the Concert Tour
+#ifdef AUI_PLAYERAI_GREAT_MUSICIAN_DIRECTIVE_HIGHER_INFLUENTIALS_REQUIRED_BEFORE_CONCERT_TOUR_PRIORITY
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && 
+		GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")) &&
+		4 * GetCulture()->GetNumCivsInfluentialOn() > 3 * GC.getGame().GetGameCulture()->GetNumCivsInfluentialForWin())
+#else
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && GetDiplomacyAI()->IsGoingForCultureVictory() &&
+		4 * GetCulture()->GetNumCivsInfluentialOn() > 3 * GC.getGame().GetGameCulture()->GetNumCivsInfluentialForWin())
+#endif // AUI_GS_PRIORITY_RATIO
+#else
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE &&
+		GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")) &&
+		GetCulture()->GetNumCivsInfluentialOn() > (GC.getGame().GetGameCulture()->GetNumCivsInfluentialForWin() / 2))
+#else
 	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && GetDiplomacyAI()->IsGoingForCultureVictory() && GetCulture()->GetNumCivsInfluentialOn() > (GC.getGame().GetGameCulture()->GetNumCivsInfluentialForWin() / 2))
+#endif // AUI_GS_PRIORITY_RATIO
+#endif // AUI_PLAYERAI_GREAT_MUSICIAN_DIRECTIVE_HIGHER_INFLUENTIALS_REQUIRED_BEFORE_CONCERT_TOUR_PRIORITY
 	{		
 		CvPlot* pTarget = FindBestMusicianTargetPlot(pGreatMusician, true);
 		if(pTarget)
@@ -1043,9 +1421,17 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveEngineer(CvUnit* pGreatEnginee
 		}
 	}
 
+#ifdef AUI_PLAYERAI_TWEAKED_GREAT_ENGINEER_DIRECTIVE
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && 4 * GC.getGame().getGameTurn() <= 3 * GC.getGame().getEstimateEndTurn())
+#else
 	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && GC.getGame().getGameTurn() <= ((GC.getGame().getEstimateEndTurn() * 3) / 4))
+#endif // AUI_PLAYERAI_TWEAKED_GREAT_ENGINEER_DIRECTIVE
 	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		if (GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST")))
+#else
 		if (GetDiplomacyAI()->IsGoingForWorldConquest())
+#endif // AUI_GS_PRIORITY_RATIO
 		{
 			eDirective = GREAT_PEOPLE_DIRECTIVE_CONSTRUCT_IMPROVEMENT;
 		}
@@ -1064,7 +1450,11 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveMerchant(CvUnit* pGreatMerchan
 	GreatPeopleDirectiveTypes eDirective = NO_GREAT_PEOPLE_DIRECTIVE_TYPE;
 
 	bool bTheVeniceException = false;
+#ifdef AUI_PLAYERAI_GREAT_MERCHANT_DIRECTIVE_TWEAKED_VENICE_CHECK
+	if (!GET_PLAYER(GetID()).GreatMerchantWantsCash())
+#else
 	if (GetPlayerTraits()->IsNoAnnexing())
+#endif // AUI_PLAYERAI_GREAT_MERCHANT_DIRECTIVE_TWEAKED_VENICE_CHECK
 	{
 		bTheVeniceException = true;
 	}
@@ -1075,16 +1465,56 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveMerchant(CvUnit* pGreatMerchan
 		return NO_GREAT_PEOPLE_DIRECTIVE_TYPE;
 	}
 
-	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && GC.getGame().getGameTurn() <= ((GC.getGame().getEstimateEndTurn() * 2) / 4))
+#ifdef AUI_MINOR_CIV_RATIO
+	// Adjusts score change based on how many city states there are
+	double dCityStateCountModifier = 1.0;
+	double dCityStateDeviation = 1.0 + log(GC.getGame().getCurrentMinorCivDeviation());
+	// Calculation is more complex than for Policies or Beliefs because we only ever want it to be 0 when there are no city states.
+	if (dCityStateDeviation >= exp(-1.0))
 	{
+		dCityStateCountModifier = dCityStateDeviation;
+	}
+	else
+	{
+		dCityStateCountModifier = exp(dCityStateDeviation);
+	}
+#endif // AUI_MINOR_CIV_RATIO
+
+#ifdef AUI_MINOR_CIV_RATIO
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && !bTheVeniceException && (dCityStateCountModifier <= 4.0 / 3.0 || 
+		4 * GC.getGame().getGameTurn() * dCityStateCountModifier <= 3 * GC.getGame().getEstimateEndTurn()))
+#else
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && (dCityStateCountModifier <= 4.0 / 3.0 || 
+		4 * GC.getGame().getGameTurn() * dCityStateCountModifier <= 3 * GC.getGame().getEstimateEndTurn()))
+#endif // AUI_GS_PRIORITY_RATIO
+#else
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && !bTheVeniceException && GC.getGame().getGameTurn() <= ((GC.getGame().getEstimateEndTurn() * 2) / 4))
+#else
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && GC.getGame().getGameTurn() <= ((GC.getGame().getEstimateEndTurn() * 2) / 4))
+#endif // AUI_GS_PRIORITY_RATIO
+#endif // AUI_MINOR_CIV_RATIO
+	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		double dTestValue = pow(GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST")) *
+			GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")) *
+			GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SCIENCE")), 1.0 / 3.0);
+		if (GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) >= MAX(0.25, dTestValue) * dCityStateCountModifier)
+#else
 		if (GetDiplomacyAI()->IsGoingForDiploVictory() && !bTheVeniceException)
+#endif // AUI_GS_PRIORITY_RATIO
 		{
 			eDirective = GREAT_PEOPLE_DIRECTIVE_CONSTRUCT_IMPROVEMENT;
 		}
 	}
 
 	// Attempt a run to a minor civ
+#ifdef AUI_MINOR_CIV_RATIO
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && dCityStateCountModifier > 0 && IsSafe(this))
+#else
 	if(eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && IsSafe(this))
+#endif // AUI_MINOR_CIV_RATIO
 	{
 		CvPlot* pTarget = FindBestMerchantTargetPlot(pGreatMerchant, true);
 		if(pTarget)
@@ -1111,9 +1541,17 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveScientist(CvUnit* /*pGreatScie
 		eDirective = GREAT_PEOPLE_DIRECTIVE_USE_POWER;
 	}
 
+#ifdef AUI_PLAYERAI_TWEAKED_GREAT_SCIENTIST_DIRECTIVE
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && AUI_PLAYERAI_TWEAKED_GREAT_SCIENTIST_DIRECTIVE * GC.getGame().getGameTurn() <= GC.getGame().getEstimateEndTurn())
+#else
 	if(eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && GC.getGame().getGameTurn() <= ((GC.getGame().getEstimateEndTurn() * 1) / 4))
+#endif // AUI_PLAYERAI_TWEAKED_GREAT_SCIENTIST_DIRECTIVE
 	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		if (GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP")))
+#else
 		if(GetDiplomacyAI()->IsGoingForSpaceshipVictory())
+#endif // AUI_GS_PRIORITY_RATIO
 		{
 			eDirective = GREAT_PEOPLE_DIRECTIVE_CONSTRUCT_IMPROVEMENT;
 		}
@@ -1170,7 +1608,13 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveProphet(CvUnit*)
 	if (pMyReligion && pMyReligion->m_bEnhanced)
 	{
 		// Spread religion if there is any city that needs it
+#ifdef AUI_PLAYERAI_TWEAKED_GREAT_PROPHET_DIRECTIVE
+		if (GetReligionAI()->ChooseProphetConversionCity(true/*bOnlyBetterThanEnhancingReligion*/) || 
+			(!GetPlayerPolicies()->IsPolicyBranchUnlocked((PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_PIETY", true /*bHideAssert*/)) && 
+			GetReligionAI()->ChooseProphetConversionCity(false/*bOnlyBetterThanEnhancingReligion*/)))
+#else
 		if (GetReligionAI()->ChooseProphetConversionCity(false/*bOnlyBetterThanEnhancingReligion*/))
+#endif // AUI_PLAYERAI_TWEAKED_GREAT_PROPHET_DIRECTIVE
 		{
 			eDirective = GREAT_PEOPLE_DIRECTIVE_SPREAD_RELIGION;
 		}
@@ -1226,9 +1670,54 @@ bool CvPlayerAI::GreatMerchantWantsCash()
 	// slewis - everybody wants cash . . .
 	// slewis - . . . except Venice. Venice wants to buy city states, unless it already has enough cities, then it doesn't want city states.
 	bool bIsVenice = GetPlayerTraits()->IsNoAnnexing();
+#ifdef AUI_PLAYERAI_TWEAKED_VENICE_CITY_TARGET
+	if (bIsVenice && GC.getGame().countCivPlayersAlive() - GC.getGame().countMajorCivsAlive() > 0)
+#else
 	if (bIsVenice)
+#endif // AUI_PLAYERAI_TWEAKED_VENICE_CITY_TARGET
 	{
+#ifdef AUI_PLAYERAI_TWEAKED_VENICE_CITY_TARGET
+		if (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE) && isHuman())
+		{
+			return true;
+		}
+
+		double dDesiredCities = double(GetEconomicAI()->GetEarlyCityNumberTarget());
+		int iFlavorExpansion = 1;
+		int iFlavorGrowth = 1;
+
+		for (int iFlavorLoop = 0; iFlavorLoop < GC.getNumFlavorTypes() && (iFlavorExpansion == 1 || iFlavorGrowth == 1); iFlavorLoop++)
+		{
+			if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_EXPANSION")
+			{
+				iFlavorExpansion = GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)iFlavorLoop);
+			}
+			else if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_GROWTH")
+			{
+				iFlavorGrowth = GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)iFlavorLoop);
+			}
+		}
+		// Extra cities from difficulty get applied as Expansion flavor
+		double dDifficulty = MAX(0, GC.getGame().getHandicapInfo().GetID() - 3) + 2.0;
+		dDifficulty /= 2.0;
+		// Base flavor scaling
+		dDesiredCities *= log(iFlavorExpansion * pow(dDifficulty, 2.0)) / log((double)MAX(iFlavorGrowth, 2));
+		// map scaling parameters
+		const int iDefaultNumTiles = 80*52;
+		dDesiredCities = dDesiredCities * GC.getMap().numPlots() / iDefaultNumTiles + 1.0; // +1.0 for capital
+		// player count scaling parameters
+		const int iMajorCount = GC.getGame().countMajorCivsAlive();
+		const int iMinorCount = GC.getGame().countCivPlayersAlive() - iMajorCount;
+		const double dDefaultCityCount = MAX(16 + 8 * dDesiredCities, (double)GC.getGame().getNumCivCities());
+		const double dTargetCityCount = MAX(iMinorCount + iMajorCount * dDesiredCities, (double)GC.getGame().getNumCivCities());
+		dDesiredCities *= dDefaultCityCount / dTargetCityCount;
+
+		dDesiredCities = MAX(dDesiredCities, 2.0);
+
+		if (getNumCities() >= int(dDesiredCities + 0.5))
+#else
 		if (getNumCities() >= 4)
+#endif // AUI_PLAYERAI_TWEAKED_VENICE_CITY_TARGET
 		{
 			return true;
 		}
@@ -1296,6 +1785,57 @@ CvPlot* CvPlayerAI::FindBestMerchantTargetPlot(CvUnit* pGreatMerchant, bool bOnl
 		bool bNotAtWar = !kTeam.isAtWar(kPlayer.getTeam());
 		bool bNotPlanningAWar = GetDiplomacyAI()->GetWarGoal(kPlayer.GetID()) == NO_WAR_GOAL_TYPE;
 
+#ifdef AUI_PLAYERAI_FIND_BEST_MERCHANT_TARGET_PLOT_VENICE_FILTERS
+		double dTurnsMod = 1.0;
+		if (!GreatMerchantWantsCash())
+		{
+			bMinorCivApproachIsCorrect = true;
+			if (kPlayer.GetMinorCivAI()->GetAlly() != GetID())
+			{
+				dTurnsMod *= 1.25;
+			}
+			for (int kK = 0; kK < GC.getNumResourceInfos(); kK++)
+			{
+				if (kPlayer.getNumResourceAvailable((ResourceTypes)kK, false) > 0)
+				{
+					if (getNumResourceAvailable((ResourceTypes)kK, false) == 0)
+					{
+						dTurnsMod *= sqrt(1.05);
+						if (getNumResourceAvailable((ResourceTypes)kK, true) == 0)
+						{
+							dTurnsMod *= sqrt(1.05);
+						}
+					}
+				}
+			}
+			CvCity* pCity = pCSPlot->getPlotCity();
+			if (pCity)
+			{
+				if (pCity->isCoastal())
+				{
+					dTurnsMod *= 1.25;
+				}
+				if (pCity->getArea() != getCapitalCity()->getArea())
+				{
+					dTurnsMod *= 1.10;
+				}
+			}
+			int iLoop = 0;
+			CvCity* pLoopCity;
+			int iBestDistance = MAX_INT;
+			int iCurDistance;
+			for (pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
+			{
+				iCurDistance = plotDistance(pLoopCity->getX(), pLoopCity->getY(), pCSPlot->getX(), pCSPlot->getY());
+				if (iCurDistance < iBestDistance)
+				{
+					iBestDistance = iCurDistance;
+				}
+			}
+			dTurnsMod *= GC.getMap().numPlots() / (double)iBestDistance;
+		}
+#endif // AUI_PLAYERAI_FIND_BEST_MERCHANT_TARGET_PLOT_VENICE_FILTERS
+
 		if(bMinorCivApproachIsCorrect && bNotAtWar && bNotPlanningAWar)
 		{
 			// Search all the plots adjacent to this city (since can't enter the minor city plot itself)
@@ -1310,7 +1850,14 @@ CvPlot* CvPlayerAI::FindBestMerchantTargetPlot(CvUnit* pGreatMerchant, bool bOnl
 					bool bIsRevealed = pAdjacentPlot->isRevealed(getTeam());
 					if(bRightOwner && bIsRevealed)
 					{
+#ifdef AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
+						iPathTurns = TurnsToReachTarget(pMerchant, pAdjacentPlot, false /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
+#else
 						iPathTurns = TurnsToReachTarget(pMerchant, pAdjacentPlot, true /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
+#endif // AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
+#ifdef AUI_PLAYERAI_FIND_BEST_MERCHANT_TARGET_PLOT_VENICE_FILTERS
+						iPathTurns = int(iPathTurns * dTurnsMod + 0.5);
+#endif // AUI_PLAYERAI_FIND_BEST_MERCHANT_TARGET_PLOT_VENICE_FILTERS
 						if(iPathTurns < iBestTurnsToReach)
 						{
 							iBestTurnsToReach = iPathTurns;
@@ -1364,7 +1911,11 @@ CvPlot* CvPlayerAI::FindBestMusicianTargetPlot(CvUnit* pGreatMusician, bool bOnl
 				bool bIsRevealed = pAdjacentPlot->isRevealed(getTeam());
 				if(bRightOwner && bIsRevealed)
 				{
+#ifdef AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
+					iPathTurns = TurnsToReachTarget(pMusician, pAdjacentPlot, false /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
+#else
 					iPathTurns = TurnsToReachTarget(pMusician, pAdjacentPlot, true /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
+#endif // AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
 					if(iPathTurns < iBestTurnsToReach)
 					{
 						iBestTurnsToReach = iPathTurns;
@@ -1390,7 +1941,11 @@ CvPlot* CvPlayerAI::FindBestMusicianTargetPlot(CvUnit* pGreatMusician, bool bOnl
 				bool bIsRevealed = pLoopPlot->isRevealed(getTeam());
 				if(bRightOwner && bIsRevealed)
 				{
+#ifdef AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
+					iPathTurns = TurnsToReachTarget(pMusician, pLoopPlot, false /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
+#else
 					iPathTurns = TurnsToReachTarget(pMusician, pLoopPlot, true /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
+#endif // AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
 					if(iPathTurns < iBestTurnsToReach)
 					{
 						iBestTurnsToReach = iPathTurns;

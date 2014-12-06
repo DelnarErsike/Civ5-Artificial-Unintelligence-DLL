@@ -277,6 +277,10 @@
 #define AUI_PLAYERAI_FREE_GP_VENETIAN_MERCHANT
 /// Lets the AI choose their free cultural GP based on the number of great work slots it has available
 #define AUI_PLAYERAI_FREE_GP_CULTURE
+/// Scales the wonder competitiveness check for choosing a free engineer instead of it being a binary thing
+#define AUI_PLAYERAI_FREE_GP_DYNAMIC_WONDER_COMPETITIVENESS (10)
+/// When deciding whether to raze a city, AI_conquerCity() now considers free and/or cheaper courthouses and has a lowerered happiness bar
+#define AUI_PLAYERAI_CONQUER_CITY_TWEAKED_RAZE
 /// do_annex will now terminate for ineligible civs (Venice, City States) much quicker (optimization)
 #define AUI_PLAYERAI_DO_ANNEX_QUICK_FILTER
 /// do_annex will now properly consider whether the AI gets courthouses for free
@@ -291,6 +295,14 @@
 #define AUI_PLAYERAI_FIX_DO_ANNEX_CHECK_FOR_RESISTANCE
 /// Great Prophets will now create shrines more often if the player has unlocked piety
 #define AUI_PLAYERAI_TWEAKED_GREAT_PROPHET_DIRECTIVE
+/// Requires the AI to be influential with more civs before concert tour is prioritized before creating a great work
+#define AUI_PLAYERAI_GREAT_MUSICIAN_DIRECTIVE_HIGHER_INFLUENTIALS_REQUIRED_BEFORE_CONCERT_TOUR_PRIORITY
+/// Slight tweak to logic to make the function's mathematics more accurate
+#define AUI_PLAYERAI_TWEAKED_GREAT_ENGINEER_DIRECTIVE
+/// Uses different logic to check when a player is venice
+#define AUI_PLAYERAI_GREAT_MERCHANT_DIRECTIVE_TWEAKED_VENICE_CHECK
+/// Slight tweak to logic to make the function's mathematics more accurate; value is simply a boost from if it's still the first quarter of the game to if it's still the first half of the game
+#define AUI_PLAYERAI_TWEAKED_GREAT_SCIENTIST_DIRECTIVE (2)
 /// Makes the number of cities Venice desires a function of various parameters instead of just a set constant (same parameters as Early Expansion economic strategy)
 #define AUI_PLAYERAI_TWEAKED_VENICE_CITY_TARGET
 /// Disables Reuse Paths for pathfinding functions
