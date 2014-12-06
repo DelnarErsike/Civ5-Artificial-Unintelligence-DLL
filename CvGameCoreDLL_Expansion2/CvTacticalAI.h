@@ -784,6 +784,11 @@ public:
 	bool IsCityInQueuedAttack(const CvCity* pAttackCity);
 	int NearXQueuedAttacks(const CvPlot* pPlot, const int iRange);
 
+#ifdef AUI_TACTICAL_HELPERS_AIR_SWEEP
+	// Public AMS functions
+	int SamePlotFound(vector<CvPlot*> plotData, CvPlot* plotXy);
+#endif // AUI_TACTICAL_HELPERS_AIR_SWEEP
+
 	// Public logging
 	void LogTacticalMessage(CvString& strMsg, bool bSkipLogDominanceZone = true);
 
@@ -880,8 +885,24 @@ private:
 	void ExecuteBarbarianMoves(bool bAggressive);
 	void ExecuteBarbarianCivilianEscortMove();
 	void ExecuteMoveToPlot(CvPlot* pTarget, bool bSaveMoves=false);
+#ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
+	void ExecuteMoveToPlot(UnitHandle pUnit, CvPlot* pTarget, bool bSaveMoves = false, int iTurnsToTarget = MAX_INT);
+#else
 	void ExecuteMoveToPlot(UnitHandle pUnit, CvPlot* pTarget, bool bSaveMoves = false);
+#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#ifdef AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_USES_SWAP
+#ifdef AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY
+	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit, UnitHandle pRequestingUnit, bool bPrioritizeZeroMove = false);
+#else
+	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit, UnitHandle pRequestingUnit);
+#endif // AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY
+#else
+#ifdef AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY
+	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit, bool bPrioritizeZeroMove = false);
+#else
 	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit);
+#endif // AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY
+#endif // AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_USES_SWAP
 	void ExecuteNavalBlockadeMove(CvPlot* pTarget);
 	void ExecuteMoveToTarget(CvPlot* pTarget);
 	void ExecuteAirInterceptMoves();
@@ -895,11 +916,18 @@ private:
 	void ExecutePriorityAttacksOnUnitTarget(CvTacticalTarget& kTarget);
 	void ExecuteWithdrawMoves();
 	void ExecuteEscortEmbarkedMoves();
+#ifdef AUI_TACTICAL_FREE_PILLAGE
+	void CheckAndExecuteFreePillageMoves(UnitHandle pUnit, int iMovesNeededStill = 0);
+#endif // AUI_TACTICAL_FREE_PILLAGE
 
 	// Internal low-level utility routines
 	void TurnOffMove(TacticalAIMoveTypes eType);
 	bool FindUnitsForThisMove(TacticalAIMoveTypes eMove, CvPlot* pTargetPlot, int iNumTurnsAway=0, bool bRangedOnly=false);
+#ifdef AUI_ASTAR_PARADROP
+	bool FindUnitsWithinStrikingDistance(CvPlot *pTargetPlot, int iNumTurnsAway, int iPreferredDamageLevel, bool bNoRangedUnits=false, bool bNavalOnly=false, bool bMustMoveThrough=false, bool bIncludeBlockedUnits=false, bool bWillPillage=false, bool bTargetUndefended=false, bool bIgnoreParadrop=false);
+#else
 	bool FindUnitsWithinStrikingDistance(CvPlot *pTargetPlot, int iNumTurnsAway, int iPreferredDamageLevel, bool bNoRangedUnits=false, bool bNavalOnly=false, bool bMustMoveThrough=false, bool bIncludeBlockedUnits=false, bool bWillPillage=false, bool bTargetUndefended=false);
+#endif // AUI_ASTAR_PARADROP
 	bool FindParatroopersWithinStrikingDistance(CvPlot *pTargetPlot);
 	bool FindCitiesWithinStrikingDistance(CvPlot* pTargetPlot);
 	bool FindClosestUnit(CvPlot* pTargetPlot, int iNumTurnsAway, bool bMustHaveHalfHP, bool bMustBeRangedUnit=false, int iRangeRequired=2, bool bNeedsIgnoreLOS=false, bool bMustBeMeleeUnit=false, bool bIgnoreUnits=false, CvPlot* pRangedAttackTarget=NULL);
@@ -910,7 +938,11 @@ private:
 	bool IsExpectedToDamageWithRangedAttack(UnitHandle pAttacker, CvPlot* pTarget);
 	bool MoveToEmptySpaceNearTarget(UnitHandle pUnit, CvPlot* pTargetPlot, bool bLand=true);
 	bool MoveToEmptySpaceTwoFromTarget(UnitHandle pUnit, CvPlot* pTargetPlot, bool bLand=true);
+#ifdef AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
+	bool MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, bool &bMoveWasSafe, int iPathTurns = MAX_INT, bool bPathGenerated = false);
+#else
 	bool MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, bool &bMoveWasSafe);
+#endif // AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
 	CvPlot* FindBestBarbarianLandMove(UnitHandle pUnit);
 	CvPlot* FindPassiveBarbarianLandMove(UnitHandle pUnit);
 	CvPlot* FindBestBarbarianSeaMove(UnitHandle pUnit);
@@ -940,6 +972,24 @@ private:
 	int ScoreCloseOnPlots(CvPlot* pTarget, bool bLandOnly);
 	void ScoreHedgehogPlots(CvPlot* pTarget);
 	int ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, CvArmyAI* pArmyAI);
+
+#ifdef AUI_TACTICAL_HELPERS_AIR_SWEEP
+	// AMS functions and helper vector (for air sweeps)
+	std::vector<CvTacticalUnit> m_CurrentAirUnits;
+	bool ContainsPlot(vector<CvPlot*> plotData, CvPlot* plotXy);
+	bool FindAirUnitsToAirSweep(CvPlot* pTarget);
+#endif // AUI_TACTICAL_HELPERS_AIR_SWEEP
+#ifdef AUI_TACTICAL_HELPERS_POSITIONING_AND_ORDER
+	void GetBestPlot(CvPlot*& outputPlot, vector<CvPlot*> plotsToCheck);
+	CvPlot* GetBestRepositionPlot(UnitHandle unitH, CvPlot* plotTarget);
+	void SortCurrentMoveUnits(bool bSortBySelfDamage = false);
+#endif // AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK
+#ifdef AUI_TACTICAL_EXECUTE_SWAP_TO_PLOT
+	void ExecuteSwapToPlot(UnitHandle pUnit, UnitHandle pTargetUnit, bool bSaveMoves);
+#endif // AUI_TACTICAL_EXECUTE_SWAP_TO_PLOT
+#ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
+	bool CheckAndExecuteParadrop(UnitHandle pUnit, CvPlot* pTarget, int iPathfindingTurns = MAX_INT);
+#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
 
 	// Logging functions
 	CvString GetLogFileName(CvString& playerName) const;
