@@ -100,6 +100,14 @@
 /// Scales the GetLastTurnWorkerDisbanded() computation to game speed
 #define AUI_CITYSTRATEGY_FIX_TILE_IMPROVERS_LAST_DISBAND_WORKER_TURN_SCALE
 
+// Culture Classes Stuff
+/// No longer returns false if any one player's influence level is Unknown (it will now simply skip that player instead)
+#define AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
+/// Influence turns are used instead of influence levels (ie. the player will propaganda the two AI's who will take the longest to get to influential)
+#define AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_INFLUENCE_TURNS_USED
+/// The AI will only want propaganda spies if its tourism is greater than a certain amount (will actually use Science Boost amount if it's active)
+#define AUI_PLAYERCULTURE_GET_MAX_PROPAGANDA_DIPLOMATS_WANTED_FILTER_TOURISM (8)
+
 // Danger Plots Stuff
 /// Better danger calculation for ranged units (originally from Ninakoru's Smart AI, but heavily modified since)
 #define AUI_DANGER_PLOTS_TWEAKED_RANGED

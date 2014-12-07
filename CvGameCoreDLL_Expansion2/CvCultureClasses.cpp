@@ -3517,12 +3517,20 @@ int CvPlayerCulture::ComputeHypotheticalPublicOpinionUnhappiness(PolicyBranchTyp
 bool CvPlayerCulture::WantsDiplomatDoingPropaganda(PlayerTypes eTargetPlayer) const
 {
 	// only return the top two
+#ifdef AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_INFLUENCE_TURNS_USED
+	int iFirstValue = 0;
+	int iSecondValue = 0;
+#else
 	int iFirstValue = NO_INFLUENCE_LEVEL;
 	int iSecondValue = NO_INFLUENCE_LEVEL;
+#endif // AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_INFLUENCE_TURNS_USED
 	PlayerTypes eFirstPlayer = NO_PLAYER;
 	PlayerTypes eSecondPlayer = NO_PLAYER;
+	int iInfluenceTurnsNeeded;
 
+#ifndef AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
 	// only do this if everybody is exotic
+#endif // AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
 	for (uint ui = 0; ui < MAX_MAJOR_CIVS; ui++)
 	{
 		PlayerTypes ePlayer = (PlayerTypes)ui;
@@ -3536,12 +3544,41 @@ bool CvPlayerCulture::WantsDiplomatDoingPropaganda(PlayerTypes eTargetPlayer) co
 			continue;
 		}
 
+#ifdef AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
+		// only do this if player is at least exotic but below influential
+		if (GetInfluenceLevel(ePlayer) < INFLUENCE_LEVEL_EXOTIC || GetInfluenceLevel(ePlayer) >= INFLUENCE_LEVEL_INFLUENTIAL)
+		{
+			continue;
+		}
+#else
 		int iInfluenceLevel = GetInfluenceLevel(ePlayer);
 		if (iInfluenceLevel < INFLUENCE_LEVEL_EXOTIC)
 		{
 			return false;
 		}
+#endif // AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
+
+#ifdef AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_INFLUENCE_TURNS_USED
+		iInfluenceTurnsNeeded = m_pPlayer->GetCulture()->GetTurnsToInfluential(ePlayer);
+		if (iInfluenceTurnsNeeded > iFirstValue && iInfluenceTurnsNeeded > iSecondValue)
+		{
+			iSecondValue = iFirstValue;
+			eSecondPlayer = eFirstPlayer;
+			iFirstValue = iInfluenceTurnsNeeded;
+			eFirstPlayer = ePlayer;
+		}
+		else if (iInfluenceTurnsNeeded > iSecondValue)
+		{
+			iSecondValue = iInfluenceTurnsNeeded;
+			eSecondPlayer = ePlayer;
+		}
+#else
+#ifdef AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
+		int iInfluenceLevel = GetInfluenceLevel(ePlayer);
+		if (iInfluenceLevel > iFirstValue && iInfluenceLevel > iSecondValue)
+#else
 		else if (iInfluenceLevel > iFirstValue && iInfluenceLevel > iSecondValue)
+#endif // AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
 		{
 			iSecondValue = iFirstValue;
 			eSecondPlayer = eFirstPlayer;
@@ -3553,6 +3590,7 @@ bool CvPlayerCulture::WantsDiplomatDoingPropaganda(PlayerTypes eTargetPlayer) co
 			iSecondValue = iInfluenceLevel;
 			eSecondPlayer = ePlayer;
 		}
+#endif // AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_INFLUENCE_TURNS_USED
 	}
 
 	return (eFirstPlayer == eTargetPlayer || eSecondPlayer == eTargetPlayer);
@@ -3563,6 +3601,30 @@ int CvPlayerCulture::GetMaxPropagandaDiplomatsWanted() const
 {
 	int iRtnValue = 0;
 
+#ifdef AUI_PLAYERCULTURE_GET_MAX_PROPAGANDA_DIPLOMATS_WANTED_FILTER_TOURISM
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
+	if (m_pPlayer->GetCulture()->GetTourism() >= m_pPlayer->GetGrandStrategyAI()->ScienceFlavorBoost())
+#else
+	if (m_pPlayer->GetCulture()->GetTourism() > AUI_PLAYERCULTURE_GET_MAX_PROPAGANDA_DIPLOMATS_WANTED_FILTER_TOURISM)
+#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+	{
+		// determine which civs have run out of techs to steal
+		for (uint ui = 0; ui < MAX_MAJOR_CIVS; ui++)
+		{
+			PlayerTypes eOtherPlayer = (PlayerTypes)ui;
+
+			if (m_pPlayer->GetID() == eOtherPlayer)
+			{
+				continue;
+			}
+
+			if (WantsDiplomatDoingPropaganda(eOtherPlayer))
+			{
+				iRtnValue++;
+			}
+		}
+	}
+#else
 	// determine which civs have run out of techs to steal
 	for(uint ui = 0; ui < MAX_MAJOR_CIVS; ui++)
 	{
@@ -3572,12 +3634,13 @@ int CvPlayerCulture::GetMaxPropagandaDiplomatsWanted() const
 		{
 			continue;
 		}
-		
+
 		if (WantsDiplomatDoingPropaganda(eOtherPlayer))
 		{
 			iRtnValue++;
 		}
 	}
+#endif // AUI_PLAYERCULTURE_GET_MAX_PROPAGANDA_DIPLOMATS_WANTED_FILTER_TOURISM
 
 	return iRtnValue;
 }
