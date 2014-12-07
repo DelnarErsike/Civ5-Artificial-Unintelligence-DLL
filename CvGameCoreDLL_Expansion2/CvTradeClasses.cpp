@@ -4291,7 +4291,11 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 }
 
 /// Score Food TR
+#ifdef AUI_TRADE_SCORE_FOOD_VALUE
+int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* /*pSmallestCity*/)
+#else
 int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSmallestCity)
+#endif // AUI_TRADE_SCORE_FOOD_VALUE
 {
 	if (kTradeConnection.m_eConnectionType != TRADE_CONNECTION_FOOD)
 	{

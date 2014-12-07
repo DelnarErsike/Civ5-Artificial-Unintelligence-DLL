@@ -2612,7 +2612,11 @@ int CvGrandStrategyAI::GetGuessOtherPlayerSpaceshipPriority(PlayerTypes ePlayer,
 // PRIVATE METHODS
 
 /// Log GrandStrategy state: what are the Priorities and who is Active?
+#ifdef AUI_GS_BETTER_LOGGING
+void CvGrandStrategyAI::LogGrandStrategies(const FStaticVector< int, 5, true, c_eCiv5GameplayDLL >& /*vModifiedGrandStrategyPriorities*/)
+#else
 void CvGrandStrategyAI::LogGrandStrategies(const FStaticVector< int, 5, true, c_eCiv5GameplayDLL >& vModifiedGrandStrategyPriorities)
+#endif // AUI_GS_BETTER_LOGGING
 {
 	if(GC.getLogging() && GC.getAILogging())
 	{

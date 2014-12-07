@@ -6939,7 +6939,7 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 	if (eFutureOwner != NO_PLAYER && eOwner == NO_PLAYER)
 	{
 		bOwnerFlipped = true;
-		eOwner == eFutureOwner;
+		eOwner = eFutureOwner;
 		pWorkingCity = GET_PLAYER(eFutureOwner).getCapitalCity();
 	}
 #endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED

@@ -5356,8 +5356,8 @@ int CvReligionAI::ScoreBelief(CvBeliefEntry* pEntry)
 					iScoreAtPlot *= 3;
 #endif // AUI_RELIGION_USE_DOUBLES
 				}
-				CvCity* pLoopCity = m_pPlayer->GetClosestFriendlyCity(*pPlot, 1);
-				if (pLoopCity && pLoopCity == pClosestCity)
+				CvCity* pNeighborCity = m_pPlayer->GetClosestFriendlyCity(*pPlot, 1);
+				if (pNeighborCity && pNeighborCity == pClosestCity)
 				{
 #ifdef AUI_RELIGION_USE_DOUBLES
 					dScoreAtPlot *= 2.0;

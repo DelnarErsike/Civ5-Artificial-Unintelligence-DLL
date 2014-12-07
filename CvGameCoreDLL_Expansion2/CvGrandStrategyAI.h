@@ -97,7 +97,11 @@ public:
 
 private:
 
+#ifdef AUI_GS_BETTER_LOGGING
+	void LogGrandStrategies(const FStaticVector< int, 5, true, c_eCiv5GameplayDLL >& /*vGrandStrategyPriorities*/);
+#else
 	void LogGrandStrategies(const FStaticVector< int, 5, true, c_eCiv5GameplayDLL >& vGrandStrategyPriorities);
+#endif // AUI_GS_BETTER_LOGGING
 	void LogGuessOtherPlayerGrandStrategy(const FStaticVector< int, 5, true, c_eCiv5GameplayDLL >& vGrandStrategyPriorities, PlayerTypes ePlayer);
 
 	CvPlayer* m_pPlayer;

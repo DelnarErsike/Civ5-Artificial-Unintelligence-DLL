@@ -1852,7 +1852,7 @@ void CreateMiniDump(EXCEPTION_POINTERS *pep)
 
 	MINIDUMP_TYPE mdt = MiniDumpNormal;
 
-	BOOL result = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(),
+	MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(),
 		hFile,
 		mdt,
 		(pep != NULL) ? &mdei : NULL,

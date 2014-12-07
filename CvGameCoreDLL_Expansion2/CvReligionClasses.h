@@ -507,7 +507,7 @@ private:
 	bool BuyAnyAvailableFaithBuilding();
 
 	int ScoreBelief(CvBeliefEntry* pEntry);
-#define AUI_RELIGION_USE_DOUBLES
+#ifdef AUI_RELIGION_USE_DOUBLES
 	double ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot);
 	double ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity);
 	double ScoreBeliefForPlayer(CvBeliefEntry* pEntry);

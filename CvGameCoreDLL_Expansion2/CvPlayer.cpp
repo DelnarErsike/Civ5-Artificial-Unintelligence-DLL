@@ -23703,7 +23703,9 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 
 	int iSettlerX = pUnit->getX();
 	int iSettlerY = pUnit->getY();
+#ifndef AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
 	int iUnitArea = pUnit->getArea();
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
 	PlayerTypes eOwner = pUnit->getOwner();
 	TeamTypes eTeam = pUnit->getTeam();
 
