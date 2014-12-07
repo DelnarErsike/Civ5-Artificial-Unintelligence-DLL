@@ -507,9 +507,15 @@ private:
 	bool BuyAnyAvailableFaithBuilding();
 
 	int ScoreBelief(CvBeliefEntry* pEntry);
+#define AUI_RELIGION_USE_DOUBLES
+	double ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot);
+	double ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity);
+	double ScoreBeliefForPlayer(CvBeliefEntry* pEntry);
+#else
 	int ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot);
 	int ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity);
 	int ScoreBeliefForPlayer(CvBeliefEntry* pEntry);
+#endif // AUI_RELIGION_USE_DOUBLES
 
 	int ScoreCityForMissionary(CvCity* pCity, UnitHandle pUnit);
 	int ScoreCityForInquisitor(CvCity* pCity, UnitHandle pUnit);
@@ -519,7 +525,11 @@ private:
 	bool AreAllOurCitiesHaveFaithBuilding(ReligionTypes eReligion, bool bIncludePuppets) const;
 	bool HaveNearbyConversionTarget(ReligionTypes eReligion, bool bCanIncludeReligionStarter) const;
 	bool HaveEnoughInquisitors(ReligionTypes eReligion) const;
+#ifdef AUI_RELIGION_FIX_MULTIPLE_FAITH_BUILDINGS
+	std::vector<BuildingClassTypes> FaithBuildingAvailable(ReligionTypes eReligion) const;
+#else
 	BuildingClassTypes FaithBuildingAvailable(ReligionTypes eReligion) const;
+#endif // AUI_RELIGION_FIX_MULTIPLE_FAITH_BUILDINGS
 	bool CanBuyNonFaithBuilding() const;
 	UnitTypes GetDesiredFaithGreatPerson() const;
 

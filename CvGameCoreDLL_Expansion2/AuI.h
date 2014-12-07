@@ -387,12 +387,76 @@
 #define AUI_POLICY_GET_BRANCH_BUILDING_HAPPINESS_GET_ALL_HAPPINESS_SOURCES
 
 // Religion/Belief Stuff
+/// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
+#define AUI_RELIGION_USE_DOUBLES
+/// Various bits of code that could cause null pointers have been fixed
+#define AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
+/// The function has been reformatted to look smaller
+#define AUI_RELIGION_REFORMAT_HAS_CREATED_RELIGION
 /// Checks all of player's cities for whether or not a city is within conversion target range, not just the player's capital
 #define AUI_RELIGION_CONVERSION_TARGET_NOT_JUST_CAPITAL
 /// If the AI's religion now unlocks multiple faith buildings, AI can now purchase all of them
 #define AUI_RELIGION_FIX_MULTIPLE_FAITH_BUILDINGS
 /// Actually checks the cost of purchasing great people at a city instead of just returning the oldest city founded (deactivated while this is equal across all cities)
 // #define AUI_RELIGION_FIX_BEST_CITY_HELPER_GREAT_PERSON
+/// Raises individual belief components (plots as a whole, each city, player twice) to the power of this number
+#define AUI_RELIGION_SCORE_BELIEF_RAISE_COMPONENT_SCORES_TO_POWER (1.05)
+/// Increases plot search distance, but scales the belief score of a plot based on distance to the closest friendly city
+#define AUI_RELIGION_SCORE_BELIEF_SCALE_PLOTS_WITH_DISTANCE (4)
+/// Tweaks the amount a pantheon belief's score is divided (to compensate for higher scoring of certain plots)
+#define AUI_RELIGION_SCORE_BELIEF_TWEAK_PANTHEON_DIVIDER (4.0)
+/// Weighs different yield types differently depending on flavor and citizen value
+#define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
+/// Reduces the score given to a tile from a feature if it has a resource on it, as chance are the resource will require the feature to be removed
+#define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REDUCE_FEATURE_SCORE_IF_WILL_BE_CHOPPED
+/// When scoring beliefs, the AI will only consider resources that it can see
+#define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_RESOURCE_OMNISCIENCE
+/// When scoring beliefs, increased yields from improvements no longer get double their normal rating
+#define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
+/// Weighs different yield types differently depending on flavor and citizen value
+#define AUI_RELIGION_SCORE_BELIEF_AT_CITY_FLAVOR_YIELDS
+/// Happiness need and multiplier have been tweaked to use more flavors
+#define AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_HAPPINESS
+/// Considers grand strategies when scoring things like beliefs that only function when at peace
+#define AUI_RELIGION_SCORE_BELIEF_AT_CITY_CONSIDER_GRAND_STRATEGY
+/// Tweaks the flavor values and inputs used by various belief effects
+#define AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_FLAVORS
+/// River happiness score will only be applied if the city being scored is actually on a river
+#define AUI_RELIGION_FIX_SCORE_BELIEF_AT_CITY_RIVER_HAPPINESS
+/// Instead of multiplying a score if the city is at or above the minimum population required, score is divided if the city is below the minimum population required
+#define AUI_RELIGION_SCORE_BELIEF_AT_CITY_REVERSED_MINIMUM_POPULATION_MODIFIER
+/// Removes the extra score given by large cities to beliefs that give yield if any specialist is present
+#define AUI_RELIGION_SCORE_BELIEF_AT_CITY_DISABLE_ANY_SPECIALIST_YIELD_BIAS
+/// Tweaks the flavor values and inputs used by various belief effects
+#define AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
+/// Considers grand strategies when scoring things like beliefs that only function when at peace
+#define AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY
+/// More flavors contribute to a player's happiness need "factor" for this function
+#define AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_HAPPINESS_FLAVOR
+/// Scales Enhancer belief scores with how far the game has progressed, not how many religions have already been enhanced
+#define AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_ENHANCER_SCALING
+/// Missionaries will no longer target hostile cities
+#define AUI_RELIGION_FIX_SCORE_CITY_FOR_MISSIONARY_NO_WAR_TARGETTING
+/// Divides a city's targetting score for missionaries by this value if passive pressure is enough to eventually convert the city
+#define AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_DIVIDER_IF_PASSIVE_PRESSURE_ENOUGH (10)
+/// Subtracts twice the distance to target squared (instead of subtracting just the distance)
+#define AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_SUBTRACT_DISTANCE_SQUARED
+/// Pathfinder used instead of raw distance, parameter dictates whether we're reusing paths and ignoring units (fast but rough) or not (slow but accurate)
+#define AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_USE_PATHFINDER_FOR_DISTANCE (true)
+/// When targetting an enemy holy city, takes the square root of the current score if it's lower than halving it
+#define AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_HOLY_CITY_TAKE_SQRT_SCORE_IF_RESULT_IS_LOWER
+/// When finding a nearby conversion target, cities that will convert to the AI's religion passively are ignored
+#define AUI_RELIGION_HAVE_NEARBY_CONVERSION_TARGET_IGNORE_TARGET_THAT_WILL_CONVERT_PASSIVELY
+/// Tweaks the base number of inquisitors needed (default is 1)
+#define AUI_RELIGION_HAVE_ENOUGH_INQUISITORS_TWEAKED_BASE_NUMER (0)
+/// Multiplies the Great Merchant score by this value if the AI is Venice and will use the Great Merchant to acquire a city
+#define AUI_RELIGION_GET_DESIRED_FAITH_GREAT_PERSON_VENICE_MERCHANT_BOOST (10)
+/// Scales the non-spaceship scoring of Great Engineers with Wonder Competitiveness
+#define AUI_RELIGION_GET_DESIRED_FAITH_GREAT_PERSON_ENGINEER_USES_WONDER_COMPETITIVENESS (1000.0 / 3.0)
+/// Fixes the bug where the AI scores inquisitors if it already has enough, not when it needs them
+#define AUI_RELIGION_FIX_GET_DESIRED_FAITH_GREAT_PERSON_INQUISITOR_CHECK
+/// Scales the score of missionaries and inquisitors with how many turns have elapsed (value is the base score for missionaries and inquisitors)
+#define AUI_RELIGION_GET_DESIRED_FAITH_GREAT_PERSON_SCALE_MISSIONARY_INQUISITOR_WITH_TURNS_ELAPSED (1000)
 
 // Site Evaluation Stuff
 /// Tweaks the multiplier given to the happiness score luxury resources that the player does not have (multiplier is applied once for importing, twice and divided by 3 for don't have at all)
