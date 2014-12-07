@@ -172,8 +172,12 @@ TechTypes CvTechAI::ChooseNextTech(CvPlayer *pPlayer, bool bFreeTech)
 	}
 
 	// Reweight our possible choices by their cost, but only if cost is actually a factor!
+#ifdef AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
+	ReweightByCost(pPlayer, bFreeTech);
+#else
 	if(!bFreeTech)
 		ReweightByCost(pPlayer);
+#endif // AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
 
 	m_ResearchableTechs.SortItems();
 	LogPossibleResearch();
@@ -288,6 +292,56 @@ float CvTechAI::GetTechRatio()
 	return fTechPositionRatio;
 }
 
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
+bool CvTechAI::HaveAllUNTechs()
+{
+	// Loop through all techs
+	int iTechLoop;
+	CvTechEntry* pkTechInfo;
+	for (iTechLoop = 0; iTechLoop < m_pCurrentTechs->GetTechs()->GetNumTechs(); iTechLoop++)
+	{
+		// Do we not have a tech?
+		if (!GET_TEAM(m_pCurrentTechs->GetPlayer()->getTeam()).GetTeamTechs()->HasTech((TechTypes)iTechLoop) && m_pCurrentTechs->CanEverResearch((TechTypes)iTechLoop))
+		{
+			pkTechInfo = m_pCurrentTechs->GetTechs()->GetEntry(iTechLoop);
+			if (pkTechInfo)
+			{
+				// Is it a tech that would increase our UN votes?
+				if (pkTechInfo->GetExtraVotesPerDiplomat() > 0)
+				{
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
+bool CvTechAI::HaveAllInternetTechs()
+{
+	// Loop through all techs
+	int iTechLoop;
+	CvTechEntry* pkTechInfo;
+	for (iTechLoop = 0; iTechLoop < m_pCurrentTechs->GetTechs()->GetNumTechs(); iTechLoop++)
+	{
+		// Do we not have a tech?
+		if (!GET_TEAM(m_pCurrentTechs->GetPlayer()->getTeam()).GetTeamTechs()->HasTech((TechTypes)iTechLoop) && m_pCurrentTechs->CanEverResearch((TechTypes)iTechLoop))
+		{
+			pkTechInfo = m_pCurrentTechs->GetTechs()->GetEntry(iTechLoop);
+			if (pkTechInfo)
+			{
+				// Is it a tech that would increase our tourism?
+				if (pkTechInfo->GetInfluenceSpreadModifier() > 0)
+				{
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+
 //=====================================
 // PRIVATE METHODS
 //=====================================
@@ -346,12 +400,21 @@ void CvTechAI::PropagateWeights(int iTech, int iWeight, int iPropagationPercent,
 }
 
 /// Recompute weights taking into account tech cost
+#ifdef AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
+void CvTechAI::ReweightByCost(CvPlayer *pPlayer, bool bWantsExpensive)
+#else
 void CvTechAI::ReweightByCost(CvPlayer *pPlayer)
+#endif // AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
 {
 	TechTypes eTech;
 
 	// April 2014 Balance Patch: if lots of science overflow, want to pick an expensive tech
 	bool bNeedExpensiveTechs = pPlayer->getOverflowResearchTimes100() > (pPlayer->GetScienceTimes100() * 2);
+
+#ifdef AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
+	if (bWantsExpensive)
+		bNeedExpensiveTechs = true;
+#endif // AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
 
 	for(int iI = 0; iI < m_ResearchableTechs.size(); iI++)
 	{

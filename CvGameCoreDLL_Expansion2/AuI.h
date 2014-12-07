@@ -622,6 +622,10 @@
 #define AUI_PLAYERTECHS_ADD_FLAVOR_AS_STRATEGIES_USE_SCIENCE_FLAVOR_BOOST
 #endif // AUI_GS_SCIENCE_FLAVOR_BOOST
 
+// Tech AI Stuff
+/// The AI wants an expensive tech if it's selecting a free tech
+#define AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
+
 // Trade Stuff
 /// Adds a minimum danger amount for each plot, to discourage long routes
 #define AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER (1)

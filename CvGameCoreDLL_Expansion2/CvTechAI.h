@@ -51,13 +51,22 @@ public:
 
 	float GetTechRatio();
 
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
+	bool HaveAllUNTechs();
+	bool HaveAllInternetTechs();
+#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+
 private:
 	// Internal methods
 	void WeightPrereqs(int* paiTempWeights, int iPropagationPercent);
 	void PropagateWeights(int iTech, int iWeight, int iPropagationPercent, int iPropagationLevel);
 
 	// Recompute weights taking into account tech cost
+#ifdef AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
+	void ReweightByCost(CvPlayer *pPlayer, bool bWantsExpensive = false);
+#else
 	void ReweightByCost(CvPlayer *pPlayer);
+#endif // AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
 
 	// Logging functions
 	void LogPossibleResearch();
