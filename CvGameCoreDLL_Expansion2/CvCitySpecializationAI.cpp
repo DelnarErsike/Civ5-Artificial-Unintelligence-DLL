@@ -483,12 +483,21 @@ void CvCitySpecializationAI::WeightSpecializations()
 			CvAIGrandStrategyXMLEntry* grandStrategy = GC.getAIGrandStrategyInfo((AIGrandStrategyTypes)iGrandStrategyLoop);
 			if(grandStrategy)
 			{
+#ifdef AUI_GS_PRIORITY_RATIO
+				iFoodYieldWeight += int(m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iGrandStrategyLoop) 
+						* grandStrategy->GetSpecializationBoost(YIELD_FOOD) + 0.5);
+				iGoldYieldWeight += int(m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iGrandStrategyLoop)
+					* grandStrategy->GetSpecializationBoost(YIELD_GOLD) + 0.5);
+				iScienceYieldWeight += int(m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iGrandStrategyLoop)
+					* grandStrategy->GetSpecializationBoost(YIELD_SCIENCE) + 0.5);
+#else
 				if(iGrandStrategyLoop == m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy())
 				{
-					iFoodYieldWeight +=	grandStrategy->GetSpecializationBoost(YIELD_FOOD);
+					iFoodYieldWeight += grandStrategy->GetSpecializationBoost(YIELD_FOOD);
 					iGoldYieldWeight += grandStrategy->GetSpecializationBoost(YIELD_GOLD);
 					iScienceYieldWeight += grandStrategy->GetSpecializationBoost(YIELD_SCIENCE);
 				}
+#endif // AUI_GS_PRIORITY_RATIO
 			}
 		}
 
@@ -603,6 +612,21 @@ int CvCitySpecializationAI::WeightProductionSubtypes(int iFlavorWonder, int iFla
 		CvAIGrandStrategyXMLEntry* grandStrategy = GC.getAIGrandStrategyInfo((AIGrandStrategyTypes)iGrandStrategyLoop);
 		if(grandStrategy)
 		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			if(grandStrategy->GetSpecializationBoost(YIELD_PRODUCTION) > 0)
+			{
+				if(grandStrategy->GetFlavorValue((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE")) > 0)
+				{
+					iMilitaryTrainingWeight += int(grandStrategy->GetSpecializationBoost(YIELD_PRODUCTION)
+						* m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iGrandStrategyLoop) + 0.5);
+				}
+				else if(grandStrategy->GetFlavorValue((FlavorTypes)GC.getInfoTypeForString("FLAVOR_SPACESHIP")) > 0)
+				{
+					iSpaceshipWeight += int(grandStrategy->GetSpecializationBoost(YIELD_PRODUCTION)
+						* m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iGrandStrategyLoop) + 0.5);
+				}
+			}
+#else
 			if(iGrandStrategyLoop == m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy())
 			{
 				if(grandStrategy->GetSpecializationBoost(YIELD_PRODUCTION) > 0)
@@ -617,6 +641,7 @@ int CvCitySpecializationAI::WeightProductionSubtypes(int iFlavorWonder, int iFla
 					}
 				}
 			}
+#endif // AUI_GS_PRIORITY_RATIO
 		}
 	}
 
