@@ -1883,7 +1883,12 @@ ArchaeologyChoiceType CvPlayerCulture::GetArchaeologyChoice(CvPlot *pPlot)
 		// ... unless this is a city state we want to influence to help with diplo victory
 		if (pPlot->getOwner() != NO_PLAYER && GET_PLAYER(pPlot->getOwner()).isMinorCiv())
 		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			if (m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriority((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) >
+				m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriority((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")))
+#else
 			if (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"))
+#endif // AUI_GS_PRIORITY_RATIO
 			{
 				if (m_pPlayer->GetDiplomacyAI()->GetMinorCivApproach(pPlot->getOwner()) != MINOR_CIV_APPROACH_CONQUEST)
 				{

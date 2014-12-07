@@ -10848,8 +10848,10 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 	int iScore = 0;
 
 	// == Grand Strategy and other factors ==
+#ifndef AUI_GS_PRIORITY_RATIO
 	AIGrandStrategyTypes eGrandStrategy = GetPlayer()->GetGrandStrategyAI()->GetActiveGrandStrategy();
 	bool bSeekingDiploVictory = eGrandStrategy == GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS");
+#endif // AUI_GS_PRIORITY_RATIO
 
 	// == Diplomatic Victory ==
 	if (pProposal->GetEffects()->bDiplomaticVictory)
@@ -10875,10 +10877,14 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 		{
 			iScore += -50;
 
+#ifdef AUI_GS_PRIORITY_RATIO
+			iScore += -int(150 * GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) + 0.5);
+#else
 			if (bSeekingDiploVictory)
 			{
 				iScore += -150;
 			}
+#endif // AUI_GS_PRIORITY_RATIO
 
 			// Don't hand victory to someone
 			if (pLeague->CalculateStartingVotesForMember(GetPlayer()->GetID()) + pLeague->CalculateStartingVotesForMember(eChoicePlayer) + 4
@@ -10936,10 +10942,14 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 		}
 		else
 		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			iScore += -int(150 * GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) + 0.5);
+#else
 			if (bSeekingDiploVictory)
 			{
 				iScore += -150;
 			}
+#endif // AUI_GS_PRIORITY_RATIO
 
 			switch (eAlignment)
 			{

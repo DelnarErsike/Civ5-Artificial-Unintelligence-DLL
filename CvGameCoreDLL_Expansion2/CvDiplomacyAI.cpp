@@ -4994,7 +4994,11 @@ bool CvDiplomacyAI::IsWantsOpenBordersWithPlayer(PlayerTypes ePlayer)
 
 	// If going for culture win always want open borders against civs we need influence on
 	AIGrandStrategyTypes eCultureStrategy = (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE");
+#ifdef AUI_GS_PRIORITY_RATIO
+	if (eCultureStrategy != NO_AIGRANDSTRATEGY && m_pPlayer->GetGrandStrategyAI()->IsGrandStrategySignificant(eCultureStrategy) && m_pPlayer->GetCulture()->GetTourism() > 0 )
+#else
 	if (eCultureStrategy != NO_AIGRANDSTRATEGY && m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eCultureStrategy && m_pPlayer->GetCulture()->GetTourism() > 0 )
+#endif // AUI_GS_PRIORITY_RATIO
 	{
 		// The civ we need influence on the most should ALWAYS be included
 		if (m_pPlayer->GetCulture()->GetCivLowestInfluence(false /*bCheckOpenBorders*/) == ePlayer)
@@ -8493,13 +8497,13 @@ void CvDiplomacyAI::DoUpdateVictoryDisputeLevels()
 				switch (GetPlayer()->GetGrandStrategyAI()->GetGuessOtherPlayerActiveGrandStrategyConfidence(ePlayer))
 				{
 				case GUESS_CONFIDENCE_POSITIVE:
-					iVictoryDisputeWeight += /*14*/ (int)((double)GC.getVICTORY_DISPUTE_GRAND_STRATEGY_MATCH_POSITIVE() * dVictoryDisputePercent + 0.5);
+					iVictoryDisputeWeight += /*14*/ int((double)GC.getVICTORY_DISPUTE_GRAND_STRATEGY_MATCH_POSITIVE() * dVictoryDisputePercent + 0.5);
 					break;
 				case GUESS_CONFIDENCE_LIKELY:
-					iVictoryDisputeWeight += /*10*/ (int)((double)GC.getVICTORY_DISPUTE_GRAND_STRATEGY_MATCH_LIKELY() * dVictoryDisputePercent + 0.5);
+					iVictoryDisputeWeight += /*10*/ int((double)GC.getVICTORY_DISPUTE_GRAND_STRATEGY_MATCH_LIKELY() * dVictoryDisputePercent + 0.5);
 					break;
 				case GUESS_CONFIDENCE_UNSURE:
-					iVictoryDisputeWeight += /*6*/ (int)((double)GC.getVICTORY_DISPUTE_GRAND_STRATEGY_MATCH_UNSURE() * dVictoryDisputePercent + 0.5);
+					iVictoryDisputeWeight += /*6*/ int((double)GC.getVICTORY_DISPUTE_GRAND_STRATEGY_MATCH_UNSURE() * dVictoryDisputePercent + 0.5);
 					break;
 #else
 					switch(GetPlayer()->GetGrandStrategyAI()->GetGuessOtherPlayerActiveGrandStrategyConfidence(ePlayer))

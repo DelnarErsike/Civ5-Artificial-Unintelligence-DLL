@@ -2268,8 +2268,14 @@ void CvMilitaryAI::UpdateBaseData()
 		dNumUnitsWanted = 7.0; // size of a basic attack
 
 		// if we are going for conquest we want at least one more task force
+#ifndef AUI_GS_PRIORITY_RATIO
 		bool bConquestGrandStrategy = false;
+#endif // AUI_GS_PRIORITY_RATIO
 		AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
+#ifdef AUI_GS_PRIORITY_RATIO
+		// even if we aren't running a conquest Grand Strategy, it still has influence over how many units we want
+		dNumUnitsWanted = dNumUnitsWanted * (1.0 + m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy));
+#else
 		if(eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
 		{
 			if(m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
@@ -2277,10 +2283,6 @@ void CvMilitaryAI::UpdateBaseData()
 				bConquestGrandStrategy = true;
 			}
 		}
-#ifdef AUI_GS_PRIORITY_RATIO
-		// even if we aren't running a conquest Grand Strategy, it still has influence over how many units we want
-		dNumUnitsWanted = dNumUnitsWanted * (1.0 + m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy));
-#else
 		if(bConquestGrandStrategy)
 		{
 			dNumUnitsWanted *= 2;
@@ -3645,7 +3647,11 @@ void CvMilitaryAI::DisbandObsoleteUnits()
 	// Are we running anything other than the Conquest Grand Strategy?
 	if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		if (m_pPlayer->GetGrandStrategyAI()->IsGrandStrategySignificant(eConquestGrandStrategy))
+#else
 		if (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
+#endif // AUI_GS_PRIORITY_RATIO
 		{
 			bConquestGrandStrategy = true;
 		}
@@ -4802,7 +4808,11 @@ bool MilitaryAIHelpers::IsTestStrategy_EnoughMilitaryUnits(CvPlayer* pPlayer)
 	AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
 	if(eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		if(bInDeficit || !pPlayer->GetGrandStrategyAI()->IsGrandStrategySignificant(eConquestGrandStrategy) || pPlayer->GetMilitaryAI()->GetPercentOfRecommendedMilitarySize() > 125)
+#else
 		if(bInDeficit || pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() != eConquestGrandStrategy || pPlayer->GetMilitaryAI()->GetPercentOfRecommendedMilitarySize() > 125)
+#endif // AUI_GS_PRIORITY_RATIO
 		{
 			if(pPlayer->GetMilitaryAI()->GetLandDefenseState() == DEFENSE_STATE_ENOUGH)
 			{
@@ -4894,14 +4904,12 @@ bool MilitaryAIHelpers::IsTestStrategy_WarMobilization(MilitaryAIStrategyTypes e
 	AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
 	if(eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		iCurrentWeight += int(25.0 * pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy) + 0.5);
+#else
 		if(pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
 		{
 			iCurrentWeight += 25;
-		}
-#ifdef AUI_GS_PRIORITY_RATIO
-		else
-		{
-			iCurrentWeight += (int)(25.0f * pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy) + 0.5f);
 		}
 #endif // AUI_GS_PRIORITY_RATIO
 	}
@@ -5303,14 +5311,12 @@ int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 	AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
 	if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
+#ifdef AUI_GS_PRIORITY_RATIO
+		dNumUnitsWanted += 10.0 * (double)iGT * pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy) / 200.0;
+#else
 		if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
 		{
 			dNumUnitsWanted += 10.0 * (double)iGT / 200.0;
-		}
-#ifdef AUI_GS_PRIORITY_RATIO
-		else
-		{
-			dNumUnitsWanted += 10.0 * (double)iGT * pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy) / 200.0;
 		}
 #endif // AUI_GS_PRIORITY_RATIO
 	}
