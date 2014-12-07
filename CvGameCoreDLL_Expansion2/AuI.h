@@ -616,6 +616,12 @@
 #define AUI_TEAM_SET_CURRENT_ERA_RANDOMIZE_WEIGHTS_BY_HALF_ON_ERA_CHANGE
 #endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
 
+// Tech Classes Stuff
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
+/// Applies the necessary science flavor boost to techs in addition to buildings, wonders, policies, and units
+#define AUI_PLAYERTECHS_ADD_FLAVOR_AS_STRATEGIES_USE_SCIENCE_FLAVOR_BOOST
+#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+
 // Trade Stuff
 /// Adds a minimum danger amount for each plot, to discourage long routes
 #define AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER (1)

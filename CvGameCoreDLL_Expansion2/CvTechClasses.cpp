@@ -1529,6 +1529,14 @@ void CvPlayerTechs::AddFlavorAsStrategies(int iPropagatePercent)
 
 		int iPersonalityFlavorValue = m_pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes) iFlavor);
 
+#ifdef AUI_PLAYERTECHS_ADD_FLAVOR_AS_STRATEGIES_USE_SCIENCE_FLAVOR_BOOST
+		if ((FlavorTypes)iFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"))
+		{
+			iCurrentFlavorValue = m_pPlayer->GetGrandStrategyAI()->ScienceFlavorBoost() * MAX(1, iCurrentFlavorValue);
+			iPersonalityFlavorValue = m_pPlayer->GetGrandStrategyAI()->ScienceFlavorBoost() * MAX(1, iPersonalityFlavorValue);
+		}
+#endif // AUI_PLAYERTECHS_ADD_FLAVOR_AS_STRATEGIES_USE_SCIENCE_FLAVOR_BOOST
+
 		// this should give a more even blend between the personality and long term strategy and the more fickle current needs
 		// in the beginning of the game it will be responsive to current events, but later it should try to go for the goal more strongly
 		int iFlavorValue = ((iCurrentFlavorValue * (1000 - iGameProgressFactor)) + (iPersonalityFlavorValue * iGameProgressFactor)) / 1000;
