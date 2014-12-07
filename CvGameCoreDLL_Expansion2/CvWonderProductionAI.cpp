@@ -205,6 +205,10 @@ BuildingTypes CvWonderProductionAI::ChooseWonder(bool bUseAsyncRandom, bool bAdj
 	RandomNumberDelegate fcn;
 	BuildingTypes eSelection;
 
+#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FLAVOR_UPDATE
+	FlavorUpdate();
+#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FLAVOR_UPDATE
+
 	// Use the asynchronous random number generate if "no random" is set
 	if(bUseAsyncRandom)
 	{
@@ -248,7 +252,11 @@ BuildingTypes CvWonderProductionAI::ChooseWonder(bool bUseAsyncRandom, bool bAdj
 			// Make sure this wonder can be built now
 			if(IsWonder(kBuilding) && HaveCityToBuild((BuildingTypes)iBldgLoop))
 			{
+#ifdef AUI_WONDER_PRODUCTION_FIX_CHOOSE_WONDER_TURNS_REQUIRED_USES_PLAYER_MOD
+				iTurnsRequired = std::max(1, m_pPlayer->getProductionNeeded((BuildingTypes)iBldgLoop) / iEstimatedProductionPerTurn);
+#else
 				iTurnsRequired = std::max(1, kBuilding.GetProductionCost() / iEstimatedProductionPerTurn);
+#endif // AUI_WONDER_PRODUCTION_FIX_CHOOSE_WONDER_TURNS_REQUIRED_USES_PLAYER_MOD
 
 				// if we are forced to restart a wonder, give one that has been started already a huge bump
 				bool bAlreadyStarted = pWonderCity->GetCityBuildings()->GetBuildingProduction(eBuilding) > 0;
@@ -351,7 +359,11 @@ BuildingTypes CvWonderProductionAI::ChooseWonder(bool bUseAsyncRandom, bool bAdj
 
 
 /// Recommend highest-weighted wonder and what city to build it at
+#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(CvUnit* pUnit, bool bUseAsyncRandom, int& iWonderWeight, CvCity*& pCityToBuildAt)
+#else
 BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncRandom, int& iWonderWeight, CvCity*& pCityToBuildAt)
+#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
 {
 	int iBldgLoop;
 	int iWeight;
@@ -361,6 +373,10 @@ BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncR
 
 	pCityToBuildAt = 0;
 	iWonderWeight = 0;
+
+#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FLAVOR_UPDATE
+	FlavorUpdate();
+#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FLAVOR_UPDATE
 
 	// Use the asynchronous random number generate if "no random" is set
 	if (bUseAsyncRandom)
@@ -385,6 +401,17 @@ BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncR
 	CvAssertMsg(pWonderCity, "Trying to choose the next wonder to build and the player has no cities!");
 	if (pWonderCity == NULL)
 		return NO_BUILDING;
+
+#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+	int iEstimatedProductionPerTurn = pWonderCity->getCurrentProductionDifference(true, false);
+	if (iEstimatedProductionPerTurn < 1)
+	{
+		iEstimatedProductionPerTurn = 1;
+	}
+	int iMaxProductionGenerated = 0;
+	if (pUnit)
+		iMaxProductionGenerated = pUnit->getMaxHurryProduction(pWonderCity);
+#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
 
 	// Loop through adding the available wonders
 	for (iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
@@ -442,6 +469,18 @@ BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncR
 						iWeight = 0;
 					}
 				}
+
+#ifdef AUI_WONDER_PRODUCITON_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WANT_WORLD_WONDER
+				if (!(::isWorldWonderClass(kBuilding.GetBuildingClassInfo())))
+					iWeight /= AUI_WONDER_PRODUCITON_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WANT_WORLD_WONDER;
+#endif // AUI_WONDER_PRODUCITON_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WANT_WORLD_WONDER
+
+#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+				int iTurnsRequired = MAX(1, m_pPlayer->getProductionNeeded((BuildingTypes)iBldgLoop) / iEstimatedProductionPerTurn);
+				int iTurnsSaved = std::max(iTurnsRequired - 1, (m_pPlayer->getProductionNeeded((BuildingTypes)iBldgLoop) - iMaxProductionGenerated) / iEstimatedProductionPerTurn);
+				iWeight = CityStrategyAIHelpers::ReweightByTurnsLeft(iWeight, iTurnsRequired - iTurnsSaved);
+#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+
 				// ??? do we want to weight it more for more expensive wonders?
 				m_Buildables.push_back(iBldgLoop, iWeight);
 			}

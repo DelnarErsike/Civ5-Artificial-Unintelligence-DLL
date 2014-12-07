@@ -3732,7 +3732,11 @@ void CvHomelandAI::ExecuteEngineerMoves()
 			// Do we want to build any wonder?
 			int iNextWonderWeight;
 			CvCity* pCityToBuildAt = 0;
+#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+			BuildingTypes eNextWonderDesired = m_pPlayer->GetWonderProductionAI()->ChooseWonderForGreatEngineer(pUnit.pointer(), false, iNextWonderWeight, pCityToBuildAt);
+#else
 			BuildingTypes eNextWonderDesired = m_pPlayer->GetWonderProductionAI()->ChooseWonderForGreatEngineer(false, iNextWonderWeight, pCityToBuildAt);
+#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
 
 			// No?  Just move to safety...
 			if(eNextWonderDesired == NO_BUILDING)

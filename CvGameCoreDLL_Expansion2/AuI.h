@@ -726,6 +726,16 @@
 /// Uses a different algorithm and unifies the code for scoring voting on arts funding and sciences funding
 #define AUI_VOTING_TWEAKED_ARTS_SCIENCES_FUNDING
 
+// Wonder Production AI Stuff
+/// Does a flavor update each time a wonder is to be chosen (helps when multiple wonders are to be chosen in a single turn)
+#define AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FLAVOR_UPDATE
+/// When determining how many turns a wonder will take to build, use the player's value for how much it will cost instead of the raw XML value
+#define AUI_WONDER_PRODUCTION_FIX_CHOOSE_WONDER_TURNS_REQUIRED_USES_PLAYER_MOD
+/// When choosing a wonder to be built by a great engineer, the AI will weigh wonders by how much production will be needed after the hurry
+#define AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+/// Divides base weight by this number for all non-world wonders
+#define AUI_WONDER_PRODUCITON_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WANT_WORLD_WONDER (10)
+
 // GlobalDefines (GD) wrappers
 // INT
 #define GD_INT_DECL(name)       int m_i##name
