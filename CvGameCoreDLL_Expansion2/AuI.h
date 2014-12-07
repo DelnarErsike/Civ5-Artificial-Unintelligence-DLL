@@ -658,6 +658,10 @@
 /// When prioritizing trade routes, the actual trade value of all three possible route types will be considered instead of prioritizing food > production > international
 #define AUI_TRADE_UNBIASED_PRIORITIZE
 
+// Trait Classes Stuff
+/// Scales the threshold wonder competitiveness for choosing an engineer with game turn instead of having it be two binary checks
+#define AUI_PLAYERTRAITS_CHOOSE_MAYA_BOOST_ENGINEER_GRANULAR_WONDER_COMPETITIVENESS
+
 // Unit Stuff
 /// Adds a function to return a unit's movement range if it can attack after a move + the unit's range (originally from Ninakoru's Smart AI)
 #define AUI_UNIT_RANGE_PLUS_MOVE

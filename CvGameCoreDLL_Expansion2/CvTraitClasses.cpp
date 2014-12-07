@@ -2241,7 +2241,11 @@ void CvPlayerTraits::ChooseMayaBoost()
 		ePossibleGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_ENGINEER");
 		if(GetUnitBaktun(ePossibleGreatPerson) == 0)
 		{
+#ifdef AUI_PLAYERTRAITS_CHOOSE_MAYA_BOOST_ENGINEER_GRANULAR_WONDER_COMPETITIVENESS
+			if (m_pPlayer->GetDiplomacyAI()->GetWonderCompetitiveness() >= int((double)GC.getGame().getGameTurn() / (double)GC.getGame().getEstimateEndTurn() * 10 + 0.5))
+#else
 			if(m_pPlayer->GetDiplomacyAI()->GetWonderCompetitiveness() >= 8 && GC.getGame().getGameTurn() <= (GC.getGame().getEstimateEndTurn() / 2))
+#endif // AUI_PLAYERTRAITS_CHOOSE_MAYA_BOOST_ENGINEER_GRANULAR_WONDER_COMPETITIVENESS
 			{
 				eDesiredGreatPerson = ePossibleGreatPerson;
 			}
