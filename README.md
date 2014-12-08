@@ -3,8 +3,10 @@ Civ5-Artifical-Unintelligence
 
 Civilization V AI Mod
 
-Note that the initial commit was just me adding all the unmodified Civ5 source files.
-As I run through my code to make things more readable and merge-friendly, I'll slowly commit the changes I've made.
+All changes I made from the unmodified Civ5 code are wrapped in preprocessor directives.
+A catalog of all preprocessor directives is located in AuI.h.
+
+Note that I have not (yet) modified non-Brave New World code.
 
 Credits
 =====
