@@ -227,6 +227,13 @@ public:
 			iNumChoices = (int) m_pItems.size();
 		}
 
+#ifdef AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_TIE
+		while (iNumChoices < (int) m_pItems.size() && iNumChoices > 0 && m_pItems[iNumChoices - 1].m_iWeight == m_pItems[iNumChoices].m_iWeight)
+		{
+			iNumChoices++;
+		}
+#endif // AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_TIE
+
 		WeightedElement elem;
 		int i;
 		int iChoice;
