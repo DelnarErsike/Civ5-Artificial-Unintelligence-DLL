@@ -1776,13 +1776,32 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 			for (CvUnit* pLoopUnit = ownerPlayer.firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = ownerPlayer.nextUnit(&iLoop))
 			{
 				const UnitAITypes eLoopUnitAIType = pLoopUnit->AI_getUnitAIType();
+#ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+				const UnitAITypes eLoopUnitDefaultAIType = (UnitAITypes)pLoopUnit->getUnitInfo().GetDefaultUnitAIType();
+#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 
 				// Make sure he's not needed by the tactical AI or already in an army or scouting
+#ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
+				if (pLoopUnit->canRecruitFromTacticalAI() && (pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX || 
+					(ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetArmyAIState() == ARMYAISTATE_WAITING_FOR_UNITS_TO_REINFORCE &&
+					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() > pThisArmy->GetNumSlotsFilled())) &&
+#else
 				if (pLoopUnit->canRecruitFromTacticalAI() && pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX &&
+#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
 #ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
+#ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) && 
+					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA))
+#else
 					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA)
+#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#else
+#ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) &&
+					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA) && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
 #else
 					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
+#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 #endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
 				{
 					// Is this unit one of the requested types?
@@ -1865,13 +1884,32 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 			for(CvUnit* pLoopUnit = ownerPlayer.firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = ownerPlayer.nextUnit(&iLoop))
 			{
 				const UnitAITypes eLoopUnitAIType = pLoopUnit->AI_getUnitAIType();
+#ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+				const UnitAITypes eLoopUnitDefaultAIType = (UnitAITypes)pLoopUnit->getUnitInfo().GetDefaultUnitAIType();
+#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 
 				// Make sure he's not needed by the tactical AI or already in an army or scouting
+#ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
+				if (pLoopUnit->canRecruitFromTacticalAI() && (pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX ||
+					(ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetArmyAIState() == ARMYAISTATE_WAITING_FOR_UNITS_TO_REINFORCE && 
+					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() > pThisArmy->GetNumSlotsFilled())) &&
+#else
 				if(pLoopUnit->canRecruitFromTacticalAI() && pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX &&
+#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
 #ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
+#ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) && 
+					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA))
+#else
 					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA)
+#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#else
+#ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) &&
+					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA) && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
 #else
 				        eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
+#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 #endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
 				{
 					// Is this unit one of the requested types?
@@ -1956,13 +1994,32 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 			for(CvUnit* pLoopUnit = ownerPlayer.firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = ownerPlayer.nextUnit(&iLoop))
 			{
 				const UnitAITypes eLoopUnitAIType = pLoopUnit->AI_getUnitAIType();
+#ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+				const UnitAITypes eLoopUnitDefaultAIType = (UnitAITypes)pLoopUnit->getUnitInfo().GetDefaultUnitAIType();
+#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 
 				// Make sure he's not needed by the tactical AI or already in an army or scouting
+#ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
+				if (pLoopUnit->canRecruitFromTacticalAI() && (pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX ||
+					(ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetArmyAIState() == ARMYAISTATE_WAITING_FOR_UNITS_TO_REINFORCE &&
+					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() > pThisArmy->GetNumSlotsFilled())) &&
+#else
 				if(pLoopUnit->canRecruitFromTacticalAI() && pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX &&
+#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
 #ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
+#ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) && 
+					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA))
+#else
 					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA)
+#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#else
+#ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) &&
+					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA) && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
 #else
 				        eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
+#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 #endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
 				{
 					// Is this unit one of the requested types?
@@ -3163,6 +3220,22 @@ bool CvAIEscortedOperation::RetargetCivilian(CvUnit* pCivilian, CvArmyAI* pArmy)
 	// If this is a new target, switch to it
 	else if(pBetterTarget != GetTargetPlot())
 	{
+#ifdef AUI_OPERATION_FIX_RETARGET_CIVILIAN_ABORT_IF_UNREACHABLE_ESCORT
+		std::vector<int> aiUnitsToRemove;
+		for (UnitHandle pUnit = pArmy->GetFirstUnit(); pUnit.pointer(); pUnit = pArmy->GetNextUnit())
+		{
+			if (TurnsToReachTarget(pUnit, pBetterTarget) == MAX_INT)
+			{
+				aiUnitsToRemove.push_back(pUnit->GetID());
+			}
+		}
+		for (std::vector<int>::iterator it = aiUnitsToRemove.begin(); it != aiUnitsToRemove.end(); ++it)
+		{
+			pArmy->RemoveUnit((*it));
+		}
+		if ((m_eCurrentState) == AI_OPERATION_STATE_ABORTED)
+			return false;
+#endif // AUI_OPERATION_FIX_RETARGET_CIVILIAN_ABORT_IF_UNREACHABLE_ESCORT
 		SetTargetPlot(pBetterTarget);
 		pArmy->SetGoalPlot(pBetterTarget);
 	}
