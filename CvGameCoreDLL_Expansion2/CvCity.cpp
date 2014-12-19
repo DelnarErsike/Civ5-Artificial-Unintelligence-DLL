@@ -14280,10 +14280,19 @@ bool CvCity::CanRangeStrikeNow() const
 	PlayerTypes eActivePlayer = GC.getGame().getActivePlayer();
 	int iGameTurn = GC.getGame().getGameTurn();
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	for (int iDY = -iRange; iDY <= iRange; iDY++)
+	{
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+		{
+#else
 	for(int iDX = -iRange; iDX <= iRange; iDX++)
 	{
 		for(int iDY = -iRange; iDY <= iRange; iDY++)
 		{
+#endif // AUI_HEXSPACE_DX_LOOPS
 			CvPlot* pTargetPlot = plotXY(iX, iY, iDX, iDY);
 			bool bCanRangeStrike = true;
 
