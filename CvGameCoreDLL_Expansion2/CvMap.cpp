@@ -431,10 +431,17 @@ void CvMap::reset(CvMapInitData* pInitInfo)
 		m_iBottomLatitude = pInitInfo->m_iBottomLatitude;
 	}
 
+#ifdef AUI_FAST_COMP
+	m_iTopLatitude = FASTMIN(m_iTopLatitude, 90);
+	m_iTopLatitude = FASTMAX(m_iTopLatitude, -90);
+	m_iBottomLatitude = FASTMIN(m_iBottomLatitude, 90);
+	m_iBottomLatitude = FASTMAX(m_iBottomLatitude, -90);
+#else
 	m_iTopLatitude = std::min(m_iTopLatitude, 90);
 	m_iTopLatitude = std::max(m_iTopLatitude, -90);
 	m_iBottomLatitude = std::min(m_iBottomLatitude, 90);
 	m_iBottomLatitude = std::max(m_iBottomLatitude, -90);
+#endif // AUI_FAST_COMP
 
 	//
 	// set wrapping
@@ -1083,7 +1090,11 @@ int CvMap::plotY(int iIndex) const
 //	--------------------------------------------------------------------------------
 int CvMap::maxPlotDistance()
 {
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, plotDistance(0, 0, ((isWrapX()) ? (getGridWidth() / 2) : (getGridWidth() - 1)), ((isWrapY()) ? (getGridHeight() / 2) : (getGridHeight() - 1))));
+#else
 	return std::max(1, plotDistance(0, 0, ((isWrapX()) ? (getGridWidth() / 2) : (getGridWidth() - 1)), ((isWrapY()) ? (getGridHeight() / 2) : (getGridHeight() - 1))));
+#endif // AUI_FAST_COMP
 }
 
 //	--------------------------------------------------------------------------------
