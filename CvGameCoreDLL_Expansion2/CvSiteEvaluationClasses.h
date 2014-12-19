@@ -43,8 +43,21 @@ public:
 
 protected:
 	// Each of these routines computes a number from 0 (no value) to 100 (best possible value)
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
+#else
 	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer);
+#endif // #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 	virtual int ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer);
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
+	virtual int ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
+	virtual int ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+	virtual int ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+	virtual int ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
+#else
 	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer);
@@ -52,6 +65,7 @@ protected:
 	virtual int ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer);
 #endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 	virtual int ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer);
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 	virtual int ComputeTradeableResourceValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeStrategicValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
 
