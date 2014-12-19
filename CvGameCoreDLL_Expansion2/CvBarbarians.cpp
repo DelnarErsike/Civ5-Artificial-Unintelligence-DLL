@@ -391,11 +391,20 @@ void CvBarbarians::DoCamps()
 												{
 													bSomethingTooClose = false;
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+													int iMaxDX;
+													for (iDY = -(iMaxDistanceToLook); iDY <= iMaxDistanceToLook; iDY++)
+													{
+														iMaxDX = iMaxDistanceToLook - MAX(0, iDY);
+														for (iDX = -(iMaxDistanceToLook)-MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+														{
+#else
 													// Look at nearby Plots to make sure another camp isn't too close
 													for(iDX = -(iMaxDistanceToLook); iDX <= iMaxDistanceToLook; iDX++)
 													{
 														for(iDY = -(iMaxDistanceToLook); iDY <= iMaxDistanceToLook; iDY++)
 														{
+#endif // AUI_HEXSPACE_DX_LOOPS
 															pNearbyCampPlot = plotXY(pLoopPlot->getX(), pLoopPlot->getY(), iDX, iDY);
 
 															if(pNearbyCampPlot != NULL)
