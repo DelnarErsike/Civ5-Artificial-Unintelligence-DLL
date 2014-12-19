@@ -149,7 +149,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 					}
 
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
-					if(!pLoopUnit->canMoveOrAttackInto(*pLoopPlot) && !pLoopUnit->canMoveAndRangedStrike(pLoopPlot->getX(),pLoopPlot->getY()))
+					if (!pLoopUnit->canMoveOrAttackInto(*pLoopPlot) && (!pLoopUnit->isRanged() || !pLoopUnit->canMoveAndRangedStrike(pLoopPlot->getX(), pLoopPlot->getY())))
 #else
 					if(!pLoopUnit->canMoveOrAttackInto(*pLoopPlot) && !pLoopUnit->canRangeStrikeAt(pLoopPlot->getX(),pLoopPlot->getY()))
 #endif
@@ -410,7 +410,11 @@ bool CvDangerPlots::IsDangerByRelationshipZero(PlayerTypes ePlayer, CvPlot* pPlo
 	{
 		if(!GET_TEAM(GET_PLAYER(m_ePlayer).getTeam()).isAtWar(GET_PLAYER(ePlayer).getTeam()))  // and they're not at war with the other player
 		{
+#ifdef AUI_DANGER_PLOTS_FIX_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_IGNORE_ALL_NONWARRED
+			return true;
+#else
 			bIgnoreInFriendlyTerritory = true; // ignore friendly territory
+#endif // AUI_DANGER_PLOTS_FIX_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_IGNORE_ALL_NONWARRED
 		}
 	}
 	else if(!GET_PLAYER(ePlayer).isMinorCiv())
@@ -526,11 +530,23 @@ bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility)
 		return true;
 	}
 
+#if defined(AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG) || defined(AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS)
 #ifdef AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
-	if(!pUnit->plot()->isVisible(GET_PLAYER(m_ePlayer).getTeam()) && (!GET_PLAYER(m_ePlayer).isMinorCiv() || !(pUnit->isBarbarian() && pUnit->plot()->isRevealed(GET_PLAYER(m_ePlayer).getTeam()))))
+	if (!GET_PLAYER(m_ePlayer).isMinorCiv() && pUnit->isBarbarian() && pUnit->plot()->isRevealed(GET_PLAYER(m_ePlayer).getTeam()))
+		bIgnoreVisibility = true;
+#endif // AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
+#ifdef AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS
+	if (GET_PLAYER(m_ePlayer).isMinorCiv() && !GET_PLAYER(pUnit->getOwner()).isMinorCiv() && !pUnit->isBarbarian() && 
+		GET_PLAYER(m_ePlayer).GetClosestFriendlyCity(*pUnit->plot(), AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS))
+		bIgnoreVisibility = true;
+#endif // AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS
+#endif
+
+#ifdef AUI_DANGER_PLOTS_FIX_SHOULD_IGNORE_UNIT_IGNORE_VISIBILITY_PLOT
+	if(!pUnit->plot()->isVisible(GET_PLAYER(m_ePlayer).getTeam()) && !bIgnoreVisibility)
 #else
 	if(!pUnit->plot()->isVisible(GET_PLAYER(m_ePlayer).getTeam()))
-#endif // AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
+#endif // AUI_DANGER_PLOTS_FIX_SHOULD_IGNORE_UNIT_IGNORE_VISIBILITY_PLOT
 	{
 		return true;
 	}
@@ -614,7 +630,7 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 			//FAssertMsg(iRange > 0, "0 range? Uh oh");
 
 #ifdef AUI_DANGER_PLOTS_TWEAKED_RANGED
-			int iTurnsAway = 0;
+			int iTurnsAway = MAX_INT;
 #endif // AUI_DANGER_PLOTS_TWEAKED_RANGED
 
 			CvIgnoreUnitsPathFinder& kPathFinder = GC.getIgnoreUnitsPathFinder();
@@ -639,18 +655,29 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 #endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 			}
 
-			// iTurnsAway is only still zero if isRanged adjustments weren't applied
-			if (iTurnsAway == 0)
+			// iTurnsAway is only greater than 1 if unit cannot ranged strike onto the tile
+			if (iTurnsAway > 1)
 			{
+				CvAStarNode* pNode = NULL;
 				// can the unit actually walk there
-				if (!kPathFinder.GeneratePath(pUnit->getX(), pUnit->getY(), iPlotX, iPlotY, 0, true /*bReuse*/))
+				if (!kPathFinder.GeneratePath(pUnit->getX(), pUnit->getY(), iPlotX, iPlotY, MOVE_UNITS_IGNORE_DANGER, true /*bReuse*/))
 				{
-					return;
+					pNode = kPathFinder.GetLastNode();
 				}
-
-				CvAStarNode* pNode = kPathFinder.GetLastNode();
-				iTurnsAway = pNode->m_iData2;
-				iTurnsAway = max(iTurnsAway, 1);
+				
+#ifdef AUI_FAST_COMP
+				if (pNode)
+					iTurnsAway = FASTMIN(iTurnsAway, pNode->m_iData2);
+				if (iTurnsAway == MAX_INT)
+					return;
+				iTurnsAway = FASTMAX(iTurnsAway, 1);
+#else
+				if (pNode)
+					iTurnsAway = MIN(iTurnsAway, pNode->m_iData2);
+				if (iTurnsAway == MAX_INT)
+					return;
+				iTurnsAway = MAX(iTurnsAway, 1);
+#endif // AUI_FAST_COMP
 			}
 #else
 			// can the unit actually walk there
@@ -661,7 +688,11 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 
 			CvAStarNode* pNode = kPathFinder.GetLastNode();
 			int iTurnsAway = pNode->m_iData2;
+#ifdef AUI_FAST_COMP
+			iTurnsAway = FASTMAX(iTurnsAway, 1);
+#else
 			iTurnsAway = max(iTurnsAway, 1);
+#endif // AUI_FAST_COMP
 #endif // AUI_DANGER_PLOTS_TWEAKED_RANGED
 
 			int iUnitCombatValue = iBaseUnitCombatValue / iTurnsAway;
