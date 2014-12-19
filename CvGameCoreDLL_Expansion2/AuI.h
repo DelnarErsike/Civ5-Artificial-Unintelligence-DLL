@@ -4,9 +4,23 @@
 #ifndef AUI_MODS_H
 #define AUI_MODS_H
 
+// New mathematical constants
+#define M_E			2.71828182845904523536
+#define fM_E		2.718281828f		//!< e (float)
+#define M_SQRT2		1.41421356237309504880
+#define fM_SQRT2	1.414213562f		//!< sqrt(2) (float)
+#define M_SQRT3		1.73205080756887729353
+#define fM_SQRT3	1.732050808f		//!< sqrt(3) (float)
+#define M_LN2		0.693147180559945309417
+#define fM_LN2		0.6931471806f		//!< ln(2) (float)
+#define M_GLDNRT	1.61803398874989484820
+#define fM_GLDNRT	1.618033989f		//!< (1 + sqrt(5))/2 (float), aka The Golden Ratio
+
 // Non-AI stuff (still used by AI routines, but could be used elsewhere as well)
 /// AUI's new GUID
 #define AUI_GUID
+/// Enables performance logging based on ini settings like normal instead of hard-disabling
+#define AUI_PERF_LOGGING_ENABLED
 /// Fast comparison functions (to be used for built-in types like int, float, double, etc.)
 #define AUI_FAST_COMP
 /// Can cache doubles from XML (DatabaseUtility actually supports double-type, don't know why Firaxis didn't bother putting this in for good measure)

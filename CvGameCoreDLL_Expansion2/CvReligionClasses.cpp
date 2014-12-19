@@ -6242,7 +6242,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 		// World wonder change
 #ifdef AUI_RELIGION_USE_DOUBLES
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_FLAVORS
-		dRtnValue += pEntry->GetYieldChangeWorldWonder(iI) * sqrt(log(MAX((double)iFlavorGrowth, exp(1.0))) * log(MAX((double)iFlavorProduction, exp(1.0)))) * log(MAX((double)iFlavorWonder, exp(1.0)))
+		dRtnValue += pEntry->GetYieldChangeWorldWonder(iI) * sqrt(log(MAX((double)iFlavorGrowth, M_E)) * log(MAX((double)iFlavorProduction, M_E))) * log(MAX((double)iFlavorWonder, M_E))
 			* dCitizenValue;
 #else
 		dRtnValue += pEntry->GetYieldChangeWorldWonder(iI) * 3 / 2.0;

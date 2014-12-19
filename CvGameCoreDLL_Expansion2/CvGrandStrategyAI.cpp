@@ -522,7 +522,7 @@ int CvGrandStrategyAI::GetConquestPriority()
 
 			// Make the likelihood of BECOMING a warmonger lower than dropping the bad behavior
 			if(dMilitaryRatio > 0)
-				dMilitaryRatio /= sqrt(3.0);
+				dMilitaryRatio /= M_SQRT3;
 #else
 			double dMilitaryRatio = (GetPlayer()->GetMilitaryMight() - iWorldMilitaryStrength) * /*100*/ GC.getAI_GRAND_STRATEGY_CONQUEST_POWER_RATIO_MULTIPLIER() / (double)iWorldMilitaryStrength;
 

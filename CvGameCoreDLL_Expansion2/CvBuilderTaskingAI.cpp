@@ -2782,15 +2782,15 @@ int CvBuilderTaskingAI::ScorePlot()
 		// Scalers
 		if (pCity->GetPlayer()->GetEconomicAI()->IsUsingStrategy((EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_LOSING_MONEY")))
 		{
-			dGoldFlavor *= sqrt(2.0);
+			dGoldFlavor *= M_SQRT2;
 		}
 		if (pCity->GetPlayer()->GetTreasury()->GetGold() < 1)
 		{
-			dGoldFlavor *= sqrt(2.0);
+			dGoldFlavor *= M_SQRT2;
 		}
 		if (pCity->getYieldRate(YIELD_FOOD, false) - pCity->foodConsumption() <= 0)
 		{
-			dFoodFlavor *= sqrt(2.0);
+			dFoodFlavor *= M_SQRT2;
 		}
 		else
 		{
@@ -2800,7 +2800,7 @@ int CvBuilderTaskingAI::ScorePlot()
 			{
 				if (pCity->getYieldRate(YIELD_FOOD, true) > pCity->foodConsumption())
 				{
-					dFoodFlavor /= sqrt(2.0);
+					dFoodFlavor /= M_SQRT2;
 				}
 			}
 		}

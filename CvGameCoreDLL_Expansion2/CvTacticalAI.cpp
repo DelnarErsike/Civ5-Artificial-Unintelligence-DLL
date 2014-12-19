@@ -12308,9 +12308,9 @@ CvPlot* CvTacticalAI::FindBarbarianGankTradeRouteTarget(UnitHandle pUnit)
 			if (iRoutes > 0)
 			{
 #ifdef AUI_FAST_COMP
-				iValue = int(TurnsToReachTarget(pUnit, pPlot) * log(2.0) / log((double)FASTMAX(iRoutes, 2)) + 0.5);
+				iValue = int(TurnsToReachTarget(pUnit, pPlot) * M_LN2 / log((double)FASTMAX(iRoutes, 2)) + 0.5);
 #else
-				iValue = int(TurnsToReachTarget(pUnit, pPlot) * log(2.0) / log((double)MAX(iRoutes, 2)) + 0.5);
+				iValue = int(TurnsToReachTarget(pUnit, pPlot) * M_LN2 / log((double)MAX(iRoutes, 2)) + 0.5);
 #endif // AUI_FAST_COMP
 				if (iValue < iBestValue)
 				{

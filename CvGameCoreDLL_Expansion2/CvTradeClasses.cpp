@@ -4097,10 +4097,10 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 #endif // AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
 	double dGoldMod = log(MAX((m_pPlayer->GetTreasury()->AverageIncome(1) + (1.0 + log((double)m_pPlayer->getNumCities())) * iGoldAmount / 100.0), 1.0) /
-		MAX(m_pPlayer->GetTreasury()->AverageIncome(1), 1.0)) / log(2.0) / 100.0;
+		MAX(m_pPlayer->GetTreasury()->AverageIncome(1), 1.0)) / M_LN2 / 100.0;
 	double dOtherGoldMod = dDiplomacyTaper * log(MAX((GET_PLAYER(kTradeConnection.m_eDestOwner).GetTreasury()->AverageIncome(1) + 
 		(1.0 + log((double)GET_PLAYER(kTradeConnection.m_eDestOwner).getNumCities())) * iOtherGoldAmount / 100.0), 1.0) /
-		MAX(GET_PLAYER(kTradeConnection.m_eDestOwner).GetTreasury()->AverageIncome(1), 1.0)) / log(2.0) / 100.0;
+		MAX(GET_PLAYER(kTradeConnection.m_eDestOwner).GetTreasury()->AverageIncome(1), 1.0)) / M_LN2 / 100.0;
 	double dGoldDelta = iGoldAmount * dGoldMod - iOtherGoldAmount * dOtherGoldMod;
 
 	// getting out of a logjam at the beginning of the game on an archepeligo map
@@ -4134,9 +4134,9 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	dTechDifferenceP2fromP1 *= dDiplomacyTaper;
 #endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
 
-	double dTechModP1 = log(MAX((m_pPlayer->GetScienceTimes100() + 200.0 * dTechDifferenceP1fromP2), 1.0) / (double)MAX(m_pPlayer->GetScienceTimes100(), 1)) / log(2.0);
+	double dTechModP1 = log(MAX((m_pPlayer->GetScienceTimes100() + 200.0 * dTechDifferenceP1fromP2), 1.0) / (double)MAX(m_pPlayer->GetScienceTimes100(), 1)) / M_LN2;
 	double dTechModP2 = log(MAX((GET_PLAYER(kTradeConnection.m_eDestOwner).GetScienceTimes100() + 200.0 * dTechDifferenceP2fromP1), 1.0) /
-		(double)MAX(GET_PLAYER(kTradeConnection.m_eDestOwner).GetScienceTimes100(), 1)) / log(2.0);
+		(double)MAX(GET_PLAYER(kTradeConnection.m_eDestOwner).GetScienceTimes100(), 1)) / M_LN2;
 
 	double dTechDelta = dTechDifferenceP1fromP2 * dTechModP1 - dTechDifferenceP2fromP1 * dTechModP2;
 #else
@@ -4188,8 +4188,8 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 						iToPressure = 0;
 					if (eFromReligion == eOwnerFoundedReligion)
 						iFromPressure = 0;
-					double dExistingPressureModFrom = sqrt(log((double)MAX(1, iExistingToPressureAtFrom + iFromPressure) / (double)MAX(1, iExistingToPressureAtFrom)) / log(2.0));
-					double dExistingPressureModTo = sqrt(log((double)MAX(1, iExistingGoodPressureAtTo + iToPressure) / (double)MAX(1, iExistingGoodPressureAtTo)) / log(2.0));
+					double dExistingPressureModFrom = sqrt(log((double)MAX(1, iExistingToPressureAtFrom + iFromPressure) / (double)MAX(1, iExistingToPressureAtFrom)) / M_LN2);
+					double dExistingPressureModTo = sqrt(log((double)MAX(1, iExistingGoodPressureAtTo + iToPressure) / (double)MAX(1, iExistingGoodPressureAtTo)) / M_LN2);
 
 					iReligionDelta += int(iToPressure * dExistingPressureModTo / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
 					iReligionDelta -= int(iFromPressure * dExistingPressureModFrom / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
@@ -4349,7 +4349,7 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 
 	// food
 	double dFoodScore = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_FOOD, true) / 100.0;
-	dFoodScore *= log(MAX((pCity->getYieldRate(YIELD_FOOD, true) + dFoodScore), 1.0) / (double)MAX(pCity->getYieldRate(YIELD_FOOD, true), 1)) / log(2.0);
+	dFoodScore *= log(MAX((pCity->getYieldRate(YIELD_FOOD, true) + dFoodScore), 1.0) / (double)MAX(pCity->getYieldRate(YIELD_FOOD, true), 1)) / M_LN2;
 
 	// religion
 	ReligionTypes eOwnerFoundedReligion = GC.getGame().GetGameReligions()->GetReligionCreatedByPlayer(m_pPlayer->GetID());
@@ -4380,8 +4380,8 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 						iToPressure = 0;
 					if (eFromReligion == eOwnerFoundedReligion)
 						iFromPressure = 0;
-					double dExistingPressureModFrom = sqrt(log((double)MAX(1, iExistingToPressureAtFrom + iFromPressure) / (double)MAX(1, iExistingToPressureAtFrom)) / log(2.0));
-					double dExistingPressureModTo = sqrt(log((double)MAX(1, iExistingGoodPressureAtTo + iToPressure) / (double)MAX(1, iExistingGoodPressureAtTo)) / log(2.0));
+					double dExistingPressureModFrom = sqrt(log((double)MAX(1, iExistingToPressureAtFrom + iFromPressure) / (double)MAX(1, iExistingToPressureAtFrom)) / M_LN2);
+					double dExistingPressureModTo = sqrt(log((double)MAX(1, iExistingGoodPressureAtTo + iToPressure) / (double)MAX(1, iExistingGoodPressureAtTo)) / M_LN2);
 
 					iReligionDelta += int(iToPressure * dExistingPressureModTo / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
 					iReligionDelta -= int(iFromPressure * dExistingPressureModFrom / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
@@ -4524,9 +4524,9 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 		iDangerSum += iDangerValue;
 	}
 
-	// food
+	// production
 	double dProductionScore = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_PRODUCTION, true) / 100.0;
-	dProductionScore *= log(MAX((pCity->getYieldRate(YIELD_PRODUCTION, true) + (1.0 + log((double)m_pPlayer->getNumCities())) * dProductionScore), 1.0) / (double)MAX(pCity->getYieldRate(YIELD_PRODUCTION, true), 1)) / log(2.0);
+	dProductionScore *= log(MAX((pCity->getYieldRate(YIELD_PRODUCTION, true) + (1.0 + log((double)m_pPlayer->getNumCities())) * dProductionScore), 1.0) / (double)MAX(pCity->getYieldRate(YIELD_PRODUCTION, true), 1)) / M_LN2;
 
 	// religion
 	ReligionTypes eOwnerFoundedReligion = GC.getGame().GetGameReligions()->GetReligionCreatedByPlayer(m_pPlayer->GetID());
@@ -4557,8 +4557,8 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 						iToPressure = 0;
 					if (eFromReligion == eOwnerFoundedReligion)
 						iFromPressure = 0;
-					double dExistingPressureModFrom = sqrt(log((double)MAX(1, iExistingToPressureAtFrom + iFromPressure) / (double)MAX(1, iExistingToPressureAtFrom)) / log(2.0));
-					double dExistingPressureModTo = sqrt(log((double)MAX(1, iExistingGoodPressureAtTo + iToPressure) / (double)MAX(1, iExistingGoodPressureAtTo)) / log(2.0));
+					double dExistingPressureModFrom = sqrt(log((double)MAX(1, iExistingToPressureAtFrom + iFromPressure) / (double)MAX(1, iExistingToPressureAtFrom)) / M_LN2);
+					double dExistingPressureModTo = sqrt(log((double)MAX(1, iExistingGoodPressureAtTo + iToPressure) / (double)MAX(1, iExistingGoodPressureAtTo)) / M_LN2);
 
 					iReligionDelta += int(iToPressure * dExistingPressureModTo / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
 					iReligionDelta -= int(iFromPressure * dExistingPressureModFrom / GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER() + 0.5);
