@@ -1995,10 +1995,19 @@ bool CvCityCitizens::IsPlotBlockaded(CvPlot* pPlot) const
 	PlayerTypes ePlayer = m_pCity->getOwner();
 
 	// Might be a better way to do this that'd be slightly less CPU-intensive
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+	for (iDY = -iBlockadeDistance; iDY <= iBlockadeDistance; iDY++)
+	{
+		iMaxDX = iBlockadeDistance - MAX(0, iDY);
+		for (iDX = -iBlockadeDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+		{
+#else
 	for(iDX = -(iBlockadeDistance); iDX <= iBlockadeDistance; iDX++)
 	{
 		for(iDY = -(iBlockadeDistance); iDY <= iBlockadeDistance; iDY++)
 		{
+#endif // AUI_HEXSPACE_DX_LOOPS
 			pNearbyPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 
 			if(pNearbyPlot != NULL)

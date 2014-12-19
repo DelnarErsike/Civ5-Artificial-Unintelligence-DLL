@@ -19003,10 +19003,19 @@ void CvDiplomacyAI::SetPlayerNoSettleRequestAccepted(PlayerTypes ePlayer, bool b
 			int iCityLoop;
 			for(pLoopCity = GET_PLAYER(ePlayer).firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = GET_PLAYER(ePlayer).nextCity(&iCityLoop))
 			{
+#ifdef AUI_HEXSPACE_DX_LOOPS
+				int iMaxDX;
+				for (iLoopY = -iRange; iLoopY <= iRange; iLoopY++)
+				{
+					iMaxDX = iRange - MAX(0, iLoopY);
+					for (iLoopX = -iRange - MIN(0, iLoopY); iLoopX <= iMaxDX; iLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+					{
+#else
 				for(iLoopX = -(iRange); iLoopX <= iRange; iLoopX++)
 				{
 					for(iLoopY = -(iRange); iLoopY <= iRange; iLoopY++)
 					{
+#endif // AUI_HEXSPACE_DX_LOOPS
 						pNearbyPlot = plotXY(pLoopCity->getX(), pLoopCity->getY(), iLoopX, iLoopY);
 
 						if(pNearbyPlot != NULL)

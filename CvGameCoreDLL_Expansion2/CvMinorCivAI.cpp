@@ -4639,10 +4639,19 @@ CvPlot* CvMinorCivAI::GetBestNearbyCampToKill()
 
 	// Loop in all plots in range
 	int iDX, iDY;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+	for (iDY = -iRange; iDY <= iRange; iDY++)
+	{
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+		{
+#else
 	for(iDX = -(iRange); iDX <= iRange; iDX++)
 	{
 		for(iDY = -(iRange); iDY <= iRange; iDY++)
 		{
+#endif // AUI_HEXSPACE_DX_LOOPS
 			pLoopPlot = plotXY(pCapital->getX(), pCapital->getY(), iDX, iDY);
 
 			if(pLoopPlot != NULL)
