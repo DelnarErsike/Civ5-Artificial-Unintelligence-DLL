@@ -248,7 +248,11 @@ public:
 	bool canHeal(const CvPlot* pPlot, bool bTestVisible = false) const;
 	bool canSentry(const CvPlot* pPlot) const;
 
+#ifdef AUI_UNIT_HEALRATE_ASSUME_EXTRA_HEALRATE_FROM_UNIT
+	int healRate(const CvPlot* pPlot, const bool bAssumeHealRateFromUnits = false, const int iAssumeHealRateFromUnits = 0) const;
+#else
 	int healRate(const CvPlot* pPlot) const;
+#endif // AUI_UNIT_HEALRATE_ASSUME_EXTRA_HEALRATE_FROM_UNIT
 	int healTurns(const CvPlot* pPlot) const;
 	void doHeal();
 	void DoAttrition();
@@ -866,6 +870,9 @@ public:
 	int getExtraRoughDefensePercent() const;
 	void changeExtraRoughDefensePercent(int iChange);
 
+#ifdef AUI_UNIT_EXTRA_ATTACKS_GETTER
+	int getNumAttacks();
+#endif // AUI_UNIT_EXTRA_ATTACKS_GETTER
 	void changeExtraAttacks(int iChange);
 
 	// Citadel
@@ -1227,11 +1234,11 @@ public:
 	int GetRangePlusMoveToshot() const;
 #endif // AUI_UNIT_RANGE_PLUS_MOVE
 #ifdef AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
-	bool canEverRangeStrikeAtFromPlot(int iX, int iY, CvPlot* targetPlot) const;
+	bool canEverRangeStrikeAtFromPlot(int iX, int iY, CvPlot* sourcePlot) const;
 #endif // AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 	bool canMoveAndRangedStrike(int iX, int iY);
-	void GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* pTarget, bool bExitOnFound);
+	void GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* pTarget, bool bExitOnFound = false, int iWithinTurns = 0, CvPlot* pFromPlot = NULL) const;
 #endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 #ifdef AUI_UNIT_DO_AITYPE_FLIP
 	bool DoSingleUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert = false, bool bForceOff = false);

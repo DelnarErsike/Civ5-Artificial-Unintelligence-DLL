@@ -1126,9 +1126,15 @@ void CvUnit::convert(CvUnit* pUnit, bool bIsUpgrade)
 	}
 
 	setLevel(pUnit->getLevel());
+#ifdef AUI_FAST_COMP
+	int iOldModifier = FASTMAX(1, 100 + GET_PLAYER(pUnit->getOwner()).getLevelExperienceModifier());
+	int iOurModifier = FASTMAX(1, 100 + GET_PLAYER(getOwner()).getLevelExperienceModifier());
+	setExperience(FASTMAX(0, (pUnit->getExperience() * iOurModifier) / iOldModifier));
+#else
 	int iOldModifier = std::max(1, 100 + GET_PLAYER(pUnit->getOwner()).getLevelExperienceModifier());
 	int iOurModifier = std::max(1, 100 + GET_PLAYER(getOwner()).getLevelExperienceModifier());
 	setExperience(std::max(0, (pUnit->getExperience() * iOurModifier) / iOldModifier));
+#endif // AUI_FAST_COMP
 
 	setName(pUnit->getNameNoDesc());
 	setLeaderUnitType(pUnit->getLeaderUnitType());
@@ -3960,7 +3966,11 @@ int CvUnit::GetCaptureChance(CvUnit *pEnemy)
 			{
 				int iMyCombat = m_pUnitInfo->GetCombat();
 				int iComputedChance = GC.getCOMBAT_CAPTURE_MIN_CHANCE() + (int)(((float)iMyCombat / (float)iTheirCombat) * GC.getCOMBAT_CAPTURE_RATIO_MULTIPLIER());
+#ifdef AUI_FAST_COMP
+				iRtnValue = FASTMIN(GC.getCOMBAT_CAPTURE_MAX_CHANCE(), iComputedChance);
+#else
 				iRtnValue = min(GC.getCOMBAT_CAPTURE_MAX_CHANCE(), iComputedChance);
+#endif // AUI_FAST_COMP
 			}
 		}
 	}
@@ -4773,7 +4783,11 @@ bool CvUnit::canSentry(const CvPlot* pPlot) const
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_UNIT_HEALRATE_ASSUME_EXTRA_HEALRATE_FROM_UNIT
+int CvUnit::healRate(const CvPlot* pPlot, const bool bAssumeHealRateFromUnits, const int iAssumeHealRateFromUnits) const
+#else
 int CvUnit::healRate(const CvPlot* pPlot) const
+#endif 
 {
 	VALIDATE_OBJECT
 	// Boats can only heal in friendly territory
@@ -4826,6 +4840,56 @@ int CvUnit::healRate(const CvPlot* pPlot) const
 	}
 
 	// Heal from units
+#ifdef AUI_UNIT_HEALRATE_ASSUME_EXTRA_HEALRATE_FROM_UNIT
+	int iBestHealFromUnits = iAssumeHealRateFromUnits;
+	if (!bAssumeHealRateFromUnits)
+	{
+		pUnitNode = pPlot->headUnitNode();
+		while (pUnitNode != NULL)
+		{
+			pLoopUnit = ::getUnit(*pUnitNode);
+			pUnitNode = pPlot->nextUnitNode(pUnitNode);
+
+			if (pLoopUnit && pLoopUnit->getTeam() == getTeam())
+			{
+				int iHeal = pLoopUnit->getSameTileHeal();
+
+				if (iHeal > iBestHealFromUnits)
+				{
+					iBestHealFromUnits = iHeal;
+				}
+			}
+		}
+		for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+		{
+			pLoopPlot = plotDirection(pPlot->getX(), pPlot->getY(), ((DirectionTypes)iI));
+
+			if (pLoopPlot != NULL)
+			{
+				if (pLoopPlot->area() == pPlot->area())
+				{
+					pUnitNode = pLoopPlot->headUnitNode();
+
+					while (pUnitNode != NULL)
+					{
+						pLoopUnit = ::getUnit(*pUnitNode);
+						pUnitNode = pLoopPlot->nextUnitNode(pUnitNode);
+
+						if (pLoopUnit && pLoopUnit->getTeam() == getTeam())
+						{
+							int iHeal = pLoopUnit->getAdjacentTileHeal();
+
+							if (iHeal > iBestHealFromUnits)
+							{
+								iBestHealFromUnits = iHeal;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+#else
 	int iBestHealFromUnits = 0;
 	pUnitNode = pPlot->headUnitNode();
 	while(pUnitNode != NULL)
@@ -4871,6 +4935,7 @@ int CvUnit::healRate(const CvPlot* pPlot) const
 			}
 		}
 	}
+#endif // AUI_UNIT_HEALRATE_ASSUME_EXTRA_HEALRATE_FROM_UNIT
 	iExtraHeal += iBestHealFromUnits;
 
 	// Heal from territory ownership (friendly, enemy, etc.)
@@ -6102,7 +6167,11 @@ int CvUnit::getExoticGoodsGoldAmount()
 
 		int iExtraGold = GC.getEXOTIC_GOODS_GOLD_MAX() - GC.getEXOTIC_GOODS_GOLD_MIN();
 		iValue = GC.getEXOTIC_GOODS_GOLD_MIN() + (int)(iExtraGold * fDistanceFactor);
+#ifdef AUI_FAST_COMP
+		iValue = FASTMIN(iValue, GC.getEXOTIC_GOODS_GOLD_MAX());
+#else
 		iValue = MIN(iValue, GC.getEXOTIC_GOODS_GOLD_MAX());
+#endif // AUI_FAST_COMP
 	}
 	return iValue;
 }
@@ -6117,7 +6186,11 @@ int CvUnit::getExoticGoodsXPAmount()
 
 		int iExtraXP = GC.getEXOTIC_GOODS_XP_MAX() - GC.getEXOTIC_GOODS_XP_MIN();
 		iValue = GC.getEXOTIC_GOODS_XP_MIN() + (int)(iExtraXP * fDistanceFactor);
+#ifdef AUI_FAST_COMP
+		iValue = FASTMIN(iValue, GC.getEXOTIC_GOODS_XP_MAX());
+#else
 		iValue = MIN(iValue, GC.getEXOTIC_GOODS_XP_MAX());
+#endif // AUI_FAST_COMP
 	}
 	return iValue;
 }
@@ -6579,7 +6652,11 @@ bool CvUnit::pillage()
 		}
 		else
 		{
+#ifdef AUI_FAST_COMP
+			int iHealAmount = FASTMIN(getDamage(), GC.getPILLAGE_HEAL_AMOUNT());
+#else
 			int iHealAmount = min(getDamage(), GC.getPILLAGE_HEAL_AMOUNT());
+#endif // AUI_FAST_COMP
 			changeDamage(-iHealAmount);
 		}
 	}
@@ -7395,7 +7472,11 @@ int CvUnit::getDiscoverAmount()
 			if (pPlayer->GetGreatScientistBeakerMod() != 0)
 			{
 				iValue += (iValue * pPlayer->GetGreatScientistBeakerMod()) / 100;
+#ifdef AUI_FAST_COMP
+				iValue = FASTMAX(iValue, 0); // Cannot be negative
+#else
 				iValue = MAX(iValue, 0); // Cannot be negative
+#endif // AUI_FAST_COMP
 			}
 
 			// Modify based on game speed
@@ -7545,7 +7626,11 @@ int CvUnit::getMaxHurryProduction(CvCity* pCity) const
 	iProduction *= GC.getGame().getGameSpeedInfo().getUnitHurryPercent();
 	iProduction /= 100;
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, iProduction);
+#else
 	return std::max(0, iProduction);
+#endif // AUI_FAST_COMP
 }
 
 
@@ -7564,9 +7649,15 @@ int CvUnit::getHurryProduction(const CvPlot* pPlot) const
 
 	iProduction = getMaxHurryProduction(pCity);
 
+#ifdef AUI_FAST_COMP
+	iProduction = FASTMIN(pCity->productionLeft(), iProduction);
+
+	return FASTMAX(0, iProduction);
+#else
 	iProduction = std::min(pCity->productionLeft(), iProduction);
 
 	return std::max(0, iProduction);
+#endif // AUI_FAST_COMP
 }
 
 
@@ -7701,7 +7792,11 @@ int CvUnit::getTradeGold(const CvPlot* /*pPlot*/) const
 	iGold *= (100 + GetTradeMissionGoldModifier());
 	iGold /= 100;
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, iGold);
+#else
 	return std::max(0, iGold);
+#endif // AUI_FAST_COMP
 }
 
 //	--------------------------------------------------------------------------------
@@ -9112,7 +9207,11 @@ bool CvUnit::giveExperience()
 int CvUnit::getStackExperienceToGive(int iNumUnits) const
 {
 	VALIDATE_OBJECT
+#ifdef AUI_FAST_COMP
+	return (getUnitInfo().GetLeaderExperience() * (100 + FASTMIN(50, (iNumUnits - 1) * GC.getWARLORD_EXTRA_EXPERIENCE_PER_UNIT_PERCENT()))) / 100;
+#else
 	return (getUnitInfo().GetLeaderExperience() * (100 + std::min(50, (iNumUnits - 1) * GC.getWARLORD_EXTRA_EXPERIENCE_PER_UNIT_PERCENT()))) / 100;
+#endif // AUI_FAST_COMP
 }
 
 //	--------------------------------------------------------------------------------
@@ -9291,7 +9390,11 @@ int CvUnit::upgradePrice(UnitTypes eUnit) const
 
 	CvPlayerAI& kPlayer = GET_PLAYER(getOwner());
 
+#ifdef AUI_FAST_COMP
+	iPrice += (FASTMAX(0, (kPlayer.getProductionNeeded(eUnit) - kPlayer.getProductionNeeded(getUnitType()))) * /*2*/ GC.getUNIT_UPGRADE_COST_PER_PRODUCTION());
+#else
 	iPrice += (std::max(0, (kPlayer.getProductionNeeded(eUnit) - kPlayer.getProductionNeeded(getUnitType()))) * /*2*/ GC.getUNIT_UPGRADE_COST_PER_PRODUCTION());
+#endif // AUI_FAST_COMP
 
 	// Upgrades for later units are more expensive
 	const TechTypes eTech = (TechTypes) pkUnitInfo->GetPrereqAndTech();
@@ -9311,7 +9414,11 @@ int CvUnit::upgradePrice(UnitTypes eUnit) const
 		iPrice *= GC.getGame().getHandicapInfo().getAIUnitUpgradePercent();
 		iPrice /= 100;
 
+#ifdef AUI_FAST_COMP
+		iPrice *= FASTMAX(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GET_TEAM(getTeam()).GetCurrentEra()) + 100));
+#else
 		iPrice *= std::max(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GET_TEAM(getTeam()).GetCurrentEra()) + 100));
+#endif // AUI_FAST_COMP
 		iPrice /= 100;
 	}
 
@@ -9653,7 +9760,11 @@ int CvUnit::maxMoves() const
 int CvUnit::movesLeft() const
 {
 	VALIDATE_OBJECT
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, getMoves());
+#else
 	return std::max(0, getMoves());
+#endif // AUI_FAST_COMP
 }
 
 
@@ -9685,7 +9796,11 @@ int CvUnit::GetRange() const
 int CvUnit::GetRangePlusMoveToshot() const
 {
 	VALIDATE_OBJECT
-	return ((getDomainType() == DOMAIN_AIR) ? GetRange() : (MIN(GetRange(), 1) + baseMoves() - 1 - (isMustSetUpToRangedAttack() ? 1 : 0)));
+#ifdef AUI_FAST_COMP
+	return ((getDomainType() == DOMAIN_AIR) ? GetRange() : (FASTMAX(GetRange(), 1) + baseMoves() - 1 - (isMustSetUpToRangedAttack() ? 1 : 0)));
+#else
+	return ((getDomainType() == DOMAIN_AIR) ? GetRange() : (MAX(GetRange(), 1) + baseMoves() - 1 - (isMustSetUpToRangedAttack() ? 1 : 0)));
+#endif // AUI_FAST_COMP
 }
 #endif // AUI_UNIT_RANGE_PLUS_MOVE
 
@@ -9786,12 +9901,20 @@ int CvUnit::workRate(bool bMax, BuildTypes /*eBuild*/) const
 
 	CvPlayerAI& kPlayer = GET_PLAYER(getOwner());
 
+#ifdef AUI_FAST_COMP
+	iRate *= FASTMAX(0, (kPlayer.getWorkerSpeedModifier() + kPlayer.GetPlayerTraits()->GetWorkerSpeedModifier() + 100));
+#else
 	iRate *= std::max(0, (kPlayer.getWorkerSpeedModifier() + kPlayer.GetPlayerTraits()->GetWorkerSpeedModifier() + 100));
+#endif // AUI_FAST_COMP
 	iRate /= 100;
 
 	if(!kPlayer.isHuman() && !kPlayer.IsAITeammateOfHuman() && !kPlayer.isBarbarian())
 	{
+#ifdef AUI_FAST_COMP
+		iRate *= FASTMAX(0, (GC.getGame().getHandicapInfo().getAIWorkRateModifier() + 100));
+#else
 		iRate *= std::max(0, (GC.getGame().getHandicapInfo().getAIWorkRateModifier() + 100));
+#endif // AUI_FAST_COMP
 		iRate /= 100;
 	}
 
@@ -10057,7 +10180,11 @@ int CvUnit::GetStrategicResourceCombatPenalty() const
 		}
 	}
 
+#ifdef AUI_FAST_COMP
+	iPenalty = FASTMAX(iPenalty, GC.getSTRATEGIC_RESOURCE_EXHAUSTED_PENALTY());
+#else
 	iPenalty = max(iPenalty, GC.getSTRATEGIC_RESOURCE_EXHAUSTED_PENALTY());
+#endif // AUI_FAST_COMP
 	return iPenalty;
 }
 
@@ -10071,7 +10198,11 @@ int CvUnit::GetUnhappinessCombatPenalty() const
 	if (kPlayer.IsEmpireUnhappy())
 	{
 		iPenalty = (-1 * kPlayer.GetExcessHappiness()) * GC.getVERY_UNHAPPY_COMBAT_PENALTY_PER_UNHAPPY();
+#ifdef AUI_FAST_COMP
+		iPenalty = FASTMAX(iPenalty, GC.getVERY_UNHAPPY_MAX_COMBAT_PENALTY());
+#else
 		iPenalty = max(iPenalty, GC.getVERY_UNHAPPY_MAX_COMBAT_PENALTY());
+#endif // AUI_FAST_COMP
 	}
 
 	return iPenalty;
@@ -10530,7 +10661,11 @@ int CvUnit::GetMaxAttackStrength(const CvPlot* pFromPlot, const CvPlot* pToPlot,
 
 	iCombat = GetBaseCombatStrength(bIsEmbarkedAttackingLand) * (iModifier + 100);
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, iCombat);
+#else
 	return std::max(1, iCombat);
+#endif // AUI_FAST_COMP
 }
 
 //	--------------------------------------------------------------------------------
@@ -10655,7 +10790,11 @@ int CvUnit::GetMaxDefenseStrength(const CvPlot* pInPlot, const CvUnit* pAttacker
 		}
 	}
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, iCombat);
+#else
 	return std::max(1, iCombat);
+#endif // AUI_FAST_COMP
 }
 
 //	--------------------------------------------------------------------------------
@@ -10971,7 +11110,11 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 
 	iCombat = (iStr * (iModifier + 100));
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, iCombat);
+#else
 	return std::max(1, iCombat);
+#endif // AUI_FAST_COMP
 }
 
 //	--------------------------------------------------------------------------------
@@ -11090,9 +11233,13 @@ int CvUnit::GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bInc
 	// Bring it back out of hundreds
 	iAttackerDamage /= 100;
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, iAttackerDamage);
+#else
 	iAttackerDamage = max(1,iAttackerDamage);
 
 	return iAttackerDamage;
+#endif // AUI_FAST_COMP
 }
 
 
@@ -11197,9 +11344,13 @@ int CvUnit::GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bI
 	// Bring it back out of hundreds
 	iAttackerDamage /= 100;
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, iAttackerDamage);
+#else
 	iAttackerDamage = max(1,iAttackerDamage);
 
 	return iAttackerDamage;
+#endif // AUI_FAST_COMP
 }
 
 //	--------------------------------------------------------------------------------
@@ -11259,9 +11410,13 @@ int CvUnit::GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand
 	// Bring it back out of hundreds
 	iDefenderDamage /= 100;
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, iDefenderDamage);
+#else
 	iDefenderDamage = max(1,iDefenderDamage);
 
 	return iDefenderDamage;
+#endif // AUI_FAST_COMP
 }
 
 //	--------------------------------------------------------------------------------
@@ -11463,9 +11618,13 @@ int CvUnit::GetInterceptionDamage(const CvUnit* pAttacker, bool bIncludeRand) co
 	// Bring it back out of hundreds
 	iInterceptorDamage /= 100;
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, iInterceptorDamage);
+#else
 	iInterceptorDamage = max(1,iInterceptorDamage);
 
 	return iInterceptorDamage;
+#endif // AUI_FAST_COMP
 }
 
 //	--------------------------------------------------------------------------------
@@ -11623,7 +11782,11 @@ int CvUnit::maxXPValue() const
 
 	if(isBarbarian())
 	{
+#ifdef AUI_FAST_COMP
+		iMaxValue = FASTMIN(iMaxValue, GC.getBARBARIAN_MAX_XP_VALUE());
+#else
 		iMaxValue = std::min(iMaxValue, GC.getBARBARIAN_MAX_XP_VALUE());
+#endif // AUI_FAST_COMP
 	}
 
 	return iMaxValue;
@@ -11634,7 +11797,11 @@ int CvUnit::maxXPValue() const
 int CvUnit::firstStrikes() const
 {
 	VALIDATE_OBJECT
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, getExtraFirstStrikes());
+#else
 	return std::max(0, getExtraFirstStrikes());
+#endif // AUI_FAST_COMP
 }
 
 
@@ -11642,7 +11809,11 @@ int CvUnit::firstStrikes() const
 int CvUnit::chanceFirstStrikes() const
 {
 	VALIDATE_OBJECT
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, getExtraChanceFirstStrikes());
+#else
 	return std::max(0, getExtraChanceFirstStrikes());
+#endif // AUI_FAST_COMP
 }
 
 
@@ -12149,7 +12320,11 @@ int CvUnit::getNoRevealMapCount() const
 int CvUnit::maxInterceptionProbability() const
 {
 	VALIDATE_OBJECT
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, getExtraIntercept());
+#else
 	return std::max(0, getExtraIntercept());
+#endif // AUI_FAST_COMP
 }
 
 
@@ -12172,7 +12347,11 @@ int CvUnit::currInterceptionProbability() const
 int CvUnit::evasionProbability() const
 {
 	VALIDATE_OBJECT
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, getExtraEvasion());
+#else
 	return std::max(0, getExtraEvasion());
+#endif // AUI_FAST_COMP
 }
 
 
@@ -12180,7 +12359,11 @@ int CvUnit::evasionProbability() const
 int CvUnit::withdrawalProbability() const
 {
 	VALIDATE_OBJECT
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, getExtraWithdrawal());
+#else
 	return std::max(0, getExtraWithdrawal());
+#endif // AUI_FAST_COMP
 }
 
 //	--------------------------------------------------------------------------------
@@ -12767,7 +12950,11 @@ int CvUnit::cargoSpaceAvailable(SpecialUnitTypes eSpecialCargo, DomainTypes eDom
 		}
 	}
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, (cargoSpace() - getCargo()));
+#else
 	return std::max(0, (cargoSpace() - getCargo()));
+#endif // AUI_FAST_COMP
 }
 
 
@@ -14236,7 +14423,11 @@ void CvUnit::setExperience(int iNewValue, int iMax)
 	{
 		int iExperienceChange = iNewValue - getExperience();
 
+#ifdef AUI_FAST_COMP
+		m_iExperience = FASTMIN(((iMax == -1) ? INT_MAX : iMax), iNewValue);
+#else
 		m_iExperience = std::min(((iMax == -1) ? INT_MAX : iMax), iNewValue);
+#endif // AUI_FAST_COMP
 		CvAssert(getExperience() >= 0);
 
 		if(getOwner() == GC.getGame().getActivePlayer())
@@ -14365,7 +14556,11 @@ void CvUnit::changeExperience(int iChange, int iMax, bool bFromCombat, bool bInB
 			}
 			else
 			{
+#ifdef AUI_FAST_COMP
+				int iModdedChange = FASTMIN(iMax - m_iExperience, iChange);
+#else
 				int iModdedChange = min(iMax - m_iExperience, iChange);
+#endif // AUI_FAST_COMP
 				if(iModdedChange > 0)
 				{
 					if(getDomainType() == DOMAIN_SEA)
@@ -14382,7 +14577,11 @@ void CvUnit::changeExperience(int iChange, int iMax, bool bFromCombat, bool bInB
 
 		if(getExperiencePercent() != 0)
 		{
+#ifdef AUI_FAST_COMP
+			iUnitExperience *= FASTMAX(0, 100 + getExperiencePercent());
+#else
 			iUnitExperience *= std::max(0, 100 + getExperiencePercent());
+#endif // AUI_FAST_COMP
 			iUnitExperience /= 100;
 		}
 	}
@@ -15527,6 +15726,15 @@ void CvUnit::changeExtraRoughDefensePercent(int iChange)
 		setInfoBarDirty(true);
 	}
 }
+
+#ifdef AUI_UNIT_EXTRA_ATTACKS_GETTER
+//	--------------------------------------------------------------------------------
+int CvUnit::getNumAttacks()
+{
+	VALIDATE_OBJECT
+		return m_iNumAttacks;
+}
+#endif // AUI_UNIT_EXTRA_ATTACKS_GETTER
 
 //	--------------------------------------------------------------------------------
 void CvUnit::changeExtraAttacks(int iChange)
@@ -17619,7 +17827,11 @@ int CvUnit::getSubUnitsAlive(int iDamage) const
 	}
 	else
 	{
+#ifdef AUI_FAST_COMP
+		return FASTMAX(1, (((getUnitInfo().GetGroupSize() * (GetMaxHitPoints() - iDamage)) + (GetMaxHitPoints() / ((getUnitInfo().GetGroupSize() * 2) + 1))) / GetMaxHitPoints()));
+#else
 		return std::max(1, (((getUnitInfo().GetGroupSize() * (GetMaxHitPoints() - iDamage)) + (GetMaxHitPoints() / ((getUnitInfo().GetGroupSize() * 2) + 1))) / GetMaxHitPoints()));
+#endif // AUI_FAST_COMP
 	}
 }
 
@@ -18058,10 +18270,10 @@ bool CvUnit::canRangeStrike() const
 
 #ifdef AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
 //AMS: Same as original canEverRangeStrikeAt but with plot as parameter
-bool CvUnit::canEverRangeStrikeAtFromPlot(int iX, int iY, CvPlot* targetPlot) const
+bool CvUnit::canEverRangeStrikeAtFromPlot(int iX, int iY, CvPlot* sourcePlot) const
 {
 	VALIDATE_OBJECT
-	CvPlot* pSourcePlot = targetPlot;
+	CvPlot* pSourcePlot = sourcePlot;
 	CvPlot* pTargetPlot = GC.getMap().plot(iX, iY);
 
 	// Plot null?
@@ -18267,31 +18479,30 @@ bool CvUnit::canMoveAndRangedStrike(int iX, int iY)
 		return true;
 	}
 
-	// We only compute if distance is reasonable.
-#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-	if (GetRangePlusMoveToshot() < GetAdjustedDistanceWithRoadFilter(this, GC.getMap().plot(iX, iY), plotDistance(getX(), getY(), iX, iY)))
-#else
+	// We only compute if distance is reasonable (ignore roads).
 	if (GetRangePlusMoveToshot() < plotDistance(getX(), getY(), iX, iY))
-#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 	{
 		return false;
 	}
 
-	int initTime = timeGetTime();
+	int initTime, endTime;
+	initTime = timeGetTime();
 
 	std::vector<CvPlot*> movePlotTest;
 	CvPlot* plotTarget = GC.getMap().plotCheckInvalid(iX, iY);
-	if (plotTarget != NULL)
+	if (plotTarget)
 	{
 		GetMovablePlotListOpt(movePlotTest, plotTarget, true);
 	}
 
-	int endTime = timeGetTime();
+	endTime = timeGetTime();
 
-	if (GC.getLogging() && GC.getAILogging())
+	if (GC.getLogging() && GC.getAILogging() && (endTime != initTime))
 	{
-		CvString szMsg;
-		szMsg.Format("Tile search time elapsed %d ms.", (endTime - initTime));
+		CvString szMsg, strName;
+		strName = getUnitInfo().GetDescription();
+		szMsg.Format("Completed isPossible tile search for %s, Result: %s, %d, X: %d, Y: %d", strName.GetCString(), (movePlotTest.size() > 0 ? "true" : "false"),
+			endTime - initTime, getX(), getY());
 		GET_PLAYER(m_eOwner).GetTacticalAI()->LogTacticalMessage(szMsg, true /*bSkipLogDominanceZone*/);
 	}
 
@@ -18299,43 +18510,159 @@ bool CvUnit::canMoveAndRangedStrike(int iX, int iY)
 }
 
 //AMS: Optimized function to evaluate free plots for move and fire.
-void CvUnit::GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* pTarget, bool bExitOnFound)
+void CvUnit::GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* pTarget, bool bExitOnFound, int iWithinTurns, CvPlot* pFromPlot) const
 {
 	VALIDATE_OBJECT
-	int xVariance = max(abs((getX() - pTarget->getX()) / 2), 1);
-	int yVariance = max(abs((getY() - pTarget->getY()) / 2), 1);
-	int xMin = min(getX(), pTarget->getX()) - yVariance;
-	int xMax = max(getX(), pTarget->getX()) + yVariance;
-	int yMin = min(getY(), pTarget->getY()) - xVariance;
-	int yMax = max(getY(), pTarget->getY()) + xVariance;
-
-	// Dirty trick to account for having to set up to attack
-	if (canSetUpForRangedAttack(NULL))
-		m_iMoves--;
-
-	for (int iDX = xMin; iDX <= xMax; iDX++)
+	CvAStarNode* pNode;
+	CvPlot* pLoopPlot;
+	int iDX, iDY;
+	bool bIsParthian = false;
+	if (pFromPlot == NULL)
 	{
-		for (int iDY = yMin; iDY <= yMax; iDY++)
+		pFromPlot = plot();
+		GC.GetTacticalAnalysisMapFinder().SetData(this);
+	}
+	else
+	{
+		GC.getIgnoreUnitsPathFinder().SetData(this);
+		bIsParthian = true;
+	}
+	if (iWithinTurns == 0)
+	{
+		int xMin, xMax, yMin, yMax;
+		if (isRanged())
 		{
-			if (GC.getMap().isPlot(iDX, iDY))
+#ifdef AUI_FAST_COMP
+			const int xVariance = FASTMAX(abs((pFromPlot->getX() - pTarget->getX()) / 2), baseMoves() - 1);
+			const int yVariance = FASTMAX(abs((pFromPlot->getY() - pTarget->getY()) / 2), baseMoves() - 1);
+			xMin = FASTMIN(pFromPlot->getX(), pTarget->getX()) - yVariance;
+			xMax = FASTMAX(pFromPlot->getX(), pTarget->getX()) + yVariance; 
+			yMin = FASTMIN(pFromPlot->getY(), pTarget->getY()) - xVariance;
+			yMax = FASTMAX(pFromPlot->getY(), pTarget->getY()) + xVariance;
+#else
+			const int xVariance = MAX(abs((getX() - pTarget->getX()) / 2), 1);
+			const int yVariance = MAX(abs((getY() - pTarget->getY()) / 2), 1);
+			xMin = MIN(getX(), pTarget->getX()) - yVariance;
+			xMax = MAX(getX(), pTarget->getX()) + yVariance + 1;
+			yMin = MIN(getY(), pTarget->getY()) - xVariance;
+			yMax = MAX(getY(), pTarget->getY()) + xVariance + 1;
+#endif // AUI_FAST_COMP
+		}
+		else
+		{
+			xMin = xMax = pTarget->getX();
+			yMin = yMax = pTarget->getY();
+		}
+
+		for (iDX = xMin; iDX <= xMax; iDX++)
+		{
+			for (iDY = yMin; iDY <= yMax; iDY++)
 			{
-				CvPlot* pCurrentPlot = GC.getMap().plotCheckInvalid(iDX, iDY);
-
-				// Check is empty plot
-				if (pCurrentPlot && canEnterTerrain(*pCurrentPlot))
+				if (GC.getMap().isPlot(iDX, iDY))
 				{
-					// Can shoot to the target from plot?
-					if (canEverRangeStrikeAtFromPlot(pTarget->getX(), pTarget->getY(), pCurrentPlot))
-					{
-						// Run pathfinder to see if we can get to plot with movement left
-						if (TurnsToReachTarget(this, pCurrentPlot, true /*bReusePaths*/, false) == 0)
-						{
-							plotData.push_back(pCurrentPlot);
+					pLoopPlot = GC.getMap().plotCheckInvalid(iDX, iDY);
 
-							if (bExitOnFound)
+					// Check is empty plot not in current data set
+					if (pLoopPlot && !(bIsParthian && pLoopPlot->getNumTimesInList(plotData, true) == 0) && canEnterTerrain(*pLoopPlot))
+					{
+						// Can we attack the target from the plot?
+						if (canEverRangeStrikeAtFromPlot(pTarget->getX(), pTarget->getY(), pLoopPlot))
+						{
+							// Run pathfinder to see if we can get to plot with movement left
+							pNode = NULL;
+							if (bIsParthian)
 							{
-								if (canSetUpForRangedAttack(NULL))
-									m_iMoves++;
+								if (GC.getIgnoreUnitsPathFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, true /*bReuse*/))
+								{
+									pNode = GC.getIgnoreUnitsPathFinder().GetLastNode();
+								}
+							}
+							else if (GC.GetTacticalAnalysisMapFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
+							{
+								pNode = GC.GetTacticalAnalysisMapFinder().GetLastNode();
+							}
+							if (pNode)
+							{
+								if (pNode->m_iData2 == 1 && pNode->m_iData1 > (canSetUpForRangedAttack(NULL) ? 1 : 0))
+								{
+									plotData.push_back(pLoopPlot);
+
+									if (bExitOnFound)
+									{
+										return;
+									}
+								}
+							}
+						}
+						else if (!isRanged())
+						{
+							// Run pathfinder to see if we can get to plot with movement left
+							pNode = NULL;
+							if (bIsParthian)
+							{
+								if (GC.getIgnoreUnitsPathFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY | MOVE_IGNORE_STACKING, true /*bReuse*/))
+								{
+									pNode = GC.getIgnoreUnitsPathFinder().GetLastNode();
+								}
+							}
+							else if (GC.GetTacticalAnalysisMapFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY | MOVE_IGNORE_STACKING, bExitOnFound /*bReuse*/))
+							{
+								pNode = GC.GetTacticalAnalysisMapFinder().GetLastNode();
+							}
+							if (pNode)
+							{
+								if (pNode->m_iData2 == 1)
+								{
+									plotData.push_back(pLoopPlot);
+
+									if (bExitOnFound)
+									{
+										return;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	// Not making anything larger, AI turns would take forever
+	else if (iWithinTurns == 1)
+	{
+		int iMaxDX;
+#ifdef AUI_FAST_COMP
+		int iRange = FASTMIN(getMoves(), baseMoves());
+#else
+		int iRange = MIN(getMoves(), maxMoves());
+#endif // AUI_FAST_COMP
+		for (iDY = -iRange; iDY <= iRange; iDY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iRange - FASTMAX(0, iDY);
+			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iRange - MAX(0, iDY);
+			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+			{
+				pLoopPlot = plotXY(pFromPlot->getX(), pFromPlot->getY(), iDX, iDY);
+				if (pLoopPlot && pLoopPlot != pTarget)
+				{
+					// Run pathfinder to see if we can get to plot with movement left
+					pNode = NULL;
+					if (GC.GetTacticalAnalysisMapFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
+					{
+						pNode = GC.GetTacticalAnalysisMapFinder().GetLastNode();
+					}
+					if (pNode)
+					{
+						if (pNode->m_iData2 == 1)
+						{
+							GetMovablePlotListOpt(plotData, pTarget, bExitOnFound, 0, pLoopPlot);
+
+							if (bExitOnFound && plotData.size() > 0)
+							{
 								return;
 							}
 						}
@@ -18344,9 +18671,6 @@ void CvUnit::GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* pTarget, b
 			}
 		}
 	}
-
-	if (canSetUpForRangedAttack(NULL))
-		m_iMoves++;
 }
 #endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 
@@ -21069,11 +21393,19 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		        (AI_getUnitAIType() == UNITAI_PARADROP))
 		{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_MARCH
+#ifdef AUI_FAST_COMP
+			dValue += 50 + (iFlavorMobile + iFlavorDefense + FASTMAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_MARCH;
+#else
 			dValue += 50 + (iFlavorMobile + iFlavorDefense + MAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_MARCH;
+#endif // AUI_FAST_COMP
 		}
 		else
 		{
+#ifdef AUI_FAST_COMP
+			dValue += 30 + (iFlavorMobile + iFlavorDefense + FASTMAX(iFlavorDefense, iFlavorOffense)) * 2;
+#else
 			dValue += 30 + (iFlavorMobile + iFlavorDefense + MAX(iFlavorDefense, iFlavorOffense)) * 2;
+#endif // AUI_FAST_COMP
 #else
 			dValue += 50 + iFlavorMobile * 2;
 		}
@@ -21096,11 +21428,19 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		        (AI_getUnitAIType() == UNITAI_PARADROP))
 		{
 #ifdef AUI_UNIT_PROMOTION_TWEAKED_BLITZ
+#ifdef AUI_FAST_COMP
+			dValue += 50 + (iFlavorMobile + iFlavorOffense + FASTMAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_BLITZ;
+#else
 			dValue += 50 + (iFlavorMobile + iFlavorOffense + MAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_BLITZ;
+#endif // AUI_FAST_COMP
 		}
 		else
 		{
+#ifdef AUI_FAST_COMP
+			dValue += 20 + (iFlavorMobile + iFlavorOffense + FASTMAX(iFlavorDefense, iFlavorOffense)) * 2;
+#else
 			dValue += 20 + (iFlavorMobile + iFlavorOffense + MAX(iFlavorDefense, iFlavorOffense)) * 2;
+#endif // AUI_FAST_COMP
 #else
 			dValue += 50 + iFlavorMobile * 2;
 		}
