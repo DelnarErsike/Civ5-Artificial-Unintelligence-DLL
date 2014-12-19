@@ -201,7 +201,11 @@ void CvPlayerAI::AI_updateFoundValues(bool bStartingLoc)
 					if(pLoopArea && !pLoopArea->isWater())
 					{
 #ifdef AUI_PLAYERAI_FIX_UPDATE_FOUND_VALUES_NOT_ADDITIVE
+#ifdef AUI_FAST_COMP
+						pLoopArea->setTotalFoundValue(FASTMAX(pLoopArea->getTotalFoundValue(), iValue));
+#else
 						pLoopArea->setTotalFoundValue(MAX(pLoopArea->getTotalFoundValue(), iValue));
+#endif // AUI_FAST_COMP
 #else
 						pLoopArea->setTotalFoundValue(pLoopArea->getTotalFoundValue() + iValue);
 #endif // AUI_PLAYERAI_FIX_UPDATE_FOUND_VALUES_NOT_ADDITIVE
@@ -567,11 +571,19 @@ void CvPlayerAI::AI_chooseFreeGreatPerson()
 					int iArtistCount = GetNumUnitsWithUnitAI(UNITAI_ARTIST);
 					int iMusicianCount = GetNumUnitsWithUnitAI(UNITAI_MUSICIAN);
 					int iWriterCount = GetNumUnitsWithUnitAI(UNITAI_WRITER);
+#ifdef AUI_FAST_COMP
+					if (iArtistCount < FASTMAX(iWriterCount, iMusicianCount))
+#else
 					if (iArtistCount < MAX(iWriterCount, iMusicianCount))
+#endif // AUI_FAST_COMP
 					{
 						eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_ARTIST");
 					}
+#ifdef AUI_FAST_COMP
+					else if (iWriterCount < FASTMAX(iArtistCount, iMusicianCount))
+#else
 					else if (iWriterCount < MAX(iArtistCount, iMusicianCount))
+#endif // AUI_FAST_COMP
 					{
 						eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_WRITER");
 					}
@@ -631,11 +643,19 @@ void CvPlayerAI::AI_chooseFreeGreatPerson()
 					int iArtistCount = GetNumUnitsWithUnitAI(UNITAI_ARTIST);
 					int iMusicianCount = GetNumUnitsWithUnitAI(UNITAI_MUSICIAN);
 					int iWriterCount = GetNumUnitsWithUnitAI(UNITAI_WRITER);
+#ifdef AUI_FAST_COMP
+					if (iArtistCount < FASTMAX(iWriterCount, iMusicianCount))
+#else
 					if (iArtistCount < MAX(iWriterCount, iMusicianCount))
+#endif // AUI_FAST_COMP
 					{
 						eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_ARTIST");
 					}
+#ifdef AUI_FAST_COMP
+					else if (iWriterCount < FASTMAX(iArtistCount, iMusicianCount))
+#else
 					else if (iWriterCount < MAX(iArtistCount, iMusicianCount))
+#endif // AUI_FAST_COMP
 					{
 						eDesiredGreatPerson = (UnitTypes)GC.getInfoTypeForString("UNIT_WRITER");
 					}
@@ -697,7 +717,11 @@ void CvPlayerAI::AI_chooseFreeTech()
 
 void CvPlayerAI::AI_chooseResearch()
 {
+#ifdef AUI_PERF_LOGGING_FORMATTING_TWEAKS
+	AI_PERF_FORMAT("AI-perf.csv", ("AI_chooseResearch, Turn %03d, %s", GC.getGame().getGameTurn(), getCivilizationShortDescription()));
+#else
 	AI_PERF("AI-perf.csv", "AI_chooseResearch");
+#endif // AUI_PERF_LOGGING_FORMATTING_TWEAKS
 
 	TechTypes eBestTech = NO_TECH;
 	int iI;
@@ -757,7 +781,11 @@ struct CityAndProductionEval
 
 void CvPlayerAI::AI_considerAnnex()
 {
+#ifdef AUI_PERF_LOGGING_FORMATTING_TWEAKS
+	AI_PERF_FORMAT("AI-perf.csv", ("AI_considerAnnex, Turn %03d, %s", GC.getGame().getGameTurn(), getCivilizationShortDescription()));
+#else
 	AI_PERF("AI-perf.csv", "AI_ considerAnnex");
+#endif // AUI_PERF_LOGGING_FORMATTING_TWEAKS
 
 #ifdef AUI_PLAYERAI_DO_ANNEX_QUICK_FILTER
 	// for Venice and City States
@@ -1500,7 +1528,13 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveMerchant(CvUnit* pGreatMerchan
 		double dTestValue = pow(GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST")) *
 			GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")) *
 			GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SCIENCE")), 1.0 / 3.0);
-		if (GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) >= MAX(0.25, dTestValue) * dCityStateCountModifier)
+#ifdef AUI_FAST_COMP
+		if (GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) >= 
+			FASTMAX(0.25, dTestValue) * dCityStateCountModifier)
+#else
+		if (GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) >= 
+			MAX(0.25, dTestValue) * dCityStateCountModifier)
+#endif // AUI_FAST_COMP
 #else
 		if (GetDiplomacyAI()->IsGoingForDiploVictory() && !bTheVeniceException)
 #endif // AUI_GS_PRIORITY_RATIO
@@ -1671,7 +1705,7 @@ bool CvPlayerAI::GreatMerchantWantsCash()
 	// slewis - . . . except Venice. Venice wants to buy city states, unless it already has enough cities, then it doesn't want city states.
 	bool bIsVenice = GetPlayerTraits()->IsNoAnnexing();
 #ifdef AUI_PLAYERAI_TWEAKED_VENICE_CITY_TARGET
-	if (bIsVenice && GC.getGame().countCivPlayersAlive() - GC.getGame().countMajorCivsAlive() > 0)
+	if (bIsVenice && GC.getGame().countCivPlayersAlive() - GC.getGame().countMajorCivsAlive() > GetNumUnitsWithUnitAI(UNITAI_MERCHANT))
 #else
 	if (bIsVenice)
 #endif // AUI_PLAYERAI_TWEAKED_VENICE_CITY_TARGET
@@ -1683,10 +1717,10 @@ bool CvPlayerAI::GreatMerchantWantsCash()
 		}
 
 		double dDesiredCities = double(GetEconomicAI()->GetEarlyCityNumberTarget());
-		int iFlavorExpansion = 1;
-		int iFlavorGrowth = 1;
+		int iFlavorExpansion = 0;
+		int iFlavorGrowth = 0;
 
-		for (int iFlavorLoop = 0; iFlavorLoop < GC.getNumFlavorTypes() && (iFlavorExpansion == 1 || iFlavorGrowth == 1); iFlavorLoop++)
+		for (int iFlavorLoop = 0; iFlavorLoop < GC.getNumFlavorTypes() && (iFlavorExpansion == 0 || iFlavorGrowth == 0); iFlavorLoop++)
 		{
 			if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_EXPANSION")
 			{
@@ -1697,22 +1731,44 @@ bool CvPlayerAI::GreatMerchantWantsCash()
 				iFlavorGrowth = GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)iFlavorLoop);
 			}
 		}
+#ifdef AUI_FAST_COMP
+		iFlavorExpansion = FASTMAX(GC.getFLAVOR_MIN_VALUE(), iFlavorExpansion);
+		iFlavorGrowth = FASTMAX(GC.getFLAVOR_MIN_VALUE(), iFlavorGrowth);
+		// Extra cities from difficulty get applied as Expansion flavor
+		double dDifficulty = FASTMAX(0, GC.getGame().getHandicapInfo().GetID() - 3) + 2.0;
+#else
+		iFlavorExpansion = MAX(GC.getFLAVOR_MIN_VALUE(), iFlavorExpansion);
+		iFlavorGrowth = MAX(GC.getFLAVOR_MIN_VALUE(), iFlavorGrowth);
 		// Extra cities from difficulty get applied as Expansion flavor
 		double dDifficulty = MAX(0, GC.getGame().getHandicapInfo().GetID() - 3) + 2.0;
+#endif // AUI_FAST_COMP
 		dDifficulty /= 2.0;
 		// Base flavor scaling
+#ifdef AUI_FAST_COMP
+		dDesiredCities *= log(iFlavorExpansion * pow(dDifficulty, 2.0)) / log((double)FASTMAX(iFlavorGrowth, 2));
+#else
 		dDesiredCities *= log(iFlavorExpansion * pow(dDifficulty, 2.0)) / log((double)MAX(iFlavorGrowth, 2));
+#endif // AUI_FAST_COMP
 		// map scaling parameters
 		const int iDefaultNumTiles = 80*52;
 		dDesiredCities = dDesiredCities * GC.getMap().numPlots() / iDefaultNumTiles + 1.0; // +1.0 for capital
 		// player count scaling parameters
 		const int iMajorCount = GC.getGame().countMajorCivsAlive();
 		const int iMinorCount = GC.getGame().countCivPlayersAlive() - iMajorCount;
+#ifdef AUI_FAST_COMP
+		const double dDefaultCityCount = FASTMAX(16 + 8 * dDesiredCities, (double)GC.getGame().getNumCivCities());
+		const double dTargetCityCount = FASTMAX(iMinorCount + iMajorCount * dDesiredCities, (double)GC.getGame().getNumCivCities());
+#else
 		const double dDefaultCityCount = MAX(16 + 8 * dDesiredCities, (double)GC.getGame().getNumCivCities());
 		const double dTargetCityCount = MAX(iMinorCount + iMajorCount * dDesiredCities, (double)GC.getGame().getNumCivCities());
+#endif // AUI_FAST_COMP
 		dDesiredCities *= dDefaultCityCount / dTargetCityCount;
 
+#ifdef AUI_FAST_COMP
+		dDesiredCities = FASTMAX(dDesiredCities, 2.0);
+#else
 		dDesiredCities = MAX(dDesiredCities, 2.0);
+#endif // AUI_FAST_COMP
 
 		if (getNumCities() >= int(dDesiredCities + 0.5))
 #else
