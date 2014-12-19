@@ -188,11 +188,12 @@ unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
 	
 	unsigned short usRet = 0;
 	unsigned long ulNewSeed = (RANDOM_A * m_ulRandomSeed) + RANDOM_C;
-	int iCounter;
-	for (iCounter = 1; iCounter < usNum; iCounter++)
+	unsigned short usCounter;
+	for (usCounter = 1; usCounter < usNum; usCounter++) // starts at 1 because the generation is not inclusive (so we need one less cycle than normal)
 	{
+		// no need to worry about masking with MAX_UNSIGNED_SHORT, max cycle number takes care of it
+		usRet += (ulNewSeed >> BINOM_SHIFT) & 1; // need the shift so results only repeat after 2^BINOM_SHIFT iterations
 		ulNewSeed = (RANDOM_A * m_ulRandomSeed) + RANDOM_C;
-		usRet += ((ulNewSeed >> BINOM_SHIFT) & MAX_UNSIGNED_SHORT) % 2;
 		m_ulRandomSeed = ulNewSeed;
 	}
 
