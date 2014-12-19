@@ -227,7 +227,11 @@ void CvTacticalAnalysisMap::RefreshDataForNextPlayer(CvPlayer* pPlayer)
 			m_iTacticalRange = ((GC.getAI_TACTICAL_RECRUIT_RANGE() + GC.getGame().getCurrentEra()) * 2) / 3;  // Have this increase as game goes on
 			m_iUnitStrengthMultiplier = GC.getAI_TACTICAL_MAP_UNIT_STRENGTH_MULTIPLIER() * m_iTacticalRange;
 
+#ifdef AUI_PERF_LOGGING_FORMATTING_TWEAKS
+			AI_PERF_FORMAT("AI-perf.csv", ("Tactical Analysis Map, Turn %03d, %s", GC.getGame().getGameTurn(), m_pPlayer->getCivilizationShortDescription()));
+#else
 			AI_PERF_FORMAT("AI-perf.csv", ("Tactical Analysis Map, Turn %d, %s", GC.getGame().getGameTurn(), m_pPlayer->getCivilizationShortDescription()) );
+#endif // AUI_PERF_LOGGING_FORMATTING_TWEAKS
 
 			m_bIsBuilt = false;
 
@@ -336,41 +340,41 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 							}
 
 							// TEMPORARY OPTIMIZATION: Assumes can't use roads or RR
-#ifdef AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
+#ifdef AUI_TACTICAL_ANALYSIS_MAP_MARKING_ADJUST_RANGED
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-							else if (GetAdjustedDistanceWithRoadFilter(pUnit, pPlot, iDistance) <= pUnit->GetRangePlusMoveToshot())
+							else if (GetAdjustedDistanceWithRoadFilter(pUnit, iDistance) <= pUnit->GetRangePlusMoveToshot())
 #else
 							else if (iDistance <= pUnit->GetRangePlusMoveToshot())
 #endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 #else
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-							else if (GetAdjustedDistanceWithRoadFilter(pUnit, pPlot, iDistance) <= pUnit->baseMoves() + pUnit->GetRange())
+							else if (GetAdjustedDistanceWithRoadFilter(pUnit, iDistance) <= pUnit->baseMoves() + pUnit->GetRange())
 #else
 							else if (iDistance <= pUnit->baseMoves() + pUnit->GetRange())
 #endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 #endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 #else
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-							else if (GetAdjustedDistanceWithRoadFilter(pUnit, pPlot, iDistance) <= pUnit->baseMoves())
+							else if (GetAdjustedDistanceWithRoadFilter(pUnit, iDistance) <= pUnit->baseMoves())
 #else
 							else if(iDistance <= pUnit->baseMoves())
 #endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-#endif // AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
+#endif // AUI_TACTICAL_ANALYSIS_MAP_MARKING_ADJUST_RANGED
 							{
 								int iTurnsToReach;
 								iTurnsToReach = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, true /*bIgnoreUnits*/);	// Its ok to reuse paths because when ignoring units, we don't use the tactical analysis map (which we are building)
-#ifdef AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
+#ifdef AUI_TACTICAL_ANALYSIS_MAP_MARKING_ADJUST_RANGED
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 								// Pathfinder gets called twice for ranged units unfortunately: once for moving, second time for move and shoot calculation
-								if (iTurnsToReach <= 1 || (pUnit->isRanged() && pUnit->canMoveAndRangedStrike(pPlot->getX(), pPlot->getY())))
+								if (iTurnsToReach <= 1 || (iTurnsToReach < 4 && pUnit->isRanged() && pUnit->canMoveAndRangedStrike(pPlot->getX(), pPlot->getY())))
 #else
 								// rough adjustment to account for ranged units
 								if (iTurnsToReach <= 1 || (pUnit->isRanged() && iTurnsToReach <= 2))
 #endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 #else
 								if(iTurnsToReach <= 1)
-#endif // AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
+#endif // AUI_TACTICAL_ANALYSIS_MAP_MARKING_ADJUST_RANGED
 								{
 									m_pPlots[iI].SetSubjectToAttack(true);
 								}
@@ -383,7 +387,7 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 						}
 					}
 
-#ifdef AUI_TACTICAL_MAP_ANALYSIS_MARKING_INCLUDE_CITIES
+#ifdef AUI_TACTICAL_ANALYSIS_MAP_MARKING_INCLUDE_CITIES
 					// Check adjacent plots for enemy citadels and nearby plots for enemy cities
 					if(!m_pPlots[iI].IsSubjectToAttack())
 					{
@@ -438,7 +442,7 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 							}
 						}
 					}
-#endif // AUI_TACTICAL_MAP_ANALYSIS_MARKING_INCLUDE_CITIES
+#endif // AUI_TACTICAL_ANALYSIS_MAP_MARKING_INCLUDE_CITIES
 				}
 			}
 		}
@@ -833,7 +837,11 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 			if(pClosestCity)
 			{
 				// Start with strength of the city itself
+#ifdef AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_CITY_GIMPING
+				int iCityHitPoints = pClosestCity->GetMaxHitPoints() - pClosestCity->getDamage() * GC.getWOUNDED_DAMAGE_MULTIPLIER() / 100;
+#else
 				int iCityHitPoints = pClosestCity->GetMaxHitPoints() - pClosestCity->getDamage();
+#endif // AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_CITY_GIMPING
 				int iStrength = m_iTacticalRange * pClosestCity->getStrengthValue() * iCityHitPoints / GC.getMAX_CITY_HIT_POINTS();
 				if(pZone->GetTerritoryType() == TACTICAL_TERRITORY_FRIENDLY)
 				{
@@ -855,10 +863,30 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 						        (pLoopUnit->getDomainType() == DOMAIN_LAND && !pZone->IsWater()) ||
 						        (pLoopUnit->getDomainType() == DOMAIN_SEA && pZone->IsWater()))
 						{
+#ifdef AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
+							iDistance = MAX_INT;
+							if (pLoopUnit->isRanged() && pLoopUnit->canEverRangeStrikeAt(pClosestCity->getX(), pClosestCity->getY()))
+								iDistance = 0;
+							else if (pLoopUnit->isRanged() && pLoopUnit->canMoveAndRangedStrike(pClosestCity->getX(), pClosestCity->getY()))
+								iDistance = 1;
+							else
+								iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true);
+							if (iDistance != MAX_INT)
+								iDistance *= 2;
+#else
 							iDistance = plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pClosestCity->getX(), pClosestCity->getY());
+#endif // AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
 							if (iDistance <= m_iTacticalRange)
 							{
+#ifdef AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_DISTANCE_DROPOFF
+#ifdef AUI_FAST_COMP
+								iMultiplier = m_iTacticalRange + FASTMIN(3 - iDistance, 0);  // 4 because action may still be spread out over the zone
+#else
+								iMultiplier = m_iTacticalRange + MIN(3 - iDistance, 0);  // 4 because action may still be spread out over the zone
+#endif // AUI_FAST_COMP
+#else
 								iMultiplier = (m_iTacticalRange + 4 - iDistance);  // "4" so unit strength isn't totally dominated by proximity to city
+#endif // AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_DISTANCE_DROPOFF
 								if(iMultiplier > 0)
 								{
 									int iUnitStrength = pLoopUnit->GetBaseCombatStrengthConsideringDamage();
@@ -906,10 +934,30 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 									if(pPlot)
 									{
 										bool bVisible = true;
+#ifdef AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
+										iDistance = MAX_INT;
+										if (pLoopUnit->isRanged() && pLoopUnit->canEverRangeStrikeAt(pClosestCity->getX(), pClosestCity->getY()))
+											iDistance = 0;
+										else if (pLoopUnit->isRanged() && pLoopUnit->canMoveAndRangedStrike(pClosestCity->getX(), pClosestCity->getY()))
+											iDistance = 1;
+										else
+											iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true);
+										if (iDistance != MAX_INT)
+											iDistance *= 2;
+#else
 										iDistance = plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pClosestCity->getX(), pClosestCity->getY());
+#endif // AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
 										if (iDistance <= m_iTacticalRange)
 										{
+#ifdef AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_DISTANCE_DROPOFF
+#ifdef AUI_FAST_COMP
+											iMultiplier = m_iTacticalRange + FASTMIN(3 - iDistance, 0);  // 4 because action may still be spread out over the zone
+#else
+											iMultiplier = m_iTacticalRange + MIN(3 - iDistance, 0);  // 4 because action may still be spread out over the zone
+#endif // AUI_FAST_COMP
+#else
 											iMultiplier = (m_iTacticalRange + 4 - iDistance);  // "4" so unit strength isn't totally dominated by proximity to city
+#endif // AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_DISTANCE_DROPOFF
 											if(!pPlot->isVisible(eTeam) && !pPlot->isAdjacentVisible(eTeam, false))
 											{
 												bVisible = false;
