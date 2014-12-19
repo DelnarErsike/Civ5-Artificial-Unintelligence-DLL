@@ -94,7 +94,11 @@ inline int hexspaceXToX(int iHexspaceX, int iHexspaceY)
 inline int hexDistance(int iDX, int iDY)
 {
 	// I'm assuming iDX and iDY are in hex-space
+#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+	if((iDX ^ iDY) >= 0)  // the signs match
+#else
 	if((iDX >= 0) == (iDY >= 0))  // the signs match
+#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 	{
 		int iAbsDX = iDX >= 0 ? iDX : -iDX;
 		int iAbsDY = iDY >= 0 ? iDY : -iDY;
@@ -141,13 +145,21 @@ inline int plotDistance(int iX1, int iY1, int iX2, int iY2)
 
 	iDX = abs(dxWrap(iHX2 - iHX1));
 
+#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+	if (((iHX2 - iHX1) ^ (iWrappedDY)) >= 0)  // the signs match
+#else
 	if((iHX2 - iHX1 >= 0) == (iWrappedDY >= 0))  // the signs match
+#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 	{
 		return iDX + iDY;
 	}
 	else
 	{
+#ifdef AUI_FAST_COMP
+		return (FASTMAX(iDX, iDY));
+#else
 		return (std::max(iDX, iDY));
+#endif // AUI_FAST_COMP
 	}
 }
 //
@@ -214,7 +226,11 @@ inline CvPlot* plotXYWithRangeCheck(int iX, int iY, int iDX, int iDY, int iRange
 	int hexRange;
 
 	// I'm assuming iDX and iDY are in hex-space
+#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+	if ((iDX ^ iDY) >= 0)  // the signs match
+#else
 	if((iDX >= 0) == (iDY >= 0))  // the signs match
+#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 	{
 		int iAbsDX = iDX >= 0 ? iDX : -iDX;
 		int iAbsDY = iDY >= 0 ? iDY : -iDY;
@@ -234,6 +250,37 @@ inline CvPlot* plotXYWithRangeCheck(int iX, int iY, int iDX, int iDY, int iRange
 
 	return plotXY(iX, iY, iDX, iDY);
 }
+
+#ifdef AUI_PLOT_XY_WITH_RANGE_CHECK_REFERENCE_DISTANCE
+inline CvPlot* plotXYWithRangeCheck(int iX, int iY, int iDX, int iDY, int iRange, int& iDistance)
+{
+	// I'm assuming iDX and iDY are in hex-space
+#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+	if ((iDX ^ iDY) >= 0)  // the signs match
+#else
+	if ((iDX >= 0) == (iDY >= 0))  // the signs match
+#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+	{
+		int iAbsDX = iDX >= 0 ? iDX : -iDX;
+		int iAbsDY = iDY >= 0 ? iDY : -iDY;
+		iDistance = iAbsDX + iAbsDY;
+	}
+	else
+	{
+		int iAbsDX = iDX >= 0 ? iDX : -iDX;
+		int iAbsDY = iDY >= 0 ? iDY : -iDY;
+		iDistance = iAbsDX >= iAbsDY ? iAbsDX : iAbsDY;
+	}
+
+	if (iDistance > iRange)
+	{
+		return NULL;
+	}
+
+	return plotXY(iX, iY, iDX, iDY);
+}
+#endif // AUI_PLOT_XY_WITH_RANGE_CHECK_REFERENCE_DISTANCE
+
 //	----------------------------------------------------------------------------
 inline DirectionTypes directionXY(int iSourceX, int iSourceY, int iDestX, int iDestY)
 {
