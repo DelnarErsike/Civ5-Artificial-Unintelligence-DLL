@@ -1322,8 +1322,42 @@ void CvHomelandAI::PlotWorkerSeaMoves()
 		else
 		{
 			pUnit->DoSingleUnitAITypeFlip(UNITAI_WORKER_SEA, true);
+			continue;
 		}
 #endif // AUI_HOMELAND_PLOT_SEA_WORKER_MOVES_EMPLOYS_AITYPE_FLIP
+#ifdef AUI_HOMELAND_PLOT_WORKER_SEA_MOVES_DISBAND_WORK_BOATS_WITHOUT_TARGET
+		bool bCanTarget = false;
+
+		// Loop through all possible resources
+		for (unsigned int iI = 0; iI < m_TargetedNavalResources.size(); iI++)
+		{
+			// See if this unit can reach any this turn
+			CvPlot* pTarget = GC.getMap().plot(m_TargetedNavalResources[iI].GetTargetX(), m_TargetedNavalResources[iI].GetTargetY());
+
+			if (!pUnit->canBuild(pTarget, (BuildTypes)m_TargetedNavalResources[iI].GetAuxIntData()))
+			{
+				continue;
+			}
+
+			int iMoves = TurnsToReachTarget(pUnit.pointer(), pTarget, true, true);
+			if (iMoves < MAX_INT)
+			{
+				bCanTarget = true;
+				break;
+			}
+		}
+		// Scrap work boats that cannot target anything (death is delayed, so it won't mess up the loop)
+		if (!bCanTarget)
+		{
+			pUnit->scrap();
+			if (GC.getLogging() && GC.getAILogging())
+			{
+				CvString strLogString;
+				strLogString.Format("Disbanding work boat, cannot target anything. %s, X: %d, Y: %d, iNumWorkersSea: %d, iNumCities: %d", pUnit->getName().GetCString(), pUnit->getX(), pUnit->getY(), m_pPlayer->GetNumUnitsWithUnitAI(UNITAI_WORKER_SEA, true, true) + 1, m_pPlayer->getNumCities());
+				LogHomelandMessage(strLogString);
+			}
+		}
+#endif // AUI_HOMELAND_PLOT_WORKER_SEA_MOVES_DISBAND_WORK_BOATS_WITHOUT_TARGET
 	}
 }
 
@@ -1475,8 +1509,13 @@ void CvHomelandAI::PlotUpgradeMoves()
 			}
 		}
 
+#ifdef AUI_FAST_COMP
+		iFlavorMilitaryTraining = FASTMAX(1,iFlavorMilitaryTraining/3);
+		int iBonusUpgrades = FASTMAX(0,GC.getGame().getHandicapInfo().GetID() - 5); // more at the higher difficulties (the AI should have more money to spend)
+#else
 		iFlavorMilitaryTraining = max(1,iFlavorMilitaryTraining/3);
 		int iBonusUpgrades = max(0,GC.getGame().getHandicapInfo().GetID() - 5); // more at the higher difficulties (the AI should have more money to spend)
+#endif // AUI_FAST_COMP
 		iFlavorMilitaryTraining += iBonusUpgrades;
 
 		// Try to find a unit that can upgrade immediately
@@ -2938,7 +2977,11 @@ void CvHomelandAI::ExecuteMovesToSafestPlot()
 
 			int iRange = pUnit->getUnitInfo().GetMoves();
 #ifdef AUI_HOMELAND_PARATROOPERS_PARADROP
+#ifdef AUI_FAST_COMP
+			iRange = FASTMAX(iRange, pUnit->getDropRange());
+#else
 			iRange = MAX(iRange, pUnit->getDropRange());
+#endif // AUI_FAST_COMP
 #endif // AUI_HOMELAND_PARATROOPERS_PARADROP
 
 			// For each plot within movement range of the fleeing unit
@@ -4781,7 +4824,7 @@ void CvHomelandAI::ExecuteAircraftInterceptions()
 				CvPlot* pUnitPlot = pUnit->plot();
 				int iNumNearbyBombers = m_pPlayer->GetMilitaryAI()->GetNumEnemyAirUnitsInRange(pUnitPlot, pUnit->GetRange()/*m_iRecruitRange*/, false/*bCountFighters*/, true/*bCountBombers*/);
 				int iNumNearbyFighters = m_pPlayer->GetMilitaryAI()->GetNumEnemyAirUnitsInRange(pUnitPlot, pUnit->GetRange()/*m_iRecruitRange*/, true/*bCountFighters*/, false/*bCountBombers*/);
-				int iNumPlotNumAlreadySet = m_pPlayer->GetTacticalAI()->SamePlotFound(checkedPlotList, pUnitPlot);
+				int iNumPlotNumAlreadySet = pUnitPlot->getNumTimesInList(checkedPlotList);
 
 				if (iNumNearbyBombers == 1)
 				{
@@ -4935,7 +4978,11 @@ void CvHomelandAI::ExecuteAircraftMoves()
 						iTempDanger += m_pPlayer->GetPlotDanger(*plotDirection(pTargetPlot->getX(), pTargetPlot->getY(), (DirectionTypes)iI));
 					}
 					iTempDanger /= NUM_DIRECTION_TYPES;
+#ifdef AUI_FAST_COMP
+					iPlotDanger = FASTMAX(iPlotDanger, iTempDanger);
+#else
 					iPlotDanger = MAX(iPlotDanger, iTempDanger);
+#endif // AUI_FAST_COMP
 				}
 #else
 				iPlotDanger += 5000;
@@ -5384,7 +5431,11 @@ void CvHomelandAI::ExecuteArchaeologistMoves()
 				LogHomelandMessage(strLogString);
 			}
 		}
+#ifdef AUI_FAST_COMP
+		iSitesStillAvailable = FASTMAX(0, iSitesStillAvailable - 1);
+#else
 		iSitesStillAvailable = MAX(0, iSitesStillAvailable - 1);
+#endif // AUI_FAST_COMP
 #endif // AUI_HOMELAND_EXECUTE_ARCHAEOLOGIST_MOVES_DISBAND_IF_NO_AVAILABLE_SITES
 	}
 }
@@ -5681,7 +5732,11 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 			{
 				if(!(pAdjacentPlot->isVisibleEnemyUnit(pUnit)))
 				{
+#if defined(AUI_ASTAR_FIX_PATH_VALID_AI_CONTROL) || (defined(AUI_ASTAR_FIX_PATH_DEST_VALID_AI_CONTROL) && !defined(AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_PATH))
+					if(pUnit->GeneratePath(pAdjacentPlot, MOVE_UNITS_IGNORE_DANGER, true))
+#else
 					if(pUnit->GeneratePath(pAdjacentPlot, 0, true))
+#endif
 					{
 						iValue = (1 + GC.getGame().getJonRandNum(10000, "AI Patrol"));
 
