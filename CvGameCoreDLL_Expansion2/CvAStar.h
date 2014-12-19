@@ -474,8 +474,8 @@ void TradePathInitialize(const void* pointer, CvAStar* finder);
 void TradePathUninitialize(const void* pointer, CvAStar* finder);
 
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-void AdjustDistanceFilterForRoads(UnitHandle pUnit, CvPlot* pTarget, int& iDistance);
-int GetAdjustedDistanceWithRoadFilter(UnitHandle pUnit, CvPlot* pTarget, int iDistance);
+void AdjustDistanceFilterForRoads(const UnitHandle pUnit, int& iDistance);
+int GetAdjustedDistanceWithRoadFilter(const UnitHandle pUnit, int iDistance);
 #endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 
 // Derived classes (for more convenient access to pathfinding)
