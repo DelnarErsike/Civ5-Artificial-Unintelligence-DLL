@@ -96,6 +96,10 @@ public:
 
 	void erase(bool bEraseUnits);
 
+#ifdef AUI_PLOT_COUNT_OCCURANCES_IN_LIST
+	int getNumTimesInList(std::vector<CvPlot*> aPlotList, bool bTerminateAfterFirst = false) const;
+#endif // AUI_PLOT_COUNT_OCCURANCES_IN_LIST
+
 	void doTurn();
 
 	void doImprovement();
@@ -543,6 +547,10 @@ public:
 	int getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUpgrade, PlayerTypes ePlayer) const;
 
 	int countNumAirUnits(TeamTypes eTeam) const;
+
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+	int getStrategicValue(bool bCheckNeighbors = true, bool bCheckThisType = true) const;
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 
 	int getFoundValue(PlayerTypes eIndex);
 	bool isBestAdjacentFound(PlayerTypes eIndex);

@@ -1248,9 +1248,22 @@ CvPlot* CvPlot::getNearestLandPlotInternal(int iDistance) const
 		return NULL;
 	}
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iDX, iMaxDX;
+	for (int iDY = -iDistance; iDY <= iDistance; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iDistance - FASTMAX(0, iDY);
+		for (iDX = -iDistance - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iDistance - MAX(0, iDY);
+		for (iDX = -iDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+#else
 	for(int iDX = -iDistance; iDX <= iDistance; iDX++)
 	{
 		for(int iDY = -iDistance; iDY <= iDistance; iDY++)
+#endif // AUI_HEXSPACE_DX_LOOPS
 		{
 			// bkw - revisit this, it works but is inefficient
 			CvPlot* pPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -1826,8 +1839,13 @@ void CvPlot::updateSeeFromSight(bool bIncrement)
 		}
 	}
 
+#ifdef AUI_FAST_COMP
+	iRange = FASTMAX(GC.getRECON_VISIBILITY_RANGE() + 1, iRange);
+	iRange = FASTMIN(8, iRange); // I don't care, I'm not looking more than 8 out, deal
+#else
 	iRange = std::max(GC.getRECON_VISIBILITY_RANGE() + 1, iRange);
 	iRange = std::min(8, iRange); // I don't care, I'm not looking more than 8 out, deal
+#endif // AUI_FAST_COMP
 
 	for(iDX = -iRange; iDX <= iRange; iDX++)
 	{
@@ -2453,7 +2471,11 @@ int CvPlot::getBuildTime(BuildTypes eBuild, PlayerTypes ePlayer) const
 		iTime += GC.getBuildInfo(eBuild)->getFeatureTime(getFeatureType());
 	}
 
+#ifdef AUI_FAST_COMP
+	iTime *= FASTMAX(0, (GC.getTerrainInfo(getTerrainType())->getBuildModifier() + 100));
+#else
 	iTime *= std::max(0, (GC.getTerrainInfo(getTerrainType())->getBuildModifier() + 100));
+#endif // AUI_FAST_COMP
 	iTime /= 100;
 
 	iTime *= GC.getGame().getGameSpeedInfo().getBuildPercent();
@@ -2509,7 +2531,11 @@ int CvPlot::getBuildTurnsLeft(BuildTypes eBuild, PlayerTypes ePlayer, int iNowEx
 	iBuildLeft -= getBuildProgress(eBuild);
 	iBuildLeft -= iNowBuildRate;
 
+#ifdef AUI_FAST_COMP
+	iBuildLeft = FASTMAX(0, iBuildLeft);
+#else
 	iBuildLeft = std::max(0, iBuildLeft);
+#endif // AUI_FAST_COMP
 
 	iTurnsLeft = (iBuildLeft / iThenBuildRate);
 
@@ -2560,13 +2586,21 @@ int CvPlot::getBuildTurnsTotal(BuildTypes eBuild, PlayerTypes ePlayer) const
 
 	iBuildLeft = getBuildTime(eBuild, ePlayer);
 
+#ifdef AUI_FAST_COMP
+	iBuildLeft = FASTMAX(0, iBuildLeft);
+#else
 	iBuildLeft = std::max(0, iBuildLeft);
+#endif // AUI_FAST_COMP
 
 	iTurnsLeft = (iBuildLeft / iThenBuildRate);
 
 	iTurnsLeft--;
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, iTurnsLeft);
+#else
 	return std::max(1, iTurnsLeft);
+#endif // AUI_FAST_COMP
 }
 
 
@@ -2605,9 +2639,15 @@ int CvPlot::getFeatureProduction(BuildTypes eBuild, PlayerTypes ePlayer, CvCity*
 	}
 
 	// Distance mod
+#ifdef AUI_FAST_COMP
+	iProduction -= (FASTMAX(0, (plotDistance(getX(), getY(), (*ppCity)->getX(), (*ppCity)->getY()) - 2)) * 5);
+
+	iProduction *= FASTMAX(0, (GET_PLAYER((*ppCity)->getOwner()).getFeatureProductionModifier() + 100));
+#else
 	iProduction -= (std::max(0, (plotDistance(getX(), getY(), (*ppCity)->getX(), (*ppCity)->getY()) - 2)) * 5);
 
 	iProduction *= std::max(0, (GET_PLAYER((*ppCity)->getOwner()).getFeatureProductionModifier() + 100));
+#endif // AUI_FAST_COMP
 	iProduction /= 100;
 
 	iProduction *= GC.getGame().getGameSpeedInfo().getFeatureProductionPercent();
@@ -2619,7 +2659,11 @@ int CvPlot::getFeatureProduction(BuildTypes eBuild, PlayerTypes ePlayer, CvCity*
 		iProduction /= 100;
 	}
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, iProduction);
+#else
 	return std::max(0, iProduction);
+#endif // AUI_FAST_COMP
 }
 
 
@@ -2648,7 +2692,11 @@ const UnitHandle CvPlot::getBestDefender(PlayerTypes eOwner, PlayerTypes eAttack
 		{
 			if((eOwner ==  NO_PLAYER) || (pLoopUnit->getOwner() == eOwner))
 			{
+#ifdef AUI_PLOT_FIX_GET_BEST_DEFENDER_CHECK_PLOT_VISIBILITY
+				if((eAttackingPlayer == NO_PLAYER) || (!(pLoopUnit->isInvisible(GET_PLAYER(eAttackingPlayer).getTeam(), false)) && (pLoopUnit->getDomainType() == DOMAIN_AIR || isVisible(GET_PLAYER(eAttackingPlayer).getTeam()))))
+#else
 				if((eAttackingPlayer == NO_PLAYER) || !(pLoopUnit->isInvisible(GET_PLAYER(eAttackingPlayer).getTeam(), false)))
+#endif // AUI_PLOT_FIX_GET_BEST_DEFENDER_CHECK_PLOT_VISIBILITY
 				{
 					if(!bTestAtWar || eAttackingPlayer == NO_PLAYER || pLoopUnit->isEnemy(GET_PLAYER(eAttackingPlayer).getTeam(), this) || (NULL != pAttacker && pAttacker->isEnemy(GET_PLAYER(pLoopUnit->getOwner()).getTeam(), this)))
 					{
@@ -4365,7 +4413,11 @@ int CvPlot::getUpgradeTimeLeft(ImprovementTypes eImprovement, PlayerTypes ePlaye
 		iTurnsLeft++;
 	}
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, iTurnsLeft);
+#else
 	return std::max(1, iTurnsLeft);
+#endif // AUI_FAST_COMP
 }
 
 
@@ -6893,6 +6945,45 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 	const CvYieldInfo& kYield = *GC.getYieldInfo(eYield);
 
 	CvCity* pWorkingCity = getWorkingCity();
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+	PlayerTypes eOwner = (PlayerTypes)m_eOwner;
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
+	ImprovementTypes eUniqueImprovement = NO_IMPROVEMENT;
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
+	if (eFutureOwner != NO_PLAYER && eOwner == NO_PLAYER)
+	{
+		eOwner = eFutureOwner;
+		pWorkingCity = GET_PLAYER(eFutureOwner).getCapitalCity();
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
+		BuildTypes eBuild;
+		for (int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+		{
+			eBuild = (BuildTypes)iBuildIndex;
+			if (!canBuild(eBuild, eOwner, false, false))
+			{
+				continue;
+			}
+			CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
+			if (pkBuild)
+			{
+				ImprovementTypes eImprovement = (ImprovementTypes)pkBuild->getImprovement();
+				if (eImprovement != NO_IMPROVEMENT)
+				{
+					CvImprovementEntry* pkImprovement = GC.getImprovementInfo(eImprovement);
+					if (pkImprovement && pkImprovement->IsSpecificCivRequired())
+					{
+						if (pkImprovement->GetRequiredCivilization() == GET_PLAYER(eOwner).getCivilizationType())
+						{
+							eUniqueImprovement = eImprovement;
+							break;
+						}
+					}
+				}
+			}
+		}
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
+	}
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 	if(pWorkingCity)
 	{
 		eMajority = pWorkingCity->GetCityReligions()->GetReligiousMajority();
@@ -6933,16 +7024,13 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 		iYield += kYield.getLakeChange();
 	}
 
-#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
-	bool bOwnerFlipped = false;
-	PlayerTypes eOwner = (PlayerTypes)m_eOwner;
-	if (eFutureOwner != NO_PLAYER && eOwner == NO_PLAYER)
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
+	// Yield from unique improvement
+	if (eUniqueImprovement != NO_IMPROVEMENT)
 	{
-		bOwnerFlipped = true;
-		eOwner = eFutureOwner;
-		pWorkingCity = GET_PLAYER(eFutureOwner).getCapitalCity();
+		iYield += calculateImprovementYieldChange(eUniqueImprovement, eYield, eOwner);
 	}
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 
 	if(!bIgnoreFeature)
 	{
@@ -7078,14 +7166,22 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 		iYield += ((bIgnoreFeature || (getFeatureType() == NO_FEATURE)) ? GC.getTerrainInfo(getTerrainType())->getHillsYieldChange(eYield) : GC.getFeatureInfo(getFeatureType())->getHillsYieldChange(eYield));
 	}
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, iYield);
+#else
 	return std::max(0, iYield);
+#endif // AUI_FAST_COMP
 }
 
 
 //	--------------------------------------------------------------------------------
 int CvPlot::calculateBestNatureYield(YieldTypes eIndex, TeamTypes eTeam) const
 {
+#ifdef AUI_FAST_COMP
+	return FASTMAX(calculateNatureYield(eIndex, eTeam, false), calculateNatureYield(eIndex, eTeam, true));
+#else
 	return std::max(calculateNatureYield(eIndex, eTeam, false), calculateNatureYield(eIndex, eTeam, true));
+#endif // AUI_FAST_COMP
 }
 
 
@@ -7176,7 +7272,11 @@ int CvPlot::calculateImprovementYieldChange(ImprovementTypes eImprovement, Yield
 
 		for(iI = 0; iI < GC.getNumRouteInfos(); ++iI)
 		{
+#ifdef AUI_FAST_COMP
+			iBestYield = FASTMAX(iBestYield, pImprovement->GetRouteYieldChanges(iI, eYield));
+#else
 			iBestYield = std::max(iBestYield, pImprovement->GetRouteYieldChanges(iI, eYield));
+#endif // AUI_FAST_COMP
 		}
 
 		iYield += iBestYield;
@@ -7481,7 +7581,11 @@ int CvPlot::calculateYield(YieldTypes eYield, bool bDisplay)
 
 	if(bCity)
 	{
+#ifdef AUI_FAST_COMP
+		iYield = FASTMAX(iYield, kYield.getMinCity());
+#else
 		iYield = std::max(iYield, kYield.getMinCity());
+#endif // AUI_FAST_COMP
 
 		// Mod for Player; used for Policies and such
 		int iTemp = GET_PLAYER(getOwner()).GetCityYieldChange(eYield);	// In hundreds - will be added to capitalYieldChange below
@@ -7526,7 +7630,11 @@ int CvPlot::calculateYield(YieldTypes eYield, bool bDisplay)
 		}
 	}
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, iYield);
+#else
 	return std::max(0, iYield);
+#endif // AUI_FAST_COMP
 }
 
 
@@ -9286,6 +9394,26 @@ void CvPlot::setScriptData(const char* szNewValue)
 	m_szScriptData = _strdup(szNewValue);
 }
 
+#ifdef AUI_PLOT_COUNT_OCCURANCES_IN_LIST
+int CvPlot::getNumTimesInList(std::vector<CvPlot*> aPlotList, bool bTerminateAfterFirst) const
+{
+	int rtnValue = 0;
+	std::vector<CvPlot*>::iterator it;
+
+	for (it = aPlotList.begin(); it != aPlotList.end(); it++)
+	{
+		if (((*it)->getX() == getX()) && ((*it)->getY() == getY()))
+		{
+			rtnValue++;
+			if (bTerminateAfterFirst)
+				return rtnValue;
+		}
+	}
+
+	return rtnValue;
+}
+#endif // AUI_PLOT_COUNT_OCCURANCES_IN_LIST
+
 // Protected Functions...
 
 //	--------------------------------------------------------------------------------
@@ -10209,7 +10337,11 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 
 	if(bCity)
 	{
+#ifdef AUI_FAST_COMP
+		iYield = FASTMAX(iYield, kYield.getMinCity());
+#else
 		iYield = std::max(iYield, kYield.getMinCity());
+#endif // AUI_FAST_COMP
 
 		// Mod for Player; used for Policies and such
 		int iTemp = GET_PLAYER(getOwner()).GetCityYieldChange(eYield);	// In hundreds - will be added to capitalYieldChange below
@@ -10254,7 +10386,11 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 		}
 	}
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(0, iYield);
+#else
 	return std::max(0, iYield);
+#endif // AUI_FAST_COMP
 }
 
 //	--------------------------------------------------------------------------------
@@ -10372,6 +10508,241 @@ int CvPlot::countNumAirUnits(TeamTypes eTeam) const
 
 	return iCount;
 }
+
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+// TODO: Make this fire off only once and store its value to an internal parameter
+int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
+{
+	// Only passable terrain can have strategic value
+	if (!isImpassable() && !isMountain())
+	{
+		return 0;
+	}
+	
+	int iRtnValue = 0;
+
+	int iI;
+	CvPlot* pLoopPlot;
+
+	int aiPlotDomains[NUM_DIRECTION_TYPES];
+	int iThisPlotDomain = 1;
+	if (!bCheckThisType)
+	{
+		iThisPlotDomain = 3;
+	}
+	else if (isWater())
+	{
+		iThisPlotDomain = 2;
+	}
+
+	int iStrategicPlots = 0;
+	// "High Value" strategic plots are those where a primary plot type is choked off (Water for naval maps, land for non-naval maps) or the choking terrain is impassable
+	int iHighValueStrategicPlots = 0;
+	// If this tile is a hill, count it as a "neighboring hill"
+	int iNeighboringHills = (isHills() ? 1 : 0);
+
+	// For checking neighbors
+	bool abPlotsToCheck[NUM_DIRECTION_TYPES];
+
+	// For straits
+	bool bAddThis;
+	std::vector<int> aiLandAreas;
+	std::vector<int> aiWaterAreas;
+	std::vector<int>::iterator it;
+	bool bSkipLandStrait = GC.getMap().getNumLandAreas() < 2;
+	bool bSkipWaterStrait = GC.getMap().getNumAreas() - GC.getMap().getNumLandAreas() < 2;
+
+	// Strategic value of purely this plot first
+	for (iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+	{
+		pLoopPlot = plotDirection(getX(), getY(), (DirectionTypes)iI);
+		if (pLoopPlot)
+		{
+			bAddThis = true;
+			if (pLoopPlot->isImpassable() || pLoopPlot->isMountain())
+			{
+				aiPlotDomains[iI] = 4;
+				// Check for straits
+				if (bSkipLandStrait || GC.getMap().getArea(pLoopPlot->getArea())->getNumTiles() < 2)
+					continue;
+				for (it = aiLandAreas.begin(); it != aiLandAreas.end(); ++it)
+				{
+					if (pLoopPlot->getArea() == (*it))
+					{
+						bAddThis = false;
+						break;
+					}
+				}
+				if (bAddThis)
+					aiLandAreas.push_back(pLoopPlot->getArea());
+			}
+			else if (pLoopPlot->isWater())
+			{
+				aiPlotDomains[iI] = 2;
+				// Check for straits
+				if (bSkipWaterStrait || pLoopPlot->isLake())
+					continue;
+				for (it = aiWaterAreas.begin(); it != aiWaterAreas.end(); ++it)
+				{
+					if (pLoopPlot->getArea() == (*it))
+					{
+						bAddThis = false;
+						break;
+					}
+				}
+				if (bAddThis)
+					aiWaterAreas.push_back(pLoopPlot->getArea());
+			}
+			else
+			{
+				aiPlotDomains[iI] = 1;
+				// Check for neighboring hills
+				if (pLoopPlot->isHills())
+					iNeighboringHills++;
+				// Check for straits
+				if (bSkipLandStrait || GC.getMap().getArea(pLoopPlot->getArea())->getNumTiles() < 2)
+					continue;
+				for (it = aiLandAreas.begin(); it != aiLandAreas.end(); ++it)
+				{
+					if (pLoopPlot->getArea() == (*it))
+					{
+						bAddThis = false;
+						break;
+					}
+				}
+				if (bAddThis)
+					aiLandAreas.push_back(pLoopPlot->getArea());
+			}
+		}
+	}
+	// If the only water tiles around this one are lakes, their domains are switched over to peaks
+	if (aiWaterAreas.size() == 0)
+	{
+		for (iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+		{
+			if (aiPlotDomains[iI] == 2)
+				aiPlotDomains[iI] = 4;
+		}
+	}
+
+	// Each neighboring plot where the tiles both CW and CCW to that plot have a different tile domain are considered "strategic"
+	// If the plot is a peak, both neighboring tiles must be the same tile domain; lake plots have peak domains if there are no neighboring coastal tiles
+	// If the current (central) plot is a chokepoint, it will always have at least two "strategic" tiles
+	// Examples below:
+	////                        -------------------               -------------------              -------------------              -------------------
+	////                        |        |        |               |        |        |              |        |        |              |        |        |
+	////                        |  Land  | Water  |               |  Land  | Water  |              |  Land  |  Land  |              |  Peak  |  Land  |
+	////                        |   **   |        |               |   **   |        |              |        |        |              |   **   |   **   |
+	////                    ----------------------------     ----------------------------     ----------------------------     ----------------------------
+	////                    |        |        |        |     |        |        |        |     |        |        |        |     |        |        |        |
+	////                    |  Peak  |  City  | Water  |     | Water  |  City  | Water  |     |  Peak  |  City  |  Land  |     |  Land  |  City  |  Peak  |
+	////                    |        |        |        |     |        |        |        |     |        |        |        |     |   **   |        |   **   |
+	////                    ----------------------------     ----------------------------     ----------------------------     ----------------------------
+	////                        |        |        |               |        |        |              |        |        |              |        |        |
+	////                        | Water  |  Land  |               | Water  |  Land  |              | Water  |  Land  |              |  Peak  |  Land  |
+	////                        |   **   |   **   |               |        |   **   |              |   **   |        |              |   **   |   **   |
+	////                        -------------------               -------------------              -------------------              -------------------
+	//// Strategic Tiles marked with **  = 3                         Count = 2                        Count = 1                        Count = 6
+	////                      Water and Land choke               Water and Land choke         Only one ** tile, not a choke
+	////                                                Though only land tiles are marked **!
+	//
+	// If the central tile is not going to be a city (ie. bCheckThisType = true), strategic tiles only count if either a strategic plot is the same tile domain as the main tile...
+	// ...or if the two neighboring tiles are both the same tile domain, like so:
+	////                        -------------------               -------------------              -------------------              -------------------
+	////                        |        |        |               |        |        |              |        |        |              |        |        |
+	////                        |  Land  | Water  |               |  Land  | Water  |              |  Land  |  Land  |              |  Peak  |  Land  |
+	////                        |   **   |        |               |   **   |        |              |        |        |              |        |        |
+	////                    ----------------------------     ----------------------------     ----------------------------     ----------------------------
+	////                    |        |        |        |     |        |        |        |     |        |        |        |     |        |        |        |
+	////                    |  Peak  |  Land  | Water  |     | Water  | Water  | Water  |     |  Peak  |  Land  |  Land  |     |  Land  |  Peak  |  Peak  |
+	////                    |        |        |        |     |        |        |        |     |        |        |        |     |        |        |        |
+	////                    ----------------------------     ----------------------------     ----------------------------     ----------------------------
+	////                        |        |        |               |        |        |              |        |        |              |        |        |
+	////                        | Water  |  Land  |               | Water  |  Land  |              | Water  |  Land  |              |  Peak  |  Land  |
+	////                        |        |   **   |               |        |   **   |              |        |        |              |        |        |
+	////                        -------------------               -------------------              -------------------              -------------------
+	//// Strategic Tiles marked with **  = 2                         Count = 2                        Count = 0                        Count = 0 
+	////                            Land choke       Water choke even if land tiles are "strategic"                           Peaks cannot have strategic value!
+
+	// It's faster to just loop these with the main for() loop than to calculate them out each time with modulo
+	int iCCWI = NUM_DIRECTION_TYPES - 1;
+	int iCWI = 1;
+	for (iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+	{
+		// Plot domains are: 4 for peak, 2 for water, 1 for land
+		int iCCWPlotDomain = aiPlotDomains[iCCWI];
+		int iCWPlotDomain = aiPlotDomains[iCWI];
+		if (iCCWPlotDomain != aiPlotDomains[iI] && aiPlotDomains[iI] != iCWPlotDomain && 
+		//  Two neighboring plots are same type as main plot... or plot being checked is the same type as the main plot
+			((iCCWPlotDomain & iCWPlotDomain & iThisPlotDomain) || (aiPlotDomains[iI] & iThisPlotDomain)))
+		{
+			iStrategicPlots++;
+			abPlotsToCheck[iCCWI] = true;
+			abPlotsToCheck[iI] = true;
+			abPlotsToCheck[iCWI] = true;
+			if (GC.getMap().GetAIMapHint() & 1)
+			{
+				if (iThisPlotDomain & 2)
+					iHighValueStrategicPlots++;
+			}
+			else
+			{
+				if (iThisPlotDomain & 1)
+					iHighValueStrategicPlots++;
+			}
+		}
+		iCCWI++;
+		iCWI++;
+		// Two conditionals are faster than constant modulos
+		if (iCCWI == NUM_DIRECTION_TYPES)
+			iCCWI = 0;
+		if (iCWI == NUM_DIRECTION_TYPES)
+			iCWI = 0;
+	}
+	
+	// Plot is only a choke point if there are at least two strategic plots
+	if (iStrategicPlots > 1)
+	{
+		iRtnValue += (iStrategicPlots + iHighValueStrategicPlots) * GC.getCHOKEPOINT_STRATEGIC_VALUE();
+	}
+
+	// Straits are extremely strategic
+#ifdef AUI_FAST_COMP
+	int iStraitCount = FASTMAX((int)aiLandAreas.size(), 1) - 1 + FASTMAX((int)aiWaterAreas.size(), 1) - 1;
+#else
+	int iStraitCount = MAX((int)aiLandAreas.size(), 1) - 1 + MAX((int)aiWaterAreas.size(), 1) - 1;
+#endif // AUI_FAST_COMP
+	iRtnValue += (iStraitCount) * GC.getCHOKEPOINT_STRATEGIC_VALUE();
+
+	// Everything afterwards has much smaller weight; scores of all adjacent tiles are averaged into one tile's worth of points
+	iRtnValue *= NUM_DIRECTION_TYPES;
+
+	// Neighboring hills mean that ranged units need to be in melee range to fire at this plot
+	iRtnValue += iNeighboringHills * GC.getHILL_STRATEGIC_VALUE();
+
+	// River crossings are to melee units what neighboring hills are to ranged units (-ish)
+	iRtnValue += getRiverCrossingCount() * GC.getHILL_STRATEGIC_VALUE();
+
+	// We could theoretically keep looping through tiles for chokepoints, but
+	if (bCheckNeighbors)
+	{
+		for (iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+		{
+			if (abPlotsToCheck[iI])
+			{
+				pLoopPlot = plotDirection(getX(), getY(), (DirectionTypes)iI);
+				if (pLoopPlot)
+					iRtnValue += pLoopPlot->getStrategicValue(false);
+			}
+		}
+	}
+
+	// For having multiplied the strait and chokepoint scores by this number earlier
+	iRtnValue /= NUM_DIRECTION_TYPES;
+
+	return iRtnValue;
+}
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 
 //	--------------------------------------------------------------------------------
 PlayerTypes CvPlot::GetBuilderAIScratchPadPlayer() const
