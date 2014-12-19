@@ -129,24 +129,8 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 	int iPolicy;
 	CvPolicyEntry* entry;
 	int* paiTempWeights;
-#ifdef AUI_MINOR_CIV_RATIO
+#if defined(AUI_MINOR_CIV_RATIO) || defined(AUI_GS_SCIENCE_FLAVOR_BOOST) || defined(AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY) || defined(AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION) || defined(AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER) || defined(AUI_POLICY_NULLIFY_EXPANSION_WEIGHT_FOR_OCC)
 	double dWeight = (double)iWeight;
-#else
-#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
-	double dWeight = (double)iWeight;
-#else
-#ifdef AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY
-	double dWeight = (double)iWeight;
-#else
-#ifdef AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION
-	double dWeight = (double)iWeight;
-#else
-#ifdef AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER
-	double dWeight = (double)iWeight;
-#endif // AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER
-#endif // AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION
-#endif // AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY
-#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
 #endif // AUI_MINOR_CIV_RATIO
 
 	CvPolicyXMLEntries* pkPolicyEntries = m_pCurrentPolicies->GetPolicies();
@@ -187,9 +171,13 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 	if (eFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"))
 	{
 		CvPlayerReligions* pPlayerReligions = m_pCurrentPolicies->GetPlayer()->GetReligions();
-		if (!(pPlayerReligions->HasCreatedReligion() || (pPlayerReligions->HasCreatedPantheon() && GC.getGame().GetGameReligions()->GetNumReligionsStillToFound() > 0)))
+		if (!pPlayerReligions->HasCreatedReligion() && !(pPlayerReligions->HasCreatedPantheon() && GC.getGame().GetGameReligions()->GetNumReligionsStillToFound() > 0))
 		{
 			dWeight /= AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION;
+		}
+		else if (pPlayerReligions->HasCreatedReligion())
+		{
+			dWeight *= AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION;
 		}
 	}
 #endif // AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION
@@ -204,6 +192,10 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 		}
 	}
 #endif // AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER
+#ifdef AUI_POLICY_NULLIFY_EXPANSION_WEIGHT_FOR_OCC
+	if (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE) && eFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"))
+		dWeight = 0;
+#endif // AUI_POLICY_NULLIFY_EXPANSION_WEIGHT_FOR_OCC
 
 	// Loop through all our policies
 	for(iPolicy = 0; iPolicy < pkPolicyEntries->GetNumPolicies(); iPolicy++)
@@ -238,22 +230,10 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 #ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 			paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight * BoostFlavorDueToUniqueGP(entry) + 0.5);
 #else
-#ifdef AUI_MINOR_CIV_RATIO
-			paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
-#else
-#ifdef AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY
-			paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
-#else
-#ifdef AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION
-			paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
-#else
-#ifdef AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER
+#if defined(AUI_MINOR_CIV_RATIO) || defined(AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY) || defined(AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION) || defined(AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER)
 			paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
 #else
 			paiTempWeights[iPolicy] = entry->GetFlavorValue(eFlavor) * iWeight;
-#endif // AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER
-#endif // AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION
-#endif // AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY
 #endif // AUI_MINOR_CIV_RATIO
 #endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 #endif // AUI_GS_SCIENCE_FLAVOR_BOOST
@@ -1218,7 +1198,8 @@ int CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
 	{
 #ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
 		// Older branches get less weight because there have been more chances to open them
-		dDivider = MAX(1.0, sqrt((double)pPlayer->GetCurrentEra() - pkPolicyBranchInfo->GetEraPrereq()));
+		if (!pkPolicyBranchInfo->IsLockedWithoutReligion() || pPlayer->GetReligions()->GetReligionCreatedByPlayer() == NO_RELIGION)
+			dDivider = MAX(1.0, sqrt((double)pPlayer->GetCurrentEra() - pkPolicyBranchInfo->GetEraPrereq()));
 #endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
 		
 		for(int iPolicyLoop = 0; iPolicyLoop < m_pCurrentPolicies->GetPolicies()->GetNumPolicies(); iPolicyLoop++)
