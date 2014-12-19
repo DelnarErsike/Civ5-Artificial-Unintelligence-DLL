@@ -1398,7 +1398,11 @@ void loadFromIni(FIGameIniParser& iniParser)
 	if(szHolder != "EMPTY")
 	{
 		StringToBools(szHolder, &iNumBools, &pbBools);
+#ifdef AUI_FAST_COMP
+		iNumBools = FASTMIN(iNumBools, GC.getNumVictoryInfos());
+#else
 		iNumBools = std::min(iNumBools, GC.getNumVictoryInfos());
+#endif // AUI_FAST_COMP
 		int i;
 		std::vector<bool> tempVBool;
 		for(i = 0; i < iNumBools; i++)
@@ -1416,7 +1420,11 @@ void loadFromIni(FIGameIniParser& iniParser)
 		if(szHolder != "EMPTY")
 		{
 			StringToBools(szHolder, &iNumBools, &pbBools);
+#ifdef AUI_FAST_COMP
+			iNumBools = FASTMIN(iNumBools, static_cast<int>(NUM_GAMEOPTION_TYPES));
+#else
 			iNumBools = std::min(iNumBools, static_cast<int>(NUM_GAMEOPTION_TYPES));
+#endif // AUI_FAST_COMP
 			int i;
 			for(i = 0; i < iNumBools; i++)
 			{
