@@ -4234,9 +4234,7 @@ BeliefTypes CvReligionAI::ChoosePantheonBelief()
 		if(pEntry)
 		{
 			const int iScore = ScoreBelief(pEntry);
-#ifndef AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 			if(iScore > 0)
-#endif // AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 			{
 				beliefChoices.push_back(eBelief, iScore);
 			}
@@ -4253,6 +4251,10 @@ BeliefTypes CvReligionAI::ChoosePantheonBelief()
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
 		LogBeliefChoices(beliefChoices, rtnValue);
+	}
+	else
+	{
+		rtnValue = availableBeliefs.at(GC.getGame().getJonRandNum(availableBeliefs.size() , "Choosing random Pantheon belief."));
 	}
 #else
 	// Choose from weighted vector
@@ -4282,9 +4284,7 @@ BeliefTypes CvReligionAI::ChooseFounderBelief()
 		if(pEntry)
 		{
 			const int iScore = ScoreBelief(pEntry);
-#ifndef AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 			if(iScore > 0)
-#endif // AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 			{
 				beliefChoices.push_back(eBelief, iScore);
 			}
@@ -4301,6 +4301,10 @@ BeliefTypes CvReligionAI::ChooseFounderBelief()
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
 		LogBeliefChoices(beliefChoices, rtnValue);
+	}
+	else
+	{
+		rtnValue = availableBeliefs.at(GC.getGame().getJonRandNum(availableBeliefs.size() , "Choosing random Founder belief."));
 	}
 #else
 	// Choose from weighted vector
@@ -4330,9 +4334,7 @@ BeliefTypes CvReligionAI::ChooseFollowerBelief()
 		if(pEntry)
 		{
 			const int iScore = ScoreBelief(pEntry);
-#ifndef AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 			if(iScore > 0)
-#endif // AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 			{
 				beliefChoices.push_back(eBelief, iScore);
 			}
@@ -4349,6 +4351,10 @@ BeliefTypes CvReligionAI::ChooseFollowerBelief()
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
 		LogBeliefChoices(beliefChoices, rtnValue);
+	}
+	else
+	{
+		rtnValue = availableBeliefs.at(GC.getGame().getJonRandNum(availableBeliefs.size(), "Choosing random Follower belief."));
 	}
 #else
 	// Choose from weighted vector
@@ -4378,9 +4384,7 @@ BeliefTypes CvReligionAI::ChooseEnhancerBelief()
 		if(pEntry)
 		{
 			const int iScore = ScoreBelief(pEntry);
-#ifndef AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 			if(iScore > 0)
-#endif // AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 			{
 				beliefChoices.push_back(eBelief, iScore);
 			}
@@ -4397,6 +4401,10 @@ BeliefTypes CvReligionAI::ChooseEnhancerBelief()
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
 		LogBeliefChoices(beliefChoices, rtnValue);
+	}
+	else
+	{
+		rtnValue = availableBeliefs.at(GC.getGame().getJonRandNum(availableBeliefs.size(), "Choosing random Enhancer belief."));
 	}
 #else
 	// Choose from weighted vector
@@ -4428,9 +4436,7 @@ BeliefTypes CvReligionAI::ChooseBonusBelief(int iExcludeBelief1, int iExcludeBel
 			if (pEntry->GetID() != iExcludeBelief1 && pEntry->GetID() != iExcludeBelief2 && pEntry->GetID() != iExcludeBelief3)
 			{
 				const int iScore = ScoreBelief(pEntry);
-#ifndef AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 				if(iScore > 0)
-#endif // AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 				{
 					beliefChoices.push_back(eBelief, iScore);
 				}
@@ -4448,6 +4454,10 @@ BeliefTypes CvReligionAI::ChooseBonusBelief(int iExcludeBelief1, int iExcludeBel
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
 		LogBeliefChoices(beliefChoices, rtnValue);
+	}
+	else
+	{
+		rtnValue = availableBeliefs.at(GC.getGame().getJonRandNum(availableBeliefs.size(), "Choosing random Bonus belief."));
 	}
 #else
 	// Choose from weighted vector
@@ -4477,9 +4487,7 @@ BeliefTypes CvReligionAI::ChooseReformationBelief()
 		if(pEntry)
 		{
 			const int iScore = ScoreBelief(pEntry);
-#ifndef AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 			if(iScore > 0)
-#endif // AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
 			{
 				beliefChoices.push_back(eBelief, iScore);
 			}
@@ -4496,6 +4504,10 @@ BeliefTypes CvReligionAI::ChooseReformationBelief()
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
 		LogBeliefChoices(beliefChoices, rtnValue);
+	}
+	else
+	{
+		rtnValue = availableBeliefs.at(GC.getGame().getJonRandNum(availableBeliefs.size(), "Choosing random Reformation belief."));
 	}
 #else
 	// Choose from weighted vector
@@ -5348,25 +5360,16 @@ int CvReligionAI::ScoreBelief(CvBeliefEntry* pEntry)
 #endif // AUI_RELIGION_USE_DOUBLES
 #ifdef AUI_RELIGION_SCORE_BELIEF_SCALE_PLOTS_WITH_DISTANCE
 				CvCity* pLoopCity = m_pPlayer->GetClosestFriendlyCity(*pPlot, 3);
-				if (pLoopCity && pLoopCity == pClosestCity)
+				if (pLoopCity)
 				{
 #ifdef AUI_RELIGION_USE_DOUBLES
-					dScoreAtPlot *= 3.0;
+					dScoreAtPlot *= AUI_RELIGION_SCORE_BELIEF_SCALE_PLOTS_WITH_DISTANCE;
 #else
 					iScoreAtPlot *= 3;
 #endif // AUI_RELIGION_USE_DOUBLES
 				}
-				CvCity* pNeighborCity = m_pPlayer->GetClosestFriendlyCity(*pPlot, 1);
-				if (pNeighborCity && pNeighborCity == pClosestCity)
-				{
 #ifdef AUI_RELIGION_USE_DOUBLES
-					dScoreAtPlot *= 2.0;
-#else
-					iScoreAtPlot *= 2;
-#endif // AUI_RELIGION_USE_DOUBLES
-				}
-#ifdef AUI_RELIGION_USE_DOUBLES
-				dScoreAtPlot /= 3.0;
+				dScoreAtPlot /= AUI_RELIGION_SCORE_BELIEF_SCALE_PLOTS_WITH_DISTANCE;
 #else
 				iScoreAtPlot /= 3;
 #endif // AUI_RELIGION_USE_DOUBLES
@@ -5511,10 +5514,13 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 #endif // AUI_RELIGION_USE_DOUBLES
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 	double dCitizenValue;
+	double dTempValue = 0;
 
 	CvFlavorManager* pFlavorManager = m_pPlayer->GetFlavorManager();
 	int iFlavorGrowth = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH"));
 	int iFlavorExpansion = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"));
+	if (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE))
+		iFlavorExpansion = GC.getFLAVOR_MIN_VALUE();
 	int iFlavorCulture = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CULTURE"));
 	int iFlavorScience = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"));
 	int iFlavorProduction = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION"));
@@ -5526,56 +5532,70 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 	{
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 		// Citizen value for yield
-		dCitizenValue = 2;
+		dCitizenValue = 2.0 / sqrt(M_PI);
+		dTempValue = 0;
 		switch (iI)
 		{
 		case YIELD_FOOD:
-			dCitizenValue *= (1.0 + log10((double)iFlavorGrowth) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_FOOD() / 2.0) / log(M_PI);
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorGrowth, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FOOD() / 2, 1));
 			break;
 		case YIELD_PRODUCTION:
-			dCitizenValue *= (1.0 + log10((double)iFlavorProduction) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_PRODUCTION()) / log(M_PI);
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorProduction, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_PRODUCTION(), 1));
 			break;
 		case YIELD_GOLD:
-			dCitizenValue *= (1.0 + log10((double)iFlavorGold) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_GOLD()) / log(M_PI);
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorGold, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_GOLD(), 1));
 			break;
 		case YIELD_SCIENCE:
-			dCitizenValue *= (1.0 + log10((double)iFlavorScience) / 2.0) * log((double)GC.getAI_CITIZEN_VALUE_SCIENCE());
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorScience, 1)) / 4.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_SCIENCE(), 1));
 			break;
 		case YIELD_CULTURE:
 			// Greater culture flavor factor is to account for fewer sources of culture
-			dCitizenValue *= (1.0 + log10((double)iFlavorCulture) / 2.0) * log((double)GC.getAI_CITIZEN_VALUE_CULTURE() * 1.5);
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorCulture, 1)) / 2.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_CULTURE(), 1));
 			break;
 		case YIELD_FAITH:
 			// Since we're calculating beliefs, faith gets 3x its regular value and even more religion flavor factor value
-			dCitizenValue *= (1.0 + log10((double)iFlavorReligion) + log10((double)iFlavorExpansion) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_FAITH() * 3.0);
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorReligion, 1)) + log10((double)FASTMAX(iFlavorExpansion, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FAITH() * 3, 1));
+			if (pEntry->IsPantheonBelief())
+				dCitizenValue *= M_PI;
 			break;
 		}
-		dCitizenValue /= sqrt(3.0);
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 
 		// Terrain
 		TerrainTypes eTerrain = pPlot->getTerrainType();
 		if(eTerrain != NO_TERRAIN)
 		{
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
+			dTempValue += pEntry->GetTerrainYieldChange(eTerrain, iI);
+#else
 #ifdef AUI_RELIGION_USE_DOUBLES
 			dRtnValue += pEntry->GetTerrainYieldChange(eTerrain, iI);
 #else
 			iRtnValue += pEntry->GetTerrainYieldChange(eTerrain, iI);
 #endif // AUI_RELIGION_USE_DOUBLES
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 		}
 
 		// Feature
 		FeatureTypes eFeature = pPlot->getFeatureType();
 		if(eFeature != NO_FEATURE)
 		{
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
+			dTempValue += pEntry->GetFeatureYieldChange(eFeature, iI);
+#else
 #ifdef AUI_RELIGION_USE_DOUBLES
 			dRtnValue += pEntry->GetFeatureYieldChange(eFeature, iI);
 #else
 			iRtnValue += pEntry->GetFeatureYieldChange(eFeature, iI);
 #endif // AUI_RELIGION_USE_DOUBLES
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 
 			if(pPlot->IsNaturalWonder())
 			{
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
+				dTempValue += pEntry->GetYieldChangeNaturalWonder(iI);
+				dTempValue += (pEntry->GetYieldModifierNaturalWonder(iI) / 25);
+#else
 #ifdef AUI_RELIGION_USE_DOUBLES
 				dRtnValue += pEntry->GetYieldChangeNaturalWonder(iI);
 				dRtnValue += (pEntry->GetYieldModifierNaturalWonder(iI) / 25);
@@ -5583,6 +5603,7 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 				iRtnValue += pEntry->GetYieldChangeNaturalWonder(iI);
 				iRtnValue += (pEntry->GetYieldModifierNaturalWonder(iI) / 25);
 #endif // AUI_RELIGION_USE_DOUBLES
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 			}
 
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REDUCE_FEATURE_SCORE_IF_WILL_BE_CHOPPED
@@ -5593,11 +5614,15 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 			if ((eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE) && pPlot->getResourceType() != NO_RESOURCE)
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_RESOURCE_OMNISCIENCE
 			{
-#ifdef AUI_RELIGION_USE_DOUBLES
-				dRtnValue -= pEntry->GetFeatureYieldChange(eFeature, iI) * 3.0 / 4.0;
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
+				dTempValue -= (pEntry->GetFeatureYieldChange(eFeature, iI) * 3.0 / 4.0);
 #else
-				iRtnValue -= pEntry->GetFeatureYieldChange(eFeature, iI) * 3 / 4;
+#ifdef AUI_RELIGION_USE_DOUBLES
+				dRtnValue -= (pEntry->GetFeatureYieldChange(eFeature, iI) * 3.0 / 4.0);
+#else
+				iRtnValue -= (pEntry->GetFeatureYieldChange(eFeature, iI) * 3 / 4);
 #endif // AUI_RELIGION_USE_DOUBLES
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 			}
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REDUCE_FEATURE_SCORE_IF_WILL_BE_CHOPPED
 		}
@@ -5610,39 +5635,61 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_RESOURCE_OMNISCIENCE
 		if(eResource != NO_RESOURCE)
 		{
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
+			dTempValue += pEntry->GetResourceYieldChange(eResource, iI);
+#else
 #ifdef AUI_RELIGION_USE_DOUBLES
 			dRtnValue += pEntry->GetResourceYieldChange(eResource, iI);
 #else
 			iRtnValue += pEntry->GetResourceYieldChange(eResource, iI);
 #endif // AUI_RELIGION_USE_DOUBLES
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 
 			// Improvement
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
+			int iMaxYieldChange = 0;
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
 			int iNumImprovementInfos = GC.getNumImprovementInfos();
 			for(int jJ = 0; jJ < iNumImprovementInfos; jJ++)
 			{
 				if(pPlot->canHaveImprovement((ImprovementTypes)jJ, m_pPlayer->getTeam()))
 				{
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
-#ifdef AUI_RELIGION_USE_DOUBLES
-					dRtnValue += pEntry->GetImprovementYieldChange((ImprovementTypes)jJ, (YieldTypes)iI);
+#ifdef AUI_FAST_COMP
+					iMaxYieldChange = FASTMAX(iMaxYieldChange, pEntry->GetImprovementYieldChange((ImprovementTypes)jJ, (YieldTypes)iI));
 #else
-					iRtnValue += pEntry->GetImprovementYieldChange((ImprovementTypes)jJ, (YieldTypes)iI);
-#endif // AUI_RELIGION_USE_DOUBLES
+					iMaxYieldChange = MAX(iMaxYieldChange, pEntry->GetImprovementYieldChange((ImprovementTypes)jJ, (YieldTypes)iI));
+#endif // AUI_FAST_COMP
+#else
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
+					dTempValue += (pEntry->GetImprovementYieldChange((ImprovementTypes)jJ, (YieldTypes)iI) * 2);
 #else
 #ifdef AUI_RELIGION_USE_DOUBLES
 					dRtnValue += (pEntry->GetImprovementYieldChange((ImprovementTypes)jJ, (YieldTypes)iI) * 2);
 #else
 					iRtnValue += (pEntry->GetImprovementYieldChange((ImprovementTypes)jJ, (YieldTypes)iI) * 2);
 #endif // AUI_RELIGION_USE_DOUBLES
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
 				}
 			}
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
+			dTempValue += iMaxYieldChange;
+#else
+#ifdef AUI_RELIGION_USE_DOUBLES
+			dRtnValue += iMaxYieldChange;
+#else
+			iRtnValue += iMaxYieldChange;
+#endif // AUI_RELIGION_USE_DOUBLES
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
 		}
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 #ifdef AUI_RELIGION_USE_DOUBLES
-		dRtnValue *= dCitizenValue;
+		dRtnValue += dTempValue * dCitizenValue;
 #else
-		iRtnValue = int(iRtnValue * dCitizenValue + 0.5);
+		iRtnValue += int(dTempValue * dCitizenValue + 0.5);
 #endif // AUI_RELIGION_USE_DOUBLES
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 	}
@@ -5686,6 +5733,8 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_FLAVORS
 	int iFlavorGrowth = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH"));
 	int iFlavorExpansion = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"));
+	if (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE))
+		iFlavorExpansion = GC.getFLAVOR_MIN_VALUE();
 	int iFlavorCulture = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CULTURE"));
 	int iFlavorScience = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"));
 	int iFlavorProduction = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION"));
@@ -5696,6 +5745,8 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_CITY_FLAVOR_YIELDS
 	int iFlavorGrowth = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH"));
 	int iFlavorExpansion = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"));
+	if (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE))
+		iFlavorExpansion = GC.getFLAVOR_MIN_VALUE();
 	int iFlavorCulture = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CULTURE"));
 	int iFlavorScience = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"));
 	int iFlavorProduction = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION"));
@@ -5706,8 +5757,8 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 #ifdef AUI_RELIGION_USE_DOUBLES
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_HAPPINESS
 
-	double dHappinessNeedFactor = (iFlavorOffense + iFlavorExpansion + iFlavorHappiness - iFlavorDefense) * log((double)MAX(iFlavorGrowth,iFlavorExpansion));
-	double dHappinessMultiplier = dHappinessNeedFactor / 3.0;
+	double dHappinessNeedFactor = (iFlavorOffense + iFlavorExpansion + iFlavorHappiness - iFlavorDefense) * log((double)MAX(1, MAX(iFlavorGrowth,iFlavorExpansion)));
+	double dHappinessMultiplier = dHappinessNeedFactor / 2.0;
 #else
 
 	double dHappinessNeedFactor = iFlavorOffense * 2 + iFlavorHappiness - iFlavorDefense;
@@ -5746,7 +5797,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 #ifdef AUI_RELIGION_USE_DOUBLES
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_CITY_FLAVOR_YIELDS
 	dRtnValue += (100.0 + pEntry->GetCityGrowthModifier()) / 100.0 * (pCity->getYieldRate(YIELD_FOOD, true) - pCity->foodConsumption()) * 
-		(1.0 + log10((double)iFlavorGrowth) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_FOOD() / 2.0) / log(M_PI);
+		(1.0 + log10((double)iFlavorGrowth) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_FOOD() / 2.0);
 #else
 	dRtnValue += pEntry->GetCityGrowthModifier() / 3;
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_CITY_FLAVOR_YIELDS
@@ -5765,7 +5816,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_FLAVORS
 	dRtnValue += (-pEntry->GetPlotCultureCostModifier() * 2) * (1.0 + log10((double)iFlavorExpansion) / 8.0) / 8.0;
 	dRtnValue += (pEntry->GetCityRangeStrikeModifier()) * (double)MIN(iFlavorCityDefense, iFlavorDefense) / 12.0;
-	dRtnValue += pEntry->GetFriendlyHealChange() * (1.0 + log10((double)iFlavorDefense) / 4.0) / 8.0;
+	dRtnValue += pEntry->GetFriendlyHealChange() * (1.0 + log10((double)MAX(iFlavorDefense, 1)) / 4.0) / 8.0;
 #else
 	dRtnValue += (-pEntry->GetPlotCultureCostModifier() * 2) / 10.0;
 	dRtnValue += (pEntry->GetCityRangeStrikeModifier() / 10.0) * MAX(iFlavorDefense, iFlavorCityDefense);
@@ -5804,6 +5855,22 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 	// Wonder production multiplier
 	if(pEntry->GetObsoleteEra() > 0)
 	{	
+#ifdef AUI_RELIGION_FIX_SCORE_BELIEF_AT_CITY_USE_PLAYER_ERA
+		double dEraMultiplier = pow((double)pEntry->GetObsoleteEra(), 1.0 - m_pPlayer->GetCurrentEra() / (double)pEntry->GetObsoleteEra());
+#ifdef AUI_RELIGION_USE_DOUBLES
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_FLAVORS
+		dRtnValue += pEntry->GetWonderProductionModifier() * (1.0 + log10((double)iFlavorWonder) / 8.0) * dEraMultiplier / 10.0;
+#else
+		dRtnValue += (pEntry->GetWonderProductionModifier() * dEraMultiplier) / 10.0;
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_FLAVORS
+#else
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_FLAVORS
+		iRtnValue += int(pEntry->GetWonderProductionModifier() * (1.0 + log10((double)iFlavorWonder) / 8.0) * dEraMultiplier / 10.0 + 0.5);
+#else
+		iRtnValue += int(pEntry->GetWonderProductionModifier() * dEraMultiplier) / 10.0 + 0.5);
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_FLAVORS
+#endif // AUI_RELIGION_USE_DOUBLES
+#else
 		if (pEntry->GetObsoleteEra() > GC.getGame().getCurrentEra())
 		{
 #ifdef AUI_RELIGION_USE_DOUBLES
@@ -5820,6 +5887,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_FLAVORS
 #endif // AUI_RELIGION_USE_DOUBLES
 		}
+#endif // AUI_RELIGION_FIX_SCORE_BELIEF_AT_CITY_USE_PLAYER_ERA
 	}
 	else
 	{
@@ -5957,31 +6025,32 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 	{
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_CITY_FLAVOR_YIELDS
 		// Citizen value for yield
-		dCitizenValue = 2;
+		dCitizenValue = 2.0 / sqrt(M_PI);
 		switch (iI)
 		{
 		case YIELD_FOOD:
-			dCitizenValue *= (1.0 + log10((double)iFlavorGrowth) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_FOOD() / 2.0) / log(M_PI);
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorGrowth, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FOOD() / 2, 1));
 			break;
 		case YIELD_PRODUCTION:
-			dCitizenValue *= (1.0 + log10((double)iFlavorProduction) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_PRODUCTION()) / log(M_PI);
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorProduction, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_PRODUCTION(), 1));
 			break;
 		case YIELD_GOLD:
-			dCitizenValue *= (1.0 + log10((double)iFlavorGold) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_GOLD()) / log(M_PI);
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorGold, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_GOLD(), 1));
 			break;
 		case YIELD_SCIENCE:
-			dCitizenValue *= (1.0 + log10((double)iFlavorScience) / 4.0) * log((double)GC.getAI_CITIZEN_VALUE_SCIENCE());
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorScience, 1)) / 4.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_SCIENCE(), 1));
 			break;
 		case YIELD_CULTURE:
 			// Greater culture flavor factor is to account for fewer sources of culture
-			dCitizenValue *= (1.0 + log10((double)iFlavorCulture) / 2.0) * log((double)GC.getAI_CITIZEN_VALUE_CULTURE() * 1.5);
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorCulture, 1)) / 2.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_CULTURE(), 1));
 			break;
 		case YIELD_FAITH:
 			// Since we're calculating beliefs, faith gets 3x its regular value and even more religion flavor factor value
-			dCitizenValue *= (1.0 + log10((double)iFlavorReligion) + log10((double)iFlavorExpansion) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_FAITH() * 3.0);
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorReligion, 1)) + log10((double)FASTMAX(iFlavorExpansion, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FAITH() * 3, 1));
+			if (pEntry->IsPantheonBelief())
+				dCitizenValue *= M_PI;
 			break;
 		}
-		dCitizenValue /= sqrt(3.0);
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_CITY_FLAVOR_YIELDS
 
 		// City yield change
@@ -6142,11 +6211,19 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 
 			if(pkBuildingClassInfo->getMaxPlayerInstances() == 1)
 			{
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_CITY_YIELDS_FROM_WONDERS_COUNT_ONCE
+#ifdef AUI_RELIGION_USE_DOUBLES
+				dTempValue /= (double)MAX(m_pPlayer->getNumCities(), (pkBuildingClassInfo->getMaxGlobalInstances() == 1 ? 2 : 1));
+#else
+				iTempValue /= MAX(m_pPlayer->getNumCities(), (pkBuildingClassInfo->getMaxGlobalInstances() == 1 ? 2 : 1));
+#endif // AUI_RELIGION_USE_DOUBLES
+#else
 #ifdef AUI_RELIGION_USE_DOUBLES
 				dTempValue /= 2.0;
 #else
 				iTempValue /= 2;
 #endif // AUI_RELIGION_USE_DOUBLES
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_CITY_YIELDS_FROM_WONDERS_COUNT_ONCE
 			}
 
 #ifdef AUI_RELIGION_USE_DOUBLES
@@ -6165,7 +6242,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 		// World wonder change
 #ifdef AUI_RELIGION_USE_DOUBLES
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_FLAVORS
-		dRtnValue += pEntry->GetYieldChangeWorldWonder(iI) * MAX(sqrt(log((double)iFlavorGrowth) * log((double)iFlavorProduction)), 1.0) * MAX(log((double)iFlavorWonder), 1.0)
+		dRtnValue += pEntry->GetYieldChangeWorldWonder(iI) * sqrt(log(MAX((double)iFlavorGrowth, exp(1.0))) * log(MAX((double)iFlavorProduction, exp(1.0)))) * log(MAX((double)iFlavorWonder, exp(1.0)))
 			* dCitizenValue;
 #else
 		dRtnValue += pEntry->GetYieldChangeWorldWonder(iI) * 3 / 2.0;
@@ -6237,9 +6314,17 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 	int iFlavorDiplomacy = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DIPLOMACY"));
 	int iFlavorExpansion = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"));
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
+	if (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE))
+		iFlavorExpansion = GC.getFLAVOR_MIN_VALUE();
 	int iFlavorGrowth = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH"));
 	int iFlavorProduction = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION"));
 	int iFlavorReligion = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"));
+
+	// Total yield change
+	double dTotalYield;
+	// Citizen value for yield
+	double dCitizenValue;
+	int kK, jJ;
 #else
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_HAPPINESS_FLAVOR
 	int iFlavorGrowth = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH"));
@@ -6247,7 +6332,7 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #endif // AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
 
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_HAPPINESS_FLAVOR
-	double dHappinessNeedFactor = (iFlavorOffense + iFlavorExpansion + iFlavorHappiness - iFlavorDefense) * log((double)MAX(iFlavorGrowth, iFlavorExpansion));
+	double dHappinessNeedFactor = (iFlavorOffense + iFlavorExpansion + iFlavorHappiness - iFlavorDefense) * log((double)MAX(1, MAX(iFlavorGrowth, iFlavorExpansion)));
 #endif // AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_HAPPINESS_FLAVOR
 
 #ifdef AUI_MINOR_CIV_RATIO
@@ -6256,7 +6341,7 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #endif // AUI_MINOR_CIV_RATIO
 
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_ENHANCER_SCALING
-	double dTurnsCompletedPercent = 50.0 * (double)GC.getGame().getGameTurn() / (double)GC.getGame().getMaxTurns();
+	double dTurnsCompletedPercent = 50.0 * (double)GC.getGame().getGameTurn() / (double)GC.getGame().getEstimateEndTurn();
 #else
 	int iNumEnhancedReligions = pGameReligions->GetNumReligionsEnhanced();
 	int iReligionsEnhancedPercent = (100 * iNumEnhancedReligions) / GC.getMap().getWorldInfo().getMaxActiveReligions();
@@ -6329,11 +6414,18 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #ifdef AUI_RELIGION_USE_DOUBLES
 					double dFlavorValue = (double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop) * pBuildingEntry->GetFlavorValue(iFlavorLoop);
 
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
+					if (iFlavorLoop == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"))
+					{
+						dFlavorValue *= m_pPlayer->GetGrandStrategyAI()->ScienceFlavorBoost();
+					}
+#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+
 					// If can also be built with hammers, much less valuable
 					if (pBuildingEntry->GetProductionCost() > 0)
 					{
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
-						dFlavorValue /= (1.0 + sqrt((double)iFlavorProduction));
+						dFlavorValue /= (1.0 + iFlavorProduction);
 #else
 						dFlavorValue /= 10.0;
 #endif // AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
@@ -6360,51 +6452,52 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
 				// Since buildings are built with one in each city, PerCity-like calculations needed
 #ifdef AUI_RELIGION_USE_DOUBLES
-				dRtnValue += pBuildingEntry->GetHappiness() * (iFlavorExpansion + dHappinessNeedFactor) * m_pPlayer->getNumCities() / 3.0;
+				dRtnValue += pBuildingEntry->GetHappiness() * (iFlavorExpansion + dHappinessNeedFactor) * m_pPlayer->getNumCities();
 #else
 				iRtnValue += int(pBuildingEntry->GetHappiness() * (iFlavorExpansion + dHappinessNeedFactor) * m_pPlayer->getNumCities() / 3.0 + 0.5);
 #endif // AUI_RELIGION_USE_DOUBLES
-				for (int iI = 0; iI < NUM_YIELD_TYPES; iI++)
+				for (kK = 0; kK < NUM_YIELD_TYPES; kK++)
 				{					
 					// Total yield change
-					double dTotalYield = 0;
+					dTotalYield = 0;
 					// Citizen value for yield
-					double dCitizenValue = 2;
-					switch (iI)
+					dCitizenValue = 2.0 / sqrt(M_PI);
+					switch (kK)
 					{
 					case YIELD_FOOD:
-						dCitizenValue *= (1.0 + log10((double)iFlavorGrowth) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_FOOD() / 2.0) / log(M_PI);
+						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorGrowth, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FOOD() / 2, 1));
 						break;
 					case YIELD_PRODUCTION:
-						dCitizenValue *= (1.0 + log10((double)iFlavorProduction) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_PRODUCTION()) / log(M_PI);
+						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorProduction, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_PRODUCTION(), 1));
 						break;
 					case YIELD_GOLD:
-						dCitizenValue *= (1.0 + log10((double)iFlavorGold) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_GOLD()) / log(M_PI);
+						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorGold, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_GOLD(), 1));
 						break;
 					case YIELD_SCIENCE:
-						dCitizenValue *= (1.0 + log10((double)iFlavorScience) / 4.0) * log((double)GC.getAI_CITIZEN_VALUE_SCIENCE());
+						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorScience, 1)) / 4.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_SCIENCE(), 1));
 						break;
 					case YIELD_CULTURE:
 						// Greater culture flavor factor is to account for fewer sources of culture
-						dCitizenValue *= (1.0 + log10((double)iFlavorCulture) / 2.0) * log((double)GC.getAI_CITIZEN_VALUE_CULTURE() * 1.5);
+						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorCulture, 1)) / 2.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_CULTURE(), 1));
 						break;
 					case YIELD_FAITH:
 						// Since we're calculating beliefs, faith gets 3x its regular value and even more religion flavor factor value
-						dCitizenValue *= (1.0 + log10((double)iFlavorReligion) + log10((double)iFlavorExpansion) / 8.0) * log((double)GC.getAI_CITIZEN_VALUE_FAITH() * 3.0);
+						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorReligion, 1)) + log10((double)FASTMAX(iFlavorExpansion, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FAITH() * 3, 1));
+						if (pEntry->IsPantheonBelief())
+							dCitizenValue *= M_PI;
 						break;
 					}
-					dCitizenValue /= sqrt(3.0);
 
 					// If can also be built with hammers, much less valuable
 					if (pBuildingEntry->GetProductionCost() > 0)
 					{
-						dCitizenValue /= (1.0 + sqrt((double)iFlavorProduction));
+						dCitizenValue /= (1.0 + (double)iFlavorProduction);
 					}
 
 
-					for (int jJ = 0; jJ < NUM_FEATURE_TYPES; jJ++)
+					for (jJ = 0; jJ < NUM_FEATURE_TYPES; jJ++)
 					{
-						if (pBuildingEntry->GetFeatureYieldChange(jJ, iI) != 0)
+						if (pBuildingEntry->GetFeatureYieldChange(jJ, kK) != 0)
 						{
 							// Loop through each plot on map
 							int iPlotLoop;
@@ -6419,15 +6512,15 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 								{
 									if (pPlot->getFeatureType() == (FeatureTypes)jJ)
 									{
-										dTotalYield += pBuildingEntry->GetFeatureYieldChange(jJ, iI);
+										dTotalYield += pBuildingEntry->GetFeatureYieldChange(jJ, kK);
 									}
 								}
 							}
 						}
 					}
-					if (pBuildingEntry->GetYieldChange(iI) != 0)
+					if (pBuildingEntry->GetYieldChange(kK) != 0)
 					{
-						dTotalYield += m_pPlayer->getNumCities() * pBuildingEntry->GetYieldChange(iI);
+						dTotalYield += m_pPlayer->getNumCities() * pBuildingEntry->GetYieldChange(kK);
 					}
 
 #ifdef AUI_RELIGION_USE_DOUBLES
@@ -6441,8 +6534,12 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 		}
 	}
 
-	// Unlocks units?	
+	// Unlocks units?
+#ifdef AUI_RELIGION_FIX_SCORE_BELIEF_FOR_PLAYER_UNLOCKS_UNITS_DISREGARD_OLD_ERAS
+	for (int i = (int)m_pPlayer->GetCurrentEra(); i < GC.getNumEraInfos(); i++)
+#else
 	for(int i = 0; i < GC.getNumEraInfos(); i++)
+#endif // AUI_RELIGION_FIX_SCORE_BELIEF_FOR_PLAYER_UNLOCKS_UNITS_DISREGARD_OLD_ERAS
 	{
 		// Add in for each era enabled
 		if (pEntry->IsFaithUnitPurchaseEra(i))
@@ -6476,6 +6573,9 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 				iTemp *= 2;
 			}
 #endif // AUI_GS_PRIORITY_RATIO
+#ifdef AUI_RELIGION_FIX_SCORE_BELIEF_FOR_PLAYER_UNLOCKS_UNITS_DISREGARD_OLD_ERAS
+			iTemp *= AUI_RELIGION_FIX_SCORE_BELIEF_FOR_PLAYER_UNLOCKS_UNITS_DISREGARD_OLD_ERAS;
+#endif // AUI_RELIGION_FIX_SCORE_BELIEF_FOR_PLAYER_UNLOCKS_UNITS_DISREGARD_OLD_ERAS
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
 			iRtnValue += MAX(0, iTemp);
 #else
@@ -6514,7 +6614,8 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #endif // AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_HAPPINESS_FLAVOR
 
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
-	dRtnValue += pEntry->GetSciencePerOtherReligionFollower() * iFlavorScience * (1.0 + log10((double)iFlavorScience) / 4.0) * log((double)GC.getAI_CITIZEN_VALUE_SCIENCE()) / log(M_PI) / 10.0;
+	dRtnValue += pEntry->GetSciencePerOtherReligionFollower() * iFlavorScience * (1.0 + log10((double)iFlavorScience) / 4.0) / 5.0 * 
+		(GC.getNumEraInfos() - m_pPlayer->GetCurrentEra()) / GC.getNumEraInfos();
 	dRtnValue += pEntry->GetGoldPerFollowingCity() * (iFlavorGold + iFlavorExpansion / 4.0);
 #else
 	dRtnValue += iFlavorScience * pEntry->GetSciencePerOtherReligionFollower() / 5.0;
@@ -6534,7 +6635,7 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #ifdef AUI_MINOR_CIV_RATIO
 	dRtnValue += iFlavorDiplomacy * pEntry->GetCityStateMinimumInfluence() / 8.0 * dCityStateDeviation;
 #else
-	dRtnValue += iFlavorDiplomacy * pEntry->GetCityStateMinimumInfluence() / 7.0;
+	dRtnValue += iFlavorDiplomacy * pEntry->GetCityStateMinimumInfluence() / 8.0;
 #endif // AUI_MINOR_CIV_RATIO
 #else
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_HAPPINESS_FLAVOR
@@ -6643,7 +6744,7 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #else
 	dRtnValue += iFlavorDiplomacy * pEntry->GetFriendlyCityStateSpreadModifier() / 45.0 * (0.5 + 2 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")));
 #endif // AUI_MINOR_CIV_RATIO
-	dRtnValue += iFlavorDefense * pEntry->GetCombatModifierFriendlyCities() / 6.0 * (0.5 + 2 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST")));
+	dRtnValue += iFlavorDefense * pEntry->GetCombatModifierFriendlyCities() / 6.0 * (2.5 - 2 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST")));
 	dRtnValue += iFlavorOffense * pEntry->GetCombatModifierEnemyCities() / 6.0 * (0.5 + 2 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST")));
 #else
 #ifdef AUI_MINOR_CIV_RATIO
@@ -6651,7 +6752,7 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #else
 	dRtnValue += iFlavorDiplomacy * pEntry->GetFriendlyCityStateSpreadModifier() / 45.0 * (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS") ? 2.5 : 0.5);
 #endif // AUI_MINOR_CIV_RATIO
-	dRtnValue += iFlavorDefense * pEntry->GetCombatModifierFriendlyCities() / 6.0 * (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST") ? 2.5 : 0.5);
+	dRtnValue += iFlavorDefense * pEntry->GetCombatModifierFriendlyCities() / 6.0 * (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST") ? 0.5 : 2.5);
 	dRtnValue += iFlavorOffense * pEntry->GetCombatModifierEnemyCities() / 6.0 * (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST") ? 2.5 : 0.5);;
 #endif // AUI_GS_PRIORITY_RATIO
 #else
@@ -6665,15 +6766,23 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #endif // AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY
 
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_ENHANCER_SCALING
+	bool bHasMissionaryBonus = false;
+	CvGameReligions* pReligions = GC.getGame().GetGameReligions();
+	const CvReligion* pMyReligion = pReligions->GetReligion(m_pPlayer->GetReligions()->GetReligionCreatedByPlayer(), m_pPlayer->GetID());
+	if (pMyReligion && pMyReligion->m_Beliefs.GetSciencePerOtherReligionFollower() > 0)
+	{
+		bHasMissionaryBonus = true;
+	}
+
 	// Good early, poor late
-	dRtnValue += ((100.0 - dTurnsCompletedPercent) * ((2 * (MIN(iFlavorGrowth, iFlavorExpansion) + iFlavorGrowth)) + pEntry->GetSpreadDistanceModifier()) +
-		dTurnsCompletedPercent * (((2 * iFlavorExpansion + iFlavorGrowth) + pEntry->GetSpreadDistanceModifier()) / 4)) / 100.0;
-	dRtnValue += ((100.0 - dTurnsCompletedPercent) * ((2 * (iFlavorScience + MAX(iFlavorGrowth, iFlavorExpansion))) + pEntry->GetSpreadStrengthModifier()) +
-		dTurnsCompletedPercent * (((2 * iFlavorScience + iFlavorGrowth) + pEntry->GetSpreadStrengthModifier()) / 4)) / 100.0;
-	dRtnValue += ((100.0 - dTurnsCompletedPercent) * (pEntry->GetMissionaryStrengthModifier() * 2) +
-		dTurnsCompletedPercent * (pEntry->GetMissionaryStrengthModifier() / 2)) / 100.0;
+	dRtnValue += ((100.0 - dTurnsCompletedPercent) * ((2 * MIN(iFlavorGrowth, iFlavorExpansion) + iFlavorGrowth) + pEntry->GetSpreadDistanceModifier()) +
+		dTurnsCompletedPercent * (((2 * MIN(iFlavorGrowth, iFlavorExpansion) + iFlavorGrowth) + pEntry->GetSpreadDistanceModifier()) / 4)) / 100.0;
+	dRtnValue += ((100.0 - dTurnsCompletedPercent) * ((2 * iFlavorScience + MAX(iFlavorGrowth, iFlavorExpansion)) + pEntry->GetSpreadStrengthModifier()) +
+		dTurnsCompletedPercent * (((2 * iFlavorScience + MAX(iFlavorGrowth, iFlavorExpansion)) + pEntry->GetSpreadStrengthModifier()) / 4)) / 100.0;
+	dRtnValue += ((100.0 - dTurnsCompletedPercent) * (pEntry->GetMissionaryStrengthModifier() * 1.5) +
+		dTurnsCompletedPercent * (pEntry->GetMissionaryStrengthModifier() * 0.375)) / 100.0 / (bHasMissionaryBonus ? 2 : 1);
 	dRtnValue += ((100.0 - dTurnsCompletedPercent) * ((-1 * pEntry->GetMissionaryCostModifier()) * 2) +
-		dTurnsCompletedPercent * ((-1 * pEntry->GetMissionaryCostModifier()) / 2)) / 100.0;
+		dTurnsCompletedPercent * ((-1 * pEntry->GetMissionaryCostModifier()) / 2)) / 100.0 * (bHasMissionaryBonus ? 2 : 1);
 
 	// Poor early, good late
 	dRtnValue += ((100.0 - dTurnsCompletedPercent) * (pEntry->GetProphetStrengthModifier() / 4.0) +
@@ -6916,27 +7025,63 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #ifdef AUI_RELIGION_USE_DOUBLES
 	if (pEntry->GetCityStateInfluenceModifier() > 0)
 	{
+#if defined(AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY) && defined(AUI_GS_PRIORITY_RATIO)
 #ifdef AUI_MINOR_CIV_RATIO
-		dRtnValue += (pEntry->GetCityStateInfluenceModifier() * iFlavorDiplomacy * dCityStateDeviation / 5.0);
+		dRtnValue += pEntry->GetCityStateInfluenceModifier() * iFlavorDiplomacy * dCityStateDeviation / 5.0 *
+			(0.5 + 1.5 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")));
 #else
-		dRtnValue += (pEntry->GetCityStateInfluenceModifier() * iFlavorDiplomacy / 5.0);
+		dRtnValue += pEntry->GetCityStateInfluenceModifier() * iFlavorDiplomacy / 5.0 *
+			(0.5 + 1.5 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")));
 #endif // AUI_MINOR_CIV_RATIO
+#else
+#ifdef AUI_MINOR_CIV_RATIO
+		dRtnValue += pEntry->GetCityStateInfluenceModifier() * iFlavorDiplomacy * dCityStateDeviation / 5.0;
+#else
+		dRtnValue += pEntry->GetCityStateInfluenceModifier() * iFlavorDiplomacy / 5.0;
+#endif // AUI_MINOR_CIV_RATIO
+#endif // UI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY && AUI_GS_PRIORITY_RATIO
 	}
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
 	if (pEntry->GetInquisitorPressureRetention() > 0)
 	{
-		dRtnValue += (pEntry->GetInquisitorPressureRetention() / 2.5);
+		dRtnValue += pEntry->GetInquisitorPressureRetention() / 4.0;
 	}
 	if (pEntry->GetSpyPressure() > 0)
 	{
+#if defined(AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY) && defined(AUI_GS_PRIORITY_RATIO)
 #ifdef AUI_MINOR_CIV_RATIO
-		dRtnValue += (pEntry->GetSpyPressure() * iFlavorDiplomacy / 2.0 * dCityStateDeviation);
+		dRtnValue += pEntry->GetSpyPressure() * iFlavorDiplomacy / 2.0 * dCityStateDeviation *
+			(m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")));
 #else
-		dRtnValue += (pEntry->GetSpyPressure() * iFlavorDiplomacy / 2.0);
+		dRtnValue += pEntry->GetSpyPressure() * iFlavorDiplomacy / 2.0 *
+			(m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")));
 #endif // AUI_MINOR_CIV_RATIO
+#else
+#ifdef AUI_MINOR_CIV_RATIO
+		dRtnValue += pEntry->GetSpyPressure() * iFlavorDiplomacy / 2.0 * dCityStateDeviation;
+#else
+		dRtnValue += pEntry->GetSpyPressure() * iFlavorDiplomacy / 2.0;
+#endif // AUI_MINOR_CIV_RATIO
+#endif // AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY && AUI_GS_PRIORITY_RATIO
 	}
 	if (pEntry->GetFaithBuildingTourism() > 0)
 	{
+#ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TOURISM_FROM_BUILDINGS_COUNTS_BUILDINGS
+#ifdef AUI_RELIGION_FIX_MULTIPLE_FAITH_BUILDINGS
+		int iBuildingCount = FaithBuildingAvailable(m_pPlayer->GetReligions()->GetReligionCreatedByPlayer()).size() * m_pPlayer->getNumCities();
+#else
+		int iBuildingCount = (FaithBuildingAvailable(m_pPlayer->GetReligions()->GetReligionCreatedByPlayer()) != NO_BUILDINGCLASS ? 1 : 0) * m_pPlayer->getNumCities();
+#endif // AUI_RELIGION_FIX_MULTIPLE_FAITH_BUILDINGS
+#ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY
+#ifdef AUI_GS_PRIORITY_RATIO
+		dRtnValue += (pEntry->GetFaithBuildingTourism() * iBuildingCount * iFlavorCulture * (0.5 + 2 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))));
+#else
+		dRtnValue += (pEntry->GetFaithBuildingTourism() * iBuildingCount * iFlavorCulture * (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE") ? 2.5 : 0.5));
+#endif // AUI_GS_PRIORITY_RATIO
+#else
+		dRtnValue += (pEntry->GetFaithBuildingTourism() * iBuildingCount * 1.5 * iFlavorCulture);
+#endif // AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY
+#else
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY
 #ifdef AUI_GS_PRIORITY_RATIO
 		dRtnValue += (pEntry->GetFaithBuildingTourism() * 2 * iFlavorCulture * (0.5 + 2 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))));
@@ -6946,6 +7091,7 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #else
 		dRtnValue += (pEntry->GetFaithBuildingTourism() * 3.0 * iFlavorCulture);
 #endif // AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY
+#endif // AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TOURISM_FROM_BUILDINGS_COUNTS_BUILDINGS
 	}
 #else
 	if (pEntry->GetInquisitorPressureRetention() > 0)
@@ -7693,7 +7839,11 @@ UnitTypes CvReligionAI::GetDesiredFaithGreatPerson() const
 #ifdef AUI_RELIGION_GET_DESIRED_FAITH_GREAT_PERSON_VENICE_MERCHANT_BOOST
 					if (!GET_PLAYER(m_pPlayer->GetID()).GreatMerchantWantsCash())
 					{
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
+						dScore *= m_pPlayer->GetGrandStrategyAI()->ScienceFlavorBoost() + 2;
+#else
 						dScore *= AUI_RELIGION_GET_DESIRED_FAITH_GREAT_PERSON_VENICE_MERCHANT_BOOST;
+#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
 					}
 #endif // AUI_RELIGION_GET_DESIRED_FAITH_GREAT_PERSON_VENICE_MERCHANT_BOOST
 					dScore /= (1.0 + m_pPlayer->getMerchantsFromFaith());
