@@ -166,6 +166,14 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 // City Strategy Stuff
 /// Scales the GetLastTurnWorkerDisbanded() computation to game speed
 #define AUI_CITYSTRATEGY_FIX_TILE_IMPROVERS_LAST_DISBAND_WORKER_TURN_SCALE
+/// Disables the minimum population requirement for the "first faith building" strategy
+#define AUI_CITYSTRATEGY_FIX_FIRST_FAITH_BUILDING_NO_MINIMUM_POP
+/// The sanity check to ensure water units are not built on small inland seas now requires at least one other civ (minors too!) to have a city coastal to that area
+#define AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_ACCURATE_SEA_SANITY_CHECK
+/// Instead of ignoring all military training buildings (eg. stables, kreposts, etc.), puppets will instead nullify the Military Training and Naval flavors
+#define AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_PUPPETS_NULLIFY_BARRACKS
+/// Priorities for sneak attack military units are no longer artificially inflated at the highest difficulty levels
+#define AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NO_HIGH_DIFFICULTY_SKEW
 
 // Culture Classes Stuff
 /// No longer returns false if any one player's influence level is Unknown (it will now simply skip that player instead)

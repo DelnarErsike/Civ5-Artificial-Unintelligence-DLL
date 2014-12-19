@@ -382,6 +382,11 @@ void CvCityStrategyAI::FlavorUpdate()
 	// Broadcast to our sub AI objects
 	for(int iFlavor = 0; iFlavor < GC.getNumFlavorTypes(); iFlavor++)
 	{
+#ifdef AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_PUPPETS_NULLIFY_BARRACKS
+		if (GetCity()->IsPuppet() && ((FlavorTypes)iFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_MILITARY_TRAINING") ||
+			(FlavorTypes)iFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_NAVAL")))
+			continue;
+#endif // AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_PUPPETS_NULLIFY_BARRACKS
 		int iFlavorValue = GetLatestFlavorValue((FlavorTypes)iFlavor);// m_piLatestFlavorValues[iFlavor];
 		
 #ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
@@ -821,8 +826,12 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 		buildable.m_iTurnsToConstruct = GetCity()->getProductionTurnsLeft(eUnitForArmy, 0);
 		iTempWeight = GC.getAI_CITYSTRATEGY_ARMY_UNIT_BASE_WEIGHT();
 		int iOffenseFlavor = kPlayer.GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE"));
+#ifdef AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NO_HIGH_DIFFICULTY_SKEW
+		iTempWeight += (GC.getAI_CITYSTRATEGY_OPERATION_UNIT_FLAVOR_MULTIPLIER() * iOffenseFlavor);
+#else
 		int iBonusMultiplier = max(1,GC.getGame().getHandicapInfo().GetID() - 5); // more at the higher difficulties
 		iTempWeight += (GC.getAI_CITYSTRATEGY_OPERATION_UNIT_FLAVOR_MULTIPLIER() * iOffenseFlavor * iBonusMultiplier);
+#endif // AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NO_HIGH_DIFFICULTY_SKEW
 		// add in the weight of this unit as if I were deciding to build it without having a reason
 		iTempWeight += m_pUnitProductionAI->GetWeight(eUnitForArmy);
 
@@ -905,11 +914,13 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 				{
 					iTempWeight = 0;
 				}
+#ifndef AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_PUPPETS_NULLIFY_BARRACKS
 				// it also avoids military training buildings - since it can't build units
 				if(pkBuildingInfo->GetDomainFreeExperience(DOMAIN_LAND))
 				{
 					iTempWeight = 0;
 				}
+#endif // AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_PUPPETS_NULLIFY_BARRACKS
 				// they also like stuff that won't burden the empire with maintenance costs
 				if(pkBuildingInfo->GetGoldMaintenance() == 0)
 				{
@@ -933,6 +944,10 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 	// If the City is a puppet, it avoids training Units and projects
 	if(!GetCity()->IsPuppet())
 	{
+#ifdef AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_ACCURATE_SEA_SANITY_CHECK
+		int iI, iLoop;
+		CvCity* pLoopCity = NULL;
+#endif // AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_ACCURATE_SEA_SANITY_CHECK
 		// Loop through adding the available units
 		for(iUnitLoop = 0; iUnitLoop < GC.GetGameUnits()->GetNumUnits(); iUnitLoop++)
 		{
@@ -974,12 +989,39 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 						CvArea* pBiggestNearbyBodyOfWater = m_pCity->waterArea();
 						if (pBiggestNearbyBodyOfWater)
 						{
+#ifdef AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_ACCURATE_SEA_SANITY_CHECK
+							CvPlayer& kThisPlayer = GET_PLAYER(m_pCity->getOwner());
+							// Loop through all the players
+							for(iI = 0; iI < MAX_PLAYERS; iI++)
+							{
+								CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iI);
+								if(kPlayer.isAlive() && kPlayer.GetID() != kThisPlayer.GetID())
+								{
+									iLoop = 0;
+									for(pLoopCity = kPlayer.firstCity(&iLoop); pLoopCity != NULL; pLoopCity = kPlayer.nextCity(&iLoop))
+									{
+										if (pLoopCity->waterArea())
+										{
+											if (pLoopCity->waterArea() == pBiggestNearbyBodyOfWater)
+											{
+												goto AreaHasOtherCity;
+											}
+										}
+									}
+								}
+							}
+							// Gets skipped over if there is at least one other civ's city on this water area
+							iTempWeight = 0;
+
+							AreaHasOtherCity:;
+#else
 							int iWaterTiles = pBiggestNearbyBodyOfWater->getNumTiles();
 							int iNumUnitsofMine = pBiggestNearbyBodyOfWater->getUnitsPerPlayer(m_pCity->getOwner());
 							if (iNumUnitsofMine * 5 > iWaterTiles)
 							{
 								iTempWeight = 0;
 							}
+#endif // AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_ACCURATE_SEA_SANITY_CHECK
 						}
 						else // this should never happen, but...
 						{
@@ -2651,11 +2693,13 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_FirstFaithBuilding(CvCity* pCity)
 		return false;
 	}
 
+#ifndef AUI_CITYSTRATEGY_FIX_FIRST_FAITH_BUILDING_NO_MINIMUM_POP
 	// Need population of 2 before worrying about this
 	if(pCity->getPopulation() < 2)
 	{
 		return false;
 	}
+#endif // AUI_CITYSTRATEGY_FIX_FIRST_FAITH_BUILDING_NO_MINIMUM_POP
 
 	// Turn on if high religion flavor (doesn't need to be as high if already has a pantheon)
 	if((iReligionFlavor > 4 && kPlayer.GetReligions()->HasCreatedPantheon()) || iReligionFlavor > 6)
