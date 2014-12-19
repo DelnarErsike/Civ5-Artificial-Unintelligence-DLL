@@ -866,7 +866,11 @@ int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 		return TRUE;
 	}
 
+#ifdef AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
+	if(pToPlot->isMountain() && !pUnit->canEnterTerrain(*pToPlot))
+#else
 	if(pToPlot->isMountain() && (!pCacheData->isHuman() || pCacheData->IsAutomated()))
+#endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 	{
 		return FALSE;
 	}
@@ -885,16 +889,22 @@ int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 
 	if(bAIControl)
 	{
+#ifndef AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_PATH
 		if(!(finder->GetInfo() & MOVE_UNITS_IGNORE_DANGER))
 		{
 			if(!pUnit->IsCombatUnit() || pUnit->getArmyID() == FFreeList::INVALID_INDEX)
 			{
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+				if (GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pToPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
+#else
 				if(GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pToPlot) > 0)
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
 				{
 					return FALSE;
 				}
 			}
 		}
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_PATH
 
 		if(pCacheData->getDomainType() == DOMAIN_LAND)
 		{
@@ -1041,7 +1051,11 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 		{
 			if(pToPlot->getFeatureType() != NO_FEATURE)
 			{
+#ifdef AUI_FAST_COMP
+				iCost += (GC.getPATH_DAMAGE_WEIGHT() * FASTMAX(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
+#else
 				iCost += (GC.getPATH_DAMAGE_WEIGHT() * std::max(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
+#endif // AUI_FAST_COMP
 			}
 
 			if(pToPlot->getExtraMovePathCost() > 0)
@@ -1132,7 +1146,11 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 	{
 		if(iMovesLeft == 0)
 		{
+#ifdef AUI_FAST_COMP
+			iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
+#else
 			iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
+#endif // AUI_FAST_COMP
 		}
 
 		if(pCacheData->IsAutomated())
@@ -1143,7 +1161,11 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 				{
 					if(pToPlot->isVisibleEnemyDefender(pUnit))
 					{
+#ifdef AUI_FAST_COMP
+						iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
+#else
 						iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
+#endif // AUI_FAST_COMP
 
 						// I guess we may as well be the garrison
 #if PATH_CITY_WEIGHT != 0
@@ -1296,10 +1318,12 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 							return FALSE;
 						}
 
+#ifndef AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 						if (kNodeCacheData.bIsMountain && !(iFinderIgnoreStacking) && (!bIsHuman || bAIControl))
 						{
 							return FALSE;
 						}
+#endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 
 						if(kNodeCacheData.bIsMountain && !kNodeCacheData.bCanEnterTerrain)
 						{
@@ -1437,7 +1461,28 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 			{
 				if(!bUnitIsCombat || pUnit->getArmyID() == FFreeList::INVALID_INDEX)
 				{
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_TO_PLOT_NOT_FROM_PLOT
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+					if (GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pToPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH &&
+						GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pFromPlot) <= pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
+#else
+					if (GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+#else
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+					if (GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pToPlot) > 0 && GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pFromPlot) <= 0)
+#else
+					if(GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > 0)
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+#else
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+					if (GET_PLAYER(unit_owner).GetPlotDanger(*pFromPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
+#else
 					if(GET_PLAYER(unit_owner).GetPlotDanger(*pFromPlot) > 0)
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_USES_TO_PLOT_NOT_FROM_PLOT
 					{
 						return FALSE;
 					}
@@ -1483,7 +1528,11 @@ int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 	if(data == ASNC_INITIALADD)
 	{
 		iTurns = 1;
+#ifdef AUI_FAST_COMP
+		iMoves = FASTMIN(iMoves, pUnit->movesLeft());
+#else
 		iMoves = std::min(iMoves, pUnit->movesLeft());
+#endif // AUI_FAST_COMP
 	}
 	else
 	{
@@ -1508,7 +1557,11 @@ int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 		}
 		else
 		{
+#ifdef AUI_FAST_COMP
+			iMoves = FASTMIN(iMoves, FASTMAX(0, iStartMoves - CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType()), pCacheData->maxMoves(), iStartMoves)));
+#else
 			iMoves = std::min(iMoves, std::max(0, iStartMoves - CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves(), iStartMoves)));
+#endif // AUI_FAST_COMP
 		}
 	}
 
@@ -1576,7 +1629,11 @@ int IgnoreUnitsDestValid(int iToX, int iToY, const void* pointer, CvAStar* finde
 		return FALSE;
 	}
 
+#ifdef AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
+	if (pToPlot->isMountain() && !pUnit->canEnterTerrain(*pToPlot))
+#else
 	if(pToPlot->isMountain() && (!pCacheData->isHuman() || pCacheData->IsAutomated()))
+#endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 	{
 		return FALSE;
 	}
@@ -1699,7 +1756,11 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 		{
 			if(pToPlot->getFeatureType() != NO_FEATURE)
 			{
+#ifdef AUI_FAST_COMP
+				iCost += (GC.getPATH_DAMAGE_WEIGHT() * FASTMAX(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
+#else
 				iCost += (GC.getPATH_DAMAGE_WEIGHT() * std::max(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
+#endif // AUI_FAST_COMP
 			}
 
 			if(pToPlot->getExtraMovePathCost() > 0)
@@ -1708,10 +1769,12 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 			}
 		}
 
+#if PATH_CITY_AVOID_WEIGHT != 0
 		if(pToPlot->getPlotCity() && !(pToPlot->getX() == finder->GetDestX() && pToPlot->getY() == finder->GetDestY()))
 		{
 			iCost += PATH_CITY_AVOID_WEIGHT; // slewis - this should be zeroed out currently
 		}
+#endif
 	}
 	else
 	{
@@ -1742,7 +1805,11 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 	{
 		if(iMovesLeft == 0)
 		{
+#ifdef AUI_FAST_COMP
+			iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
+#else
 			iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
+#endif // AUI_FAST_COMP
 		}
 
 		if(pCacheData->IsAutomated())
@@ -1753,13 +1820,19 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 				{
 					if(pToPlot->isVisibleEnemyDefender(pUnit))
 					{
+#ifdef AUI_FAST_COMP
+						iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
+#else
 						iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
+#endif // AUI_FAST_COMP
 
 						// I guess we may as well be the garrison
+#if PATH_CITY_WEIGHT != 0
 						if(!(pFromPlot->isCity()))
 						{
 							iCost += PATH_CITY_WEIGHT;
 						}
+#endif
 
 						if(!(pUnit->isRiverCrossingNoPenalty()))
 						{
@@ -1879,7 +1952,11 @@ int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const v
 	if(data == ASNC_INITIALADD)
 	{
 		iTurns = 1;
+#ifdef AUI_FAST_COMP
+		iMoves = FASTMIN(iMoves, pUnit->movesLeft());
+#else
 		iMoves = std::min(iMoves, pUnit->movesLeft());
+#endif // AUI_FAST_COMP
 	}
 	else
 	{
@@ -1897,7 +1974,11 @@ int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const v
 
 		// We can't use maxMoves, because that checks where the unit is currently, and we're plotting a path so we have to see
 		// what the max moves would be like if the unit was already at the desired location.
+#ifdef AUI_FAST_COMP
+		iMoves = FASTMIN(iMoves, FASTMAX(0, iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves())));
+#else
 		iMoves = std::min(iMoves, std::max(0, iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves())));
+#endif // AUI_FAST_COMP
 	}
 
 	FAssertMsg(iMoves >= 0, "iMoves is expected to be non-negative (invalid Index)");
@@ -1969,7 +2050,11 @@ int StepValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 		return FALSE;
 	}
 
+#ifdef AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
+	if(pNewPlot->isImpassable())
+#else
 	if(pNewPlot->isImpassable() || pNewPlot->isMountain())
+#endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 	{
 		return FALSE;
 	}
@@ -2159,8 +2244,13 @@ int InfluenceCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* 
 	{
 		iCost = 1;
 	}
+#ifdef AUI_FAST_COMP
+	iCost = FASTMAX(1,iCost);
+	iCost = FASTMIN(3,iCost);
+#else
 	iCost = std::max(1,iCost);
 	iCost = std::min(3,iCost);
+#endif // AUI_FAST_COMP
 	if (bDifferentOwner)
 	{
 		iCost += 15;
@@ -2895,7 +2985,11 @@ CvPlot* CvStepPathFinder::GetXPlotsFromEnd(PlayerTypes ePlayer, PlayerTypes eEne
 
 	// Generate step path
 	iPathLen = GC.getStepFinder().GetStepDistanceBetweenPoints(ePlayer, eEnemy, pStartPlot, pEndPlot);
+#ifdef AUI_FAST_COMP
+	iNumSteps = FASTMIN(iPlotsFromEnd, iPathLen);
+#else
 	iNumSteps = ::min(iPlotsFromEnd, iPathLen);
+#endif // AUI_FAST_COMP
 
 	if(iNumSteps != -1)
 	{
@@ -3398,10 +3492,12 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 							return FALSE;
 						}
 
+#ifndef AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 						if (kNodeCacheData.bIsMountain && !(iFinderIgnoreStacking) && (!bIsHuman || bAIControl))
 						{
 							return FALSE;
 						}
+#endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 
 						if(kNodeCacheData.bIsMountain && !kNodeCacheData.bCanEnterTerrain)	// only doing canEnterTerrain on mountain plots because it is expensive, though it probably should always be called and some other checks in this loop could be removed.
 						{
@@ -3539,7 +3635,28 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 			{
 				if(!bUnitIsCombat || pUnit->getArmyID() == FFreeList::INVALID_INDEX)
 				{
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_TO_PLOT_NOT_FROM_PLOT
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+					if (GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pToPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH &&
+						GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pFromPlot) <= pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
+#else
+					if (GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+#else
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+					if (GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pToPlot) > 0 && GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pFromPlot) <= 0)
+#else
+					if(GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > 0)
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+#else
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+					if (GET_PLAYER(unit_owner).GetPlotDanger(*pFromPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
+#else
 					if(GET_PLAYER(unit_owner).GetPlotDanger(*pFromPlot) > 0)
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_USES_TO_PLOT_NOT_FROM_PLOT
 					{
 						return FALSE;
 					}
@@ -3622,10 +3739,14 @@ int FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int da
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 // Each valid road or railroad within single maximum move distance of the unit lowers the cutoff by 1 and 2 respectively.
 // Check is fairly fast and is good enough for most cases.
-void AdjustDistanceFilterForRoads(UnitHandle pUnit, CvPlot* pTarget, int& iCutoffDistance)
+void AdjustDistanceFilterForRoads(const UnitHandle pUnit, int& iCutoffDistance)
 {
-	// Initial Range to check for roads around both target and unit 
-	const int iRange = MIN(pUnit->baseMoves() - 1 - (pUnit->isEmbarked() ? 1 : 0), iCutoffDistance);
+	// Initial Range to check for roads around the unit 
+#ifdef AUI_FAST_COMP
+	const int iRange = FASTMIN(pUnit->baseMoves() - (pUnit->isEmbarked() ? 1 : 0), iCutoffDistance);
+#else
+	const int iRange = MIN(pUnit->baseMoves()  - (pUnit->isEmbarked() ? 1 : 0), iCutoffDistance);
+#endif // AUI_FAST_COMP
 	// Filtering out units that don't need road optimization
 	if (iRange <= 0 || pUnit->getDomainType() != DOMAIN_LAND || pUnit->flatMovementCost() || (!pUnit->IsCombatUnit() && pUnit->getArmyID() == FFreeList::INVALID_INDEX))
 	{
@@ -3635,40 +3756,46 @@ void AdjustDistanceFilterForRoads(UnitHandle pUnit, CvPlot* pTarget, int& iCutof
 	const bool bIsIroquois = GET_PLAYER(pUnit->getOwner()).GetPlayerTraits()->IsMoveFriendlyWoodsAsRoad();
 	int iRoadPlots = 0;
 	int iRailPlots = 0;
-	int iDX, iDY;
+	int iDX, iDY, iI;
 	CvPlot* pLoopPlot;
+	CvPlot* pAdjacentPlot;
+	FeatureTypes eFeature;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+	for (iDY = -iRange; iDY <= iRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iDY);
+		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
+#else
 	for (iDX = -(iRange); iDX <= iRange; iDX++)
 	{
 		for (iDY = -(iRange); iDY <= iRange; iDY++)
 		{
-			pLoopPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
-			if (pLoopPlot && plotDistance(pLoopPlot->getX(), pLoopPlot->getY(), pTarget->getX(), pTarget->getY()) >= iCutoffDistance)
+			pLoopPlot = plotXYWithRangeCheck(pUnit->getX(), pUnit->getY(), iDX, iDY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
+			if (pLoopPlot)
 			{
-				FeatureTypes eFeature = pLoopPlot->getFeatureType();
-				bool bIroquoisBonus = bIsIroquois && pUnit->getOwner() == pLoopPlot->getOwner() && (eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE);
-				if ((bIroquoisBonus || pLoopPlot->isValidRoute(pUnit.pointer())))
+				eFeature = pLoopPlot->getFeatureType();
+				if (bIsIroquois && pUnit->getOwner() == pLoopPlot->getOwner() && (eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE))
 				{
-					if (bIroquoisBonus)
+					// Iroquois don't need adjacent forests to use the road bonus (according to CvUnitMovement)
+					iRoadPlots++;
+				}
+				else if (pLoopPlot->isValidRoute(pUnit.pointer()))
+				{
+					// Check for an adjacent road before adding on this road type
+					for (iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
 					{
-						// Iroquois don't need adjacent forests to use the road bonus (according to CvUnitMovement)
-						iRoadPlots++;
-					}
-					else
-					{
-						// Check for an adjacent road
-						CvPlot* pAdjacentPlot;
-						bool bCountPlot = false;
-						for (int jJ = 0; jJ < NUM_DIRECTION_TYPES; jJ++)
-						{
-							pAdjacentPlot = plotDirection(pLoopPlot->getX(), pLoopPlot->getY(), ((DirectionTypes)jJ));
-							if (pAdjacentPlot->isValidRoute(pUnit.pointer()))
-							{
-								bCountPlot = true;
-								break;
-							}
-						}
-						// If there's an adjacent road, unit might be able to use this road to its benefit
-						if (bCountPlot)
+						pAdjacentPlot = plotDirection(pLoopPlot->getX(), pLoopPlot->getY(), ((DirectionTypes)iI));
+						if (pAdjacentPlot && pAdjacentPlot->isValidRoute(pUnit.pointer()))
 						{
 							switch (pLoopPlot->getRouteType())
 							{
@@ -3679,6 +3806,7 @@ void AdjustDistanceFilterForRoads(UnitHandle pUnit, CvPlot* pTarget, int& iCutof
 								iRailPlots++;
 								break;
 							}
+							break;
 						}
 					}
 				}
@@ -3687,15 +3815,18 @@ void AdjustDistanceFilterForRoads(UnitHandle pUnit, CvPlot* pTarget, int& iCutof
 	}
 
 	// Extra move distance to take account of if there are nearby roads or railroads
+#ifdef AUI_FAST_COMP
+	iCutoffDistance = FASTMAX(0, iCutoffDistance - iRoadPlots - 2 * iRailPlots);
+#else
 	iCutoffDistance = MAX(0, iCutoffDistance - iRoadPlots - 2 * iRailPlots);
+#endif // AUI_FAST_COMP
 }
 
 // AdjustDistanceFilterForRoads() call for when the distance isn't being stored
-int GetAdjustedDistanceWithRoadFilter(UnitHandle pUnit, CvPlot* pTarget, int iDistance)
+int GetAdjustedDistanceWithRoadFilter(const UnitHandle pUnit, int iDistance)
 {
-	int iAdjusted = iDistance;
-	AdjustDistanceFilterForRoads(pUnit, pTarget, iAdjusted);
-	return iAdjusted;
+	AdjustDistanceFilterForRoads(pUnit, iDistance);
+	return iDistance;
 }
 #endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 
@@ -3750,7 +3881,7 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 	// Compare distance to movement rate
 	iDistance = plotDistance(pUnit->getX(), pUnit->getY(), pTarget->getX(), pTarget->getY());
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-	AdjustDistanceFilterForRoads(pUnit, pTarget, iDistance);
+	AdjustDistanceFilterForRoads(pUnit, iDistance);
 #endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 	// KWG: If the unit is a land unit that can embark, baseMoves() is only going to give correct value if the starting and ending locations
 	//		are in the same domain (LAND vs. SEA) and no transition occurs.
@@ -3779,7 +3910,11 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 		int iTurnsCalculated = TurnsToReachTarget(pUnit, pTarget, false /*bReusePaths*/, bIgnoreUnits);
 #ifdef AUI_ASTAR_PARADROP
 		if (bCanParadropAdjacent)
+#ifdef AUI_FAST_COMP
+			iTurnsCalculated = FASTMIN(1, iTurnsCalculated);
+#else
 			iTurnsCalculated = MIN(1, iTurnsCalculated);
+#endif // AUI_FAST_COMP
 #endif // AUI_ASTAR_PARADROP
 		if (piTurns)
 			*piTurns = iTurnsCalculated;
