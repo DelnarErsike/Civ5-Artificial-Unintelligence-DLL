@@ -3274,6 +3274,10 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 	{
 		return false;
 	}
+	if (pPlayer->GetPlayerTraits()->IsNoAnnexing() || pPlayer->IsEmpireUnhappy())
+	{
+		return false; // Venice can't build settlers, we don't want unhappy empires to rush out settlers
+	}
 #endif // AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
 
 #ifdef AUI_ECONOMIC_USE_DOUBLES
@@ -3306,14 +3310,13 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 		}
 	}
 
-#ifdef AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
-	// If we're the only ones on our continent, increase effect of expansion flavor
+#ifdef AUI_ECONOMIC_EARLY_EXPANSION_ALWAYS_ACTIVE_IF_ALONE
+	// If we're the only ones on our continent, we use completely different logic
 	bool bAloneInArea = true;
-	int iStartArea = 0;
 	CvPlot* pLoopPlot;
-	if (pPlayer->getStartingPlot())
+	if (pPlayer->getCapitalCity())
 	{
-		iStartArea = pPlayer->getStartingPlot()->getArea();
+		int iStartArea = pPlayer->getCapitalCity()->getArea();
 		for (int iI = 0; iI < GC.getMap().numPlots(); iI++)
 		{
 			pLoopPlot = GC.getMap().plotByIndexUnchecked(iI);
@@ -3322,12 +3325,27 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 				if (pLoopPlot->isOwned() && pLoopPlot->getOwner() != pPlayer->GetID() && !GET_PLAYER(pLoopPlot->getOwner()).isMinorCiv())
 				{
 					bAloneInArea = false;
-					break;
 				}
 			}
 		}
 	}
-#endif // AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
+	if (bAloneInArea)
+	{
+		CvArea* pArea = GC.getMap().getArea(pPlayer->getCapitalCity()->getArea());
+
+		// Is this area still one of the best to settle?
+		int iBestArea, iSecondBestArea;
+		pPlayer->GetBestSettleAreas(pPlayer->GetEconomicAI()->GetMinimumSettleFertility(), iBestArea, iSecondBestArea);
+		if (iBestArea == pArea->GetID() || iSecondBestArea == pArea->GetID())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_ALWAYS_ACTIVE_IF_ALONE
 
 #ifndef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_FLAVOR_APPLICATION
 	iDesiredCities = (iDesiredCities * iFlavorExpansion) / max(iFlavorGrowth, 1);
@@ -3340,20 +3358,14 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 #endif // AUI_ECONOMIC_USE_DOUBLES
 
 #ifdef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_FLAVOR_APPLICATION
+	iFlavorExpansion = MAX(GC.getFLAVOR_MIN_VALUE(), iFlavorExpansion);
+	iFlavorGrowth = MAX(GC.getFLAVOR_MIN_VALUE(), iFlavorGrowth);
 #ifdef AUI_ECONOMIC_USE_DOUBLES
 	dDifficulty /= 2.0;
 	dDifficulty += 1.0;
-#ifdef AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
-	dDesiredCities *= log(iFlavorExpansion * ((bAloneInArea ? iFlavorExpansion : 0) + pow(dDifficulty, 2.0))) / log((double)MAX(iFlavorGrowth, 2));
-#else
 	dDesiredCities *= log(iFlavorExpansion * pow(dDifficulty, 2.0)) / log((double)MAX(iFlavorGrowth, 2));
-#endif // AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
-#else
-#ifdef AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
-	iDesiredCities *= int(log(iFlavorExpansion * ((bAloneInArea ? iFlavorExpansion : 0) + pow((double)iDifficulty / 2.0 + 1.0, 2.0))) / log((double)MAX(iFlavorGrowth, 2)) + 0.5);
 #else
 	iDesiredCities *= int(log(iFlavorExpansion * pow((double)iDifficulty / 2.0 + 1.0, 2.0)) / log((double)MAX(iFlavorGrowth, 2)) + 0.5);
-#endif // AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
 #endif // AUI_ECONOMIC_USE_DOUBLES
 #else
 #ifdef AUI_ECONOMIC_USE_DOUBLES
@@ -3419,6 +3431,46 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 				{
 					return true;
 				}
+#ifdef AUI_ECONOMIC_EARLY_EXPANSION_REPLACE_OWNED_TILE_CHECKS_WITH_DISTANCE_CHECK
+				// Not actually replacing the check, since it can still fire, but if the checks return false, this distance check thing is run
+#ifdef AUI_ECONOMIC_USE_DOUBLES
+				else if ((iNumCities + iSettlersOnMap) < int(dDesiredCities + 0.5))
+#else
+				else if ((iNumCities + iSettlersOnMap) < iDesiredCities)
+#endif // AUI_ECONOMIC_USE_DOUBLES
+				{
+					if (pPlayer->getCapitalCity())
+					{
+						CvPlot* pLoopPlot;
+						int iCityLoop;
+						CvCity* pLoopCity;
+						const int iRange = AUI_ECONOMIC_EARLY_EXPANSION_REPLACE_OWNED_TILE_CHECKS_WITH_DISTANCE_CHECK;
+						int iStartArea = pPlayer->getCapitalCity()->getArea();
+						for (pLoopCity = pPlayer->firstCity(&iCityLoop); pLoopCity != NULL && pLoopCity->getArea() == iStartArea; pLoopCity = pPlayer->nextCity(&iCityLoop))
+						{
+							int iMaxDX, iDY, iDX;
+							for (iDY = -iRange; iDY <= iRange; iDY++)
+							{
+#ifdef AUI_FAST_COMP
+								iMaxDX = iRange - FASTMAX(0, iDY);
+								for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+								iMaxDX = iRange - MAX(0, iDY);
+								for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+								{
+									// No need for range check because loops are set up properly
+									pLoopPlot = plotXY(pLoopCity->getX(), pLoopCity->getY(), iDX, iDY);
+									if (pLoopPlot && pLoopPlot->getArea() == iStartArea && pLoopPlot->getFoundValue(pPlayer->GetID()) >= pPlayer->GetEconomicAI()->GetMinimumSettleFertility())
+									{
+										return true;
+									}
+								}
+							}
+						}
+					}
+				}
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_REPLACE_OWNED_TILE_CHECKS_WITH_DISTANCE_CHECK
 			}
 #ifndef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
 		}
