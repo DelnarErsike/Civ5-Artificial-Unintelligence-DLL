@@ -784,11 +784,6 @@ public:
 	bool IsCityInQueuedAttack(const CvCity* pAttackCity);
 	int NearXQueuedAttacks(const CvPlot* pPlot, const int iRange);
 
-#ifdef AUI_TACTICAL_HELPERS_AIR_SWEEP
-	// Public AMS functions
-	int SamePlotFound(vector<CvPlot*> plotData, CvPlot* plotXy);
-#endif // AUI_TACTICAL_HELPERS_AIR_SWEEP
-
 	// Public logging
 	void LogTacticalMessage(CvString& strMsg, bool bSkipLogDominanceZone = true);
 
@@ -976,16 +971,15 @@ private:
 #ifdef AUI_TACTICAL_HELPERS_AIR_SWEEP
 	// AMS functions and helper vector (for air sweeps)
 	std::vector<CvTacticalUnit> m_CurrentAirUnits;
-	bool ContainsPlot(vector<CvPlot*> plotData, CvPlot* plotXy);
 	bool FindAirUnitsToAirSweep(CvPlot* pTarget);
+	CvUnit* GetProbableInterceptor(CvPlot* pTarget) const;
 #endif // AUI_TACTICAL_HELPERS_AIR_SWEEP
 #ifdef AUI_TACTICAL_HELPERS_POSITIONING_AND_ORDER
-	void GetBestPlot(CvPlot*& outputPlot, vector<CvPlot*> plotsToCheck);
-	CvPlot* GetBestRepositionPlot(UnitHandle unitH, CvPlot* plotTarget);
+	CvPlot* GetBestRepositionPlot(UnitHandle unitH, CvPlot* plotTarget, int iWithinTurns = 0);
 	void SortCurrentMoveUnits(bool bSortBySelfDamage = false);
 #endif // AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK
 #ifdef AUI_TACTICAL_EXECUTE_SWAP_TO_PLOT
-	void ExecuteSwapToPlot(UnitHandle pUnit, UnitHandle pTargetUnit, bool bSaveMoves);
+	bool ExecuteSwapToPlot(UnitHandle pUnit, UnitHandle pTargetUnit, bool bSaveMoves);
 #endif // AUI_TACTICAL_EXECUTE_SWAP_TO_PLOT
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 	bool CheckAndExecuteParadrop(UnitHandle pUnit, CvPlot* pTarget, int iPathfindingTurns = MAX_INT);
