@@ -1267,6 +1267,16 @@ int CvGrandStrategyAI::GetSpaceshipPriority()
 			dPriority += /*150*/ GC.getAI_GS_SS_HAS_APOLLO_PROGRAM();
 		}
 	}
+#ifdef AUI_GS_SPACESHIP_TWEAKED_ERAS
+	if (eApolloProgram == NO_PROJECT || GET_TEAM(m_pPlayer->getTeam()).getProjectCount(eApolloProgram) == 0)
+	{
+		// We're on Future Tech, so might as well try to power through to spaceship
+		if (m_pPlayer->GetPlayerTechs()->IsCurrentResearchRepeat())
+		{
+			dPriority += GC.getAI_GS_SS_HAS_APOLLO_PROGRAM() * iFlavorScience / (double)GC.getFLAVOR_MAX_VALUE();
+		}
+	}
+#endif // AUI_GS_SPACESHIP_TWEAKED_ERAS
 
 	return (int)(dPriority + 0.5);
 #else
@@ -2086,6 +2096,19 @@ int CvGrandStrategyAI::ScienceFlavorBoost() const
 /// Get AI Flavor based on Personality and Grand Strategy Ratios
 int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
 {
+#ifdef AUI_GS_GET_PERSONALITY_AND_GRAND_STRATEGY_USE_COMPARE_TO_LOWEST_RATIO
+	double dLowestRatio = 1.0;
+	for (int iI = 0; iI < GC.getNumAIGrandStrategyInfos(); iI++)
+	{
+#ifdef AUI_FAST_COMP
+		dLowestRatio = FASTMIN(dLowestRatio, GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iI));
+#else
+		dLowestRatio = MIN(dLowestRatio, GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iI));
+#endif // AUI_FAST_COMP
+	}
+	if (dLowestRatio == 1.0)
+		dLowestRatio = 0.0;
+#endif // AUI_GS_GET_PERSONALITY_AND_GRAND_STRATEGY_USE_COMPARE_TO_LOWEST_RATIO
 #ifdef AUI_GS_USE_DOUBLES
 	// Personality flavors set as initial values
 	double dModdedFlavor = (double)m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
@@ -2104,22 +2127,26 @@ int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
 #  endif // AUI_GS_SINUSOID_PERSONALITY_INFLUENCE
 
 	// Loop through all Grand Strategies, adding their flavor values to the modded value
-	for (int iGrandStrategiesLoop = 0; iGrandStrategiesLoop < GetAIGrandStrategies()->GetNumAIGrandStrategies(); iGrandStrategiesLoop++)
+	for (int iI = 0; iI < GetAIGrandStrategies()->GetNumAIGrandStrategies(); iI++)
 	{
 		// First line is just the Grand Strategy's base flavor, second line reduces its influence on modded flavor based on Priority Ratio (Active = 1.0)
-		dModdedFlavor += GetAIGrandStrategies()->GetEntry(iGrandStrategiesLoop)->GetFlavorModValue(eFlavorType) * sin(dPercentTechsResearched * M_PI / 2.0) *
+		dModdedFlavor += GetAIGrandStrategies()->GetEntry(iI)->GetFlavorModValue(eFlavorType) * sin(dPercentTechsResearched * M_PI / 2.0) *
+#ifdef AUI_GS_GET_PERSONALITY_AND_GRAND_STRATEGY_USE_COMPARE_TO_LOWEST_RATIO
+			(GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iI) - dLowestRatio) / (1.0 - dLowestRatio);
+#else
 			GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iGrandStrategiesLoop);
+#endif // AUI_GS_GET_PERSONALITY_AND_GRAND_STRATEGY_USE_COMPARE_TO_LOWEST_RATIO
 	}
 # else
 	if(m_eActiveGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
 		CvAIGrandStrategyXMLEntry* pGrandStrategy = GetAIGrandStrategies()->GetEntry(m_eActiveGrandStrategy);
-		fModdedFlavor = pGrandStrategy->GetFlavorModValue(eFlavorType) + m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
+		dModdedFlavor = pGrandStrategy->GetFlavorModValue(eFlavorType) + m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
 	}
 # endif // AUI_GS_PRIORITY_RATIO
 	// Modded flavor can't be negative
-	dModdedFlavor = MAX(0.0, dModdedFlavor);
-	return (int)(dModdedFlavor + 0.5);
+	dModdedFlavor = MAX((double)GC.getFLAVOR_MIN_VALUE(), dModdedFlavor);
+	return int(dModdedFlavor + 0.5);
 #else
 	if(m_eActiveGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
