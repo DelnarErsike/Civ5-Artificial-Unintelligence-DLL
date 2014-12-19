@@ -3622,7 +3622,7 @@ void CvMilitaryAI::DisbandObsoleteUnits()
 	else
 	{
 		m_iTurnsWithUpgradeRequest--;
-		m_iTurnsWithUpgradeRequest = MAX(0, MIN(m_iTurnsWithUpgradeRequest, GC.getGame().getMaxTurns() / 20));
+		m_iTurnsWithUpgradeRequest = MAX(0, MIN(m_iTurnsWithUpgradeRequest, GC.getGame().getEstimateEndTurn() / 20));
 	}
 
 	// Are we running at a deficit?
@@ -3659,7 +3659,7 @@ void CvMilitaryAI::DisbandObsoleteUnits()
 
 	// if our units maintenance cost is high we may want to scrap some obsolete stuff
 #ifdef AUI_MILITARY_USE_DOUBLES
-	bInDeficit = bInDeficit || dAverageGoldPerUnit > 5.0 || (m_iTurnsWithUpgradeRequest > GC.getGame().getMaxTurns() / 20);
+	bInDeficit = bInDeficit || dAverageGoldPerUnit > 5.0 || (m_iTurnsWithUpgradeRequest > GC.getGame().getEstimateEndTurn() / 20);
 #else
 	bInDeficit = bInDeficit || fAverageGoldPerUnit > 5 || (m_iTurnsWithUpgradeRequest > GC.getGame().getMaxTurns() / 20);
 #endif // AUI_MILITARY_USE_DOUBLES
@@ -4128,9 +4128,11 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 
 #ifdef AUI_MILITARY_MAX_INTERCEPTS
 /// AMS: Get all possible interceptions on that plot, doesn't use visibility to offset AI inability to remember air attacks.
-int CvMilitaryAI::GetMaxPossibleInterceptions(CvPlot* pTargetPlot) const
+int CvMilitaryAI::GetMaxPossibleInterceptions(CvPlot* pTargetPlot, bool bCountPercents) const
 {
 	int iRtnValue = 0;
+	int iLoopUnit;
+	CvUnit* pLoopUnit;
 
 	// Loop through all the players
 	for (int iI = 0; iI < MAX_PLAYERS; iI++)
@@ -4142,8 +4144,7 @@ int CvMilitaryAI::GetMaxPossibleInterceptions(CvPlot* pTargetPlot) const
 			if (atWar(kPlayer.getTeam(), m_pPlayer->getTeam()))
 			{
 				// Loop through their units looking for intercept capable units
-				int iLoopUnit = 0;
-				CvUnit* pLoopUnit;
+				iLoopUnit = 0;
 				for (pLoopUnit = kPlayer.firstUnit(&iLoopUnit); pLoopUnit != NULL; pLoopUnit = kPlayer.nextUnit(&iLoopUnit))
 				{
 					// Must be able to intercept this turn
@@ -4157,7 +4158,10 @@ int CvMilitaryAI::GetMaxPossibleInterceptions(CvPlot* pTargetPlot) const
 							{
 								if (pLoopUnit->currInterceptionProbability() > 0)
 								{
-									iRtnValue++;
+									if (bCountPercents)
+										iRtnValue += pLoopUnit->currInterceptionProbability();
+									else
+										iRtnValue++;
 								}
 							}
 						}
@@ -4166,6 +4170,9 @@ int CvMilitaryAI::GetMaxPossibleInterceptions(CvPlot* pTargetPlot) const
 			}
 		}
 	}
+
+	if (bCountPercents)
+		iRtnValue /= 100;
 
 	return iRtnValue;
 }
@@ -4230,6 +4237,9 @@ int CvMilitaryAI::DoUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert, int iM
 /// Assess nearby enemy air assets
 #ifdef AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
 int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int iRange, bool bCountFighters, bool bCountBombers) const
+#else
+int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int /*iRange*/, bool bCountFighters, bool bCountBombers) const
+#endif // AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
 {
 	int iRtnValue = 0;
 
@@ -4247,30 +4257,13 @@ int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int iRange, bo
 				{
 					if (pLoopUnit->getDomainType() == DOMAIN_AIR)
 					{
+#ifdef AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
 						// AMS: Just to keep fighters closer to high range bombers (stealth bombers)
 						int iMaxCheckRange = MIN(pLoopUnit->GetRange(), 12);
 						int iAcceptableDistance = iMaxCheckRange + (iRange / 2);
 
 						if (plotDistance(pCenterPlot->getX(), pCenterPlot->getY(), pLoopUnit->getX(), pLoopUnit->getY()) <= iAcceptableDistance)
 #else
-int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int /*iRange*/, bool bCountFighters, bool bCountBombers) const
-{
-	int iRtnValue = 0;
-
-	// Loop through all the players
-	for (int iI = 0; iI < MAX_PLAYERS; iI++)
-	{
-		CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iI);
-		if (kPlayer.isAlive() && kPlayer.GetID() != m_pPlayer->GetID())
-		{
-			if (atWar(kPlayer.getTeam(), m_pPlayer->getTeam()))
-			{
-				// Loop through their units looking for bombers (this will allow us to find bombers on carriers also
-				int iLoopUnit = 0;
-				for (CvUnit* pLoopUnit = kPlayer.firstUnit(&iLoopUnit); pLoopUnit != NULL; pLoopUnit = kPlayer.nextUnit(&iLoopUnit))
-				{
-					if (pLoopUnit->getDomainType() == DOMAIN_AIR)
-					{
 						if ( plotDistance(pCenterPlot->getX(), pCenterPlot->getY(), pLoopUnit->getX(), pLoopUnit->getY()) <= 10 )
 #endif // AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
 						{
