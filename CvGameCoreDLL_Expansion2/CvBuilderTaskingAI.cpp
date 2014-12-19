@@ -21,6 +21,7 @@
 
 #ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
 #include "CvEconomicAI.h"
+#include "CvCitySpecializationAI.h"
 #endif // AUI_WORKER_SCORE_PLOT_FLAVORS
 
 CvWeightedVector<BuilderDirective, 100, true> CvBuilderTaskingAI::m_aDirectives;
@@ -829,6 +830,9 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 
 		//AddRepairDirectives(pUnit, pPlot, iMoveTurnsAway);
 		AddRouteDirectives(pUnit, pPlot, iMoveTurnsAway);
+#ifdef AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
+		AddImprovingMinorPlotsDirectives(pUnit, pPlot, iMoveTurnsAway);
+#endif // AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
 	}
 
 	m_aDirectives.StableSortItems();
@@ -930,6 +934,48 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 		return;
 	}
 
+#ifdef AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+	// check to see if someone already has a conflicting mission here
+	if (pUnit->GetMissionAIPlot() != pPlot)
+	{
+		int iLoop;
+		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+		{
+			CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
+			if (!pMissionPlot)
+			{
+				continue;
+			}
+
+			MissionAITypes eGroupMissionAI = pLoopUnit->GetMissionAIType();
+			if (eGroupMissionAI != MISSIONAI_BUILD)
+			{
+				continue;
+			}
+
+			if (pPlot->getX() == pMissionPlot->getX() && pPlot->getY() == pMissionPlot->getY())
+			{
+				BuildTypes eOtherBuild = pLoopUnit->getBuildType();
+				CvBuildInfo* pkBuild = GC.getBuildInfo(eOtherBuild);
+				if (pkBuild != NULL)
+				{
+					ImprovementTypes eImprovement = (ImprovementTypes)pkBuild->getImprovement();
+					if (eImprovement != NO_IMPROVEMENT || (eOtherBuild == m_eRepairBuild && eExistingPlotImprovement != NO_IMPROVEMENT))
+					{
+						if (m_bLogging)
+						{
+							CvString strLog;
+							strLog.Format("x: %d y: %d, Somebody has a conflicting mission here.", pPlot->getX(), pPlot->getY());
+							LogInfo(strLog, m_pPlayer, true);
+						}
+						return;
+					}
+				}
+			}
+		}
+	}
+#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
 	FeatureTypes eFeatureType = pPlot->getFeatureType();
 #endif // AUI_WORKER_SCORE_PLOT_CHOP
@@ -1024,7 +1070,7 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 
 		UpdateProjectedPlotYields(pPlot, eBuild);
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
-		int iScore = ScorePlot(eFeatureType != NO_FEATURE && pkBuild->isFeatureRemove(eFeatureType));
+		int iScore = ScorePlot(eFeatureType != NO_FEATURE && pkBuild->isFeatureRemove(eFeatureType) && pkBuild->getFeatureProduction(eFeatureType) > 0);
 #else
 		int iScore = ScorePlot();
 #endif // AUI_WORKER_SCORE_PLOT_CHOP
@@ -1121,11 +1167,55 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 		}
 	}
 
+#ifdef AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+	// check to see if someone already has a conflicting mission here
+	if(pUnit->GetMissionAIPlot() != pPlot)
+	{
+		int iLoop;
+		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+		{
+			CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
+			if (!pMissionPlot)
+			{
+				continue;
+			}
+
+			MissionAITypes eGroupMissionAI = pLoopUnit->GetMissionAIType();
+			if (eGroupMissionAI != MISSIONAI_BUILD)
+			{
+				continue;
+			}
+
+			if (pPlot->getX() == pMissionPlot->getX() && pPlot->getY() == pMissionPlot->getY())
+			{
+				BuildTypes eOtherBuild = pLoopUnit->getBuildType();
+				CvBuildInfo* pkBuild = GC.getBuildInfo(eOtherBuild);
+				if (pkBuild != NULL)
+				{
+					ImprovementTypes eImprovement = (ImprovementTypes)pkBuild->getImprovement();
+					if (eImprovement != NO_IMPROVEMENT || (eOtherBuild == m_eRepairBuild && eExistingImprovement != NO_IMPROVEMENT))
+					{
+						if (m_bLogging)
+						{
+							CvString strLog;
+							strLog.Format("x: %d y: %d, Somebody has a conflicting mission here.", pPlot->getX(), pPlot->getY());
+							LogInfo(strLog, m_pPlayer, true);
+						}
+						return;
+					}
+				}
+			}
+		}
+	}
+#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+
 	CvCity* pCity = GetWorkingCity(pPlot);
+#ifndef AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
 	if(!pCity)
 	{
 		return;
 	}
+#endif // AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
 
 	// loop through the build types to find one that we can use
 	BuildTypes eBuild;
@@ -1149,11 +1239,19 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 
 		CvImprovementEntry* pImprovement = GC.getImprovementInfo(eImprovement);
 
+#ifdef AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
+		// If the improvement has no defensive effect, skip it
+		if(pImprovement->GetDefenseModifier() == 0 && !pCity)
+		{
+			continue;
+		}
+#else
 		// if this improvement has a defense modifier, ignore it for now
 		//if(pImprovement->GetDefenseModifier() > 0)
 		//{
 		//	continue;
 		//}
+#endif // AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
 
 		// for bonus resources, check to see if this is the improvement that connects it
 		if(eResource != NO_RESOURCE)
@@ -1277,12 +1375,32 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 			}
 		}
 
+#ifdef AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
+		int iScore = 0;
+		if (pCity)
+		{
+			UpdateProjectedPlotYields(pPlot, eBuild);
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+			iScore = ScorePlot(bWillRemoveForestOrJungle && pkBuild->getFeatureProduction(eFeature) > 0);
+#else
+			iScore = ScorePlot();
+#endif // AUI_WORKER_SCORE_PLOT_CHOP
+		}
+		if (!pCity || iScore > 0)
+		{
+			int iBaseDefenseBonus = (pPlot->isHills() || pPlot->isMountain() ? GC.getHILLS_EXTRA_DEFENSE() :
+				(eFeature != NO_FEATURE && !pkBuild->isFeatureRemove(eFeature) ? GC.getFeatureInfo(eFeature)->getDefenseModifier() :
+				GC.getTerrainInfo(pPlot->getTerrainType())->getDefenseModifier() + GC.getFLAT_LAND_EXTRA_DEFENSE()));
+			iScore += (pImprovement->GetDefenseModifier() + iBaseDefenseBonus) * pPlot->getStrategicValue(false) / (100 * GC.getCHOKEPOINT_STRATEGIC_VALUE());
+		}
+#else
 		UpdateProjectedPlotYields(pPlot, eBuild);
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
-		int iScore = ScorePlot(bWillRemoveForestOrJungle);
+		int iScore = ScorePlot(bWillRemoveForestOrJungle && pkBuild->getFeatureProduction(eFeature) > 0);
 #else
 		int iScore = ScorePlot();
 #endif // AUI_WORKER_SCORE_PLOT_CHOP
+#endif // AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
 
 		// if we're going backward, bail out!
 		if(iScore <= 0)
@@ -1345,6 +1463,216 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 	}
 }
 
+#ifdef AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
+void CvBuilderTaskingAI::AddImprovingMinorPlotsDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMoveTurnsAway)
+{
+	ImprovementTypes eExistingImprovement = pPlot->getImprovementType();
+
+	// Do we have a special improvement here? (great person improvement, gifted improvement from major civ)
+	if (eExistingImprovement != NO_IMPROVEMENT && pPlot->HasSpecialImprovement() && !pPlot->IsImprovementPillaged())
+	{
+		return;
+	}
+
+	// check to see if a non-bonus resource is here. if so, bail out!
+	ResourceTypes eResource = pPlot->getResourceType(m_pPlayer->getTeam());
+	if (eResource != NO_RESOURCE)
+	{
+		if (GC.getResourceInfo(eResource)->getResourceUsage() != RESOURCEUSAGE_BONUS)
+		{
+			return;
+		}
+	}
+
+#ifdef AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+	// check to see if someone already has a conflicting mission here
+	if (pUnit->GetMissionAIPlot() != pPlot)
+	{
+		int iLoop;
+		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+		{
+			CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
+			if (!pMissionPlot)
+			{
+				continue;
+			}
+
+			MissionAITypes eGroupMissionAI = pLoopUnit->GetMissionAIType();
+			if (eGroupMissionAI != MISSIONAI_BUILD)
+			{
+				continue;
+			}
+
+			if (pPlot->getX() == pMissionPlot->getX() && pPlot->getY() == pMissionPlot->getY())
+			{
+				BuildTypes eOtherBuild = pLoopUnit->getBuildType();
+				CvBuildInfo* pkBuild = GC.getBuildInfo(eOtherBuild);
+				if (pkBuild != NULL)
+				{
+					ImprovementTypes eImprovement = (ImprovementTypes)pkBuild->getImprovement();
+					if (eImprovement != NO_IMPROVEMENT || (eOtherBuild == m_eRepairBuild && eExistingImprovement != NO_IMPROVEMENT))
+					{
+						if (m_bLogging)
+						{
+							CvString strLog;
+							strLog.Format("x: %d y: %d, Somebody has a conflicting mission here.", pPlot->getX(), pPlot->getY());
+							LogInfo(strLog, m_pPlayer, true);
+						}
+						return;
+					}
+				}
+			}
+		}
+	}
+#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+
+	// loop through the build types to find one that we can use
+	BuildTypes eBuild;
+	BuildTypes eOriginalBuildType;
+	int iBuildIndex;
+	for (iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+	{
+		eBuild = (BuildTypes)iBuildIndex;
+		eOriginalBuildType = eBuild;
+		CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
+		if (pkBuild == NULL)
+		{
+			continue;
+		}
+
+		ImprovementTypes eImprovement = (ImprovementTypes)pkBuild->getImprovement();
+		if (eImprovement == NO_IMPROVEMENT)
+		{
+			continue;
+		}
+
+		CvImprovementEntry* pImprovement = GC.getImprovementInfo(eImprovement);
+
+		if (eImprovement == pPlot->getImprovementType())
+		{
+			if (pPlot->IsImprovementPillaged())
+			{
+				eBuild = m_eRepairBuild;
+			}
+			else
+			{
+				if (m_bLogging){
+					CvString strTemp;
+					strTemp.Format("Weight,eImprovement == pPlot->getImprovementType(),%s,%i,,,%i, %i", GC.getBuildInfo(eBuild)->GetType(), eImprovement, pPlot->getX(), pPlot->getY());
+					LogInfo(strTemp, m_pPlayer);
+				}
+				continue;
+			}
+		}
+
+		// Only check to make sure our unit can build this after possibly switching this to a repair build in the block of code above
+		if (!pUnit->canBuild(pPlot, eBuild))
+		{
+			if (m_bLogging){
+				CvString strTemp;
+				strTemp.Format("Weight,!pUnit->canBuild(),%s,,,,%i, %i", GC.getBuildInfo(eBuild)->GetType(), pPlot->getX(), pPlot->getY());
+				LogInfo(strTemp, m_pPlayer);
+			}
+			continue;
+		}
+
+		FeatureTypes eFeature = pPlot->getFeatureType();
+		if (GET_PLAYER(pUnit->getOwner()).isOption(PLAYEROPTION_LEAVE_FORESTS))
+		{
+			if (eFeature != NO_FEATURE)
+			{
+				if (pkBuild->isFeatureRemove(eFeature))
+				{
+					if (m_bLogging){
+						CvString strTemp;
+						strTemp.Format("Weight,Keep Forests,%s,,,,%i, %i", GC.getBuildInfo(eBuild)->GetType(), pPlot->getX(), pPlot->getY());
+						LogInfo(strTemp, m_pPlayer);
+					}
+					continue;
+				}
+			}
+		}
+
+		int iExtraWeight = 0;
+		int iScore = 0;
+		if (pImprovement->GetLuxuryCopiesSiphonedFromMinor() > 0)
+		{
+			if (m_pPlayer->getSiphonLuxuryCount(pPlot->getOwner()) <= 0)
+			{
+				for (int iI = 0; iI < GC.getNumResourceInfos(); iI++)
+				{
+					int iResouceCount = GET_PLAYER(pPlot->getOwner()).getResourceInOwnedPlots((ResourceTypes)iI);
+					if (iResouceCount > 0)
+					{
+						CvResourceInfo* pkResource = GC.getResourceInfo(eResource);
+						if (pkResource && pkResource->getResourceUsage() == RESOURCEUSAGE_LUXURY)
+						{
+							iExtraWeight += GetResourceWeight((ResourceTypes)iI, eImprovement, iResouceCount);
+							iScore += 1;
+						}
+					}
+				}
+				int iBaseDefenseBonus = (pPlot->isHills() || pPlot->isMountain() ? GC.getHILLS_EXTRA_DEFENSE() :
+					(eFeature != NO_FEATURE && !pkBuild->isFeatureRemove(eFeature) ? GC.getFeatureInfo(eFeature)->getDefenseModifier() :
+					GC.getTerrainInfo(pPlot->getTerrainType())->getDefenseModifier() + GC.getFLAT_LAND_EXTRA_DEFENSE()));
+				iScore += (pImprovement->GetDefenseModifier() + iBaseDefenseBonus) * pPlot->getStrategicValue(false) / (100 * GC.getCHOKEPOINT_STRATEGIC_VALUE());
+			}
+		}
+
+// Add other improvements that are advantageous when built on other players' territory here
+
+		// if we're going backward, bail out!
+		if (iScore <= 0 && iExtraWeight <= 0)
+		{
+			continue;
+		}
+
+		BuilderDirective::BuilderDirectiveType eDirectiveType = BuilderDirective::BUILD_IMPROVEMENT;
+		int iWeight = GC.getBUILDER_TASKING_BASELINE_BUILD_IMPROVEMENTS();
+		if (eBuild == m_eRepairBuild)
+		{
+			eDirectiveType = BuilderDirective::REPAIR;
+			iWeight = GC.getBUILDER_TASKING_BASELINE_REPAIR();
+		}
+
+		iWeight = GetBuildCostWeight(iWeight, pPlot, eBuild);
+		int iBuildTimeWeight = GetBuildTimeWeight(pUnit, pPlot, eBuild, DoesBuildHelpRush(pUnit, pPlot, eBuild), iMoveTurnsAway);
+		iWeight += iBuildTimeWeight;
+		iWeight = CorrectWeight(iWeight);
+
+		if (iExtraWeight > 0)
+		{
+			iWeight += iExtraWeight;
+			iWeight = CorrectWeight(iWeight);
+		}
+
+		if (iScore > 0)
+		{
+			iWeight *= iScore;
+			iWeight = CorrectWeight(iWeight);
+		}
+
+		BuilderDirective directive;
+
+		directive.m_eDirective = eDirectiveType;
+		directive.m_eBuild = eBuild;
+		directive.m_eResource = NO_RESOURCE;
+		directive.m_sX = pPlot->getX();
+		directive.m_sY = pPlot->getY();
+		directive.m_sMoveTurnsAway = iMoveTurnsAway;
+
+		if (m_bLogging)
+		{
+			CvString strTemp;
+			strTemp.Format("Weight,Directive Score Added,%s,,,,%i, %i, %i, %d", GC.getBuildInfo(eBuild)->GetType(), directive.m_sX, directive.m_sY, directive.m_sMoveTurnsAway, iWeight);
+			LogInfo(strTemp, m_pPlayer);
+		}
+
+		m_aDirectives.push_back(directive, iWeight);
+	}
+}
+#endif // AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
+
 /// Adds a directive if the unit can construct a road in the plot
 void CvBuilderTaskingAI::AddRouteDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMoveTurnsAway)
 {
@@ -1375,6 +1703,48 @@ void CvBuilderTaskingAI::AddRouteDirectives(CvUnit* pUnit, CvPlot* pPlot, int iM
 		return;
 	}
 #endif
+
+#ifdef AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+	// check to see if someone already has a conflicting mission here
+	if (pUnit->GetMissionAIPlot() != pPlot)
+	{
+		int iLoop;
+		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+		{
+			CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
+			if (!pMissionPlot)
+			{
+				continue;
+			}
+
+			MissionAITypes eGroupMissionAI = pLoopUnit->GetMissionAIType();
+			if (eGroupMissionAI != MISSIONAI_BUILD)
+			{
+				continue;
+			}
+
+			if (pPlot->getX() == pMissionPlot->getX() && pPlot->getY() == pMissionPlot->getY())
+			{
+				BuildTypes eOtherBuild = pLoopUnit->getBuildType();
+				CvBuildInfo* pkBuild = GC.getBuildInfo(eOtherBuild);
+				if (pkBuild != NULL)
+				{
+					RouteTypes eOtherRoute = (RouteTypes)pkBuild->getRoute();
+					if (eOtherRoute != NO_ROUTE || (eOtherBuild == m_eRepairBuild && pPlot->IsRoutePillaged()))
+					{
+						if (m_bLogging)
+						{
+							CvString strLog;
+							strLog.Format("x: %d y: %d, Somebody has a conflicting mission here.", pPlot->getX(), pPlot->getY());
+							LogInfo(strLog, m_pPlayer, true);
+						}
+						return;
+					}
+				}
+			}
+		}
+	}
+#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
 
 	// find the route build
 	BuildTypes eRouteBuild = NO_BUILD;
@@ -1531,6 +1901,44 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 		}
 	}
 
+#ifdef AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+	// check to see if someone already has a conflicting mission here
+	if (pUnit->GetMissionAIPlot() != pPlot)
+	{
+		int iLoop;
+		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+		{
+			CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
+			if (!pMissionPlot)
+			{
+				continue;
+			}
+
+			MissionAITypes eGroupMissionAI = pLoopUnit->GetMissionAIType();
+			if (eGroupMissionAI != MISSIONAI_BUILD)
+			{
+				continue;
+			}
+
+			if (pPlot->getX() == pMissionPlot->getX() && pPlot->getY() == pMissionPlot->getY())
+			{
+				BuildTypes eOtherBuild = pLoopUnit->getBuildType();
+				CvBuildInfo* pkBuild = GC.getBuildInfo(eOtherBuild);
+				if (pkBuild != NULL && pkBuild->getImprovement() == NO_IMPROVEMENT && pkBuild->isFeatureRemove(eFeature) && pkBuild->getFeatureProduction(eFeature) > 0)
+				{
+					if (m_bLogging)
+					{
+						CvString strLog;
+						strLog.Format("x: %d y: %d, Somebody has a conflicting mission here.", pPlot->getX(), pPlot->getY());
+						LogInfo(strLog, m_pPlayer, true);
+					}
+					return;
+				}
+			}
+		}
+	}
+#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+
 	BuildTypes eChopBuild = NO_BUILD;
 	for(int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
 	{
@@ -1587,38 +1995,38 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 			case YIELD_FOOD:
 				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_GROWTH")
 				{
-					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_FOOD() + 0.5);
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop))) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_FOOD() + 0.5);
 				}
 				break;
 			case YIELD_PRODUCTION:
 				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_PRODUCTION")
 				{
-					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_PRODUCTION() + 0.5);
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop))) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_PRODUCTION() + 0.5);
 				}
 				break;
 			case YIELD_GOLD:
 				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_GOLD")
 				{
-					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_GOLD() + 0.5);
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop))) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_GOLD() + 0.5);
 				}
 				break;
 			case YIELD_SCIENCE:
 				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_SCIENCE")
 				{
-					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_SCIENCE() + 0.5);
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop))) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_SCIENCE() + 0.5);
 				}
 				break;
 			case YIELD_CULTURE:
 				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_CULTURE")
 				{
-					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE() + 0.5);
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop))) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE() + 0.5);
 				}
 				break;
 			case YIELD_FAITH:
 #ifdef AUI_WORKER_EVALUATE_FAITH
 				if (GC.getFlavorTypes((FlavorTypes)iFlavorLoop) == "FLAVOR_RELIGION")
 				{
-					iYieldDifferenceWeight += int(iDeltaYield * log((double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop)) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE() + 0.5);
+					iYieldDifferenceWeight += int(iDeltaYield * log((double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop))) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE() + 0.5);
 				}
 #endif // AUI_WORKER_EVALUATE_FAITH
 				break;
@@ -1923,6 +2331,7 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 		}
 	}
 
+#ifndef AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
 	// check to see if someone already has a mission here
 	if(pUnit->GetMissionAIPlot() != pPlot)
 	{
@@ -1938,9 +2347,11 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 			return false;
 		}
 	}
+#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
 
 #ifdef AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH
-	if((!pUnit->IsCombatUnit() && m_pPlayer->GetPlotDanger(*pPlot) > 0) || m_pPlayer->GetPlotDanger(*pPlot) > pUnit->GetBaseCombatStrengthConsideringDamage())
+	if ((!pUnit->IsCombatUnit() && m_pPlayer->GetPlotDanger(*pPlot) > 0) || 
+		m_pPlayer->GetPlotDanger(*pPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH)
 #else
 	if(m_pPlayer->GetPlotDanger(*pPlot) > 0)
 #endif // AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH
@@ -2095,6 +2506,9 @@ int CvBuilderTaskingAI::GetResourceWeight(ResourceTypes eResource, ImprovementTy
 	if(pkResource->getResourceUsage() == RESOURCEUSAGE_LUXURY)
 	{
 		int iModifier = GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_LUXURY_RESOURCE() * pkResource->getHappiness();
+#ifdef AUI_WORKER_GET_RESOURCE_WEIGHT_CONSIDER_EXTRAS_FOR_HAPPINESS_FROM_RESOURCE
+		iModifier += GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_LUXURY_RESOURCE() * m_pPlayer->GetExtraHappinessPerLuxury();
+#endif // AUI_WORKER_GET_RESOURCE_WEIGHT_CONSIDER_EXTRAS_FOR_HAPPINESS_FROM_RESOURCE
 
 		//if (m_pPlayer->IsEmpireUnhappy() || m_pPlayer->GetExcessHappiness() <= 2)
 		//{
@@ -2102,6 +2516,17 @@ int CvBuilderTaskingAI::GetResourceWeight(ResourceTypes eResource, ImprovementTy
 		if(m_pPlayer->getNumResourceAvailable(eResource) == 0)
 		{
 			// full bonus
+#ifdef AUI_WORKER_GET_RESOURCE_WEIGHT_CONSIDER_EXTRAS_FOR_HAPPINESS_FROM_RESOURCE
+			if (m_pPlayer->GetPlayerTraits()->GetLuxuryHappinessRetention() > 0)
+				iModifier = iModifier * (m_pPlayer->GetPlayerTraits()->GetLuxuryHappinessRetention() + pkResource->getHappiness()) / pkResource->getHappiness();
+			iModifier += GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_LUXURY_RESOURCE() * GC.getHAPPINESS_PER_EXTRA_LUXURY();
+#endif // AUI_WORKER_GET_RESOURCE_WEIGHT_CONSIDER_EXTRAS_FOR_HAPPINESS_FROM_RESOURCE
+#ifdef AUI_WORKER_GET_RESOURCE_WEIGHT_INCREASE_UNOWNED_LUXURY_WEIGHT
+			if (m_pPlayer->GetExcessHappiness() < -GC.getVERY_UNHAPPY_THRESHOLD())
+			{
+				iModifier = int(iModifier * pow(AUI_WORKER_GET_RESOURCE_WEIGHT_INCREASE_UNOWNED_LUXURY_WEIGHT, 1.0 - (double)m_pPlayer->GetExcessHappiness() / -(double)GC.getVERY_UNHAPPY_THRESHOLD()) + 0.5);
+			}
+#endif // AUI_WORKER_GET_RESOURCE_WEIGHT_INCREASE_UNOWNED_LUXURY_WEIGHT
 		}
 		else
 		{
@@ -2367,7 +2792,19 @@ int CvBuilderTaskingAI::ScorePlot()
 		{
 			dFoodFlavor *= sqrt(2.0);
 		}
-		else if (pCity->GetPlayer()->GetExcessHappiness() <= 0 && !pCity->IsIgnoreCityForHappiness())
+		else
+		{
+			CityAIFocusTypes eFocus = pCity->GetCityCitizens()->GetFocusType();
+			// If we have a non-default and non-food focus, only worry about getting to 0 food
+			if (eFocus != NO_CITY_AI_FOCUS_TYPE && eFocus != CITY_AI_FOCUS_TYPE_FOOD && eFocus != CITY_AI_FOCUS_TYPE_PROD_GROWTH && eFocus != CITY_AI_FOCUS_TYPE_GOLD_GROWTH)
+			{
+				if (pCity->getYieldRate(YIELD_FOOD, true) > pCity->foodConsumption())
+				{
+					dFoodFlavor /= sqrt(2.0);
+				}
+			}
+		}
+		if (pCity->GetPlayer()->GetExcessHappiness() <= 0 && !pCity->IsIgnoreCityForHappiness())
 		{
 			dFoodFlavor /= pow(2.0, 1.0 - (double)pCity->GetPlayer()->GetExcessHappiness() / 10.0);
 		}
