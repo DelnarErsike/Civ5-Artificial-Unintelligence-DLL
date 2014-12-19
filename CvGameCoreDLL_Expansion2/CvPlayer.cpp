@@ -4042,7 +4042,11 @@ ArtStyleTypes CvPlayer::getArtStyleType() const
 void CvPlayer::doTurn()
 {
 	// Time building of these maps
+#ifdef AUI_PERF_LOGGING_FORMATTING_TWEAKS
+	AI_PERF_FORMAT("AI-perf.csv", ("CvPlayer::doTurn(), Turn %03d, %s", GC.getGame().getGameTurn(), getCivilizationShortDescription()));
+#else
 	AI_PERF_FORMAT("AI-perf.csv", ("CvPlayer::doTurn(), Turn %d, %s", GC.getGame().getGameTurn(), getCivilizationShortDescription()));
+#endif // AUI_PERF_LOGGING_FORMATTING_TWEAKS
 
 	CvAssertMsg(isAlive(), "isAlive is expected to be true");
 
@@ -5613,10 +5617,19 @@ bool CvPlayer::canReceiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit) 
 		ImprovementTypes barbCampType = (ImprovementTypes) GC.getBARBARIAN_CAMP_IMPROVEMENT();
 
 		// Look at nearby Plots to make sure another camp isn't too close
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		int iMaxDX;
+		for (iDY = -iBarbCampDistance; iDY <= iBarbCampDistance; iDY++)
+		{
+			iMaxDX = iBarbCampDistance - MAX(0, iDY);
+			for (iDX = -iBarbCampDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+			{
+#else
 		for(iDX = -(iBarbCampDistance); iDX <= iBarbCampDistance; iDX++)
 		{
 			for(iDY = -(iBarbCampDistance); iDY <= iBarbCampDistance; iDY++)
 			{
+#endif // AUI_HEXSPACE_DX_LOOPS
 				pNearbyPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 
 				if(pNearbyPlot != NULL)
@@ -5997,10 +6010,19 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 	{
 		// Look at nearby Plots to make sure another camp isn't too close
 		const int iBarbCampDistance = kGoodyInfo.getRevealNearbyBarbariansRange();
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		int iMaxDX;
+		for (iDY = -iBarbCampDistance; iDY <= iBarbCampDistance; iDY++)
+		{
+			iMaxDX = iBarbCampDistance - MAX(0, iDY);
+			for (iDX = -iBarbCampDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+			{
+#else
 		for(iDX = -(iBarbCampDistance); iDX <= iBarbCampDistance; iDX++)
 		{
 			for(iDY = -(iBarbCampDistance); iDY <= iBarbCampDistance; iDY++)
 			{
+#endif // AUI_HEXSPACE_DX_LOOPS
 				CvPlot* pNearbyBarbarianPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 				if(pNearbyBarbarianPlot != NULL)
 				{
@@ -6032,12 +6054,28 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 			pBestPlot = NULL;
 
 			int iRandLimit;
+#ifdef AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
+			int iDistance;
+#endif // AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+			int iMaxDX;
+			for (iDY = -iOffset; iDY <= iOffset; iDY++)
+			{
+				iMaxDX = iOffset - MAX(0, iDY);
+				for (iDX = -iOffset - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+				{
+#else
 			for(iDX = -(iOffset); iDX <= iOffset; iDX++)
 			{
 				for(iDY = -(iOffset); iDY <= iOffset; iDY++)
 				{
+#endif // AUI_HEXSPACE_DX_LOOPS
+#ifdef AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
+					pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iOffset, iDistance);
+#else
 					pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iOffset);
+#endif // AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
 
 					if(pLoopPlot != NULL)
 					{
@@ -6051,7 +6089,11 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 
 							iValue = (1 + GC.getGame().getJonRandNum(iRandLimit, "Goody Map"));
 
+#ifdef AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
+							iValue *= iDistance;
+#else
 							iValue *= plotDistance(pPlot->getX(), pPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY());
+#endif // AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
 
 							if(iValue > iBestValue)
 							{
@@ -23715,6 +23757,18 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 	const CvCity* pLoopCity;
 #endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
 
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE
+	int iFlags = 0;
+	if (!AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE && bEscorted)
+		iFlags = MOVE_UNITS_IGNORE_DANGER;
+
+	CvAStarNode* pNode = NULL;
+	if (AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE)
+		GC.getIgnoreUnitsPathFinder().SetData(pUnit);
+	else
+		GC.GetTacticalAnalysisMapFinder().SetData(pUnit);
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE
+
 	int iBestFoundValue = 0;
 	CvPlot* pBestFoundPlot = NULL;
 
@@ -23807,12 +23861,64 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 			if(iValue > 5000)
 			{
 #ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
-				int iTurnsToDestination = TurnsToReachTarget(pUnit, pPlot, false, bEscorted);
+				int iTurnsToDestination = TurnsToReachTarget(pUnit, pPlot, bEscorted, bEscorted);
 				if (iTurnsToDestination == MAX_INT)
 				{
 					continue;
 				}
 #endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE
+				int iSettlerDistance = MAX_INT;
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
+				iLoop = 0;
+				iBestDistance = MAX_INT;
+				for (pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
+				{
+					pNode = NULL;
+					iCurDistance = MAX_INT;
+
+					if (AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE &&
+						GC.getIgnoreUnitsPathFinder().GeneratePath(pLoopCity->getX(), pLoopCity->getY(), pPlot->getX(), pPlot->getY(), iFlags, true))
+					{
+						pNode = GC.getIgnoreUnitsPathFinder().GetLastNode();
+					}
+					else if (!AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE &&
+						GC.GetTacticalAnalysisMapFinder().GeneratePath(pLoopCity->getX(), pLoopCity->getY(), pPlot->getX(), pPlot->getY(), iFlags, false))
+					{
+						pNode = GC.GetTacticalAnalysisMapFinder().GetLastNode();
+					}
+					if (pNode)
+					{
+						iCurDistance = pNode->m_iData2;
+					}
+					if (iCurDistance < iBestDistance)
+					{
+						iBestDistance = iCurDistance;
+						pClosestCity = pLoopCity;
+					}
+				}
+				if (iBestDistance < MAX_INT)
+					iSettlerDistance = iBestDistance;
+				else if (AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE &&
+#else
+				if (AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE &&
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
+					GC.getIgnoreUnitsPathFinder().GeneratePath(iSettlerX, iSettlerY, pPlot->getX(), pPlot->getY(), iFlags, true))
+				{
+					pNode = GC.getIgnoreUnitsPathFinder().GetLastNode();
+				}
+				else if (!AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE && 
+					GC.GetTacticalAnalysisMapFinder().GeneratePath(pLoopCity->getX(), pLoopCity->getY(), pPlot->getX(), pPlot->getY(), iFlags, false))
+				{
+					pNode = GC.GetTacticalAnalysisMapFinder().GetLastNode();
+				}
+				if (iSettlerDistance == MAX_INT && pNode)
+				{
+					iSettlerDistance = pNode->m_iData2;
+				}
+				if (iSettlerDistance < MAX_INT)
+					iSettlerDistance *= pUnit->maxMoves() / GC.getMOVE_DENOMINATOR();
+#else
 #ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
 				iLoop = 0;
 				iBestDistance = MAX_INT;
@@ -23833,6 +23939,7 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 #else
 				int iSettlerDistance = ::plotDistance(pPlot->getX(), pPlot->getY(), iSettlerX, iSettlerY);
 #endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE
 				int iDistanceDropoff = min(99,(iDistanceDropoffMod * iSettlerDistance) / iEvalDistance);
 				iDistanceDropoff = max(0,iDistanceDropoff);
 				iValue = iValue * (100 - iDistanceDropoff) / 100;
