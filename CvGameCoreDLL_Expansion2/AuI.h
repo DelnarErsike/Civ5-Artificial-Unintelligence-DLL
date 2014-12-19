@@ -7,6 +7,8 @@
 // Non-AI stuff (still used by AI routines, but could be used elsewhere as well)
 /// AUI's new GUID
 #define AUI_GUID
+/// Fast comparison functions (to be used for built-in types like int, float, double, etc.)
+#define AUI_FAST_COMP
 /// Can cache doubles from XML (DatabaseUtility actually supports double-type, don't know why Firaxis didn't bother putting this in for good measure)
 #define AUI_CACHE_DOUBLE
 /// Enables the Binomial Random Number Generator
@@ -17,12 +19,59 @@
 #define AUI_PUBLIC_HAS_MET_MAJOR
 /// Implements a new function that flips a unit's UnitAIType to a certain allowed value or off of a certain value
 #define AUI_UNIT_DO_AITYPE_FLIP
+/// Implements a new function that returns the number of attacks a unit can make
+#define AUI_UNIT_EXTRA_ATTACKS_GETTER
+/// New parameter in healRate() that assumes the heal rate from units is a certain number (used to weigh healing great generals/civilians)
+#define AUI_UNIT_HEALRATE_ASSUME_EXTRA_HEALRATE_FROM_UNIT
+/// When choosing the top n choices from a weighted vector, choices with weight equal to the last choice are also included
+#define AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_TIE
+/// Adds a new function to CvPlot that calculates the strategic value of a plot based on river crossing count, whether it's hills, and chokepoint factor
+#define AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+/// Adds a new function to CvPlot to count how many times the given plot is in a list
+#define AUI_PLOT_COUNT_OCCURANCES_IN_LIST
+/// Tweaks to make performance logs a bit more consistent and easier to read
+#define AUI_PERF_LOGGING_FORMATTING_TWEAKS
+/// Performance optimizations related to bit twiddling (http://www.graphics.stanford.edu/~seander/bithacks.html) 
+#define AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+/// Optimizes loops that iterate over relative coordinates to hexspace
+#define AUI_HEXSPACE_DX_LOOPS
+/// New inline function that sets the plot distance if it passes the range check
+#define AUI_PLOT_XY_WITH_RANGE_CHECK_REFERENCE_DISTANCE
+/// PlotXYWithRangeCheck will now convert to HexspaceX, since coordinates are never in hexspace
+//#define AUI_PLOT_XY_WITH_RANGE_CHECK_TO_HEXSPACE
+#if defined(AUI_PLOT_XY_WITH_RANGE_CHECK_REFERENCE_DISTANCE)
+/// Optimizations and fixes from the two new, previously defined, inline functions
+#define AUI_ARMYAI_FIX_GET_CENTER_OF_MASS_PLOT_DISTANCE_CHECK
+#define AUI_BARBARIANS_FIX_DO_CAMPS_PLOT_DISTANCE_CHECK
+#define AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
+#endif
+
+#ifdef AUI_FAST_COMP
+// Avoids Visual Studio's compiler from generating inefficient code
+// FastMax() and FastMin() taken from https://randomascii.wordpress.com/2013/11/24/stdmin-causing-three-times-slowdown-on-vc/
+template<class T> inline T FastMax(const T& _Left, const T& _Right) { return (_DEBUG_LT(_Left, _Right) ? _Right : _Left); }
+template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_DEBUG_LT(_Right, _Left) ? _Right : _Left); }
+#define FASTMAX(a, b) FastMax(a, b)
+#define FASTMIN(a, b) FastMin(a, b)
+#endif // AUI_FAST_COMP
 
 // A* Pathfinding Stuff
 /// Adds a new function that is a middle-of-the-road fix for allowing the functions to take account of roads and railroads without calling pathfinder too often
 #define AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 /// A* functions now identify paradropping as a valid move
 #define AUI_ASTAR_PARADROP
+/// The danger of a tile will only be considered when checking path nodes, not when checking the destination (stops units from freezing in panic)
+#define AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_PATH
+/// The path's destination's danger value will be considered instead of the original plot's danger value, otherwise we're just immobilizing AI units (oddly enough, the Civ4 algorithm is fine, only the Civ5 ones needed to be fixed)
+#define AUI_ASTAR_FIX_CONSIDER_DANGER_USES_TO_PLOT_NOT_FROM_PLOT
+#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_TO_PLOT_NOT_FROM_PLOT
+/// If the pathfinder does not ignore danger, the plot we're moving from must pass the danger check before we consider the destination plot's danger 
+#define AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+#endif
+/// If the pathfinder does not ignore danger, use the unit's combat strength times this value as the danger limit instead of 0 (important for combat units)
+#define AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH (6)
+/// AI-controlled units no longer ignore all paths with peaks; since the peak plots are check anyway for whether or not a unit can enter them, this check is pointless 
+#define AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 
 // AI Operations Stuff
 /// Always moves out with a settler if it cannot instantly find an escort
@@ -34,9 +83,13 @@
 #ifdef AUI_BINOM_RNG
 /// If it's available, opts for the binomial RNG for the boldness check's random factor instead of the flat RNG
 #define AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_BINOMIAL
-#endif // AUI_BINOM_RNG
+#endif
 /// FindBestFitReserveUnit() no longer ignores units that can paradrop
 #define AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
+/// The filter to filter out scouting units only applies to units whose default AI is scouting
+#define AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+/// Operations will now recruit units who are in armies that are waiting for reinforcements
+#define AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
 /// Before considering units that fit the primary type first in FindBestFitReserveUnit(), "perfect match" units that fit both primary and secondary type are looked for
 #define AUI_OPERATION_FIND_BEST_FIT_RESERVE_CALCULATE_PERFECT_MATCH_FIRST
 /// Resets the loop iterator before the secondary unit types are considered in FindBestFitReserveUnit()
@@ -49,6 +102,8 @@
 #define AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
 /// Fixes bugs and tweaks certain values in the FindBestTarget() function for nuke targets
 #define AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+/// If a civilian retargets and an escort cannot get to the new target (ignoring units), then the operation is aborted
+#define AUI_OPERATION_FIX_RETARGET_CIVILIAN_ABORT_IF_UNREACHABLE_ESCORT
 
 // Worker Automation Stuff
 /// Automated Inca workers know that there is no maintenance on hills, so routines are adjusted as a result
@@ -77,10 +132,22 @@
 #define AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL "ERA_INDUSTRIAL"
 /// Automated workers value strategic resources that a player has none of higher than strategic resources that the player has used all of
 #define AUI_WORKER_TWEAKED_DONT_HAVE_MULTIPLIER (6)
-/// Combat workers will increase the maximum allowed plot danger value to their current strength considering HP
-#define AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH
+/// Combat workers will increase the maximum allowed plot danger value to their current strength times this value
+#define AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH (6)
 /// FindTurnsAway() no longer returns raw distance, parameter dictates whether we're reusing paths and ignoring units (fast but rough) or not (slow but accurate)
 #define AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER (true)
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+/// AddImprovingPlotsDirective() now processes improvement defense rate
+#define AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
+#endif
+/// Shifts the check for whether there already is someone building something on the plot to the necessary AddDirectives() functions (so collaborative building is possible)
+#define AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+/// New function that is called to construct non-road improvements in a minor's territory (eg. for Portugal)
+#define AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
+/// Multiplies the weight of unowned luxury resources for plot directives depending on the empire's happiness (value is the multiplier at 0 happiness)
+#define AUI_WORKER_GET_RESOURCE_WEIGHT_INCREASE_UNOWNED_LUXURY_WEIGHT (2.0)
+/// Consider extra sources of happiness once a resource is obtained (eg. extra happiness from luxury resources via policy, extra happiness from resource variety)
+#define AUI_WORKER_GET_RESOURCE_WEIGHT_CONSIDER_EXTRAS_FOR_HAPPINESS_FROM_RESOURCE
 
 // City Stuff
 /// Shifts the scout assignment code to EconomicAI
@@ -111,8 +178,16 @@
 // Danger Plots Stuff
 /// Better danger calculation for ranged units (originally from Ninakoru's Smart AI, but heavily modified since)
 #define AUI_DANGER_PLOTS_TWEAKED_RANGED
+/// The ignore visibility switch also works on the plot visibility check
+#define AUI_DANGER_PLOTS_FIX_SHOULD_IGNORE_UNIT_IGNORE_VISIBILITY_PLOT
 /// Majors will always "see" barbarians in tiles that have been revealed when plotting danger values (kind of a cheat, but it's a knowledge cheat, so it's OK-ish)
 #define AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
+/// Minors will always "see" units of major civs in tiles (value) away from their city (since minors don't scout) when plotting danger values (stops excessive worker stealing)
+#define AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS (5)
+/// Minors will ignore all units of players who are not at war with them
+#define AUI_DANGER_PLOTS_FIX_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_IGNORE_ALL_NONWARRED
+/// Counts air unit strength into danger (commented out for now)
+//#define AUI_DANGER_PLOTS_COUNT_AIR_UNITS
 
 // DiplomacyAI Stuff
 /// If the first adjusted value is out of bounds, keep rerolling with the amount with which it is out of bounds until we remain in bounds
@@ -134,7 +209,7 @@
 #define AUI_DIPLOMACY_IS_DOF_ACCEPTABLE_USES_BINOM_RNG (5)
 /// When adding an extra, random value to the score of whether to denounce a player, the AI will use the binomial RNG for a normal distribution instead of a flat one
 #define AUI_DIPLOMACY_GET_DENOUNCE_WEIGHT_USES_BINOM_RNG (5)
-#endif // AUI_BINOM_RNG
+#endif
 
 // EconomicAI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division)
@@ -142,7 +217,7 @@
 #ifdef AUI_CITY_FIX_CREATE_UNIT_EXPLORE_ASSIGNMENT_TO_ECONOMIC
 /// Assigning non-scout units to become explorers is now done in EconomicAI instead of at City
 #define AUI_ECONOMIC_FIX_DO_RECON_STATE_EXPLORE_ASSIGNMENT_FROM_CITY
-#endif // AUI_CITY_FIX_CREATE_UNIT_EXPLORE_ASSIGNMENT_TO_ECONOMIC
+#endif
 /// Resets the UnitLoop iterator before looping through units (would otherwise cause problems when both land and sea exploration was in the "enough" state)
 #define AUI_ECONOMIC_FIX_DO_RECON_STATE_ITERATOR
 /// The "skip first" code to remove scouting non-scouts only works if we don't actually have any dedicated scout units
@@ -153,18 +228,20 @@
 #define AUI_ECONOMIC_SETTER_LAST_TURN_WORKER_DISBANDED
 /// Checks that would force the function to return false happen earlier in the function
 #define AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
-/// Squares the amount of expansion flavor applied to get the desired amount of cities if the AI is the only major on its starting landmass
-#define AUI_ECONOMIC_EARLY_EXPANSION_BOOST_EXPANSION_FLAVOR_IF_ALONE
+/// Early Expansion strategy is always active if the AI is the only player on a continent (well, until the good settling plots run out)
+#define AUI_ECONOMIC_EARLY_EXPANSION_ALWAYS_ACTIVE_IF_ALONE
 /// Multiplies the desired city count by the ratio of the natural logs of expansion and growth flavors, with difficulty acting as an extra multiplier to expansion flavor
 #define AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_FLAVOR_APPLICATION
 /// Scales the desired amount of cities by the amount of major and minor players on the map
 #define AUI_ECONOMIC_EARLY_EXPANSION_SCALE_BY_PLAYER_COUNT
+/// Instead of checking to see how many tiles are owned in the starting area, the AI will instead check whether it has any possible settle plots within (value) tiles of a city
+#define AUI_ECONOMIC_EARLY_EXPANSION_REPLACE_OWNED_TILE_CHECKS_WITH_DISTANCE_CHECK (7)
 /// Removes the check for a cultural grand strategy that's a holdover from pre-BNW when cultural victories were won through policies, not tourism
 #define AUI_ECONOMIC_FIX_EXPAND_LIKE_CRAZY_REMOVE_HOLDOVER_CULTURE_CHECK
 #ifdef AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
 /// Reenables the DoHurry() function, but using a reworked method instead of the original (originally from Ninakoru's Smart AI, but heavily modified since)
 #define AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
-#endif // AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+#endif
 
 // Flavor Manager Stuff
 /// Players that start as human no longer load in default flavor values
@@ -182,7 +259,7 @@
 #ifdef AUI_BINOM_RNG
 /// When adding or subtracting flavor value, the binomial RNG is used to generate a normal distribution instead of a flat one
 #define AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USES_BINOM_RNG
-#endif // AUI_BINOM_RNG
+#endif
 
 // Grand Strategy Stuff
 /// Enables use of Grand Strategy Priority; the function returns the ratio of the requested GS's priority to the active GS's priority (1.0 if the requested GS is the active GS)
@@ -213,14 +290,20 @@
 #define AUI_GS_SPACESHIP_TECH_RATIO
 /// GS does not instantly have full influence over this function until later into the game; increase is sinusoid
 #define AUI_GS_SINUSOID_PERSONALITY_INFLUENCE
+#ifdef AUI_GS_PRIORITY_RATIO
+/// GS influence over flavor is multiplied by the difference between the GS's priority ratio and the lowest GS priority ratio if the GS is not the primary GS
+#define AUI_GS_GET_PERSONALITY_AND_GRAND_STRATEGY_USE_COMPARE_TO_LOWEST_RATIO
+#endif
 /// Multiplies the science flavor of buildings, wonders, and techs depending on how well the tech requirements of significant GS's is met (eg. have Archaeology, have Internet, etc.)
 #define AUI_GS_SCIENCE_FLAVOR_BOOST (8)
 /// Replaces the logging function with one that allows for easy creation of graphs within Excel
 #define AUI_GS_BETTER_LOGGING
 
 // Homeland AI Stuff
+#ifdef AUI_PLOT_COUNT_OCCURANCES_IN_LIST
 /// Adds a new function that lets aircraft go on intercept missions (originally from Ninakoru's Smart AI)
 #define AUI_HOMELAND_AIRCRAFT_INTERCEPTIONS
+#endif
 /// Dials up priority for upgrading units by 50x every other turn primarily to help upgrade air units (originally from Ninakoru's Smart AI with slight modification)
 #define AUI_HOMELAND_ESTABLISH_HOMELAND_PRIORITIES_50X_UPGRADE_PRIORITY_EVERY_OTHER_TURN
 /// Disables the code that would start fortifying scouts if recon state was set as "enough"
@@ -236,7 +319,7 @@
 #ifdef AUI_ASTAR_PARADROP
 /// Paradropping is now inserted into relevant tactical moves and the AI will execute them when favorable
 #define AUI_HOMELAND_PARATROOPERS_PARADROP
-#endif // AUI_ASTAR_PARADROP
+#endif
 /// Flavors that weren't previously fetched but were still (attempted to be) used in processing later are now fetched
 #define AUI_HOMELAND_FIX_ESTABLISH_HOMELAND_PRIORITIES_MISSING_FLAVORS
 #ifdef AUI_UNIT_DO_AITYPE_FLIP
@@ -244,7 +327,7 @@
 #define AUI_HOMELAND_PLOT_SEA_WORKER_MOVES_EMPLOYS_AITYPE_FLIP
 /// Attempts to flip a scout's UnitAIType if it has no target
 #define AUI_HOMELAND_EXECUTE_EXPLORER_MOVES_FLIP_AITYPE_ON_NOTARGET
-#endif // AUI_UNIT_DO_AITYPE_FLIP
+#endif
 /// Allows units that can act as Workers to flip to or from the UnitAIType using the MilitaryAI helper function
 #define AUI_HOMELAND_PLOT_WORKER_MOVES_EMPLOYS_AITYPE_FLIP
 /// Disbanding explorers now uses the scrap() function instead of the kill() function
@@ -252,7 +335,7 @@
 #ifdef AUI_ECONOMIC_SETTER_LAST_TURN_WORKER_DISBANDED
 /// If a worker is idle and we have extra workers, disband him instead of sending him to the safest plot
 #define AUI_HOMELAND_PLOT_WORKER_MOVES_DISBAND_EXTRA_IDLE_WORKERS
-#endif // AUI_ECONOMIC_SETTER_LAST_TURN_WORKER_DISBANDED
+#endif
 /// This function is just filled with holes; I've now fixed (most of) them!
 #define AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
 /// Units in armies that are waiting around are now eligible for upgrading
@@ -263,6 +346,8 @@
 #define AUI_HOMELAND_FIX_EXECUTE_MOVES_TO_SAFEST_PLOT_NO_EMBARK_SUICIDE
 /// Disbands archaeologists if there are no more sites available (originally from Ninakoru's Smart AI)
 #define AUI_HOMELAND_EXECUTE_ARCHAEOLOGIST_MOVES_DISBAND_IF_NO_AVAILABLE_SITES
+/// Disbands work boats that cannot target anything, even if units are ignored
+#define AUI_HOMELAND_PLOT_WORKER_SEA_MOVES_DISBAND_WORK_BOATS_WITHOUT_TARGET
 
 // Military AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
@@ -290,7 +375,7 @@
 #ifdef AUI_UNIT_DO_AITYPE_FLIP
 /// Adds a function that will check for and flip the UnitAITypes of all units (eg. to/from worker AI, to/from explore AI, etc.)
 #define AUI_MILITARY_AITYPE_FLIP
-#endif // AUI_UNIT_DO_AITYPE_FLIP
+#endif
 /// Fixes a bug that would only put a log header in one AI's log, not all their logs
 #define AUI_MILITARY_BETTER_LOGGING
 /// This function is just filled with holes; I've now fixed (most of) them!
@@ -315,6 +400,8 @@
 #define AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
 /// Calls a pathfinder instead of scaling values depending on whether or not the plot is on a different landmass
 #define AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
+/// Pathfinder used instead of raw distance, parameter dictates whether we're reusing paths (fast but rough) or not (slow but accurate)
+#define AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE (true)
 
 // PlayerAI Stuff
 /// Great prophet will be chosen as a free great person if the AI can still found a religion with them
@@ -361,6 +448,12 @@
 // Plot Stuff
 /// If a plot is unowned, CalculateNatureYield() will assume the plot is owned by a future player
 #define AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+/// If we're looking at an unowned plot, assume we're going to build a civ-specific improvement on it
+#define AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
+#endif
+/// If a plot is not visible to the attacking player and the unit being considered is not an air unit, disregard the unit
+#define AUI_PLOT_FIX_GET_BEST_DEFENDER_CHECK_PLOT_VISIBILITY
 
 // Policy Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
@@ -379,6 +472,8 @@
 #define AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION (2)
 /// Divides the weight of military flavors (offense, defense, military training) by this number if we do not have any policies
 #define AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER (4)
+/// When playing a One City Challenge game, expansion flavor for policies is nullified
+#define AUI_POLICY_NULLIFY_EXPANSION_WEIGHT_FOR_OCC
 /// Replaces the divider for opening new branches with a "determination" divider based on the geometric mean of grand strategy ratios (old one was a holdover from pre-BNW)
 #define AUI_POLICY_CHOOSE_NEXT_POLICY_TWEAKED_OPEN_NEW_BRANCH
 /// Slight tweak to logic of ClearPrefs part to make the function's mathematics more accurate
@@ -386,7 +481,7 @@
 #ifdef AUI_BINOM_RNG
 /// The binomial RNG is used for the extra random score given to all ideologies; value is the maximum amount an ideology can receive from the random portion
 #define AUI_POLICY_DO_CHOOSE_IDEOLOGY_USES_BINOM_RNG (10)
-#endif // AUI_BINOM_RNG
+#endif
 /// Implements a tiebreaker that adds random values to all ideologies until there is a clear winner
 #define AUI_POLICY_DO_CHOOSE_IDEOLOGY_TIEBREAKER
 /// Slight tweak to logic of ClearPrefs part to make the function's mathematics more accurate; ClearPrefs also gets overwritten if empire is very unhappy
@@ -408,11 +503,11 @@
 /// Actually checks the cost of purchasing great people at a city instead of just returning the oldest city founded (deactivated while this is equal across all cities)
 // #define AUI_RELIGION_FIX_BEST_CITY_HELPER_GREAT_PERSON
 /// Raises individual belief components (plots as a whole, each city, player twice) to the power of this number
-#define AUI_RELIGION_SCORE_BELIEF_RAISE_COMPONENT_SCORES_TO_POWER (1.05)
+#define AUI_RELIGION_SCORE_BELIEF_RAISE_COMPONENT_SCORES_TO_POWER (1.25)
 /// Increases plot search distance, but scales the belief score of a plot based on distance to the closest friendly city
 #define AUI_RELIGION_SCORE_BELIEF_SCALE_PLOTS_WITH_DISTANCE (4)
 /// Tweaks the amount a pantheon belief's score is divided (to compensate for higher scoring of certain plots)
-#define AUI_RELIGION_SCORE_BELIEF_TWEAK_PANTHEON_DIVIDER (4.0)
+#define AUI_RELIGION_SCORE_BELIEF_TWEAK_PANTHEON_DIVIDER (6.0)
 /// Weighs different yield types differently depending on flavor and citizen value
 #define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 /// Reduces the score given to a tile from a feature if it has a resource on it, as chance are the resource will require the feature to be removed
@@ -435,6 +530,10 @@
 #define AUI_RELIGION_SCORE_BELIEF_AT_CITY_REVERSED_MINIMUM_POPULATION_MODIFIER
 /// Removes the extra score given by large cities to beliefs that give yield if any specialist is present
 #define AUI_RELIGION_SCORE_BELIEF_AT_CITY_DISABLE_ANY_SPECIALIST_YIELD_BIAS
+/// If a building for which yield improvement is being calculated is a wonder of any kind, divide the yield by the city count (so there's effective only one instance being scored in the civ)
+#define AUI_RELIGION_SCORE_BELIEF_AT_CITY_YIELDS_FROM_WONDERS_COUNT_ONCE
+/// When a belief has an obsoleting era, uses the player's current era as the benchmark instead of the game's average era
+#define AUI_RELIGION_FIX_SCORE_BELIEF_AT_CITY_USE_PLAYER_ERA
 /// Tweaks the flavor values and inputs used by various belief effects
 #define AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
 /// Considers grand strategies when scoring things like beliefs that only function when at peace
@@ -443,6 +542,10 @@
 #define AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_HAPPINESS_FLAVOR
 /// Scales Enhancer belief scores with how far the game has progressed, not how many religions have already been enhanced
 #define AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_ENHANCER_SCALING
+/// The score for a belief that generates tourism from faith buildings is multiplied by the number of eligible buildings
+#define AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TOURISM_FROM_BUILDINGS_COUNTS_BUILDINGS
+/// When scoring a belief that unlocks faith purchases of units, disregard eras that have already passed
+#define AUI_RELIGION_FIX_SCORE_BELIEF_FOR_PLAYER_UNLOCKS_UNITS_DISREGARD_OLD_ERAS
 /// Missionaries will no longer target hostile cities
 #define AUI_RELIGION_FIX_SCORE_CITY_FOR_MISSIONARY_NO_WAR_TARGETTING
 /// Divides a city's targetting score for missionaries by this value if passive pressure is enough to eventually convert the city
@@ -467,8 +570,10 @@
 #define AUI_RELIGION_GET_DESIRED_FAITH_GREAT_PERSON_SCALE_MISSIONARY_INQUISITOR_WITH_TURNS_ELAPSED (1000)
 
 // Site Evaluation Stuff
-/// Tweaks the multiplier given to the happiness score luxury resources that the player does not have (multiplier is applied once for importing, twice and divided by 3 for don't have at all)
-#define AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER (15)
+/// Tweaks the multiplier given to the happiness score luxury resources that the player does not have (multiplier is applied once for importing, twice and times 2 for don't have at all)
+#define AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER (4)
+/// Player bonuses from happiness (eg. extra happiness from luxuries, happiness from multiple luxury types) is included in the calculation
+#define AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_PLAYER_SOURCES
 /// Multiplies the settling value of coastal plots if we do not have a coastal city yet
 #define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FIRST_COASTAL_CITY_MULTIPLIER (2)
 /// The flavor multiplier is now affected by grand strategies
@@ -487,6 +592,10 @@
 #define AUI_SITE_EVALUATION_FIX_PLOT_FOUND_VALUE_RESET_FAITH_VALUE_EACH_LOOP
 /// Identification of a possible choke point is now much more accurate
 #define AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_TWEAKED_CHOKEPOINT_CALCULATION
+/// The helper values to compute the yield values of plots will recognize when the plot being targetted will be settled, so future yield will be different
+#define AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+/// Adds the happiness value of natural wonders to the happiness value of a plot
+#define AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_NATURAL_WONDERS
 
 // Tactical AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
@@ -501,6 +610,8 @@
 #define AUI_TACTICAL_TWEAKED_ACCEPTABLE_DANGER (1.0)
 /// Multiply total range strength with average range strength when considering ranged dominance
 #define AUI_TACTICAL_SELECT_POSTURE_CONSIDER_AVERAGE_RANGED_STRENGTH
+/// Always withdraw from a city if the AI has no melee units left in the zone
+#define AUI_TACTICAL_SELECT_POSTURE_ALWAYS_WITHDRAW_FROM_CITY_IF_NO_MELEE_UNITS
 /// More aggressive city attack postures will consider melee unit count before executing
 #define AUI_TACTICAL_CITY_ATTACK_POSTURE_CONSIDERS_MELEE_COUNT (1)
 /// Priority randomizer is now applied to tactical moves for non-barbarians players as well
@@ -508,7 +619,7 @@
 #ifdef AUI_BINOM_RNG
 /// Uses the binomial RNG for the randomness factor in tactical move priority
 #define AUI_TACTICAL_TWEAKED_MOVE_PRIORITIES_RANDOM_BINOMIAL
-#endif // AUI_BINOM_RNG
+#endif
 /// Tweaks capture/damage city moves so that ranged attacks aren't wasted on cities with 1 HP (originally from Ninakoru's Smart AI)
 #define AUI_TACTICAL_TWEAKED_CAPTURE_DAMAGE_CITY_MOVES
 /// Uses Boldness to determine whether long sieges are worth it instead of a set 8 turns
@@ -517,22 +628,32 @@
 #define AUI_TACTICAL_TWEAKED_DESTROY_UNIT_MOVE_SUICIDE_THRESHOLD (50)
 /// Tweaks the algorithm for Plot Heal Moves to keep March promotions in mind and make sure we don't overheal if we're under threat
 #define AUI_TACTICAL_TWEAKED_HEAL_MOVES
+#ifdef AUI_PLOT_COUNT_OCCURANCES_IN_LIST
 /// Uses a different algorithm for plotting intercept moves instead of relying on dominance zones (originally from Ninakoru's Smart AI)
 #define AUI_TACTICAL_TWEAKED_AIR_INTERCEPT
+#endif
 #ifdef AUI_TACTICAL_HELPERS_POSITIONING_AND_ORDER
+/// If a barbarian is already at the targetted plot, patrol around the target instead
+#define AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_PATROL_IF_ON_TARGET
+/// If a unit has moves remaining at the end of its reposition move, patrol to the best possible position as well
+#define AUI_TACTICAL_EXECUTE_REPOSITION_MOVES_PATROL_IF_MOVES_REMAIN
 /// Reorders the parts of the ExecuteAttack() algorithm to push ranged units before melee ones (originally from Ninakoru's Smart AI, heavily modified since)
 #define AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK
 #ifdef AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK
 /// If the target is a city, add the city's planned ranged attack to the expected self damage of melee units
 #define AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK_NO_MELEE_SUICIDE_AGAINST_CITY
+/// Ranged units will always want to reposition, even if they can already attack at the target
+#define AUI_TACTICAL_EXECUTE_ATTACK_FIDDLY_ARCHERS
+/// If a target is not dead, units that can still move after attacking will retreat to a distance from where they can attack the target next turn
+#define AUI_TACTICAL_EXECUTE_ATTACK_PARTHIAN_TACTICS
 /// Postpones the MoveToEmptySpaceNearTarget() parts of the code until after ranged attacks have processed so ranged units can move into range and fire
 #define AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK_POSTPONE_MELEE_MOVE
-/// If a melee unit cannot move adjacent to the target, attempt to move within two tiles of target
-#define AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK_MELEE_MOVE_ALLOWS_OUTER_RING
-#endif // AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK
-#endif // AUI_TACTICAL_HELPERS_POSITIONING_AND_ORDER
+#endif
+#endif
+#ifdef AUI_UNIT_EXTRA_ATTACKS_GETTER
 /// Fix for units that can attack multiple times per turn so they can now participate in the same ExecuteAttackMove()
 #define AUI_TACTICAL_FIX_EXECUTE_ATTACK_BLITZ
+#endif
 /// Sets a very high danger value for water tiles if a unit needs to embark onto the tile (originally from Ninakoru's Smart AI)
 #define AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_HIGH_DANGER_EMBARK
 /// Sets a lower danger value for city tiles depending on the health of the city
@@ -540,7 +661,7 @@
 #ifdef AUI_TACTICAL_TWEAKED_ACCEPTABLE_DANGER
 /// Considers units of the same type when executing move to safety (important if health is a factor in selecting units for this movetype)
 #define AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_CONSIDER_SAME_UNIT_TYPE
-#endif // AUI_TACTICAL_TWEAKED_ACCEPTABLE_DANGER
+#endif
 /// Immediately skips some heavy computation if the function is not looking for ranged units and unit being checked is a ranged unit (originally from Ninakoru's Smart AI)
 #define AUI_TACTICAL_FIND_UNITS_WITHIN_STRIKING_DISTANCE_NO_RANGED_SHORTCUT
 /// When calculating the expected damage on a target from a melee unit, the AI will now use pTargetPlot and pDefender parameters when appropriate (instead of having them as NULL)
@@ -588,19 +709,25 @@
 #ifdef AUI_ASTAR_PARADROP
 /// Paradropping is now inserted into relevant tactical moves and the AI will execute them when favorable
 #define AUI_TACTICAL_PARATROOPERS_PARADROP
-#endif // AUI_ASTAR_PARADROP
+#endif
 #ifdef AUI_TACTICAL_EXECUTE_SWAP_TO_PLOT
 /// Uses the new ExecuteSwapToPlot() function when moving blocking units
 #define AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_USES_SWAP
-#endif // AUI_TACTICAL_EXECUTE_SWAP_TO_PLOT
+#endif
 /// If a blocking unit is moved, it will no longer automatically end the just moved unit's turn
 #define AUI_TACTICAL_FIX_EXECUTE_MOVE_BLOCKING_UNIT_SAVE_MOVES
 /// When moving a blocking unit, allow it to prioritize tiles from which it can still move and/or attack this turn
 #define AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY
 /// Checks to see if the unit being moved by MoveToEmptySpaceNearTarget() or MoveToEmptySpaceTwoFromTarget() isn't already within 1 or 2 tiles of the target respectively
 #define AUI_TACTICAL_FIX_MOVE_TO_EMPTY_SPACE_FROM_TARGET_CHECK_UNIT_PLOT_FIRST
+/// Allow blocking friendly units to move out of the way when moving right next to a target (since 
+#define AUI_TACTICAL_FIX_MOVE_TO_EMPTY_SPACE_FROM_TARGET_MOVE_BLOCKING
+/// When moving to an empty tile near a target, weigh tiles by the amount of turns it will take to get there, then by plot danger
+#define AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER
 /// When processing civilians in an escorted move, have them move to safety if they aren't currently defended and are in danger
 #define AUI_TACTICAL_PLOT_SINGLE_HEX_OPERATION_MOVES_CIVILIAN_TO_SAFETY
+/// Units that cannot caputre cities will not attempt to do so
+#define AUI_TACTICAL_FIX_NO_CAPTURE
 /// Removes the finishMoves() call that gets executed for every unit executing this function
 #define AUI_TACTICAL_FIX_EXECUTE_FORMATION_MOVES_NO_FINISHMOVE_COMMAND
 /// Removes the finishMoves() call after a unit has looted a barbarian camp
@@ -611,24 +738,52 @@
 #define AUI_TACTICAL_FIX_EXECUTE_PILLAGE_NO_FINISHMOVE_COMMAND
 /// Removes the finishMoves() call after a unit has completed a plunder trade route mission
 #define AUI_TACTICAL_FIX_EXECUTE_PLUNDER_TRADE_UNIT_NO_FINISHMOVE_COMMAND
+/// Only consider moving towards undefended barbarian camps as a "passive move"
+#define AUI_TACTICAL_FIX_FIND_PASSIVE_BARBARIAN_LAND_MOVE_ONLY_UNDEFENDED_CAMPS
+/// Units under max health are also eligible to retreat if the danger level is too high
+#define AUI_TACTICAL_FIX_PLOT_MOVES_TO_SAFETY_NOT_MAX_HEALTH_CHECK_DANGER
+/// Barbarians will move toward trade routes even if they're out of single-turn move range
+#define AUI_TACTICAL_FIND_BARBARIAN_GANK_TRADE_ROUTE_TARGET_MULTITURN
+/// Sea scouts are also no longer commandeered by the tactical AI, but all scouts in armies are 
+#define AUI_TACTICAL_FIX_COMMANDEER_UNITS_SCOUTS
+/// Air units are no longer skipped by the tactical AI (since homeland AI can send them out on intercepts and rebases)
+#define AUI_TACTICAL_FIX_REVIEW_UNASSIGNED_UNITS_DO_NOT_SKIP_AIR
+/// All non-combat units, not just Great Generals and Admirals, can be handled properly in operations (useful for mods!)
+#define AUI_TACTICAL_FIX_GENERALIZED_CIVILIAN_SUPPORT
+/// When choosing a plot to move to, the plot's score no longer needs to be positive, it just needs to be more than the great general's current plot score
+#define AUI_TACTICAL_MOVE_GREAT_GENERAL_ONLY_REQUIRE_POSITIVE_DELTA
+/// Loads range to check for queued attacks and movement of great general unit from XML instead of using a hardcoded value
+#define AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_USE_XML_RANGE
+/// Scales the score from nearby queued attacks based on the general's combat modifier
+#define AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_SCALE_SCORE_BY_COMBAT_MODIFIER
+#ifdef AUI_UNIT_HEALRATE_ASSUME_EXTRA_HEALRATE_FROM_UNIT
+/// If the civilian support unit can heal adjacent tiles, consider the health of adjacent units as well
+#define AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_CONSIDER_MEDIC
+#endif
 
 // Tactical Analysis Map Stuff
 /// Enables a minor adjustment for ranged units to account for possibly being able to move and shoot at a tile
-#define AUI_TACTICAL_MAP_ANALYSIS_MARKING_ADJUST_RANGED
+#define AUI_TACTICAL_ANALYSIS_MAP_MARKING_ADJUST_RANGED
 /// Checks for cities in addition to citadel improvements
-#define AUI_TACTICAL_MAP_ANALYSIS_MARKING_INCLUDE_CITIES
+#define AUI_TACTICAL_ANALYSIS_MAP_MARKING_INCLUDE_CITIES
+/// City strength does not decrease completely with hitpoints
+#define AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_CITY_GIMPING
+/// Distance dropoff only starts taking place at 4 tile range instead of immediately
+#define AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_DISTANCE_DROPOFF
+/// Uses pathfinding turns instead of raw distance for strength multipliers
+#define AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
 
 // Team Stuff
 #ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
 /// Randomizes weights by half their usual amount on each era change
 #define AUI_TEAM_SET_CURRENT_ERA_RANDOMIZE_WEIGHTS_BY_HALF_ON_ERA_CHANGE
-#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+#endif
 
 // Tech Classes Stuff
 #ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
 /// Applies the necessary science flavor boost to techs in addition to buildings, wonders, policies, and units
 #define AUI_PLAYERTECHS_ADD_FLAVOR_AS_STRATEGIES_USE_SCIENCE_FLAVOR_BOOST
-#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+#endif
 
 // Tech AI Stuff
 /// The AI wants an expensive tech if it's selecting a free tech
@@ -672,13 +827,11 @@
 #ifdef AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
 /// Overloads the vanilla canEverRangeStrikeAt() function to call the new canEverRangeStrikeAtFromPlot() function if it's enabled (originally from Ninakoru's Smart AI)
 #define AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_OVERLOAD
-#ifdef AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_OVERLOAD
-#ifdef AUI_UNIT_RANGE_PLUS_MOVE
+#if defined(AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_OVERLOAD) && defined(AUI_UNIT_RANGE_PLUS_MOVE)
 /// Adds two new functions that return whether a unit can move and ranged strike at a plot (originally from Ninakoru's Smart AI)
 #define AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
-#endif // AUI_UNIT_RANGE_PLUS_MOVE
-#endif // AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_OVERLOAD
-#endif // AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
+#endif
+#endif
 
 // Promition Stuff (within CvUnit.cpp)
 /// Use double instead of int for most variables (to retain information during division) inside AI_promotionValue()
@@ -707,6 +860,8 @@
 // Voting/League Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
 #define AUI_VOTING_USE_DOUBLES
+/// When voting for a player, the AI will now adjust for the fact that the voting system is First-Past-The-Post (so it will try to vote against player as well)
+#define AUI_VOTING_SCORE_VOTING_CHOICE_PLAYER_ADJUST_FOR_FPTP
 /// Uses slightly modified algorithm for determining Diplomat Usefulness levels
 #define AUI_VOTING_TWEAKED_DIPLOMAT_USEFULNESS
 /// Uses a different algorithm for scoring voting on international projects
