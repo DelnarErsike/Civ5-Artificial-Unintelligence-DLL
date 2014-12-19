@@ -336,7 +336,11 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	void setsize( unsigned int uiNewSize ){
 		SetSize(uiNewSize);
+#ifdef AUI_FAST_COMP
+		m_uiCurrSize = FASTMIN(uiNewSize, m_uiCurrMaxSize);
+#else
 		m_uiCurrSize = MIN(uiNewSize, m_uiCurrMaxSize);
+#endif // AUI_FAST_COMP
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -349,7 +353,11 @@ public:
 		if( m_uiCurrMaxSize < uiNewSize ){
 			GrowSize(uiNewSize);
 		}
+#ifdef AUI_FAST_COMP
+		m_uiCurrSize = FASTMIN(uiNewSize, m_uiCurrMaxSize);
+#else
 		m_uiCurrSize = MIN(uiNewSize, m_uiCurrMaxSize);
+#endif // AUI_FAST_COMP
 	};
 
 
@@ -464,7 +472,11 @@ protected:
 
 		unsigned int nOld = m_uiCurrSize;
 
+#ifdef AUI_FAST_COMP
+		m_uiCurrSize = FASTMIN(m_uiCurrSize, uiFit);
+#else
 		m_uiCurrSize = MIN( m_uiCurrSize, uiFit );
+#endif // AUI_FAST_COMP
 
 		T* pTemp = NULL;
 		if( uiFit > 0 ){
@@ -1120,7 +1132,11 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	FFixedVector(const THIS_TYPE& RHS)
 	{
+#ifdef AUI_FAST_COMP
+		m_uiCurrSize = FASTMIN(RHS.m_uiCurrSize, m_uiCurrMaxSize);
+#else
 		m_uiCurrSize = MIN(RHS.m_uiCurrSize, m_uiCurrMaxSize);
+#endif // AUI_FAST_COMP
 		CopyMin(RHS);
 	};
 
@@ -1252,7 +1268,11 @@ protected:
 
 	//Copy list of elements, calling copy constructor for each element
 	void CopyMin(const THIS_TYPE& RHS){
+#ifdef AUI_FAST_COMP
+		m_uiCurrSize = FASTMIN(RHS.m_uiCurrSize, m_uiCurrMaxSize);
+#else
 		m_uiCurrSize = MIN(RHS.m_uiCurrSize, m_uiCurrMaxSize);
+#endif // AUI_FAST_COMP
 		if( bPODType ){
 			memcpy( (void*)m_pData, (void*)RHS.m_pData, sizeof(T)*m_uiCurrSize);
 		}else{
