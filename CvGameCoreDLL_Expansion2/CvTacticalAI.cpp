@@ -2484,62 +2484,6 @@ void CvTacticalAI::PlotMovesToSafety(bool bCombatUnits)
 			CvPlot* pPlot = pUnit->plot();
 
 			iDangerLevel = m_pPlayer->GetPlotDanger(*pPlot);
-#ifndef AUI_DANGER_PLOTS_COUNT_AIR_UNITS
-			int iLoopUnit = 0;
-			int iNumIntercepts = 0;
-			CvUnit* pLoopUnit;
-			// Loop through our units looking for intercept capable units
-			for (pLoopUnit = m_pPlayer->firstUnit(&iLoopUnit); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iLoopUnit))
-			{
-				// Must be able to intercept this turn
-				if (!pLoopUnit->isDelayedDeath() && pLoopUnit->canAirDefend() && !pLoopUnit->isInCombat() && !pLoopUnit->isOutOfInterceptions())
-				{
-					// Must either be a non-air Unit, or an air Unit that hasn't moved this turn and is on intercept duty
-					if ((pLoopUnit->getDomainType() != DOMAIN_AIR) || !(pLoopUnit->hasMoved() && pLoopUnit->GetActivityType() == ACTIVITY_INTERCEPT))
-					{
-						// Test range
-						if (plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pPlot->getX(), pPlot->getY()) <= pLoopUnit->getUnitInfo().GetAirInterceptRange())
-						{
-							if (pLoopUnit->currInterceptionProbability() > 0)
-							{
-								iNumIntercepts += pLoopUnit->currInterceptionProbability();
-							}
-						}
-					}
-				}
-			}
-			iNumIntercepts /= 100;
-			CvWeightedVector<int> aiAirDangers;
-			for (int jJ = 0; jJ < MAX_PLAYERS; jJ++)
-			{
-				CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)jJ);
-
-				if (kPlayer.isAlive() && kPlayer.GetID() != m_pPlayer->GetID())
-				{
-					if (atWar(kPlayer.getTeam(), m_pPlayer->getTeam()))
-					{
-						// Loop through their units looking for bomb-capable units
-						iLoopUnit = 0;
-						for (pLoopUnit = kPlayer.firstUnit(&iLoopUnit); pLoopUnit != NULL; pLoopUnit = kPlayer.nextUnit(&iLoopUnit))
-						{
-							// Must be air unit able to ranged strike this turn
-							if (pLoopUnit->getDomainType() == DOMAIN_AIR &&!pLoopUnit->isDelayedDeath() && !pLoopUnit->isInCombat())
-							{
-								if (pLoopUnit->canRangeStrikeAt(pPlot->getX(), pPlot->getY()))
-								{
-									aiAirDangers.push_back(0, pUnit->GetBaseCombatStrengthConsideringDamage() * 100);
-								}
-							}
-						}
-					}
-				}
-			}
-			aiAirDangers.SortItems();
-			for (int jJ = iNumIntercepts; jJ < aiAirDangers.size(); jJ++)
-			{
-				iDangerLevel += aiAirDangers.GetWeight(jJ);
-			}
-#endif // AUI_DANGER_PLOTS_COUNT_AIR_UNITS
 			if(iDangerLevel > 0)
 			{
 				bool bAddUnit = false;
@@ -7802,62 +7746,6 @@ void CvTacticalAI::ExecuteMovesToSafestPlot()
 					//   prefer the lowest danger value
 
 					iDanger = m_pPlayer->GetPlotDanger(*pPlot);
-#ifndef AUI_DANGER_PLOTS_COUNT_AIR_UNITS
-					int iLoopUnit = 0;
-					int iNumIntercepts = 0;
-					CvUnit* pLoopUnit;
-					// Loop through our units looking for intercept capable units
-					for (pLoopUnit = m_pPlayer->firstUnit(&iLoopUnit); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iLoopUnit))
-					{
-						// Must be able to intercept this turn
-						if (!pLoopUnit->isDelayedDeath() && pLoopUnit->canAirDefend() && !pLoopUnit->isInCombat() && !pLoopUnit->isOutOfInterceptions())
-						{
-							// Must either be a non-air Unit, or an air Unit that hasn't moved this turn and is on intercept duty
-							if ((pLoopUnit->getDomainType() != DOMAIN_AIR) || !(pLoopUnit->hasMoved() && pLoopUnit->GetActivityType() == ACTIVITY_INTERCEPT))
-							{
-								// Test range
-								if (plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pPlot->getX(), pPlot->getY()) <= pLoopUnit->getUnitInfo().GetAirInterceptRange())
-								{
-									if (pLoopUnit->currInterceptionProbability() > 0)
-									{
-										iNumIntercepts += pLoopUnit->currInterceptionProbability();
-									}
-								}
-							}
-						}
-					}
-					iNumIntercepts /= 100;
-					CvWeightedVector<int> aiAirDangers;
-					for (int jJ = 0; jJ < MAX_PLAYERS; jJ++)
-					{
-						CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)jJ);
-
-						if (kPlayer.isAlive() && kPlayer.GetID() != m_pPlayer->GetID())
-						{
-							if (atWar(kPlayer.getTeam(), m_pPlayer->getTeam()))
-							{
-								// Loop through their units looking for bomb-capable units
-								iLoopUnit = 0;
-								for (pLoopUnit = kPlayer.firstUnit(&iLoopUnit); pLoopUnit != NULL; pLoopUnit = kPlayer.nextUnit(&iLoopUnit))
-								{
-									// Must be air unit able to ranged strike this turn
-									if (pLoopUnit->getDomainType() == DOMAIN_AIR &&!pLoopUnit->isDelayedDeath() && !pLoopUnit->isInCombat())
-									{
-										if (pLoopUnit->canRangeStrikeAt(pPlot->getX(), pPlot->getY()))
-										{
-											aiAirDangers.push_back(0, pUnit->GetBaseCombatStrengthConsideringDamage() * 100);
-										}
-									}
-								}
-							}
-						}
-					}
-					aiAirDangers.SortItems();
-					for (int jJ = iNumIntercepts; jJ < aiAirDangers.size(); jJ++)
-					{
-						iDanger += aiAirDangers.GetWeight(jJ);
-					}
-#endif // AUI_DANGER_PLOTS_COUNT_AIR_UNITS
 					bool bIsZeroDanger = (iDanger <= 0);
 					bool bIsInCity = pPlot->isFriendlyCity(*pUnit, false);
 					bool bIsInCover = (pPlot->getNumDefenders(ePlayerID) > 0) && !pUnit->IsCanDefend(pPlot); // only move to cover if I'm defenseless here
