@@ -5685,6 +5685,11 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
 		}
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
+		// Double score if improvement is now replaced with a "cheat" to halve value on plots that do not have resources and are not a natural wonder
+		if (pPlot->getResourceType(NO_TEAM) == NO_RESOURCE && !pPlot->IsNaturalWonder())
+			dTempValue /= 2.0;
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 #ifdef AUI_RELIGION_USE_DOUBLES
 		dRtnValue += dTempValue * dCitizenValue;
