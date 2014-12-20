@@ -283,24 +283,43 @@ CvPlot* CvArmyAI::GetCenterOfMass(DomainTypes eDomainRequired)
 			}
 
 			// Try two plots out if really having problems
-#ifdef AUI_ARMYAI_FIX_GET_CENTER_OF_MASS_PLOT_DISTANCE_CHECK
-			int iDistance;
-#endif // AUI_ARMYAI_FIX_GET_CENTER_OF_MASS_PLOT_DISTANCE_CHECK
+
+#ifdef AUI_HEXSPACE_DX_LOOPS
+			int iMaxDX, iDX;
+			CvPlot* pLoopPlot;
+			for (int iDY = -2; iDY <= 2; iDY++)
+			{
+#ifdef AUI_FAST_COMP
+				iMaxDX = 2 - FASTMAX(0, iDY);
+				for (iDX = -2 - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+				iMaxDX = 2 - MAX(0, iDY);
+				for (iDX = -2 - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+				{
+					// No need for range check because loops are set up properly
+					pLoopPlot = plotXY(pRtnValue->getX(), pRtnValue->getY(), iDX, iDY);
+					if (pLoopPlot)
+					{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+						if (hexDistance(iDX, iDY) == 2)
+#else
+						if (plotDistance(pRtnValue->getX(), pRtnValue->getY(), pLoopPlot->getX(), pLoopPlot->getY()) == 2)
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#else
 			for (int iDX = -2; iDX <= 2; iDX++)
 			{
 				for (int iDY = -2; iDY <= 2; iDY++)
 				{
-#ifdef AUI_ARMYAI_FIX_GET_CENTER_OF_MASS_PLOT_DISTANCE_CHECK
-					CvPlot *pLoopPlot = plotXYWithRangeCheck(pRtnValue->getX(), pRtnValue->getY(), iDX, iDY, 2, iDistance);
-					if (pLoopPlot)
-					{
-						if (iDistance == 2)
-#else
 					CvPlot *pLoopPlot = plotXYWithRangeCheck(pRtnValue->getX(), pRtnValue->getY(), iDX, iDY, 2);
 					if (pLoopPlot)
 					{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+						if (hexDistance(iDX, iDY) == 2)
+#else
 						if (plotDistance(pRtnValue->getX(), pRtnValue->getY(), pLoopPlot->getX(), pLoopPlot->getY()) == 2)
-#endif // AUI_ARMYAI_FIX_GET_CENTER_OF_MASS_PLOT_DISTANCE_CHECK
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#endif // AUI_HEXSPACE_DX_LOOPS
 						{
 							if (pLoopPlot->isWater() && eDomainRequired == DOMAIN_SEA || !pLoopPlot->isWater() && eDomainRequired == DOMAIN_LAND)
 							{

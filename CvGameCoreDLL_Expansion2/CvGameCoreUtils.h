@@ -96,9 +96,23 @@ inline int hexDistance(int iDX, int iDY)
 	// I'm assuming iDX and iDY are in hex-space
 #ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 	if((iDX ^ iDY) >= 0)  // the signs match
+	{
+#ifdef AUI_FAST_COMP
+		return FASTMAX(iDX, -iDX) + FASTMAX(iDY, -iDY);
+#else
+		return MAX(iDX, -iDX) + MAX(iDY, -iDY);
+#endif // AUI_FAST_COMP
+	}
+	else
+	{
+#ifdef AUI_FAST_COMP
+		return FASTMAX(FASTMAX(iDX, -iDX), FASTMAX(iDY, -iDY));
+#else
+		return MAX(MAX(iDX, -iDX), MAX(iDY, -iDY));
+#endif // AUI_FAST_COMP
+	}
 #else
 	if((iDX >= 0) == (iDY >= 0))  // the signs match
-#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 	{
 		int iAbsDX = iDX >= 0 ? iDX : -iDX;
 		int iAbsDY = iDY >= 0 ? iDY : -iDY;
@@ -110,6 +124,7 @@ inline int hexDistance(int iDX, int iDY)
 		int iAbsDY = iDY >= 0 ? iDY : -iDY;
 		return iAbsDX >= iAbsDY ? iAbsDX : iAbsDY;
 	}
+#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 }
 
 //
@@ -162,6 +177,7 @@ inline int plotDistance(int iX1, int iY1, int iX2, int iY2)
 #endif // AUI_FAST_COMP
 	}
 }
+
 //
 //// 3 | 3 | 3 | 3 | 3 | 3 | 3
 //// -------------------------
@@ -223,14 +239,14 @@ inline CvPlot* PlotFromHex(CvMap& kMap, int iHexX, int iHexY)
 
 inline CvPlot* plotXYWithRangeCheck(int iX, int iY, int iDX, int iDY, int iRange)
 {
+#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+	// I'm assuming iDX and iDY are in hex-space
+	if (hexDistance(iDX, iDY) > iRange)
+#else
 	int hexRange;
 
 	// I'm assuming iDX and iDY are in hex-space
-#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
-	if ((iDX ^ iDY) >= 0)  // the signs match
-#else
 	if((iDX >= 0) == (iDY >= 0))  // the signs match
-#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 	{
 		int iAbsDX = iDX >= 0 ? iDX : -iDX;
 		int iAbsDY = iDY >= 0 ? iDY : -iDY;
@@ -244,6 +260,7 @@ inline CvPlot* plotXYWithRangeCheck(int iX, int iY, int iDX, int iDY, int iRange
 	}
 
 	if(hexRange > iRange)
+#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 	{
 		return NULL;
 	}
@@ -256,10 +273,9 @@ inline CvPlot* plotXYWithRangeCheck(int iX, int iY, int iDX, int iDY, int iRange
 {
 	// I'm assuming iDX and iDY are in hex-space
 #ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
-	if ((iDX ^ iDY) >= 0)  // the signs match
+	iDistance = hexDistance(iDX, iDY);
 #else
 	if ((iDX >= 0) == (iDY >= 0))  // the signs match
-#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 	{
 		int iAbsDX = iDX >= 0 ? iDX : -iDX;
 		int iAbsDY = iDY >= 0 ? iDY : -iDY;
@@ -271,6 +287,7 @@ inline CvPlot* plotXYWithRangeCheck(int iX, int iY, int iDX, int iDY, int iRange
 		int iAbsDY = iDY >= 0 ? iDY : -iDY;
 		iDistance = iAbsDX >= iAbsDY ? iAbsDX : iAbsDY;
 	}
+#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 
 	if (iDistance > iRange)
 	{

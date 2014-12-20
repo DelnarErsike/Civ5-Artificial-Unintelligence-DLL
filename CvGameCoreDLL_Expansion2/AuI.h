@@ -37,6 +37,8 @@
 #define AUI_UNIT_EXTRA_ATTACKS_GETTER
 /// New parameter in healRate() that assumes the heal rate from units is a certain number (used to weigh healing great generals/civilians)
 #define AUI_UNIT_HEALRATE_ASSUME_EXTRA_HEALRATE_FROM_UNIT
+/// Removes the cap of 8 range for unit sight; this was only needed because the for() loops weren't set up properly, resulting in too many unused cycles
+#define AUI_PLOT_SEE_FROM_SIGHT_NO_MAXIMUM_SIGHT_RANGE
 /// When choosing the top n choices from a weighted vector, choices with weight equal to the last choice are also included
 #define AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_TIE
 /// Adds a new function to CvPlot that calculates the strategic value of a plot based on river crossing count, whether it's hills, and chokepoint factor
@@ -51,14 +53,8 @@
 #define AUI_HEXSPACE_DX_LOOPS
 /// New inline function that sets the plot distance if it passes the range check
 #define AUI_PLOT_XY_WITH_RANGE_CHECK_REFERENCE_DISTANCE
-/// PlotXYWithRangeCheck will now convert to HexspaceX, since coordinates are never in hexspace
-//#define AUI_PLOT_XY_WITH_RANGE_CHECK_TO_HEXSPACE
-#if defined(AUI_PLOT_XY_WITH_RANGE_CHECK_REFERENCE_DISTANCE)
-/// Optimizations and fixes from the two new, previously defined, inline functions
-#define AUI_ARMYAI_FIX_GET_CENTER_OF_MASS_PLOT_DISTANCE_CHECK
-#define AUI_BARBARIANS_FIX_DO_CAMPS_PLOT_DISTANCE_CHECK
-#define AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
-#endif
+/// Optimizations and fixes to reduce distance check overhead
+#define AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code

@@ -8541,10 +8541,12 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 
 	int iEvalDistance = GC.getSETTLER_EVALUATION_DISTANCE();
 	int iDistanceDropoffMod = GC.getSETTLER_DISTANCE_DROPOFF_MODIFIER();
+#ifndef AUI_HEXSPACE_DX_LOOPS
 	int iBeginSearchX = iSettlerX - iEvalDistance;
 	int iBeginSearchY = iSettlerY - iEvalDistance;
 	int iEndSearchX   = iSettlerX + iEvalDistance;
 	int iEndSearchY   = iSettlerY + iEvalDistance;
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 	CvMap& kMap = GC.getMap();
 
@@ -8560,11 +8562,28 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 	WeightedPlotVector aBestPlots;
 	aBestPlots.reserve((iEvalDistance+1) * 2);
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	CvPlot* pPlot;
+	for (int iDY = -iEvalDistance; iDY <= iEvalDistance; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iEvalDistance - FASTMAX(0, iDY);
+		for (iDX = -iEvalDistance - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iEvalDistance - MAX(0, iDY);
+		for (iDX = -iEvalDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pPlot = plotXY(iSettlerX, iSettlerY, iDX, iDY);
+#else
 	for(int iPlotX = iBeginSearchX; iPlotX != iEndSearchX; iPlotX++)
 	{
 		for(int iPlotY = iBeginSearchY; iPlotY != iEndSearchY; iPlotY++)
 		{
 			CvPlot* pPlot = kMap.plot(iPlotX, iPlotY);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if(!pPlot)
 			{
 				continue;
@@ -8577,7 +8596,11 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 			}
 
 			// Can't actually found here!
+#ifdef AUI_HEXSPACE_DX_LOOPS
+			if(!pkPlayer->canFound(pPlot->getX(), pPlot->getY()))
+#else
 			if(!pkPlayer->canFound(iPlotX, iPlotY))
+#endif // AUI_HEXSPACE_DX_LOOPS
 			{
 				continue;
 			}
@@ -8591,10 +8614,18 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 			// Do we have to check if this is a safe place to go?
 			if(!pPlot->isVisibleEnemyUnit(pkPlayer->GetID()))
 			{
+#ifdef AUI_HEXSPACE_DX_LOOPS
+				iSettlerDistance = hexDistance(iDX, iDY);
+#else
 				iSettlerDistance = plotDistance(iPlotX, iPlotY, iSettlerX, iSettlerY);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 				//iValue = pPlot->getFoundValue(pkPlayer->GetID());
+#ifdef AUI_HEXSPACE_DX_LOOPS
+				iValue = pkPlayer->AI_foundValue(pPlot->getX(), pPlot->getY(), -1, false);
+#else
 				iValue = pkPlayer->AI_foundValue(iPlotX, iPlotY, -1, false);
+#endif //  AUI_HEXSPACE_DX_LOOPS
 
 				iDistanceDropoff = (iDistanceDropoffMod * iSettlerDistance) / iEvalDistance;
 				iValue = iValue * (100 - iDistanceDropoff) / 100;

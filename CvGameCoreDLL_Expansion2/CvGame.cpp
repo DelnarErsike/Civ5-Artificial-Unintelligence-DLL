@@ -11152,6 +11152,39 @@ int CalculateDigSiteWeight(int iIndex, FFastVector<CvArchaeologyData, true, c_eC
 			int iDivisor = 1;
 			// lower the value if there is at least one nearby site (say, 3 tiles distance)
 			int iRange = 3;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+			int iMaxDX, iDX;
+			CvPlot* pLoopPlot;
+			for (int iDY = -iRange; iDY <= iRange; iDY++)
+			{
+#ifdef AUI_FAST_COMP
+				iMaxDX = iRange - FASTMAX(0, iDY);
+				for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+				iMaxDX = iRange - MAX(0, iDY);
+				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+				{
+					// No need for range check because loops are set up properly
+					pLoopPlot = plotXY(iPlotX, iPlotY, iDX, iDY);
+					// Condensing 3 loops into 1
+					if (pLoopPlot)
+					{
+						if (chosenDigSites[pLoopPlot->GetPlotIndex()].m_eArtifactType != NO_GREAT_WORK_ARTIFACT_CLASS)
+						{
+							if (hexDistance(iDX, iDY) == 1)
+							{
+								iDivisor += 3;
+							}
+							else if (hexDistance(iDX, iDY) == 2)
+							{
+								iDivisor += 2;
+							}
+							else
+							{
+								iDivisor++;
+							}
+#else
 			for (int iDX = -iRange; iDX <= iRange; iDX++)
 			{
 				for (int iDY = -iRange; iDY <= iRange; iDY++)
@@ -11192,6 +11225,7 @@ int CalculateDigSiteWeight(int iIndex, FFastVector<CvArchaeologyData, true, c_eC
 						if (chosenDigSites[pLoopPlot->GetPlotIndex()].m_eArtifactType != NO_GREAT_WORK_ARTIFACT_CLASS)
 						{
 							iDivisor++;
+#endif // AUI_HEXSPACE_DX_LOOPS
 						}
 					}
 				}
@@ -11558,11 +11592,28 @@ void CvGame::SpawnArchaeologySitesHistorically()
 		const int iRange = 3;
 		int iPlotX = iBestSite % iGridWidth;
 		int iPlotY = iBestSite / iGridWidth;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		int iMaxDX, iDX;
+		CvPlot* pLoopPlot;
+		for (int iDY = -iRange; iDY <= iRange; iDY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iRange - FASTMAX(0, iDY);
+			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iRange - MAX(0, iDY);
+			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+			{
+				// No need for range check because loops are set up properly
+				pLoopPlot = plotXY(iPlotX, iPlotY, iDX, iDY);
+#else
 		for (int iDX = -iRange; iDX <= iRange; iDX++)
 		{
 			for (int iDY = -iRange; iDY <= iRange; iDY++)
 			{
 				CvPlot* pLoopPlot = plotXYWithRangeCheck(iPlotX, iPlotY, iDX, iDY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 				if (pLoopPlot)
 				{
 					int iIndex = pLoopPlot->GetPlotIndex();

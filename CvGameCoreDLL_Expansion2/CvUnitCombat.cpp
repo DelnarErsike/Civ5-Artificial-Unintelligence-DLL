@@ -469,7 +469,11 @@ void CvUnitCombat::ResolveMeleeCombat(const CvCombatInfo& kCombatInfo, uint uiPa
 				}
 				else
 				{
+#ifdef AUI_FAST_COMP
+					pkAttacker->changeMoves(-1 * FASTMAX(GC.getMOVE_DENOMINATOR(), pkTargetPlot->movementCost(pkAttacker, pkAttacker->plot())));
+#else
 					pkAttacker->changeMoves(-1 * std::max(GC.getMOVE_DENOMINATOR(), pkTargetPlot->movementCost(pkAttacker, pkAttacker->plot())));
+#endif // AUI_FAST_COMP
 
 					if(!pkAttacker->canMove() || !pkAttacker->isBlitz())
 					{
@@ -546,7 +550,11 @@ void CvUnitCombat::GenerateRangedCombatInfo(CvUnit& kAttacker, CvUnit* pkDefende
 			iDamage = GC.getMAX_HIT_POINTS() - pkDefender->getDamage();
 		}
 
+#ifdef AUI_FAST_COMP
+		iTotalDamage = MAX(pkDefender->getDamage(), pkDefender->getDamage() + iDamage);
+#else
 		iTotalDamage = std::max(pkDefender->getDamage(), pkDefender->getDamage() + iDamage);
+#endif // AUI_FAST_COMP
 	}
 	else
 	{
@@ -573,7 +581,11 @@ void CvUnitCombat::GenerateRangedCombatInfo(CvUnit& kAttacker, CvUnit* pkDefende
 			iDamage = pCity->GetMaxHitPoints() - pCity->getDamage() - 1;
 		}
 
+#ifdef AUI_FAST_COMP
+		iTotalDamage = FASTMAX(pCity->getDamage(), pCity->getDamage() + iDamage);
+#else
 		iTotalDamage = std::max(pCity->getDamage(), pCity->getDamage() + iDamage);
+#endif // AUI_FAST_COMP
 	}
 	//////////////////////////////////////////////////////////////////////
 
@@ -646,7 +658,11 @@ void CvUnitCombat::GenerateRangedCombatInfo(CvCity& kAttacker, CvUnit* pkDefende
 			iDamage = GC.getMAX_HIT_POINTS() - pkDefender->getDamage();
 		}
 
+#ifdef AUI_FAST_COMP
+		iTotalDamage = FASTMAX(pkDefender->getDamage(), pkDefender->getDamage() + iDamage);
+#else
 		iTotalDamage = std::max(pkDefender->getDamage(), pkDefender->getDamage() + iDamage);
+#endif // AUI_FAST_COMP
 	}
 	else
 	{
@@ -1180,7 +1196,11 @@ void CvUnitCombat::GenerateAirCombatInfo(CvUnit& kAttacker, CvUnit* pkDefender, 
 			iAttackerDamageInflicted = GC.getMAX_HIT_POINTS() - pkDefender->getDamage();
 		}
 
+#ifdef AUI_FAST_COMP
+		iAttackerTotalDamageInflicted = FASTMAX(pkDefender->getDamage(), pkDefender->getDamage() + iAttackerDamageInflicted);
+#else
 		iAttackerTotalDamageInflicted = std::max(pkDefender->getDamage(), pkDefender->getDamage() + iAttackerDamageInflicted);
+#endif // AUI_FAST_COMP
 
 		// Calculate defense damage
 		iDefenderDamageInflicted = pkDefender->GetAirStrikeDefenseDamage(&kAttacker);
@@ -1190,7 +1210,11 @@ void CvUnitCombat::GenerateAirCombatInfo(CvUnit& kAttacker, CvUnit* pkDefender, 
 			iDefenderDamageInflicted = GC.getMAX_HIT_POINTS() - kAttacker.getDamage();
 		}
 
+#ifdef AUI_FAST_COMP
+		iDefenderTotalDamageInflicted = FASTMAX(kAttacker.getDamage(), kAttacker.getDamage() + (iDefenderDamageInflicted + iInterceptionDamage));
+#else
 		iDefenderTotalDamageInflicted = std::max(kAttacker.getDamage(), kAttacker.getDamage() + (iDefenderDamageInflicted + iInterceptionDamage));
+#endif // AUI_FAST_COMP
 	}
 	// Target is a City
 	else
@@ -1217,7 +1241,11 @@ void CvUnitCombat::GenerateAirCombatInfo(CvUnit& kAttacker, CvUnit* pkDefender, 
 			iAttackerDamageInflicted = pCity->GetMaxHitPoints() - pCity->getDamage() - 1;
 		}
 
+#ifdef AUI_FAST_COMP
+		iAttackerTotalDamageInflicted = FASTMAX(pCity->getDamage(), pCity->getDamage() + iAttackerDamageInflicted);
+#else
 		iAttackerTotalDamageInflicted = std::max(pCity->getDamage(), pCity->getDamage() + iAttackerDamageInflicted);
+#endif // AUI_FAST_COMP
 
 		// Calculate defense damage
 		iDefenderDamageInflicted = pCity->GetAirStrikeDefenseDamage(&kAttacker);
@@ -1227,7 +1255,11 @@ void CvUnitCombat::GenerateAirCombatInfo(CvUnit& kAttacker, CvUnit* pkDefender, 
 			iDefenderDamageInflicted = GC.getMAX_HIT_POINTS() - kAttacker.getDamage();
 		}
 
+#ifdef AUI_FAST_COMP
+		iDefenderTotalDamageInflicted = FASTMAX(kAttacker.getDamage(), kAttacker.getDamage() + (iDefenderDamageInflicted + iInterceptionDamage));
+#else
 		iDefenderTotalDamageInflicted = std::max(kAttacker.getDamage(), kAttacker.getDamage() + (iDefenderDamageInflicted + iInterceptionDamage));
+#endif // AUI_FAST_COMP
 
 		//Achievement for Washington
 		CvUnitEntry* pkUnitInfo = GC.getUnitInfo(kAttacker.getUnitType());
@@ -1970,11 +2002,28 @@ uint CvUnitCombat::ApplyNuclearExplosionDamage(const CvCombatMemberEntry* pkDama
 	// Then the terrain effects
 	int iBlastRadius = GC.getNUKE_BLAST_RADIUS();
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	CvPlot* pLoopPlot;
+	for (int iDY = -iBlastRadius; iDY <= iBlastRadius; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iBlastRadius - FASTMAX(0, iDY);
+		for (iDX = -iBlastRadius - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iBlastRadius - MAX(0, iDY);
+		for (iDX = -iBlastRadius - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(pkTargetPlot->getX(), pkTargetPlot->getY(), iDX, iDY);
+#else
 	for(int iDX = -(iBlastRadius); iDX <= iBlastRadius; iDX++)
 	{
 		for(int iDY = -(iBlastRadius); iDY <= iBlastRadius; iDY++)
 		{
 			CvPlot* pLoopPlot = plotXYWithRangeCheck(pkTargetPlot->getX(), pkTargetPlot->getY(), iDX, iDY, iBlastRadius);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot != NULL)
 			{
@@ -2065,10 +2114,18 @@ uint CvUnitCombat::ApplyNuclearExplosionDamage(const CvCombatMemberEntry* pkDama
 
 					int iNukedPopulation = pkCity->getPopulation() * (iBaseDamage + iRandDamage1 + iRandDamage2) / 100;
 
+#ifdef AUI_FAST_COMP
+					iNukedPopulation *= FASTMAX(0, (pkCity->getNukeModifier() + 100));
+#else
 					iNukedPopulation *= std::max(0, (pkCity->getNukeModifier() + 100));
+#endif // AUI_FAST_COMP
 					iNukedPopulation /= 100;
 
+#ifdef AUI_FAST_COMP
+					pkCity->changePopulation(-(FASTMIN((pkCity->getPopulation() - 1), iNukedPopulation)));
+#else
 					pkCity->changePopulation(-(std::min((pkCity->getPopulation() - 1), iNukedPopulation)));
+#endif // AUI_FAST_COMP
 
 					// Add damage to the city
 					pkCity->setDamage(kEntry.GetFinalDamage());
@@ -2090,11 +2147,28 @@ void CvUnitCombat::GenerateNuclearExplosionDamage(CvPlot* pkTargetPlot, int iDam
 
 	*piDamageMembers = 0;
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	CvPlot* pLoopPlot;
+	for (int iDY = -iBlastRadius; iDY <= iBlastRadius; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iBlastRadius - FASTMAX(0, iDY);
+		for (iDX = -iBlastRadius - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iBlastRadius - MAX(0, iDY);
+		for (iDX = -iBlastRadius - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(pkTargetPlot->getX(), pkTargetPlot->getY(), iDX, iDY);
+#else
 	for(int iDX = -(iBlastRadius); iDX <= iBlastRadius; iDX++)
 	{
 		for(int iDY = -(iBlastRadius); iDY <= iBlastRadius; iDY++)
 		{
 			CvPlot* pLoopPlot = plotXYWithRangeCheck(pkTargetPlot->getX(), pkTargetPlot->getY(), iDX, iDY, iBlastRadius);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot != NULL)
 			{
@@ -2136,7 +2210,11 @@ void CvUnitCombat::GenerateNuclearExplosionDamage(CvPlot* pkTargetPlot, int iDam
 
 								if(pLoopCity != NULL)
 								{
+#ifdef AUI_FAST_COMP
+									iNukeDamage *= FASTMAX(0, (pLoopCity->getNukeModifier() + 100));
+#else
 									iNukeDamage *= std::max(0, (pLoopCity->getNukeModifier() + 100));
+#endif // AUI_FAST_COMP
 									iNukeDamage /= 100;
 								}
 
@@ -2144,7 +2222,11 @@ void CvUnitCombat::GenerateNuclearExplosionDamage(CvPlot* pkTargetPlot, int iDam
 								if(pkDamageEntry)
 								{
 									pkDamageEntry->SetDamage(iNukeDamage);
+#ifdef AUI_FAST_COMP
+									pkDamageEntry->SetFinalDamage(FASTMIN(iNukeDamage + pLoopUnit->getDamage(), GC.getMAX_HIT_POINTS()));
+#else
 									pkDamageEntry->SetFinalDamage(std::min(iNukeDamage + pLoopUnit->getDamage(), GC.getMAX_HIT_POINTS()));
+#endif // AUI_FAST_COMP
 									pkDamageEntry->SetMaxHitPoints(GC.getMAX_HIT_POINTS());
 									if(pkAttacker)
 										pLoopUnit->setCombatUnit(pkAttacker);
@@ -2192,7 +2274,11 @@ void CvUnitCombat::GenerateNuclearExplosionDamage(CvPlot* pkTargetPlot, int iDam
 						iTotalDamage += pLoopCity->getDamage();
 
 						// Can't bring a city below 1 HP
+#ifdef AUI_FAST_COMP
+						iTotalDamage = FASTMIN(iTotalDamage, pLoopCity->GetMaxHitPoints() - 1);
+#else
 						iTotalDamage = min(iTotalDamage, pLoopCity->GetMaxHitPoints() - 1);
+#endif // AUI_FAST_COMP
 					}
 
 					CvCombatMemberEntry* pkDamageEntry = AddCombatMember(pkDamageArray, piDamageMembers, iMaxDamageMembers, pLoopCity);
@@ -3113,7 +3199,11 @@ void CvUnitCombat::ApplyPostCombatTraitEffects(CvUnit* pkWinner, CvUnit* pkLoser
 	CvPlayer& kPlayer = GET_PLAYER(pkWinner->getOwner());
 	if (pkWinner->GetGoldenAgeValueFromKills() > 0)
 	{
+#ifdef AUI_FAST_COMP
+		int iCombatStrength = FASTMAX(pkLoser->getUnitInfo().GetCombat(), pkLoser->getUnitInfo().GetRangedCombat());
+#else
 		int iCombatStrength = max(pkLoser->getUnitInfo().GetCombat(), pkLoser->getUnitInfo().GetRangedCombat());
+#endif // AUI_FAST_COMP
 		if(iCombatStrength > 0)
 		{
 			int iValue = iCombatStrength * pkWinner->GetGoldenAgeValueFromKills() / 100;
@@ -3209,7 +3299,11 @@ void CvUnitCombat::ApplyPostCityCombatEffects(CvUnit* pkAttacker, CvCity* pkDefe
 			GET_PLAYER(pkAttacker->getOwner()).GetTreasury()->ChangeGold(iGoldPlundered);
 
 			CvPlayer& kCityPlayer = GET_PLAYER(pkDefender->getOwner());
+#ifdef AUI_FAST_COMP
+			int iDeduction = FASTMIN(iGoldPlundered, kCityPlayer.GetTreasury()->GetGold());
+#else
 			int iDeduction = min(iGoldPlundered, kCityPlayer.GetTreasury()->GetGold());
+#endif // AUI_FAST_COMP
 			kCityPlayer.GetTreasury()->ChangeGold(-iDeduction);
 
 			if(pkAttacker->getOwner() == GC.getGame().getActivePlayer())

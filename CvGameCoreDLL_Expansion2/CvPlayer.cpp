@@ -2500,11 +2500,28 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 
 	if(bConquest)
 	{
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		int iMaxDX, iDX;
+		CvPlot* pLoopPlot;
+		for (int iDY = -iMaxRange; iDY <= iMaxRange; iDY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iMaxRange - FASTMAX(0, iDY);
+			for (iDX = -iMaxRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iMaxRange - MAX(0, iDY);
+			for (iDX = -iMaxRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+			{
+				// No need for range check because loops are set up properly
+				pLoopPlot = plotXY(iOldCityX, iOldCityY, iDX, iDY);
+#else
 		for(int iDX = -iMaxRange; iDX <= iMaxRange; iDX++)
 		{
 			for(int iDY = -iMaxRange; iDY <= iMaxRange; iDY++)
 			{
 				CvPlot* pLoopPlot = plotXYWithRangeCheck(iOldCityX, iOldCityY, iDX, iDY, iMaxRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 				if(pLoopPlot)
 				{
 					pLoopPlot->verifyUnitValidPlot();
@@ -5634,7 +5651,11 @@ bool CvPlayer::canReceiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit) 
 
 				if(pNearbyPlot != NULL)
 				{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+					if (hexDistance(iDX, iDY) <= iBarbCampDistance)
+#else
 					if(plotDistance(pNearbyPlot->getX(), pNearbyPlot->getY(), pPlot->getX(), pPlot->getY()) <= iBarbCampDistance)
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 					{
 						if(pNearbyPlot->getImprovementType() == barbCampType)
 						{
@@ -5908,6 +5929,9 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 	int iBestValue;
 	int iPass;
 	int iDX, iDY;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+#endif // AUI_HEXSPACE_DX_LOOPS
 	int iI;
 
 	CvAssertMsg(canReceiveGoody(pPlot, eGoody, pUnit), "Instance is expected to be able to recieve goody");
@@ -6011,11 +6035,15 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 		// Look at nearby Plots to make sure another camp isn't too close
 		const int iBarbCampDistance = kGoodyInfo.getRevealNearbyBarbariansRange();
 #ifdef AUI_HEXSPACE_DX_LOOPS
-		int iMaxDX;
 		for (iDY = -iBarbCampDistance; iDY <= iBarbCampDistance; iDY++)
 		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iBarbCampDistance - FASTMAX(0, iDY);
+			for (iDX = -iBarbCampDistance - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
 			iMaxDX = iBarbCampDistance - MAX(0, iDY);
 			for (iDX = -iBarbCampDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
 			{
 #else
 		for(iDX = -(iBarbCampDistance); iDX <= iBarbCampDistance; iDX++)
@@ -6026,7 +6054,11 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 				CvPlot* pNearbyBarbarianPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 				if(pNearbyBarbarianPlot != NULL)
 				{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+					if (hexDistance(iDX, iDY) <= iBarbCampDistance)
+#else
 					if(plotDistance(pNearbyBarbarianPlot->getX(), pNearbyBarbarianPlot->getY(), pPlot->getX(), pPlot->getY()) <= iBarbCampDistance)
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 					{
 						if(pNearbyBarbarianPlot->getImprovementType() == GC.getBARBARIAN_CAMP_IMPROVEMENT())
 						{
@@ -6054,28 +6086,27 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 			pBestPlot = NULL;
 
 			int iRandLimit;
-#ifdef AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
-			int iDistance;
-#endif // AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
 
 #ifdef AUI_HEXSPACE_DX_LOOPS
 			int iMaxDX;
 			for (iDY = -iOffset; iDY <= iOffset; iDY++)
 			{
+#ifdef AUI_FAST_COMP
+				iMaxDX = iOffset - FASTMAX(0, iDY);
+				for (iDX = -iOffset - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
 				iMaxDX = iOffset - MAX(0, iDY);
 				for (iDX = -iOffset - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
 				{
+					pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 #else
 			for(iDX = -(iOffset); iDX <= iOffset; iDX++)
 			{
 				for(iDY = -(iOffset); iDY <= iOffset; iDY++)
 				{
-#endif // AUI_HEXSPACE_DX_LOOPS
-#ifdef AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
-					pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iOffset, iDistance);
-#else
 					pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iOffset);
-#endif // AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 					if(pLoopPlot != NULL)
 					{
@@ -6089,11 +6120,11 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 
 							iValue = (1 + GC.getGame().getJonRandNum(iRandLimit, "Goody Map"));
 
-#ifdef AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
-							iValue *= iDistance;
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+							iValue *= hexDistance(iDX, iDY);
 #else
 							iValue *= plotDistance(pPlot->getX(), pPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY());
-#endif // AUI_PLAYER_FIX_RECEIVE_GOODY_OPTIMIZED_PLOT_DISTANCE_CHECK
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 
 							if(iValue > iBestValue)
 							{
@@ -6111,15 +6142,31 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 			pBestPlot = pPlot;
 		}
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		for (iDY = -iRange; iDY <= iRange; iDY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iRange - FASTMAX(0, iDY);
+			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iRange - MAX(0, iDY);
+			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+#else
 		for(iDX = -(iRange); iDX <= iRange; iDX++)
 		{
 			for(iDY = -(iRange); iDY <= iRange; iDY++)
+#endif // AUI_HEXSPACE_DX_LOOPS
 			{
 				pLoopPlot = plotXY(pBestPlot->getX(), pBestPlot->getY(), iDX, iDY);
 
 				if(pLoopPlot != NULL)
 				{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+					if (hexDistance(iDX, iDY) <= iRange)
+#else
 					if(plotDistance(pBestPlot->getX(), pBestPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY()) <= iRange)
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 					{
 						if(GC.getGame().getJonRandNum(100, "Goody Map") < kGoodyInfo.getMapProb())
 						{
@@ -6371,11 +6418,26 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 				pBestPlot = NULL;
 				iBestValue = INT_MAX;
 				const int iPopRange = 2;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+				int iMaxDX;
+				for (iDY = -iPopRange; iDY <= iPopRange; iDY++)
+				{
+#ifdef AUI_FAST_COMP
+					iMaxDX = iPopRange - FASTMAX(0, iDY);
+					for (iDX = -iPopRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+					iMaxDX = iPopRange - MAX(0, iDY);
+					for (iDX = -iPopRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+					{
+						pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
+#else
 				for(iDX = -(iPopRange); iDX <= iPopRange; iDX++)
 				{
 					for(iDY = -(iPopRange); iDY <= iPopRange; iDY++)
 					{
 						pLoopPlot	= plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iPopRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 						if(pLoopPlot != NULL)
 						{
 							if(pLoopPlot->isValidDomainForLocation(*pNewUnit))
@@ -6392,7 +6454,11 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 												{
 													iValue = 1 + GC.getGame().getJonRandNum(6, "spawn goody unit that would over-stack"); // okay, I'll admit it, not a great heuristic
 
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+													if(hexDistance(iDX, iDY) > 1)
+#else
 													if(plotDistance(pPlot->getX(),pPlot->getY(),pLoopPlot->getX(),pLoopPlot->getY()) > 1)
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 													{
 														iValue += 12;
 													}
@@ -16384,11 +16450,26 @@ void CvPlayer::DoUpdateCramped()
 	int iLoop;
 	for(pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
 	{
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		int iMaxDX, iDX;
+		for (int iDY = -iRange; iDY <= iRange; iDY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iRange - FASTMAX(0, iDY);
+			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iRange - MAX(0, iDY);
+			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+			{
+				pPlot = plotXY(pLoopCity->getX(), pLoopCity->getY(), iDX, iDY);
+#else
 		for(int iX = -iRange; iX <= iRange; iX++)
 		{
 			for(int iY = -iRange; iY <= iRange; iY++)
 			{
 				pPlot = plotXYWithRangeCheck(pLoopCity->getX(), pLoopCity->getY(), iX, iY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 				if(pPlot != NULL)
 				{

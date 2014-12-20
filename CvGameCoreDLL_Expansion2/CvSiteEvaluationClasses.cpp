@@ -153,11 +153,26 @@ bool CvCitySiteEvaluator::CanFound(CvPlot* pPlot, const CvPlayer* pPlayer, bool 
 		// look at same land mass
 		iRange = GC.getMIN_CITY_RANGE();
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		int iMaxDX;
+		for (iDY = -iRange; iDY <= iRange; iDY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iRange - FASTMAX(0, iDY);
+			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iRange - MAX(0, iDY);
+			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+			{
+				pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
+#else
 		for(iDX = -(iRange); iDX <= iRange; iDX++)
 		{
 			for(iDY = -(iRange); iDY <= iRange; iDY++)
 			{
 				pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 				if(pLoopPlot != NULL)
 				{
@@ -433,8 +448,14 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 
 			if (pLoopPlot != NULL)
 			{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+				int iDistance = hexDistance(iDX, iDY);
+#else
 				int iDistance = plotDistance(pPlot->getX(), pPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY());
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#ifndef AUI_HEXSPACE_DX_LOOPS
 				if (iDistance <= 7)
+#endif // AUI_HEXSPACE_DX_LOOPS
 				{
 					if ((pLoopPlot->getOwner() == NO_PLAYER) || (pLoopPlot->getOwner() == pPlayer->GetID()))
 					{

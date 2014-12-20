@@ -2774,11 +2774,28 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_HillCity(CvCity* pCity)
 	int iNumHills = 0;
 	CvPlot* pPlot = pCity->plot();
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	CvPlot* pLoopPlot;
+	for (int iDY = -iRange; iDY <= iRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iDY);
+		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
+#else
 	for(int iDX = -iRange; iDX <= iRange; iDX++)
 	{
 		for(int iDY = -iRange; iDY <= iRange; iDY++)
 		{
 			CvPlot* pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if(pLoopPlot)
 			{
 				if(pLoopPlot->isHills() && pLoopPlot->getOwner() == pPlot->getOwner())
@@ -2825,11 +2842,28 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_ForestCity(CvCity* pCity)
 	int iNumForests = 0;
 	CvPlot* pPlot = pCity->plot();
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	CvPlot* pLoopPlot;
+	for (int iDY = -iRange; iDY <= iRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iDY);
+		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
+#else
 	for(int iDX = -iRange; iDX <= iRange; iDX++)
 	{
 		for(int iDY = -iRange; iDY <= iRange; iDY++)
 		{
 			CvPlot* pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if(pLoopPlot)
 			{
 				// FEATURE_FOREST seems dubious to me...
@@ -2856,11 +2890,28 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_JungleCity(CvCity* pCity)
 	int iNumJungles = 0;
 	CvPlot* pPlot = pCity->plot();
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	CvPlot* pLoopPlot;
+	for (int iDY = -iRange; iDY <= iRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iDY);
+		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
+#else
 	for(int iDX = -iRange; iDX <= iRange; iDX++)
 	{
 		for(int iDY = -iRange; iDY <= iRange; iDY++)
 		{
 			CvPlot* pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if(pLoopPlot)
 			{
 				// FEATURE_JUNGLE seems dubious to me...

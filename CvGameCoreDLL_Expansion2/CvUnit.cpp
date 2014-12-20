@@ -2464,11 +2464,28 @@ bool CvUnit::willRevealByMove(const CvPlot& plot) const
 	int iVisRange = visibilityRange();
 	TeamTypes eTeam = getTeam();
 	int iRange = iVisRange + 1;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	CvPlot* pLoopPlot;
+	for (int iDY = -iRange; iDY <= iRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iDY);
+		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(plot.getX(), plot.getY(), iDX, iDY);
+#else
 	for(int i = -iRange; i <= iRange; ++i)
 	{
 		for(int j = -iRange; j <= iRange; ++j)
 		{
 			CvPlot* pLoopPlot = ::plotXYWithRangeCheck(plot.getX(), plot.getY(), i, j, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if(NULL != pLoopPlot)
 			{
 				if(!pLoopPlot->isRevealed(eTeam) && plot.canSeePlot(pLoopPlot, eTeam, iVisRange, NO_DIRECTION))
@@ -3058,11 +3075,27 @@ bool CvUnit::jumpToNearestValidPlotWithinRange(int iRange)
 	iBestValue = INT_MAX;
 	pBestPlot = NULL;
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	for (int iDY = -iRange; iDY <= iRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iDY);
+		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
+#else
 	for(int iDX = -iRange; iDX <= iRange; iDX++)
 	{
 		for(int iDY = -iRange; iDY <= iRange; iDY++)
 		{
 			pLoopPlot	= plotXYWithRangeCheck(getX(), getY(), iDX, iDY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot != NULL)
 			{
@@ -3081,7 +3114,11 @@ bool CvUnit::jumpToNearestValidPlotWithinRange(int iRange)
 								{
 									if(pLoopPlot->isRevealed(getTeam()))
 									{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+										iValue = (hexDistance(iDX, iDY) * 2);
+#else
 										iValue = (plotDistance(getX(), getY(), pLoopPlot->getX(), pLoopPlot->getY()) * 2);
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 
 										if(pLoopPlot->area() != area())
 										{
@@ -4058,11 +4095,28 @@ bool CvUnit::canEmbark(const CvPlot* pPlot) const
 	// search the water plots around this plot to see if any are vacant
 	int iRange = 1;
 	bool bOpenPlot = false;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iX;
+	CvPlot* pEvalPlot;
+	for (int iY = -iRange; iY <= iRange; iY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iY);
+		for (iX = -iRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iY);
+		for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pEvalPlot = plotXY(pPlot->getX(), pPlot->getY(), iX, iY);
+#else
 	for(int iX = -iRange; iX <= iRange; iX++)
 	{
 		for(int iY = -iRange; iY <= iRange; iY++)
 		{
 			CvPlot* pEvalPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iX, iY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if(!pEvalPlot)
 			{
 				continue;
@@ -4079,12 +4133,19 @@ bool CvUnit::canEmbark(const CvPlot* pPlot) const
 				bOpenPlot = true;
 
 				// get out of the loop
+#ifdef AUI_HEXSPACE_DX_LOOPS
+				goto LoopEnd;
+#else
 				iX = iRange + 1;
 				iY = iRange + 1;
+#endif // AUI_HEXSPACE_DX_LOOPS
 			}
 		}
 	}
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	LoopEnd:
+#endif // AUI_HEXSPACE_DX_LOOPS
 	return bOpenPlot;
 }
 
@@ -4120,11 +4181,28 @@ bool CvUnit::canDisembark(const CvPlot* pPlot) const
 	// search the land plots around this plot to see if any can be moved into
 	int iRange = 1;
 	bool bOpenPlot = false;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iX;
+	CvPlot* pEvalPlot;
+	for (int iY = -iRange; iY <= iRange; iY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iY);
+		for (iX = -iRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iY);
+		for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pEvalPlot = plotXY(pPlot->getX(), pPlot->getY(), iX, iY);
+#else
 	for(int iX = -iRange; iX <= iRange; iX++)
 	{
 		for(int iY = -iRange; iY <= iRange; iY++)
 		{
 			CvPlot* pEvalPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iX, iY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if(!pEvalPlot)
 			{
 				continue;
@@ -4140,12 +4218,19 @@ bool CvUnit::canDisembark(const CvPlot* pPlot) const
 				bOpenPlot = true;
 
 				// get out of the loop
+#ifdef AUI_HEXSPACE_DX_LOOPS
+				goto LoopEnd;
+#else
 				iX = iRange + 1;
 				iY = iRange + 1;
+#endif // AUI_HEXSPACE_DX_LOOPS
 			}
 		}
 	}
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	LoopEnd:
+#endif // AUI_HEXSPACE_DX_LOOPS
 	return bOpenPlot;
 }
 
@@ -5313,11 +5398,27 @@ bool CvUnit::isNukeVictim(const CvPlot* pPlot, TeamTypes eTeam) const
 
 	int iBlastRadius = /*2*/ GC.getNUKE_BLAST_RADIUS();
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+	for (iDY = -iBlastRadius; iDY <= iBlastRadius; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iBlastRadius - FASTMAX(0, iDY);
+		for (iDX = -iBlastRadius - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iBlastRadius - MAX(0, iDY);
+		for (iDX = -iBlastRadius - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
+#else
 	for(iDX = -(iBlastRadius); iDX <= iBlastRadius; iDX++)
 	{
 		for(iDY = -(iBlastRadius); iDY <= iBlastRadius; iDY++)
 		{
 			pLoopPlot	= plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iBlastRadius);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot != NULL)
 			{
@@ -8273,11 +8374,27 @@ void CvUnit::PerformCultureBomb(int iRadius)
 	// Change ownership of nearby plots
 	int iBombRange = iRadius;
 	CvPlot* pLoopPlot;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	for (int iDY = -iBombRange; iDY <= iBombRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iBombRange - FASTMAX(0, iDY);
+		for (iDX = -iBombRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iBombRange - MAX(0, iDY);
+		for (iDX = -iBombRange - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
+#else
 	for(int i = -iBombRange; i <= iBombRange; ++i)
 	{
 		for(int j = -iBombRange; j <= iBombRange; ++j)
 		{
 			pLoopPlot = ::plotXYWithRangeCheck(getX(), getY(), i, j, iBombRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot == NULL)
 				continue;
@@ -13822,11 +13939,28 @@ void CvUnit::setXY(int iX, int iY, bool bGroup, bool bUpdate, bool bShow, bool b
 
 	// if there is an enemy city nearby, alert any scripts to this
 	int iAttackRange = GC.getCITY_ATTACK_RANGE();
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	CvPlot* pTargetPlot;
+	for (int iDY = -iAttackRange; iDY <= iAttackRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iAttackRange - FASTMAX(0, iDY);
+		for (iDX = -iAttackRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iAttackRange - MAX(0, iDY);
+		for (iDX = -iAttackRange - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pTargetPlot = plotXY(getX(), getY(), iDX, iDY);
+#else
 	for(int iDX = -iAttackRange; iDX <= iAttackRange; iDX++)
 	{
 		for(int iDY = -iAttackRange; iDY <= iAttackRange; iDY++)
 		{
 			CvPlot* pTargetPlot = plotXYWithRangeCheck(getX(), getY(), iDX, iDY, iAttackRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if(pTargetPlot && pTargetPlot->isCity())
 			{
 				if(isEnemy(pTargetPlot->getTeam()))
@@ -15762,11 +15896,27 @@ bool CvUnit::IsNearEnemyCitadel(int& iCitadelDamage)
 	int iDamage;
 
 	// Look around this Unit to see if there's an adjacent Citadel
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	for (int iDY = -iCitadelRange; iDY <= iCitadelRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iCitadelRange - FASTMAX(0, iDY);
+		for (iDX = -iCitadelRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iCitadelRange - MAX(0, iDY);
+		for (iDX = -iCitadelRange - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
+#else
 	for(int iX = -iCitadelRange; iX <= iCitadelRange; iX++)
 	{
 		for(int iY = -iCitadelRange; iY <= iCitadelRange; iY++)
 		{
 			pLoopPlot = plotXYWithRangeCheck(getX(), getY(), iX, iY, iCitadelRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot != NULL)
 			{
@@ -15808,11 +15958,27 @@ bool CvUnit::IsNearGreatGeneral() const
 	CvUnit* pLoopUnit;
 
 	// Look around this Unit to see if there's a Great General nearby
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	for (int iDY = -iGreatGeneralRange; iDY <= iGreatGeneralRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iGreatGeneralRange - FASTMAX(0, iDY);
+		for (iDX = -iGreatGeneralRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iGreatGeneralRange - MAX(0, iDY);
+		for (iDX = -iGreatGeneralRange - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
+#else
 	for(int iX = -iGreatGeneralRange; iX <= iGreatGeneralRange; iX++)
 	{
 		for(int iY = -iGreatGeneralRange; iY <= iGreatGeneralRange; iY++)
 		{
 			pLoopPlot = plotXYWithRangeCheck(getX(), getY(), iX, iY, iGreatGeneralRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot != NULL)
 			{
@@ -15940,11 +16106,27 @@ int CvUnit::GetReverseGreatGeneralModifier()const
 	CvUnit* pLoopUnit;
 
 	// Look around this Unit to see if there's a Great General nearby
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iX;
+	for (int iY = -iGreatGeneralRange; iY <= iGreatGeneralRange; iY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iGreatGeneralRange - FASTMAX(0, iY);
+		for (iX = -iGreatGeneralRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iGreatGeneralRange - MAX(0, iY);
+		for (iX = -iGreatGeneralRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(getX(), getY(), iX, iY);
+#else
 	for(int iX = -iGreatGeneralRange; iX <= iGreatGeneralRange; iX++)
 	{
 		for(int iY = -iGreatGeneralRange; iY <= iGreatGeneralRange; iY++)
 		{
 			pLoopPlot = plotXYWithRangeCheck(getX(), getY(), iX, iY, iGreatGeneralRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot != NULL)
 			{
@@ -15970,7 +16152,11 @@ int CvUnit::GetReverseGreatGeneralModifier()const
 								{
 									// Within range?
 									int iRange = pLoopUnit->getNearbyEnemyCombatRange();
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+									if (hexDistance(iX, iY) <= iRange)
+#else
 									if(plotDistance(getX(), getY(), pLoopPlot->getX(), pLoopPlot->getY()) <= iRange)
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 									{
 										return iMod;
 									}
@@ -16000,11 +16186,27 @@ int CvUnit::GetNearbyImprovementModifier()const
 		CvPlot* pLoopPlot;
 
 		// Look around this Unit to see if there's an improvement nearby
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		int iMaxDX, iX;
+		for (int iY = -iImprovementRange; iY <= iImprovementRange; iY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iImprovementRange - FASTMAX(0, iY);
+			for (iX = -iImprovementRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iImprovementRange - MAX(0, iY);
+			for (iX = -iImprovementRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+			{
+				// No need for range check because loops are set up properly
+				pLoopPlot = plotXY(getX(), getY(), iX, iY);
+#else
 		for(int iX = -iImprovementRange; iX <= iImprovementRange; iX++)
 		{
 			for(int iY = -iImprovementRange; iY <= iImprovementRange; iY++)
 			{
 				pLoopPlot = plotXYWithRangeCheck(getX(), getY(), iX, iY, iImprovementRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 				if(pLoopPlot != NULL)
 				{
@@ -16179,11 +16381,27 @@ bool CvUnit::IsNearSapper(const CvCity* pTargetCity) const
 	CvUnit* pLoopUnit;
 
 	// Look around this Unit to see if there's a Sapper nearby
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iX;
+	for (int iY = -iSapperRange; iY <= iSapperRange; iY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iSapperRange - FASTMAX(0, iY);
+		for (iX = -iSapperRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iSapperRange - MAX(0, iY);
+		for (iX = -iSapperRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(getX(), getY(), iX, iY);
+#else
 	for(int iX = -iSapperRange; iX <= iSapperRange; iX++)
 	{
 		for(int iY = -iSapperRange; iY <= iSapperRange; iY++)
 		{
 			pLoopPlot = plotXYWithRangeCheck(getX(), getY(), iX, iY, iSapperRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot != NULL)
 			{
@@ -19244,11 +19462,28 @@ bool CvUnit::SentryAlert() const
 	{
 		CvUnit* pEnemyUnit;
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		int iMaxDX, iX;
+		CvPlot* pPlot;
+		for (int iY = -iRange; iY <= iRange; iY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iRange - FASTMAX(0, iY);
+			for (iX = -iRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iRange - MAX(0, iY);
+			for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+			{
+				// No need for range check because loops are set up properly
+				pPlot = plotXY(getX(), getY(), iX, iY);
+#else
 		for(int iX = -iRange; iX <= iRange; ++iX)
 		{
 			for(int iY = -iRange; iY <= iRange; ++iY)
 			{
 				CvPlot* pPlot = ::plotXYWithRangeCheck(getX(), getY(), iX, iY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 				if(NULL != pPlot)
 				{
 					// because canSeePlot() adds one to the range internally

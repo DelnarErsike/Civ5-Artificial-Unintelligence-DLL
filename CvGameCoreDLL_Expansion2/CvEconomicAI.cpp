@@ -965,11 +965,27 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 
 	FAssertMsg(pPlot->isRevealed(eTeam), "Plot isn't revealed. This isn't good.");
 	CvPlot* pEvalPlot = NULL;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iX;
+	for (int iY = -iRange; iY <= iRange; iY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iY);
+		for (iX = -iRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iY);
+		for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pEvalPlot = plotXY(pPlot->getX(), pPlot->getY(), iX, iY);
+#else
 	for(int iX = -iRange; iX <= iRange; iX++)
 	{
 		for(int iY = -iRange; iY <= iRange; iY++)
 		{
 			pEvalPlot = plotXYWithRangeCheck(iPlotX, iPlotY, iX, iY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if(!pEvalPlot)
 			{
 				continue;
@@ -985,9 +1001,16 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 				continue;
 			}
 
+#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+			int iDistance = hexDistance(iX, iY);
+#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 			if(pEvalPlot->isAdjacentRevealed(eTeam))
 			{
+#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+				if (iDistance > 1)
+#else
 				if(plotDistance(iPlotX, iPlotY, pEvalPlot->getX(), pEvalPlot->getY()) > 1)
+#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 				{
 					CvPlot* pAdjacentPlot;
 					bool bViewBlocked = true;
@@ -1066,7 +1089,9 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 				iResultValue += iGoodScore;
 			}
 
+#ifndef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 			int iDistance = plotDistance(iPlotX, iPlotY, pEvalPlot->getX(), pEvalPlot->getY());
+#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 			iResultValue += (iRange - iDistance) * iAdjacencyBonus;
 		}
 	}

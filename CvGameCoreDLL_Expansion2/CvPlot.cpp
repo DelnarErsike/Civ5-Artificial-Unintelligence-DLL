@@ -1092,11 +1092,26 @@ bool CvPlot::isFreshWater() const
 		return true;
 	}
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+	for (iDY = -1; iDY <= 1; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = 1 - FASTMAX(0, iDY);
+		for (iDX = -1 - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = 1 - MAX(0, iDY);
+		for (iDX = -1 - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
+#else
 	for(iDX = -1; iDX <= 1; iDX++)
 	{
 		for(iDY = -1; iDY <= 1; iDY++)
 		{
 			pLoopPlot	= plotXYWithRangeCheck(getX(), getY(), iDX, iDY, 1);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot != NULL)
 			{
@@ -1267,7 +1282,11 @@ CvPlot* CvPlot::getNearestLandPlotInternal(int iDistance) const
 		{
 			// bkw - revisit this, it works but is inefficient
 			CvPlot* pPlot = plotXY(getX(), getY(), iDX, iDY);
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+			if (pPlot != NULL && !pPlot->isWater() && hexDistance(iDX, iDY) == iDistance)
+#else
 			if(pPlot != NULL && !pPlot->isWater() && plotDistance(getX(), getY(), pPlot->getX(), pPlot->getY()) == iDistance)
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 			{
 				return pPlot;
 			}
@@ -1841,17 +1860,36 @@ void CvPlot::updateSeeFromSight(bool bIncrement)
 
 #ifdef AUI_FAST_COMP
 	iRange = FASTMAX(GC.getRECON_VISIBILITY_RANGE() + 1, iRange);
+#ifndef AUI_PLOT_SEE_FROM_SIGHT_NO_MAXIMUM_SIGHT_RANGE
 	iRange = FASTMIN(8, iRange); // I don't care, I'm not looking more than 8 out, deal
+#endif // AUI_PLOT_SEE_FROM_SIGHT_NO_MAXIMUM_SIGHT_RANGE
 #else
 	iRange = std::max(GC.getRECON_VISIBILITY_RANGE() + 1, iRange);
+#ifndef AUI_PLOT_SEE_FROM_SIGHT_NO_MAXIMUM_SIGHT_RANGE
 	iRange = std::min(8, iRange); // I don't care, I'm not looking more than 8 out, deal
+#endif // AUI_PLOT_SEE_FROM_SIGHT_NO_MAXIMUM_SIGHT_RANGE
 #endif // AUI_FAST_COMP
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+	for (iDY = -iRange; iDY <= iRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iDY);
+		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
+#else
 	for(iDX = -iRange; iDX <= iRange; iDX++)
 	{
 		for(iDY = -iRange; iDY <= iRange; iDY++)
 		{
 			pLoopPlot = plotXYWithRangeCheck(getX(), getY(), iDX, iDY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot != NULL)
 			{

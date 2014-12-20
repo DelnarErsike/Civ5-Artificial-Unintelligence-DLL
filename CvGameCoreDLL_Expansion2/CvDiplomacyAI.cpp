@@ -19020,7 +19020,11 @@ void CvDiplomacyAI::SetPlayerNoSettleRequestAccepted(PlayerTypes ePlayer, bool b
 
 						if(pNearbyPlot != NULL)
 						{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+							if (hexDistance(iLoopX, iLoopY) <= iRange)
+#else
 							if(plotDistance(pNearbyPlot->getX(), pNearbyPlot->getY(), pLoopCity->getX(), pLoopCity->getY()) <= iRange)
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 							{
 								pNearbyPlot->SetNoSettling(eID, true);
 							}

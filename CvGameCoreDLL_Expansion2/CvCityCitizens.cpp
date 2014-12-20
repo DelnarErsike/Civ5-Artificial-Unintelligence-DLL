@@ -2015,7 +2015,11 @@ bool CvCityCitizens::IsPlotBlockaded(CvPlot* pPlot) const
 				// Must be water in the same Area
 				if(pNearbyPlot->isWater() && pNearbyPlot->getArea() == pPlot->getArea())
 				{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+					if(hexDistance(iDX, iDY) <= iBlockadeDistance)
+#else
 					if(plotDistance(pNearbyPlot->getX(), pNearbyPlot->getY(), pPlot->getX(), pPlot->getY()) <= iBlockadeDistance)
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 					{
 						// Enemy boat within range to blockade our plot?
 						if(pNearbyPlot->IsActualEnemyUnit(ePlayer))

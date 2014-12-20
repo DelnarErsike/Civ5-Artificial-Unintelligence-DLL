@@ -393,11 +393,18 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 					{
 						CvPlot* pAdjacentPlot;
 						int iCityRange = GC.getCITY_ATTACK_RANGE();
-						for (int iDX = -iCityRange; iDX <= iCityRange && !m_pPlots[iI].IsSubjectToAttack(); iDX++)
+						int iMaxDX, iDX;
+						for (int iDY = -iCityRange; iDY <= iCityRange; iDY++)
 						{
-							for (int iDY = -iCityRange; iDY <= iCityRange && !m_pPlots[iI].IsSubjectToAttack(); iDY++)
+#ifdef AUI_FAST_COMP
+							iMaxDX = iCityRange - FASTMAX(0, iDY);
+							for (iDX = -iCityRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+							iMaxDX = iCityRange - MAX(0, iDY);
+							for (iDX = -iCityRange - MIN(0, iDY); iDX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
 							{
-								pAdjacentPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iCityRange);
+								pAdjacentPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 								if (pAdjacentPlot != NULL && pAdjacentPlot->getOwner() != NO_PLAYER)
 								{
 									if (atWar(m_pPlayer->getTeam(), GET_PLAYER(pAdjacentPlot->getOwner()).getTeam()))
@@ -407,7 +414,7 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 											m_pPlots[iI].SetSubjectToAttack(true);
 										}
 										// Check adjacent plots for enemy citadels
-										if (plotDistance(pPlot->getX(), pPlot->getY(), pAdjacentPlot->getX(), pAdjacentPlot->getY()) <= 1)
+										if (hexDistance(iDX, iDY) <= 1)
 										{
 											ImprovementTypes eImprovement = pAdjacentPlot->getImprovementType();
 											if (eImprovement != NO_IMPROVEMENT && GC.getImprovementInfo(eImprovement)->GetNearbyEnemyDamage() > 0)
@@ -468,17 +475,38 @@ void CvTacticalAnalysisMap::SetTargetBombardCells(CvPlot* pTarget, int iRange, b
 	int iDX, iDY;
 	CvPlot* pLoopPlot;
 	int iPlotIndex;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+	for (iDY = -iRange; iDY <= iRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iDY);
+		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+#else
 	int iPlotDistance;
 
 	for(iDX = -(iRange); iDX <= iRange; iDX++)
 	{
 		for(iDY = -(iRange); iDY <= iRange; iDY++)
+#endif
 		{
 			pLoopPlot = plotXY(pTarget->getX(), pTarget->getY(), iDX, iDY);
 			if(pLoopPlot != NULL)
 			{
+#ifdef AUI_HEXSPACE_DX_LOOPS
+				if (pLoopPlot->getX() != pTarget->getX() || pLoopPlot->getY() != pTarget->getY())
+#else
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+				iPlotDistance = hexDistance(iDX, iDY);
+#else
 				iPlotDistance = plotDistance(pLoopPlot->getX(), pLoopPlot->getY(), pTarget->getX(), pTarget->getY());
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 				if(iPlotDistance > 0 && iPlotDistance <= iRange)
+#endif // AUI_HEXSPACE_DX_LOOPS
 				{
 					iPlotIndex = GC.getMap().plotNum(pLoopPlot->getX(), pLoopPlot->getY());
 					if(m_pPlots[iPlotIndex].IsRevealed() && !m_pPlots[iPlotIndex].IsImpassableTerrain() && !m_pPlots[iPlotIndex].IsImpassableTerritory())

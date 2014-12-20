@@ -9074,6 +9074,9 @@ bool CvTacticalAI::ExecuteSafeBombards(CvTacticalTarget& kTarget)
 	// For each plot that we can bombard from that the enemy can't attack, try and move a ranged unit there.
 	// If so, make that move and mark that tile as blocked with our unit.  If unit has movement left, queue up an attack
 	int iDX, iDY;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+#endif // AUI_HEXSPACE_DX_LOOPS
 	CvPlot* pLoopPlot;
 	int iPlotIndex;
 	CvTacticalAnalysisCell* pCell;
@@ -9082,15 +9085,35 @@ bool CvTacticalAI::ExecuteSafeBombards(CvTacticalTarget& kTarget)
 	{
 		int iRange = m_pMap->GetBestFriendlyRange();
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		for (iDY = -iRange; iDY <= iRange; iDY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iRange - FASTMAX(0, iDY);
+			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iRange - MAX(0, iDY);
+			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+#else
 		for(iDX = -(iRange); iDX <= iRange; iDX++)
 		{
 			for(iDY = -(iRange); iDY <= iRange; iDY++)
+#endif // AUI_HEXSPACE_DX_LOOPS
 			{
 				pLoopPlot = plotXY(kTarget.GetTargetX(), kTarget.GetTargetY(), iDX, iDY);
 				if(pLoopPlot != NULL)
 				{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+					int iDistance = hexDistance(iDX, iDY);
+#else
 					int iDistance = plotDistance(pLoopPlot->getX(), pLoopPlot->getY(), kTarget.GetTargetX(), kTarget.GetTargetY());
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#ifdef AUI_HEXSPACE_DX_LOOPS
+					if (iDistance > 0)
+#else
 					if(iDistance > 0 && iDistance <= iRange)
+#endif // AUI_HEXSPACE_DX_LOOPS
 					{
 						iPlotIndex = GC.getMap().plotNum(pLoopPlot->getX(), pLoopPlot->getY());
 						pCell = m_pMap->GetCell(iPlotIndex);
@@ -9200,6 +9223,9 @@ bool CvTacticalAI::ExecuteOneProtectedBombard(CvTacticalTarget& kTarget)
 {
 	UnitHandle pFirstAttacker;
 	int iDX, iDY;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+#endif // AUI_HEXSPACE_DX_LOOPS
 	CvPlot* pAttackPlot;
 	int iPlotIndex;
 	CvTacticalAnalysisCell* pCell;
@@ -9229,15 +9255,35 @@ bool CvTacticalAI::ExecuteOneProtectedBombard(CvTacticalTarget& kTarget)
 	m_TempTargets.clear();
 
 	// Build a list of all plots that have LOS to target where no enemy unit is adjacent
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	for (iDY = -iRange; iDY <= iRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iDY);
+		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+#else
 	for(iDX = -(iRange); iDX <= iRange; iDX++)
 	{
 		for(iDY = -(iRange); iDY <= iRange; iDY++)
+#endif // AUI_HEXSPACE_DX_LOOPS
 		{
 			pAttackPlot = plotXY(kTarget.GetTargetX(), kTarget.GetTargetY(), iDX, iDY);
 			if(pAttackPlot != NULL)
 			{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+				int iPlotDistance = hexDistance(iDX, iDY);
+#else
 				int iPlotDistance = plotDistance(pAttackPlot->getX(), pAttackPlot->getY(), kTarget.GetTargetX(), kTarget.GetTargetY());
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#ifdef AUI_HEXSPACE_DX_LOOPS
+				if (iPlotDistance > 0)
+#else
 				if(iPlotDistance > 0 && iPlotDistance <= iRange)
+#endif // AUI_HEXSPACE_DX_LOOPS
 				{
 					iPlotIndex = GC.getMap().plotNum(pAttackPlot->getX(), pAttackPlot->getY());
 					pCell = m_pMap->GetCell(iPlotIndex);
@@ -11963,11 +12009,27 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 		// Now looking for BEST score
 		iBestValue = 0;
 		int iMovementRange = pUnit->movesLeft() / GC.getMOVE_DENOMINATOR();
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		int iMaxDX, iX;
+		CvPlot* pConsiderPlot;
+		for (int iY = -iMovementRange; iY <= iMovementRange; iY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iMovementRange - FASTMAX(0, iY);
+			for (iX = -iMovementRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iMovementRange - MAX(0, iY);
+			for (iX = -iMovementRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+			{
+				pConsiderPlot = plotXY(pUnit->getX(), pUnit->getY(), iX, iY);
+#else
 		for(int iX = -iMovementRange; iX <= iMovementRange; iX++)
 		{
 			for(int iY = -iMovementRange; iY <= iMovementRange; iY++)
 			{
 				CvPlot* pConsiderPlot = plotXYWithRangeCheck(pUnit->getX(), pUnit->getY(), iX, iY, iMovementRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 				if(!pConsiderPlot)
 				{
 					continue;
@@ -12014,7 +12076,11 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 				// If still have no value, score equal to distance from my current plot
 				if(iValue == 0)
 				{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+					iValue = hexDistance(iX, iY);
+#else
 					iValue = plotDistance(pUnit->getX(), pUnit->getY(), pConsiderPlot->getX(), pConsiderPlot->getY());
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 				}
 
 				if(iValue > iBestValue)
@@ -12039,11 +12105,27 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 	// Now looking for BEST score
 	iBestValue = 0;
 	int iMovementRange = pUnit->movesLeft() / GC.getMOVE_DENOMINATOR();
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iX;
+	CvPlot* pPlot;
+	for (int iY = -iMovementRange; iY <= iMovementRange; iY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iMovementRange - FASTMAX(0, iY);
+		for (iX = -iMovementRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iMovementRange - MAX(0, iY);
+		for (iX = -iMovementRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			pPlot = plotXY(pUnit->getX(), pUnit->getY(), iX, iY);
+#else
 	for(int iX = -iMovementRange; iX <= iMovementRange; iX++)
 	{
 		for(int iY = -iMovementRange; iY <= iMovementRange; iY++)
 		{
 			CvPlot* pPlot = plotXYWithRangeCheck(pUnit->getX(), pUnit->getY(), iX, iY, iMovementRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if(!pPlot)
 			{
 				continue;
@@ -12090,7 +12172,11 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 			// If still have no value, score equal to distance from my current plot
 			if(iValue == 0)
 			{
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+				iValue = hexDistance(iX, iY);
+#else
 				iValue = plotDistance(pUnit->getX(), pUnit->getY(), pPlot->getX(), pPlot->getY());
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 			}
 
 			if(iValue > iBestValue)
@@ -12113,11 +12199,27 @@ CvPlot* CvTacticalAI::FindBarbarianGankTradeRouteTarget(UnitHandle pUnit)
 	// Now looking for BEST score
 	iBestValue = 0;
 	int iMovementRange = pUnit->movesLeft() / GC.getMOVE_DENOMINATOR();
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iX;
+	CvPlot* pPlot;
+	for (int iY = -iMovementRange; iY <= iMovementRange; iY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iMovementRange - FASTMAX(0, iY);
+		for (iX = -iMovementRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iMovementRange - MAX(0, iY);
+		for (iX = -iMovementRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			pPlot = plotXY(pUnit->getX(), pUnit->getY(), iX, iY);
+#else
 	for (int iX = -iMovementRange; iX <= iMovementRange; iX++)
 	{
 		for (int iY = -iMovementRange; iY <= iMovementRange; iY++)
 		{
 			CvPlot* pPlot = plotXYWithRangeCheck(pUnit->getX(), pUnit->getY(), iX, iY, iMovementRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if (!pPlot)
 			{
 				continue;
@@ -12749,12 +12851,28 @@ void CvTacticalAI::MoveGreatGeneral(CvArmyAI* pArmyAI)
 			iRange = MAX(iRange, pGeneral->getDropRange());
 #endif // AUI_FAST_COMP
 #endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#ifdef AUI_HEXSPACE_DX_LOOPS
+			int iMaxDX, iX;
+			CvPlot* pEvalPlot;
+			for (int iY = -iRange; iY <= iRange; iY++)
+			{
+#ifdef AUI_FAST_COMP
+				iMaxDX = iRange - FASTMAX(0, iY);
+				for (iX = -iRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+				iMaxDX = iRange - MAX(0, iY);
+				for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+				{
+					pEvalPlot = plotXY(pGeneral->getX(), pGeneral->getY(), iX, iY);
+#else
 			for(int iX = -iRange; iX <= iRange; iX++)
 			{
 				for(int iY = -iRange; iY <= iRange; iY++)
 				{
 					CvPlot* pEvalPlot = NULL;
 					pEvalPlot = plotXYWithRangeCheck(pGeneral->getX(), pGeneral->getY(), iX, iY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 #ifdef AUI_TACTICAL_MOVE_GREAT_GENERAL_ONLY_REQUIRE_POSITIVE_DELTA
 					if (!pEvalPlot || pEvalPlot == pGeneral->plot())
 #else

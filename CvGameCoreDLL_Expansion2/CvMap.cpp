@@ -651,11 +651,28 @@ void CvMap::updateWorkingCity(CvPlot* pPlot, int iRange)
 {
 	if(pPlot && iRange > 0)
 	{
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		int iMaxDX, iDX;
+		CvPlot* pLoopPlot;
+		for (int iDY = -iRange; iDY <= iRange; iDY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iRange - FASTMAX(0, iDY);
+			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iRange - MAX(0, iDY);
+			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+			{
+				// No need for range check because loops are set up properly
+				pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
+#else
 		for(int iX = -iRange; iX <= iRange; iX++)
 		{
 			for(int iY = -iRange; iY <= iRange; iY++)
 			{
 				CvPlot* pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iX, iY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 				if(pLoopPlot)
 				{
 					pLoopPlot->updateWorkingCity();
@@ -718,6 +735,9 @@ CvPlot* CvMap::syncRandPlot(int iFlags, int iArea, int iMinUnitDistance, int iTi
 	bool bValid;
 	int iCount;
 	int iDX, iDY;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 	pPlot = NULL;
 
@@ -740,11 +760,26 @@ CvPlot* CvMap::syncRandPlot(int iFlags, int iArea, int iMinUnitDistance, int iTi
 			{
 				if(iMinUnitDistance != -1)
 				{
+#ifdef AUI_HEXSPACE_DX_LOOPS
+					for (iDY = -iMinUnitDistance; iDY <= iMinUnitDistance; iDY++)
+					{
+#ifdef AUI_FAST_COMP
+						iMaxDX = iMinUnitDistance - FASTMAX(0, iDY);
+						for (iDX = -iMinUnitDistance - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+						iMaxDX = iMinUnitDistance - MAX(0, iDY);
+						for (iDX = -iMinUnitDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+						{
+							// No need for range check because loops are set up properly
+							pLoopPlot = plotXY(pTestPlot->getX(), pTestPlot->getY(), iDX, iDY);
+#else
 					for(iDX = -(iMinUnitDistance); iDX <= iMinUnitDistance; iDX++)
 					{
 						for(iDY = -(iMinUnitDistance); iDY <= iMinUnitDistance; iDY++)
 						{
 							pLoopPlot	= plotXYWithRangeCheck(pTestPlot->getX(), pTestPlot->getY(), iDX, iDY, iMinUnitDistance);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 							if(pLoopPlot != NULL)
 							{
@@ -1044,11 +1079,27 @@ bool CvMap::findWater(CvPlot* pPlot, int iRange, bool bFreshWater)
 	int iPlotX = pPlot->getX();
 	int iPlotY = pPlot->getY();
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+	for (iDY = -iRange; iDY <= iRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iRange - FASTMAX(0, iDY);
+		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iRange - MAX(0, iDY);
+		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pLoopPlot = plotXY(iPlotX, iPlotY, iDX, iDY);
+#else
 	for(iDX = -(iRange); iDX <= iRange; iDX++)
 	{
 		for(iDY = -(iRange); iDY <= iRange; iDY++)
 		{
 			pLoopPlot = plotXYWithRangeCheck(iPlotX, iPlotY, iDX, iDY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 			if(pLoopPlot != NULL)
 			{
@@ -1642,6 +1693,9 @@ void CvMap::DoPlaceNaturalWonders()
 
 	int iPlotLoopX;
 	int iPlotLoopY;
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX;
+#endif // AUI_HEXSPACE_DX_LOOPS
 	CvPlot* pLoopPlot;
 
 	int iNumMapPlots = numPlots();
@@ -1736,11 +1790,26 @@ void CvMap::DoPlaceNaturalWonders()
 		{
 			bValid = false;
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+			for (iPlotLoopY = -iCoastDistance; iPlotLoopY <= iCoastDistance; iPlotLoopY++)
+			{
+#ifdef AUI_FAST_COMP
+				iMaxDX = iCoastDistance - FASTMAX(0, iPlotLoopY);
+				for (iPlotLoopX = -iCoastDistance - FASTMIN(0, iPlotLoopY); iPlotLoopX <= iMaxDX; iPlotLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+				iMaxDX = iCoastDistance - MAX(0, iPlotLoopY);
+				for (iPlotLoopX = -iCoastDistance - MIN(0, iPlotLoopY); iPlotLoopX <= iMaxDX; iPlotLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+				{
+					// No need for range check because loops are set up properly
+					pLoopPlot = plotXY(pRandPlot->getX(), pRandPlot->getY(), iPlotLoopX, iPlotLoopY);
+#else
 			for(iPlotLoopX = -iCoastDistance; iPlotLoopX <= iCoastDistance; iPlotLoopX++)
 			{
 				for(iPlotLoopY = -iCoastDistance; iPlotLoopY <= iCoastDistance; iPlotLoopY++)
 				{
 					pLoopPlot = plotXYWithRangeCheck(pRandPlot->getX(), pRandPlot->getY(), iPlotLoopX, iPlotLoopY, iCoastDistance);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 					if(pLoopPlot != NULL)
 					{
@@ -1772,11 +1841,26 @@ void CvMap::DoPlaceNaturalWonders()
 		bValid = true;
 
 		// Can't be too close to another Natural Wonder
+#ifdef AUI_HEXSPACE_DX_LOOPS
+		for (iPlotLoopY = -iAnotherNWDistance; iPlotLoopY <= iAnotherNWDistance; iPlotLoopY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iAnotherNWDistance - FASTMAX(0, iPlotLoopY);
+			for (iPlotLoopX = -iAnotherNWDistance - FASTMIN(0, iPlotLoopY); iPlotLoopX <= iMaxDX; iPlotLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iAnotherNWDistance - MAX(0, iPlotLoopY);
+			for (iPlotLoopX = -iAnotherNWDistance - MIN(0, iPlotLoopY); iPlotLoopX <= iMaxDX; iPlotLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+			{
+				// No need for range check because loops are set up properly
+				pLoopPlot = plotXY(pRandPlot->getX(), pRandPlot->getY(), iPlotLoopX, iPlotLoopY);
+#else
 		for(iPlotLoopX = -iAnotherNWDistance; iPlotLoopX <= iAnotherNWDistance; iPlotLoopX++)
 		{
 			for(iPlotLoopY = -iAnotherNWDistance; iPlotLoopY <= iAnotherNWDistance; iPlotLoopY++)
 			{
 				pLoopPlot = plotXYWithRangeCheck(pRandPlot->getX(), pRandPlot->getY(), iPlotLoopX, iPlotLoopY, iAnotherNWDistance);
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 				if(pLoopPlot != NULL)
 				{

@@ -138,11 +138,27 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 			AssignUnitDangerValue(pLoopUnit, pUnitPlot);
 			CvPlot* pLoopPlot = NULL;
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+			int iMaxDX, iDX;
+			for (int iDY = -iRange; iDY <= iRange; iDY++)
+			{
+#ifdef AUI_FAST_COMP
+				iMaxDX = iRange - FASTMAX(0, iDY);
+				for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+				iMaxDX = iRange - MAX(0, iDY);
+				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+				{
+					// No need for range check because loops are set up properly
+					pLoopPlot = plotXY(pUnitPlot->getX(), pUnitPlot->getY(), iDX, iDY);
+#else
 			for(int iDX = -(iRange); iDX <= iRange; iDX++)
 			{
 				for(int iDY = -(iRange); iDY <= iRange; iDY++)
 				{
 					pLoopPlot = plotXYWithRangeCheck(pUnitPlot->getX(), pUnitPlot->getY(), iDX, iDY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 					if(!pLoopPlot || pLoopPlot == pUnitPlot)
 					{
 						continue;
@@ -176,11 +192,27 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 			AssignCityDangerValue(pLoopCity, pCityPlot);
 			CvPlot* pLoopPlot = NULL;
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+			int iMaxDX, iDX;
+			for (int iDY = -iRange; iDY <= iRange; iDY++)
+			{
+#ifdef AUI_FAST_COMP
+				iMaxDX = iRange - FASTMAX(0, iDY);
+				for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+				iMaxDX = iRange - MAX(0, iDY);
+				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+				{
+					// No need for range check because loops are set up properly
+					pLoopPlot = plotXY(pCityPlot->getX(), pCityPlot->getY(), iDX, iDY);
+#else
 			for(int iDX = -(iRange); iDX <= iRange; iDX++)
 			{
 				for(int iDY = -(iRange); iDY <= iRange; iDY++)
 				{
 					pLoopPlot = plotXYWithRangeCheck(pCityPlot->getX(), pCityPlot->getY(), iDX, iDY, iRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 					if(!pLoopPlot)
 					{
 						continue;
@@ -278,11 +310,28 @@ int CvDangerPlots::GetCityDanger(CvCity* pCity)
 
 	int iDangerValue = 0;
 
+#ifdef AUI_HEXSPACE_DX_LOOPS
+	int iMaxDX, iDX;
+	CvPlot* pEvalPlot;
+	for (int iDY = -iEvalRange; iDY <= iEvalRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = iEvalRange - FASTMAX(0, iDY);
+		for (iDX = -iEvalRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = iEvalRange - MAX(0, iDY);
+		for (iDX = -iEvalRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			// No need for range check because loops are set up properly
+			pEvalPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
+#else
 	for(int iX = -iEvalRange; iX <= iEvalRange; iX++)
 	{
 		for(int iY = -iEvalRange; iY <= iEvalRange; iY++)
 		{
 			CvPlot* pEvalPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iX, iY, iEvalRange);
+#endif // AUI_HEXSPACE_DX_LOOPS
 			if(!pEvalPlot)
 			{
 				continue;
