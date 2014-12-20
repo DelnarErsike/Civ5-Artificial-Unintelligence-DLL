@@ -98,6 +98,7 @@ public:
 
 #ifdef AUI_PLOT_COUNT_OCCURANCES_IN_LIST
 	int getNumTimesInList(std::vector<CvPlot*> aPlotList, bool bTerminateAfterFirst = false) const;
+	int getNumTimesInList(FFastVector<CvPlot*> aPlotList, bool bTerminateAfterFirst = false) const;
 #endif // AUI_PLOT_COUNT_OCCURANCES_IN_LIST
 
 	void doTurn();

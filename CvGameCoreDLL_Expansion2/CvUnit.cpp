@@ -18706,7 +18706,7 @@ bool CvUnit::canMoveAndRangedStrike(int iX, int iY)
 	int initTime, endTime;
 	initTime = timeGetTime();
 
-	std::vector<CvPlot*> movePlotTest;
+	FFastVector<CvPlot*, false, 2> movePlotTest;
 	CvPlot* plotTarget = GC.getMap().plotCheckInvalid(iX, iY);
 	if (plotTarget)
 	{
@@ -18728,7 +18728,7 @@ bool CvUnit::canMoveAndRangedStrike(int iX, int iY)
 }
 
 //AMS: Optimized function to evaluate free plots for move and fire.
-void CvUnit::GetMovablePlotListOpt(vector<CvPlot*>& plotData, CvPlot* pTarget, bool bExitOnFound, int iWithinTurns, CvPlot* pFromPlot) const
+void CvUnit::GetMovablePlotListOpt(FFastVector<CvPlot*>& plotData, CvPlot* pTarget, bool bExitOnFound, int iWithinTurns, CvPlot* pFromPlot) const
 {
 	VALIDATE_OBJECT
 	CvAStarNode* pNode;

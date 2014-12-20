@@ -406,6 +406,21 @@ public:
 		m_uiCurrSize = uNewSize;
 	}
 
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+	// remove the element pointed to by 'it' and shrink the list
+	void erase(iterator it)
+	{
+		unsigned int uIndex = it - m_pData;
+
+		for (unsigned int i = uIndex; i + 1< m_uiCurrSize; ++i)
+		{
+			m_pData[i] = m_pData[i + 1];
+		}
+
+		--m_uiCurrSize;
+	}
+#endif // AUI_FIX_FFASTVECTOR_ERASE
+
 	//Add uiNum copies of element to the end of the vector.
 	void push_back_copy( const T& element, unsigned int uiNum  )
 	{

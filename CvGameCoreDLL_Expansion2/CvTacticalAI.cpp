@@ -3298,7 +3298,7 @@ void CvTacticalAI::PlotAirInterceptMoves()
 	m_CurrentMoveUnits.clear();
 	CvTacticalUnit unit;
 #ifdef AUI_TACTICAL_TWEAKED_AIR_INTERCEPT
-	std::vector<CvPlot*> checkedPlotList;
+	FFastVector<CvPlot*, false, 64> checkedPlotList;
 #else
 	CvTacticalDominanceZone *pZone;
 #endif
@@ -6620,7 +6620,11 @@ void CvTacticalAI::ExecuteAttack(CvTacticalTarget* pTarget, CvPlot* pTargetPlot,
 	}
 
 	// Make a list of adjacent plots
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+	FFastVector<CvPlot *, NUM_DIRECTION_TYPES> plotList;
+#else
 	std::vector<CvPlot *> plotList;
+#endif // AUI_FIX_FFASTVECTOR_ERASE
 	for (int iDirectionLoop = 0; iDirectionLoop < NUM_DIRECTION_TYPES; ++iDirectionLoop)
 	{
 		CvPlot* pAdjacentPlot = plotDirection(pTargetPlot->getX(), pTargetPlot->getY(), ((DirectionTypes)iDirectionLoop));
@@ -6693,7 +6697,11 @@ void CvTacticalAI::ExecuteAttack(CvTacticalTarget* pTarget, CvPlot* pTargetPlot,
 						if (plotDistance(pUnit->getX(), pUnit->getY(), pTargetPlot->getX(), pTargetPlot->getY()) > 1)
 						{
 							// Find spaces adjacent to target we can move into with MP left
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+							FFastVector<CvPlot*>::iterator it;
+#else
 							std::vector<CvPlot*>::iterator it;
+#endif // AUI_FIX_FFASTVECTOR_ERASE
 
 							for (it = plotList.begin(); it != plotList.end(); it++)
 							{
@@ -7053,7 +7061,11 @@ void CvTacticalAI::ExecuteAttack(CvTacticalTarget* pTarget, CvPlot* pTargetPlot,
 				if (plotDistance(pUnit->getX(), pUnit->getY(), pTargetPlot->getX(), pTargetPlot->getY()) > 1)
 				{
 					// Find spaces adjacent to target we can move into with MP left
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+					FFastVector<CvPlot*>::iterator it;
+#else
 					std::vector<CvPlot*>::iterator it;
+#endif // AUI_FIX_FFASTVECTOR_ERASE
 
 					// In case an attacker died, let's see if we can move up now
 					for (it = plotList.begin(); it != plotList.end(); it++)
@@ -10205,7 +10217,7 @@ void CvTacticalAI::ExecuteEscortEmbarkedMoves()
 CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget, int iWithinTurns)
 {
 	CvPlot* pBestRepositionPlot = NULL;
-	std::vector<CvPlot*> movePlotList;
+	FFastVector<CvPlot*, false, 16> movePlotList;
 	int initTime, endTime;
 	initTime = timeGetTime();
 	pUnit->GetMovablePlotListOpt(movePlotList, plotTarget, false, iWithinTurns);
@@ -10225,7 +10237,7 @@ CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget
 		int iMinDanger = MAX_INT;
 		int iMaxDefense = 0;
 		int iCurrentDanger, iCurrentDefense;
-		for (std::vector<CvPlot*>::iterator it = movePlotList.begin(); it != movePlotList.end(); it++)
+		for (FFastVector<CvPlot*>::iterator it = movePlotList.begin(); it != movePlotList.end(); it++)
 		{
 			iCurrentDanger = m_pPlayer->GetPlotDanger(*(*it));
 			if (iCurrentDanger <= iMinDanger)

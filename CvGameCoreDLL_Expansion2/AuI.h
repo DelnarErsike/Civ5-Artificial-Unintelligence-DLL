@@ -23,6 +23,8 @@
 #define AUI_PERF_LOGGING_ENABLED
 /// Fast comparison functions (to be used for built-in types like int, float, double, etc.)
 #define AUI_FAST_COMP
+/// Increases stopwatch (performance counter) precision by using long double types instead of double
+#define AUI_STOPWATCH_LONG_DOUBLE_PRECISION
 /// Can cache doubles from XML (DatabaseUtility actually supports double-type, don't know why Firaxis didn't bother putting this in for good measure)
 #define AUI_CACHE_DOUBLE
 /// Enables the Binomial Random Number Generator
@@ -55,6 +57,8 @@
 #define AUI_PLOT_XY_WITH_RANGE_CHECK_REFERENCE_DISTANCE
 /// Optimizations and fixes to reduce distance check overhead
 #define AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+/// Implements the missing erase(iterator) function for FFastVector
+#define AUI_FIX_FFASTVECTOR_ERASE
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code

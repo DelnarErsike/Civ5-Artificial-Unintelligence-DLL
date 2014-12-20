@@ -9433,10 +9433,29 @@ void CvPlot::setScriptData(const char* szNewValue)
 }
 
 #ifdef AUI_PLOT_COUNT_OCCURANCES_IN_LIST
+// How many times does a vector contain this plot?
 int CvPlot::getNumTimesInList(std::vector<CvPlot*> aPlotList, bool bTerminateAfterFirst) const
 {
 	int rtnValue = 0;
 	std::vector<CvPlot*>::iterator it;
+
+	for (it = aPlotList.begin(); it != aPlotList.end(); it++)
+	{
+		if (((*it)->getX() == getX()) && ((*it)->getY() == getY()))
+		{
+			rtnValue++;
+			if (bTerminateAfterFirst)
+				return rtnValue;
+		}
+	}
+
+	return rtnValue;
+}
+// How many times does a vector contain this plot?
+int CvPlot::getNumTimesInList(FFastVector<CvPlot*> aPlotList, bool bTerminateAfterFirst) const
+{
+	int rtnValue = 0;
+	FFastVector<CvPlot*>::iterator it;
 
 	for (it = aPlotList.begin(); it != aPlotList.end(); it++)
 	{
