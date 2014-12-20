@@ -37,7 +37,11 @@ private:
 
 	const char* m_szName;
 	const char* m_szLogFile;
+#ifdef AUI_STOPWATCH_LONG_DOUBLE_PRECISION
+	long double m_dtseconds;
+#else
 	double m_dtseconds;
+#endif // AUI_STOPWATCH_LONG_DOUBLE_PRECISION
 	uint m_logFlags;
 	int m_nesting;
 	bool m_bStarted;
