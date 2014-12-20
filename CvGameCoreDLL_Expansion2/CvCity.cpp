@@ -1459,7 +1459,11 @@ CvPlayer* CvCity::GetPlayer()
 //	--------------------------------------------------------------------------------
 void CvCity::doTurn()
 {
+#ifdef AUI_PERF_LOGGING_FORMATTING_TWEAKS
+	AI_PERF_FORMAT("City-AI-perf.csv", ("CvCity::doTurn, Turn %03d, %s, %s", GC.getGame().getElapsedGameTurns(), GetPlayer()->getCivilizationShortDescription(), getName().c_str()));
+#else
 	AI_PERF_FORMAT("City-AI-perf.csv", ("CvCity::doTurn, Turn %03d, %s, %s,", GC.getGame().getElapsedGameTurns(), GetPlayer()->getCivilizationShortDescription(), getName().c_str()) );
+#endif // AUI_PERF_LOGGING_FORMATTING_TWEAKS
 
 	VALIDATE_OBJECT
 	CvPlot* pLoopPlot;
