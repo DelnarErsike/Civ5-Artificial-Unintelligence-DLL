@@ -88,8 +88,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 
 // AI Operations Stuff
-/// Always moves out with a settler if it cannot instantly find an escort
-#define AUI_OPERATION_FOUND_CITY_ALWAYS_NO_ESCORT
+/// If a settler tries and fails the no escort check, keep rerolling each turn
+#define AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
 /// Tweaks the boldness check for whether a settler should proceed without escort
 #define AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS (8)
 /// Adds a random value to the boldness check so it doesn't always succeed or fail

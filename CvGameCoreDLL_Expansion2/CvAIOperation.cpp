@@ -498,6 +498,9 @@ bool CvAIOperation::CheckOnTarget()
 {
 	int iUnitID;
 	CvUnit* pCivilian;
+#ifdef AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
+	pCivilian = NULL;
+#endif // AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
 	CvPlot* pCivilianPlot = NULL;
 	CvPlot* pEscortPlot;
 
@@ -541,6 +544,42 @@ bool CvAIOperation::CheckOnTarget()
 						}
 					}
 				}
+#ifdef AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
+				else if (pCivilian && m_eCurrentState == AI_OPERATION_STATE_RECRUITING_UNITS)
+				{
+					// try to get the escort from existing units that are waiting around
+					GrabUnitsFromTheReserves(pCivilianPlot, GC.getMap().plot(m_iTargetX, m_iTargetY));
+					if (pThisArmy->GetNumSlotsFilled() > 1)
+					{
+						pThisArmy->SetArmyAIState(ARMYAISTATE_WAITING_FOR_UNITS_TO_CATCH_UP);
+						m_eCurrentState = AI_OPERATION_STATE_GATHERING_FORCES;
+					}
+					else
+					{
+						// Make sure a city isn't building a unit for this operation already
+						if (m_viListOfUnitsCitiesHaveCommittedToBuild.size() == 0)
+						{
+#ifdef AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS
+							if (m_eOwner == -1 || (GET_PLAYER(m_eOwner).getNumCities() > 1 && GET_PLAYER(m_eOwner).GetDiplomacyAI()->GetBoldness()
+#ifdef AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE
+#ifdef AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_BINOMIAL
+								+ GC.getGame().getJonRandNumBinom(AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE, "Brave Settler Roll")
+#else
+								+ GC.getGame().getJonRandNum(AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE, "Brave Settler Roll")
+#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_BINOMIAL
+#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE
+	> AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS)) // unless we'd rather play it safe
+#else
+							if (eOwner == -1 || GET_PLAYER(eOwner).getNumCities() > 1 || GET_PLAYER(eOwner).GetDiplomacyAI()->GetBoldness() > 5) // unless we'd rather play it safe
+#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS
+							{
+								ArmyInPosition(pThisArmy);
+								return true;
+							}
+						}
+					}
+				}
+#endif // AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
 			}
 			else
 			{
@@ -3329,7 +3368,6 @@ void CvAIOperationFoundCity::Init(int iID, PlayerTypes eOwner, PlayerTypes /*eEn
 				{
 					// There was no escort immediately available.  Let's look for a "safe" city site instead
 
-#ifndef AUI_OPERATION_FOUND_CITY_ALWAYS_NO_ESCORT
 #ifdef AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS
 					if (eOwner == -1 || (GET_PLAYER(eOwner).getNumCities() > 1 && GET_PLAYER(eOwner).GetDiplomacyAI()->GetBoldness() 
 #ifdef AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE
@@ -3343,7 +3381,6 @@ void CvAIOperationFoundCity::Init(int iID, PlayerTypes eOwner, PlayerTypes /*eEn
 #else
 					if (eOwner == -1 || GET_PLAYER(eOwner).getNumCities() > 1 || GET_PLAYER(eOwner).GetDiplomacyAI()->GetBoldness() > 5) // unless we'd rather play it safe
 #endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS
-#endif // AUI_OPERATION_FOUND_CITY_ALWAYS_NO_ESCORT
 					{
 						pNewTarget = FindBestTarget(pOurCivilian, true);
 					}
@@ -3400,15 +3437,18 @@ bool CvAIOperationFoundCity::ArmyInPosition(CvArmyAI* pArmy)
 	bool bStateChanged = false;
 	CvUnit* pSettler = 0, *pEscort = 0;
 	CvString strMsg;
+#ifdef AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
+	CvPlot* pNewTarget;
+#endif // AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
 
-	switch(m_eCurrentState)
+	switch (m_eCurrentState)
 	{
 		// If we were gathering forces, we have to insist that any escort is in the same plot as the settler.
 		// If not we'll fall through and just stay in this state.
 	case AI_OPERATION_STATE_GATHERING_FORCES:
 
 		// No escort, can just let base class handle it
-		if(!m_bEscorted)
+		if (!m_bEscorted)
 		{
 			return CvAIOperation::ArmyInPosition(pArmy);
 		}
@@ -3417,12 +3457,12 @@ bool CvAIOperationFoundCity::ArmyInPosition(CvArmyAI* pArmy)
 		else
 		{
 			iUnitID = pArmy->GetFirstUnitID();
-			if(iUnitID != -1)
+			if (iUnitID != -1)
 			{
 				pSettler = GET_PLAYER(m_eOwner).getUnit(iUnitID);
 			}
 			iUnitID = pArmy->GetNextUnitID();
-			if(iUnitID != -1)
+			if (iUnitID != -1)
 			{
 				pEscort = GET_PLAYER(m_eOwner).getUnit(iUnitID);
 			}
@@ -3433,13 +3473,13 @@ bool CvAIOperationFoundCity::ArmyInPosition(CvArmyAI* pArmy)
 				m_eAbortReason = AI_ABORT_ESCORT_DIED;
 				return true;
 			}
-			if(pSettler != NULL && pEscort != NULL && pSettler->plot() == pEscort->plot())
+			if (pSettler != NULL && pEscort != NULL && pSettler->plot() == pEscort->plot())
 			{
 				// let's see if the target still makes sense (this is modified from RetargetCivilian)
 				CvPlot* pBetterTarget = FindBestTarget(pSettler, true);
 
 				// No targets at all!  Abort
-				if(pBetterTarget == NULL)
+				if (pBetterTarget == NULL)
 				{
 					m_eCurrentState = AI_OPERATION_STATE_ABORTED;
 					m_eAbortReason = AI_ABORT_NO_TARGET;
@@ -3464,16 +3504,16 @@ bool CvAIOperationFoundCity::ArmyInPosition(CvArmyAI* pArmy)
 
 		// Now get the settler
 		iUnitID = pArmy->GetFirstUnitID();
-		if(iUnitID != -1)
+		if (iUnitID != -1)
 		{
 			pSettler = GET_PLAYER(m_eOwner).getUnit(iUnitID);
 		}
 
-		if(pSettler != NULL)
+		if (pSettler != NULL)
 		{
-			if((GetTargetPlot()->getOwner() != NO_PLAYER && GetTargetPlot()->getOwner() != m_eOwner) || GetTargetPlot()->IsAdjacentOwnedByOtherTeam(pSettler->getTeam()))
+			if ((GetTargetPlot()->getOwner() != NO_PLAYER && GetTargetPlot()->getOwner() != m_eOwner) || GetTargetPlot()->IsAdjacentOwnedByOtherTeam(pSettler->getTeam()))
 			{
-				if(GC.getLogging() && GC.getAILogging())
+				if (GC.getLogging() && GC.getAILogging())
 				{
 					strMsg.Format("Now at target but can no longer settle here. Target was (X=%d Y=%d)", GetTargetPlot()->getX(), GetTargetPlot()->getY());
 					LogOperationSpecialMessage(strMsg);
@@ -3481,21 +3521,21 @@ bool CvAIOperationFoundCity::ArmyInPosition(CvArmyAI* pArmy)
 				RetargetCivilian(pSettler, pArmy);
 				pSettler->finishMoves();
 				iUnitID = pArmy->GetNextUnitID();
-				if(iUnitID != -1)
+				if (iUnitID != -1)
 				{
 					pEscort = GET_PLAYER(m_eOwner).getUnit(iUnitID);
 					pEscort->finishMoves();
 				}
 			}
 			// If the settler made it, we don't care about the entire army
-			else if(pSettler->plot() == GetTargetPlot() && pSettler->canMove() && pSettler->canFound(pSettler->plot()))
+			else if (pSettler->plot() == GetTargetPlot() && pSettler->canMove() && pSettler->canFound(pSettler->plot()))
 			{
 				CvPlot* pCityPlot = pSettler->plot();
 				int iPlotValue = GC.getGame().GetSettlerSiteEvaluator()->PlotFoundValue(pCityPlot, &GET_PLAYER(m_eOwner), NO_YIELD, false);
 
 				pSettler->PushMission(CvTypes::getMISSION_FOUND());
 
-				if(GC.getLogging() && GC.getAILogging())
+				if (GC.getLogging() && GC.getAILogging())
 				{
 					CvArea* pArea = pCityPlot->area();
 					CvCity* pCity = pCityPlot->getPlotCity();
@@ -3511,9 +3551,9 @@ bool CvAIOperationFoundCity::ArmyInPosition(CvArmyAI* pArmy)
 
 			// If we're at our target but can no longer found a city, might be someone else beat us to this area
 			// So move back out, picking a new target
-			else if(pSettler->plot() == GetTargetPlot() && !pSettler->canFound(pSettler->plot()))
+			else if (pSettler->plot() == GetTargetPlot() && !pSettler->canFound(pSettler->plot()))
 			{
-				if(GC.getLogging() && GC.getAILogging())
+				if (GC.getLogging() && GC.getAILogging())
 				{
 					strMsg.Format("At target but can no longer settle here. Target was (X=%d Y=%d)", GetTargetPlot()->getX(), GetTargetPlot()->getY());
 					LogOperationSpecialMessage(strMsg);
@@ -3521,7 +3561,7 @@ bool CvAIOperationFoundCity::ArmyInPosition(CvArmyAI* pArmy)
 				RetargetCivilian(pSettler, pArmy);
 				pSettler->finishMoves();
 				iUnitID = pArmy->GetNextUnitID();
-				if(iUnitID != -1)
+				if (iUnitID != -1)
 				{
 					pEscort = GET_PLAYER(m_eOwner).getUnit(iUnitID);
 					pEscort->finishMoves();
@@ -3530,9 +3570,33 @@ bool CvAIOperationFoundCity::ArmyInPosition(CvArmyAI* pArmy)
 		}
 		break;
 
+#ifdef AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
+		// We've succeeded in a boldness reroll
+	case AI_OPERATION_STATE_RECRUITING_UNITS:
+		pNewTarget = FindBestTarget(pSettler, true);
+		if (pNewTarget)
+		{
+			m_bEscorted = false;
+
+			// Clear the list of units we need
+			m_viListOfUnitsWeStillNeedToBuild.clear();
+
+			// Change the muster point
+			pArmy->SetGoalPlot(pNewTarget);
+			SetMusterPlot(pSettler->plot());
+			pArmy->SetXY(GetMusterPlot()->getX(), GetMusterPlot()->getY());
+
+			// Send the settler directly to the target
+			pArmy->SetArmyAIState(ARMYAISTATE_MOVING_TO_DESTINATION);
+			m_eCurrentState = AI_OPERATION_STATE_MOVING_TO_TARGET;
+		}
+#endif // AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
+
 		// In all other cases use base class version
 	case AI_OPERATION_STATE_ABORTED:
+#ifndef AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
 	case AI_OPERATION_STATE_RECRUITING_UNITS:
+#endif // AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
 		return CvAIOperation::ArmyInPosition(pArmy);
 		break;
 	};
