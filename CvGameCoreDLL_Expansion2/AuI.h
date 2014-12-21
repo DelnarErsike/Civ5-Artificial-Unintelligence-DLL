@@ -176,6 +176,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_HAPPINESS (8)
 /// Extra food value assigned to specialists for half food consumption now depends on the XML value for citizen food consumption (instead of assuming the default value)
 #define AUI_CITIZENS_FIX_SPECIALIST_VALUE_HALF_FOOD_CONSUMPTION
+/// Replaces the rudimentary specialist-plot check with a plot vs. default citizen value check
+#define AUI_CITIZENS_IS_PLOT_BETTER_THAN_DEFAULT_SPECIALIST
 
 // City Strategy Stuff
 /// Scales the GetLastTurnWorkerDisbanded() computation to game speed
@@ -192,6 +194,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
 
 // Culture Classes Stuff
+/// AI only wants propaganda diplomats with players of different ideologies (since that's the only time they get the tourism bonus)
+#define AUI_PLAYERCULTURE_FIX_WANTS_DIPLOMAT_DOING_PROPAGANDA_ONLY_NON_SAME_IDEOLOGY
 /// No longer returns false if any one player's influence level is Unknown (it will now simply skip that player instead)
 #define AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
 /// Influence turns are used instead of influence levels (ie. the player will propaganda the two AI's who will take the longest to get to influential)
