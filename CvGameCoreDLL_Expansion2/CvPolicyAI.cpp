@@ -145,8 +145,7 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 	}
 #endif // AUI_MINOR_CIV_RATIO
 #ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
-	// Spaceship instead of Science to make sure Patronage isn't grabbed all the time (proper science flavor for ideological tenents addressed later)
-	if (eFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_SPACESHIP"))
+	if (eFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"))
 	{
 		dWeight *= m_pCurrentPolicies->GetPlayer()->GetGrandStrategyAI()->ScienceFlavorBoost();
 	}
@@ -206,25 +205,17 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 		if(entry)
 #ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
 		{
+			// To make sure civs don't all go Patronage
+			if (eFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE") && entry->GetPolicyBranchType() != NO_POLICY_BRANCH_TYPE &&
+				GC.getPolicyBranchInfo((PolicyBranchTypes)entry->GetPolicyBranchType())->IsDelayWhenNoCityStates())
+			{
+				dWeight /= m_pCurrentPolicies->GetPlayer()->GetGrandStrategyAI()->ScienceFlavorBoost();
+			}
 #ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
-			if (entry->GetLevel() > 0 && eFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"))
-			{
-				paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight * m_pCurrentPolicies->GetPlayer()->GetGrandStrategyAI()->ScienceFlavorBoost()
-					* BoostFlavorDueToUniqueGP(entry) + 0.5);
-			}
-			else
-			{
-				paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight * BoostFlavorDueToUniqueGP(entry) + 0.5);
+			paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight * BoostFlavorDueToUniqueGP(entry) + 0.5);
 #else
-			if (entry->GetLevel() > 0 && eFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"))
-			{
-				paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight * m_pCurrentPolicies->GetPlayer()->GetGrandStrategyAI()->ScienceFlavorBoost() + 0.5);
-			}
-			else
-			{
-				paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
+			paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
 #endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
-			}
 		}
 #else
 #ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
