@@ -6813,7 +6813,7 @@ void CvTacticalAI::ExecuteAttack(CvTacticalTarget* pTarget, CvPlot* pTargetPlot,
 					{
 #ifdef AUI_TACTICAL_EXECUTE_ATTACK_FIDDLY_ARCHERS
 						// Siege units stay put because of possible wonky issues
-						if ((!pUnit->canMoveAfterAttacking() && pUnit->canSetUpForRangedAttack(NULL)) || !pUnit->canEverRangeStrikeAt(pTargetPlot->getX(), pTargetPlot->getY()))
+						if (!pUnit->canMoveAfterAttacking() || !pUnit->canEverRangeStrikeAt(pTargetPlot->getX(), pTargetPlot->getY()))
 #else
 						bool bQueueTryRangedAttack = false;
 

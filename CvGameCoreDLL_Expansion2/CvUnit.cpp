@@ -18794,7 +18794,7 @@ void CvUnit::GetMovablePlotListOpt(FFastVector<CvPlot*>& plotData, CvPlot* pTarg
 							}
 							if (pNode)
 							{
-								if (pNode->m_iData2 == 1 && pNode->m_iData1 > (canSetUpForRangedAttack(NULL) ? 1 : 0))
+								if (pNode->m_iData2 == 1 && pNode->m_iData1 > (isMustSetUpToRangedAttack() ? 1 : 0))
 								{
 									plotData.push_back(pLoopPlot);
 
