@@ -1873,7 +1873,14 @@ CvPlot* CvPlayerAI::FindBestMerchantTargetPlot(CvUnit* pGreatMerchant, bool bOnl
 				}
 				if (pCity->getArea() != getCapitalCity()->getArea())
 				{
-					dTurnsMod *= 1.10;
+					if (pCity->isCoastal())
+					{
+						dTurnsMod *= 1.10;
+					}
+					else
+					{
+						dTurnsMod /= 1.25;
+					}
 				}
 			}
 			int iLoop = 0;
