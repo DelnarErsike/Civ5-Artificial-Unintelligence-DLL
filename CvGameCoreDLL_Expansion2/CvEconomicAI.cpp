@@ -3290,18 +3290,14 @@ bool EconomicAIHelpers::IsTestStrategy_TechLeader(CvPlayer* pPlayer)
 bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 {
 #ifdef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
-	// Make sure city specialization has gotten one chance to specialize the capital before we adopt this
-	if (pPlayer->getCapitalCity() == NULL || GC.getGame().getGameTurn() <= GC.getAI_CITY_SPECIALIZATION_EARLIEST_TURN() * GC.getGame().getEstimateEndTurn() / 500)
-	{
-		return false;
-	}
 	if (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE) && pPlayer->isHuman())
 	{
 		return false;
 	}
-	if (pPlayer->GetPlayerTraits()->IsNoAnnexing() || pPlayer->IsEmpireUnhappy())
+	if (pPlayer->getCapitalCity() == NULL || pPlayer->GetPlayerTraits()->IsNoAnnexing() || pPlayer->IsEmpireUnhappy() || 
+		pPlayer->GetNumUnitsWithDomain(DOMAIN_LAND, true) - pPlayer->GetNumUnitsWithUnitAI(UNITAI_EXPLORE, true) <= pPlayer->GetNumUnitsWithUnitAI(UNITAI_SETTLE, true))
 	{
-		return false; // Venice can't build settlers, we don't want unhappy empires to rush out settlers
+		return false; // Venice can't build settlers, we don't want unhappy empires to rush out settlers, and we don't want to keep building settlers without escorts
 	}
 #endif // AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
 
