@@ -3521,6 +3521,14 @@ int CvPlayerCulture::ComputeHypotheticalPublicOpinionUnhappiness(PolicyBranchTyp
 
 bool CvPlayerCulture::WantsDiplomatDoingPropaganda(PlayerTypes eTargetPlayer) const
 {
+
+#ifdef AUI_PLAYERCULTURE_FIX_WANTS_DIPLOMAT_DOING_PROPAGANDA_ONLY_NON_SAME_IDEOLOGY
+	PolicyBranchTypes eMyIdeology = m_pPlayer->GetPlayerPolicies()->GetLateGamePolicyTree();
+	PolicyBranchTypes eTheirIdeology = GET_PLAYER(eTargetPlayer).GetPlayerPolicies()->GetLateGamePolicyTree();
+	if (eMyIdeology == NO_POLICY_BRANCH_TYPE || eTheirIdeology == NO_POLICY_BRANCH_TYPE || eMyIdeology == eTheirIdeology)
+		return false;
+#endif // AUI_PLAYERCULTURE_FIX_WANTS_DIPLOMAT_DOING_PROPAGANDA_ONLY_NON_SAME_IDEOLOGY
+
 	// only return the top two
 #ifdef AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_INFLUENCE_TURNS_USED
 	int iFirstValue = 0;
@@ -3548,6 +3556,14 @@ bool CvPlayerCulture::WantsDiplomatDoingPropaganda(PlayerTypes eTargetPlayer) co
 		{
 			continue;
 		}
+
+#ifdef AUI_PLAYERCULTURE_FIX_WANTS_DIPLOMAT_DOING_PROPAGANDA_ONLY_NON_SAME_IDEOLOGY
+		eTheirIdeology = GET_PLAYER(ePlayer).GetPlayerPolicies()->GetLateGamePolicyTree();
+		if (eTheirIdeology == NO_POLICY_BRANCH_TYPE || eMyIdeology == eTheirIdeology)
+		{
+			continue;
+		}
+#endif // AUI_PLAYERCULTURE_FIX_WANTS_DIPLOMAT_DOING_PROPAGANDA_ONLY_NON_SAME_IDEOLOGY
 
 #ifdef AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
 		// only do this if player is at least exotic but below influential
