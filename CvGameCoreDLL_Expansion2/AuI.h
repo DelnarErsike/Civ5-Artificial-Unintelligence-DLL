@@ -188,6 +188,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_PUPPETS_NULLIFY_BARRACKS
 /// Priorities for sneak attack military units are no longer artificially inflated at the highest difficulty levels
 #define AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NO_HIGH_DIFFICULTY_SKEW
+/// If the number of buildables is greater than the number of possible choices, normalize all weights in the list (ie. subtract the lowest score from all scores)
+#define AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
 
 // Culture Classes Stuff
 /// No longer returns false if any one player's influence level is Unknown (it will now simply skip that player instead)

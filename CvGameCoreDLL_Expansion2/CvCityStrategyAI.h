@@ -201,6 +201,9 @@ public:
 private:
 
 	void ReweightByCost();
+#ifdef AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
+	void NormalizeList();
+#endif // AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
 
 	// Logging functions
 	void LogFlavors(FlavorTypes eFlavor = NO_FLAVOR);

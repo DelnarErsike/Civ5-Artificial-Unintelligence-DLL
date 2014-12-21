@@ -1082,7 +1082,11 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 
 	ReweightByCost();
 
+#ifdef AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
+	NormalizeList();
+#else
 	m_Buildables.SortItems();
+#endif // AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
 
 	LogPossibleBuilds();
 
@@ -1700,6 +1704,25 @@ void CvCityStrategyAI::ReweightByCost()
 		m_Buildables.SetWeight(iI, iNewWeight);
 	}
 }
+
+#ifdef AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
+void CvCityStrategyAI::NormalizeList()
+{
+	if (m_Buildables.size() > 0)
+	{
+		m_Buildables.SortItems();
+#ifdef AUI_FAST_COMP
+		int iToDecrease = -FASTMAX(m_Buildables.GetWeight(m_Buildables.size() - 1) - 1, 0);
+#else
+		int iToDecrease = -MAX(m_Buildables.GetWeight(m_Buildables.size() - 1) - 1, 0);
+#endif // AUI_FAST_COMP
+		for (int iI = 0; iI < m_Buildables.size(); iI++)
+		{
+			m_Buildables.IncreaseWeight(iI, iToDecrease);
+		}
+	}
+}
+#endif // AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
 
 /// Log new flavor settings
 void CvCityStrategyAI::LogFlavors(FlavorTypes eFlavor)
