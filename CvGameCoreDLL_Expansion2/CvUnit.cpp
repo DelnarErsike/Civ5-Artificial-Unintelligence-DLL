@@ -62,6 +62,10 @@
 // Come back to this
 #include "LintFree.h"
 
+#ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+#include "cvStopWatch.h"
+#endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+
 namespace FSerialization
 {
 std::set<CvUnit*> unitsToCheck;
@@ -18703,25 +18707,11 @@ bool CvUnit::canMoveAndRangedStrike(int iX, int iY)
 		return false;
 	}
 
-	int initTime, endTime;
-	initTime = timeGetTime();
-
 	FFastVector<CvPlot*> movePlotTest;
 	CvPlot* plotTarget = GC.getMap().plotCheckInvalid(iX, iY);
 	if (plotTarget)
 	{
 		GetMovablePlotListOpt(movePlotTest, plotTarget, true);
-	}
-
-	endTime = timeGetTime();
-
-	if (GC.getLogging() && GC.getAILogging() && (endTime != initTime))
-	{
-		CvString szMsg, strName;
-		strName = getUnitInfo().GetDescription();
-		szMsg.Format("Completed isPossible tile search for %s, Result: %s, %d, X: %d, Y: %d", strName.GetCString(), (movePlotTest.size() > 0 ? "true" : "false"),
-			endTime - initTime, getX(), getY());
-		GET_PLAYER(m_eOwner).GetTacticalAI()->LogTacticalMessage(szMsg, true /*bSkipLogDominanceZone*/);
 	}
 
 	return movePlotTest.size() > 0;
@@ -18730,7 +18720,10 @@ bool CvUnit::canMoveAndRangedStrike(int iX, int iY)
 //AMS: Optimized function to evaluate free plots for move and fire.
 void CvUnit::GetMovablePlotListOpt(FFastVector<CvPlot*>& plotData, CvPlot* pTarget, bool bExitOnFound, int iWithinTurns, CvPlot* pFromPlot) const
 {
-	VALIDATE_OBJECT
+	if (pFromPlot == NULL)
+	{
+		AI_PERF_FORMAT("AI-perf-MoveAndShoot.csv", ("Turn Range %d Tile Search for %s (%d), %s, Turn %03d, %s", iWithinTurns, getUnitInfo().GetDescription(), GetID(), (bExitOnFound ? "Heuristic" : "Full"), GC.getGame().getElapsedGameTurns(), GET_PLAYER(m_eOwner).getCivilizationShortDescription()));
+	}
 	CvAStarNode* pNode;
 	CvPlot* pLoopPlot;
 	int iDX, iDY;
