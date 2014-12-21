@@ -6812,7 +6812,8 @@ void CvTacticalAI::ExecuteAttack(CvTacticalTarget* pTarget, CvPlot* pTargetPlot,
 					if (pUnit->IsCanAttackRanged())
 					{
 #ifdef AUI_TACTICAL_EXECUTE_ATTACK_FIDDLY_ARCHERS
-						if (!pUnit->canMoveAfterAttacking() || !pUnit->canEverRangeStrikeAt(pTargetPlot->getX(), pTargetPlot->getY()))
+						// Siege units stay put because of possible wonky issues
+						if ((!pUnit->canMoveAfterAttacking() && pUnit->canSetUpForRangedAttack(NULL)) || !pUnit->canEverRangeStrikeAt(pTargetPlot->getX(), pTargetPlot->getY()))
 #else
 						bool bQueueTryRangedAttack = false;
 
@@ -10218,19 +10219,7 @@ CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget
 {
 	CvPlot* pBestRepositionPlot = NULL;
 	FFastVector<CvPlot*> movePlotList;
-	int initTime, endTime;
-	initTime = timeGetTime();
 	pUnit->GetMovablePlotListOpt(movePlotList, plotTarget, false, iWithinTurns);
-	endTime = timeGetTime();
-
-	if (GC.getLogging() && GC.getAILogging() && (endTime != initTime))
-	{
-		CvString szMsg, strName;
-		strName = pUnit->getUnitInfo().GetDescription();
-		szMsg.Format("Completed %s tile search for %s, Result: %s, %d, X: %d, Y: %d", (iWithinTurns > 0 ? "parthian" : "regular"), strName.GetCString(),
-			(movePlotList.size() > 0 ? "true" : "false"), endTime - initTime, pUnit->getX(), pUnit->getY());
-		LogTacticalMessage(szMsg, true /*bSkipLogDominanceZone*/);
-	}
 
 	if (movePlotList.size() > 0)
 	{
@@ -10239,6 +10228,8 @@ CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget
 		int iCurrentDanger, iCurrentDefense;
 		for (FFastVector<CvPlot*>::iterator it = movePlotList.begin(); it != movePlotList.end(); it++)
 		{
+			if ((*it) == pUnit->plot())
+				continue;
 			iCurrentDanger = m_pPlayer->GetPlotDanger(*(*it));
 			if (iCurrentDanger <= iMinDanger)
 			{
