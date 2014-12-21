@@ -951,7 +951,11 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam(), false, pPlayer->GetID());
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam());
 #endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
@@ -961,11 +965,25 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	{
 		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_FOOD);
 		if (pYieldInfo)
+		{
+			rtnValue += pYieldInfo->getCityChange();
 #ifdef AUI_FAST_COMP
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
 #endif // AUI_FAST_COMP
+		}
+		if (pPlayer != NULL)
+		{
+			rtnValue += pPlayer->GetCityYieldChange(YIELD_FOOD);
+			if (pPlot->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()))
+			{
+				rtnValue += pPlayer->GetCoastalCityYieldChange(YIELD_FOOD);
+			}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_FOOD);
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+		}
 	}
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 
@@ -978,7 +996,7 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 	ResourceTypes eResource;
 	eResource = pPlot->getResourceType(eTeam);
-	if(eResource != NO_RESOURCE)
+	if (eResource != NO_RESOURCE)
 	{
 		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_FOOD);
 
@@ -990,8 +1008,25 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_FOOD);
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_FOOD);
+		}
+		if (pPlayer != NULL && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+		{
+			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_FOOD);
 		}
 	}
+	if (pPlayer != NULL && pPlayer->getExtraYieldThreshold(YIELD_FOOD) > 0)
+	{
+		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_FOOD))
+		{
+			rtnValue += GC.getEXTRA_YIELD();
+		}
+	}
+#else
+		}
+	}
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_FOOD];
 }
@@ -1093,7 +1128,11 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+		rtnValue += pPlot->calculateNatureYield(YIELD_PRODUCTION, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_PRODUCTION, pPlayer->getTeam(), false, pPlayer->GetID());
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_PRODUCTION, pPlayer->getTeam());
 #endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
@@ -1103,11 +1142,25 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 	{
 		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_PRODUCTION);
 		if (pYieldInfo)
+		{
+			rtnValue += pYieldInfo->getCityChange();
 #ifdef AUI_FAST_COMP
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
 #endif // AUI_FAST_COMP
+		}
+		if (pPlayer != NULL)
+		{
+			rtnValue += pPlayer->GetCityYieldChange(YIELD_PRODUCTION);
+			if (pPlot->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()))
+			{
+				rtnValue += pPlayer->GetCoastalCityYieldChange(YIELD_PRODUCTION);
+			}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_PRODUCTION);
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+		}
 	}
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 
@@ -1132,8 +1185,25 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_PRODUCTION);
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_PRODUCTION);
+		}
+		if (pPlayer != NULL && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+		{
+			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_PRODUCTION);
 		}
 	}
+	if (pPlayer != NULL && pPlayer->getExtraYieldThreshold(YIELD_PRODUCTION) > 0)
+	{
+		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_PRODUCTION))
+		{
+			rtnValue += GC.getEXTRA_YIELD();
+		}
+	}
+#else
+		}
+	}
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_PRODUCTION];
 }
@@ -1155,7 +1225,11 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+		rtnValue += pPlot->calculateNatureYield(YIELD_GOLD, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_GOLD, pPlayer->getTeam(), false, pPlayer->GetID());
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_GOLD, pPlayer->getTeam());
 #endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
@@ -1165,11 +1239,25 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	{
 		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_GOLD);
 		if (pYieldInfo)
+		{
+			rtnValue += pYieldInfo->getCityChange();
 #ifdef AUI_FAST_COMP
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
 #endif // AUI_FAST_COMP
+		}
+		if (pPlayer != NULL)
+		{
+			rtnValue += pPlayer->GetCityYieldChange(YIELD_GOLD);
+			if (pPlot->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()))
+			{
+				rtnValue += pPlayer->GetCoastalCityYieldChange(YIELD_GOLD);
+			}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_GOLD);
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+		}
 	}
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 
@@ -1194,8 +1282,25 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_GOLD);
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_GOLD);
+		}
+		if (pPlayer != NULL && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+		{
+			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_GOLD);
 		}
 	}
+	if (pPlayer != NULL && pPlayer->getExtraYieldThreshold(YIELD_GOLD) > 0)
+	{
+		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_GOLD))
+		{
+			rtnValue += GC.getEXTRA_YIELD();
+		}
+	}
+#else
+		}
+	}
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_GOLD];
 }
@@ -1220,7 +1325,11 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+		rtnValue += pPlot->calculateNatureYield(YIELD_SCIENCE, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_SCIENCE, pPlayer->getTeam(), false, pPlayer->GetID());
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_SCIENCE, pPlayer->getTeam());
 #endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
@@ -1230,11 +1339,25 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	{
 		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_SCIENCE);
 		if (pYieldInfo)
+		{
+			rtnValue += pYieldInfo->getCityChange();
 #ifdef AUI_FAST_COMP
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
 #endif // AUI_FAST_COMP
+		}
+		if (pPlayer != NULL)
+		{
+			rtnValue += pPlayer->GetCityYieldChange(YIELD_SCIENCE);
+			if (pPlot->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()))
+			{
+				rtnValue += pPlayer->GetCoastalCityYieldChange(YIELD_SCIENCE);
+			}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_SCIENCE);
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+		}
 	}
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 
@@ -1259,8 +1382,25 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_SCIENCE);
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_SCIENCE);
+		}
+		if (pPlayer != NULL && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+		{
+			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_SCIENCE);
 		}
 	}
+	if (pPlayer != NULL && pPlayer->getExtraYieldThreshold(YIELD_SCIENCE) > 0)
+	{
+		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_SCIENCE))
+		{
+			rtnValue += GC.getEXTRA_YIELD();
+		}
+	}
+#else
+		}
+	}
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_SCIENCE];
 }
@@ -1286,7 +1426,11 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, pPlayer->getTeam(), false, pPlayer->GetID());
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, pPlayer->getTeam());
 #endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
@@ -1296,11 +1440,25 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	{
 		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_CULTURE);
 		if (pYieldInfo)
+		{
+			rtnValue += pYieldInfo->getCityChange();
 #ifdef AUI_FAST_COMP
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
 #endif // AUI_FAST_COMP
+		}
+		if (pPlayer != NULL)
+		{
+			rtnValue += pPlayer->GetCityYieldChange(YIELD_CULTURE);
+			if (pPlot->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()))
+			{
+				rtnValue += pPlayer->GetCoastalCityYieldChange(YIELD_CULTURE);
+			}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_CULTURE);
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+		}
 	}
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 
@@ -1325,8 +1483,25 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_CULTURE);
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_CULTURE);
+		}
+		if (pPlayer != NULL && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+		{
+			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_CULTURE);
 		}
 	}
+	if (pPlayer != NULL && pPlayer->getExtraYieldThreshold(YIELD_CULTURE) > 0)
+	{
+		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_CULTURE))
+		{
+			rtnValue += GC.getEXTRA_YIELD();
+		}
+	}
+#else
+		}
+	}
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_CULTURE];
 }
@@ -1352,7 +1527,11 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+		rtnValue += pPlot->calculateNatureYield(YIELD_FAITH, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FAITH, pPlayer->getTeam(), false, pPlayer->GetID());
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FAITH, pPlayer->getTeam());
 #endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
@@ -1362,11 +1541,25 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	{
 		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_FAITH);
 		if (pYieldInfo)
+		{
+			rtnValue += pYieldInfo->getCityChange();
 #ifdef AUI_FAST_COMP
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
 #endif // AUI_FAST_COMP
+		}
+		if (pPlayer != NULL)
+		{
+			rtnValue += pPlayer->GetCityYieldChange(YIELD_FAITH);
+			if (pPlot->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()))
+			{
+				rtnValue += pPlayer->GetCoastalCityYieldChange(YIELD_FAITH);
+			}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_FAITH);
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+		}
 	}
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 
@@ -1391,8 +1584,25 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_FAITH);
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_FAITH);
+		}
+		if (pPlayer != NULL && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+		{
+			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_FAITH);
 		}
 	}
+	if (pPlayer != NULL && pPlayer->getExtraYieldThreshold(YIELD_FAITH) > 0)
+	{
+		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_FAITH))
+		{
+			rtnValue += GC.getEXTRA_YIELD();
+		}
+	}
+#else
+	}
+}
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_FAITH];
 }
