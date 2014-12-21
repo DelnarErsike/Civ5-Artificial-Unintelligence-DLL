@@ -382,6 +382,18 @@ void CvCityCitizens::DoTurn()
 				}
 			}
 		}
+#ifdef AUI_CITIZENS_DO_TURN_NO_FOOD_FOCUS_IF_UNHAPPY
+		if (thisPlayer.IsEmpireUnhappy())
+		{
+			CityAIFocusTypes eCurrentFocus = GetFocusType();
+			if (eCurrentFocus == CITY_AI_FOCUS_TYPE_FOOD)
+				SetFocusType(NO_CITY_AI_FOCUS_TYPE);
+			else if (eCurrentFocus == CITY_AI_FOCUS_TYPE_PROD_GROWTH)
+				SetFocusType(CITY_AI_FOCUS_TYPE_PRODUCTION);
+			else if (eCurrentFocus == CITY_AI_FOCUS_TYPE_GOLD_GROWTH)
+				SetFocusType(CITY_AI_FOCUS_TYPE_GOLD);
+		}
+#endif // AUI_CITIZENS_DO_TURN_NO_FOOD_FOCUS_IF_UNHAPPY
 	}
 
 	CvAssertMsg((GetNumCitizensWorkingPlots() + GetTotalSpecialistCount() + GetNumUnassignedCitizens()) <= GetCity()->getPopulation(), "Gameplay: More workers than population in the city.");

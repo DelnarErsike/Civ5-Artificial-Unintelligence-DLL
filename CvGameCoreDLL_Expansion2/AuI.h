@@ -178,6 +178,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITIZENS_FIX_SPECIALIST_VALUE_HALF_FOOD_CONSUMPTION
 /// Replaces the rudimentary specialist-plot check with a plot vs. default citizen value check
 #define AUI_CITIZENS_IS_PLOT_BETTER_THAN_DEFAULT_SPECIALIST
+/// If the empire is unhappy, cities with full or partial food focus get their food focus removed
+#define AUI_CITIZENS_DO_TURN_NO_FOOD_FOCUS_IF_UNHAPPY
 
 // City Strategy Stuff
 /// Scales the GetLastTurnWorkerDisbanded() computation to game speed
