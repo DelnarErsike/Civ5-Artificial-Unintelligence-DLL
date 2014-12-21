@@ -23946,7 +23946,11 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 		if(bEscorted || (!pPlot->isVisibleEnemyUnit(eOwner)))
 		{
 			int iValue = pPlot->getFoundValue(eOwner);
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_MINIMUM_FERTILITY
+			if (iValue >= GetEconomicAI()->GetMinimumSettleFertility())
+#else
 			if(iValue > 5000)
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_MINIMUM_FERTILITY
 			{
 #ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
 				int iTurnsToDestination = TurnsToReachTarget(pUnit, pPlot, bEscorted, bEscorted);

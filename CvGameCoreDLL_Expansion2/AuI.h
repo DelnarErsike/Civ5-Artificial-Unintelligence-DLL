@@ -432,6 +432,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE (true)
 /// If a tile is on the same continent as the player's capital and is closer to an enemy major capital than any allied cities, disregard the tile
 #define AUI_PLAYER_GET_BEST_SETTLE_PLOT_CONSIDER_ENEMY_CAPITALS
+/// Switches the function over to using the XML-loaded fertility value
+#define AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_MINIMUM_FERTILITY
 
 // PlayerAI Stuff
 /// Great prophet will be chosen as a free great person if the AI can still found a religion with them
