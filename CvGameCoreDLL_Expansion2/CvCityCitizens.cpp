@@ -1393,7 +1393,11 @@ bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
 		return true;
 	}
 	// Found a Valid Plot to place a guy?
+#ifdef AUI_CITIZENS_IS_PLOT_BETTER_THAN_DEFAULT_SPECIALIST
+	else if (pBestPlot != NULL && iBestPlotValue >= GetSpecialistValue((SpecialistTypes)GC.getDEFAULT_SPECIALIST()))
+#else
 	else if (!bSpecialistBetterThanPlot && pBestPlot != NULL)
+#endif // AUI_CITIZENS_IS_PLOT_BETTER_THAN_DEFAULT_SPECIALIST
 	{
 		// Now assign the guy to the best possible Plot
 		SetWorkingPlot(pBestPlot, true);
