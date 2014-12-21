@@ -8546,9 +8546,9 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 	int iBeginSearchY = iSettlerY - iEvalDistance;
 	int iEndSearchX   = iSettlerX + iEvalDistance;
 	int iEndSearchY   = iSettlerY + iEvalDistance;
-#endif // AUI_HEXSPACE_DX_LOOPS
 
 	CvMap& kMap = GC.getMap();
+#endif // AUI_HEXSPACE_DX_LOOPS
 
 	TeamTypes eUnitTeam = pFoundingUnit->getTeam();
 

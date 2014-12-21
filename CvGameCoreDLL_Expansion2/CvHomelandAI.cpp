@@ -714,7 +714,7 @@ void CvHomelandAI::AssignHomelandMoves()
 		CvHomelandMove move = *it;
 
 #ifdef AUI_PERF_LOGGING_FORMATTING_TWEAKS
-		CvString aHomelandMoves[] = {"AI_HOMELAND_MOVE_UNASSIGNED",
+		static const char* aHomelandMoves[] = { "AI_HOMELAND_MOVE_UNASSIGNED",
 			"AI_HOMELAND_MOVE_EXPLORE",
 			"AI_HOMELAND_MOVE_EXPLORE_SEA",
 			"AI_HOMELAND_MOVE_SETTLE",
@@ -747,8 +747,7 @@ void CvHomelandAI::AssignHomelandMoves()
 			"AI_HOMELAND_MOVE_ARCHAEOLOGIST",
 			"AI_HOMELAND_MOVE_ADD_SPACESHIP_PART",
 			"AI_HOMELAND_MOVE_AIRLIFT"};
-		AI_PERF_FORMAT("AI-perf-home.csv", ("Move Type: %s (%d), Turn %03d, %s", (move.m_eMoveType > 0 && move.m_eMoveType < 33 ? aHomelandMoves[move.m_eMoveType].c_str : "AI_HOMELAND_MOVE_NONE"),
-			(int)move.m_eMoveType, GC.getGame().getElapsedGameTurns(), m_pPlayer->getCivilizationShortDescription()) );
+		AI_PERF_FORMAT("AI-perf-home.csv", ("Move Type: %s (%d), Turn %03d, %s", (move.m_eMoveType > 0 && move.m_eMoveType < 33 ? aHomelandMoves[move.m_eMoveType] : "AI_HOMELAND_MOVE_NONE"), (int)move.m_eMoveType, GC.getGame().getElapsedGameTurns(), m_pPlayer->getCivilizationShortDescription()) );
 #else
 		AI_PERF_FORMAT("AI-perf-tact.csv", ("Homeland Move: %d, Turn %03d, %s", (int)move.m_eMoveType, GC.getGame().getElapsedGameTurns(), m_pPlayer->getCivilizationShortDescription()) );
 #endif // AUI_PERF_LOGGING_FORMATTING_TWEAKS
@@ -4886,7 +4885,7 @@ void CvHomelandAI::ExecuteTreasureMoves()
 void CvHomelandAI::ExecuteAircraftInterceptions()
 {
 	FStaticVector<CvHomelandUnit, 64, true, c_eCiv5GameplayDLL>::iterator it;
-	FFastVector<CvPlot*, false, 64 > checkedPlotList;
+	FFastVector<CvPlot*> checkedPlotList;
 
 	for (it = m_CurrentMoveUnits.begin(); it != m_CurrentMoveUnits.end(); ++it)
 	{

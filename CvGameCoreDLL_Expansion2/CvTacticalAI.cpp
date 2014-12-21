@@ -3298,7 +3298,7 @@ void CvTacticalAI::PlotAirInterceptMoves()
 	m_CurrentMoveUnits.clear();
 	CvTacticalUnit unit;
 #ifdef AUI_TACTICAL_TWEAKED_AIR_INTERCEPT
-	FFastVector<CvPlot*, false, 64> checkedPlotList;
+	FFastVector<CvPlot*> checkedPlotList;
 #else
 	CvTacticalDominanceZone *pZone;
 #endif
@@ -6621,7 +6621,7 @@ void CvTacticalAI::ExecuteAttack(CvTacticalTarget* pTarget, CvPlot* pTargetPlot,
 
 	// Make a list of adjacent plots
 #ifdef AUI_FIX_FFASTVECTOR_ERASE
-	FFastVector<CvPlot *, NUM_DIRECTION_TYPES> plotList;
+	FFastVector<CvPlot *, false, NUM_DIRECTION_TYPES> plotList;
 #else
 	std::vector<CvPlot *> plotList;
 #endif // AUI_FIX_FFASTVECTOR_ERASE
@@ -10217,7 +10217,7 @@ void CvTacticalAI::ExecuteEscortEmbarkedMoves()
 CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget, int iWithinTurns)
 {
 	CvPlot* pBestRepositionPlot = NULL;
-	FFastVector<CvPlot*, false, 16> movePlotList;
+	FFastVector<CvPlot*> movePlotList;
 	int initTime, endTime;
 	initTime = timeGetTime();
 	pUnit->GetMovablePlotListOpt(movePlotList, plotTarget, false, iWithinTurns);

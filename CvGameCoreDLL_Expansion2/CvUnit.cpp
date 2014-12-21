@@ -18706,7 +18706,7 @@ bool CvUnit::canMoveAndRangedStrike(int iX, int iY)
 	int initTime, endTime;
 	initTime = timeGetTime();
 
-	FFastVector<CvPlot*, false, 2> movePlotTest;
+	FFastVector<CvPlot*> movePlotTest;
 	CvPlot* plotTarget = GC.getMap().plotCheckInvalid(iX, iY);
 	if (plotTarget)
 	{
