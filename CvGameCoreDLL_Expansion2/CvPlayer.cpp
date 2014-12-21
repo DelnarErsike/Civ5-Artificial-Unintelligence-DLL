@@ -23837,6 +23837,13 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 	const CvCity* pClosestCity = NULL;
 	const CvCity* pLoopCity;
 #endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_CONSIDER_ENEMY_CAPITALS
+	const CvCity* pEnemyCapital = NULL;
+	const CvCity* pOurCapital = getCapitalCity();
+	int iCapitalArea = -1;
+	if (pOurCapital)
+		iCapitalArea = pOurCapital->getArea();
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_CONSIDER_ENEMY_CAPITALS
 
 #ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE
 	int iFlags = 0;
@@ -24021,6 +24028,20 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 				int iSettlerDistance = ::plotDistance(pPlot->getX(), pPlot->getY(), iSettlerX, iSettlerY);
 #endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
 #endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_CONSIDER_ENEMY_CAPITALS
+				for (int iI = 0; iI < MAX_MAJOR_CIVS; iI++)
+				{
+					pEnemyCapital = GET_PLAYER((PlayerTypes)iI).getCapitalCity();
+					if (pEnemyCapital && (pEnemyCapital->getArea() == iCapitalArea || iCapitalArea == -1))
+					{
+						if (iSettlerDistance > 2 * plotDistance(pEnemyCapital->getX(), pEnemyCapital->getY(), pPlot->getX(), pPlot->getY()))
+						{
+							iSettlerDistance = MAX_INT;
+							break;
+						}
+					}
+				}
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_CONSIDER_ENEMY_CAPITALS
 				int iDistanceDropoff = min(99,(iDistanceDropoffMod * iSettlerDistance) / iEvalDistance);
 				iDistanceDropoff = max(0,iDistanceDropoff);
 				iValue = iValue * (100 - iDistanceDropoff) / 100;
