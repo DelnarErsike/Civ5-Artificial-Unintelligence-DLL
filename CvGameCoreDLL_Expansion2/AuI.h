@@ -590,6 +590,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_RELIGION_FIX_GET_DESIRED_FAITH_GREAT_PERSON_INQUISITOR_CHECK
 /// Scales the score of missionaries and inquisitors with how many turns have elapsed (value is the base score for missionaries and inquisitors)
 #define AUI_RELIGION_GET_DESIRED_FAITH_GREAT_PERSON_SCALE_MISSIONARY_INQUISITOR_WITH_TURNS_ELAPSED (1000)
+/// When comparing the final score for beliefs, the score of the lowest scored belief will be subtracted from all beliefs
+#define AUI_RELIGION_RELATIVE_BELIEF_SCORE
 
 // Site Evaluation Stuff
 /// Tweaks the multiplier given to the happiness score luxury resources that the player does not have (multiplier is applied once for importing, twice and times 2 for don't have at all)

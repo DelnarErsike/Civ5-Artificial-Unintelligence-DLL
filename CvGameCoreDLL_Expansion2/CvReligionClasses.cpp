@@ -4247,6 +4247,17 @@ BeliefTypes CvReligionAI::ChoosePantheonBelief()
 	{
 		// Choose from weighted vector
 		beliefChoices.SortItems();
+#ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
+#ifdef AUI_FAST_COMP
+		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#else
+		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#endif // AUI_FAST_COMP
+		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		{
+			beliefChoices.IncreaseWeight(iI, iToDecrease);
+		}
+#endif // AUI_RELIGION_RELATIVE_BELIEF_SCORE
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // Throw out two-thirds of the choices -- this was way too loose as choices way down were being selected now only top 3
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
@@ -4297,6 +4308,17 @@ BeliefTypes CvReligionAI::ChooseFounderBelief()
 	{
 		// Choose from weighted vector
 		beliefChoices.SortItems();
+#ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
+#ifdef AUI_FAST_COMP
+		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#else
+		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#endif // AUI_FAST_COMP
+		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		{
+			beliefChoices.IncreaseWeight(iI, iToDecrease);
+		}
+#endif // AUI_RELIGION_RELATIVE_BELIEF_SCORE
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // this was way too loose as choices way down were being selected now only top 3
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
@@ -4347,6 +4369,17 @@ BeliefTypes CvReligionAI::ChooseFollowerBelief()
 	{
 		// Choose from weighted vector
 		beliefChoices.SortItems();
+#ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
+#ifdef AUI_FAST_COMP
+		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#else
+		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#endif // AUI_FAST_COMP
+		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		{
+			beliefChoices.IncreaseWeight(iI, iToDecrease);
+		}
+#endif // AUI_RELIGION_RELATIVE_BELIEF_SCORE
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // this was way too loose as choices way down were being selected now only top 3
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
@@ -4397,6 +4430,17 @@ BeliefTypes CvReligionAI::ChooseEnhancerBelief()
 	{
 		// Choose from weighted vector
 		beliefChoices.SortItems();
+#ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
+#ifdef AUI_FAST_COMP
+		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#else
+		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#endif // AUI_FAST_COMP
+		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		{
+			beliefChoices.IncreaseWeight(iI, iToDecrease);
+		}
+#endif // AUI_RELIGION_RELATIVE_BELIEF_SCORE
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // this was way too loose as choices way down were being selected now only top 3
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
@@ -4450,6 +4494,17 @@ BeliefTypes CvReligionAI::ChooseBonusBelief(int iExcludeBelief1, int iExcludeBel
 	{
 		// Choose from weighted vector
 		beliefChoices.SortItems();
+#ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
+#ifdef AUI_FAST_COMP
+		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#else
+		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#endif // AUI_FAST_COMP
+		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		{
+			beliefChoices.IncreaseWeight(iI, iToDecrease);
+		}
+#endif // AUI_RELIGION_RELATIVE_BELIEF_SCORE
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // this was way too loose as choices way down were being selected now only top 3
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
@@ -4500,6 +4555,17 @@ BeliefTypes CvReligionAI::ChooseReformationBelief()
 	{
 		// Choose from weighted vector
 		beliefChoices.SortItems();
+#ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
+#ifdef AUI_FAST_COMP
+		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#else
+		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
+#endif // AUI_FAST_COMP
+		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		{
+			beliefChoices.IncreaseWeight(iI, iToDecrease);
+		}
+#endif // AUI_RELIGION_RELATIVE_BELIEF_SCORE
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // this was way too loose as choices way down were being selected now only top 3
 		RandomNumberDelegate fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
 		rtnValue = beliefChoices.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing belief from Top Choices");
@@ -5692,7 +5758,9 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
 		// Double score if improvement is now replaced with a "cheat" to halve value on plots that do not have resources and are not a natural wonder
 		if (pPlot->getResourceType(NO_TEAM) == NO_RESOURCE && !pPlot->IsNaturalWonder())
+		{
 			dTempValue /= 2.0;
+		}
 #endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 #ifdef AUI_RELIGION_USE_DOUBLES
