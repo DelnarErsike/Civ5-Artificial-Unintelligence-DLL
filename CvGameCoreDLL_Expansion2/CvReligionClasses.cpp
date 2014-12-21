@@ -4253,7 +4253,7 @@ BeliefTypes CvReligionAI::ChoosePantheonBelief()
 #else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
 #endif // AUI_FAST_COMP
-		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
 		}
@@ -4314,7 +4314,7 @@ BeliefTypes CvReligionAI::ChooseFounderBelief()
 #else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
 #endif // AUI_FAST_COMP
-		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
 		}
@@ -4375,7 +4375,7 @@ BeliefTypes CvReligionAI::ChooseFollowerBelief()
 #else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
 #endif // AUI_FAST_COMP
-		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
 		}
@@ -4436,7 +4436,7 @@ BeliefTypes CvReligionAI::ChooseEnhancerBelief()
 #else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
 #endif // AUI_FAST_COMP
-		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
 		}
@@ -4500,7 +4500,7 @@ BeliefTypes CvReligionAI::ChooseBonusBelief(int iExcludeBelief1, int iExcludeBel
 #else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
 #endif // AUI_FAST_COMP
-		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
 		}
@@ -4561,7 +4561,7 @@ BeliefTypes CvReligionAI::ChooseReformationBelief()
 #else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
 #endif // AUI_FAST_COMP
-		for (unsigned int iI = 0; iI < beliefChoices.size(); iI++)
+		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
 		}
