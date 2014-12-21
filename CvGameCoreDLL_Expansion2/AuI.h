@@ -812,6 +812,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_DISTANCE_DROPOFF
 /// Uses pathfinding turns instead of raw distance for strength multipliers
 #define AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
+/// When calculating unit strengths, the unit's city attack power will be used instead of its unmodified damage
+#define AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_CONSIDER_CITY_ATTACK_BONUS
 
 // Team Stuff
 #ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
