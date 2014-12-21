@@ -358,15 +358,11 @@ int CvPolicyAI::ChooseNextPolicy(CvPlayer* pPlayer)
 					// Does this branch actually help us, based on game options?
 					if(IsBranchEffectiveInGame(ePolicyBranch))
 					{
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
-						dBranchWeight += WeighBranch(pPlayer, ePolicyBranch);
-#else
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
+#if defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE) || defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER)
 						dBranchWeight += WeighBranch(pPlayer, ePolicyBranch);
 #else
 						dBranchWeight += WeighBranch(ePolicyBranch);
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif
 						dBranchWeight *= (100.0 - m_iPolicyWeightPercentDropNewBranch);
 						dBranchWeight /= 100.0;
 
@@ -395,15 +391,11 @@ int CvPolicyAI::ChooseNextPolicy(CvPlayer* pPlayer)
 					// Does this branch actually help us, based on game options?
 					if(IsBranchEffectiveInGame(ePolicyBranch))
 					{
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
-						iBranchWeight += WeighBranch(pPlayer, ePolicyBranch);
-#else
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
+#if defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE) || defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER)
 						iBranchWeight += WeighBranch(pPlayer, ePolicyBranch);
 #else
 						iBranchWeight += WeighBranch(ePolicyBranch);
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif
 
 						iBranchWeight *= (100 - m_iPolicyWeightPercentDropNewBranch);
 						iBranchWeight /= 100;
@@ -1159,25 +1151,17 @@ void CvPolicyAI::PropagateWeights(int iPolicy, int iWeight, int iPropagationPerc
 
 /// Priority for opening up this branch
 #ifdef AUI_POLICY_USE_DOUBLES
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
-double CvPolicyAI::WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch)
-#else
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
+#if defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE) || defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER)
 double CvPolicyAI::WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch)
 #else
 double CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif
 #else
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
-int CvPolicyAI::WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch)
-#else
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
+#if defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE) || defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER)
 int CvPolicyAI::WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch)
 #else
 int CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif
 #endif // AUI_POLICY_USE_DOUBLES
 {
 #ifdef AUI_POLICY_USE_DOUBLES
@@ -1185,13 +1169,9 @@ int CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
 #else
 	int iWeight = 0;
 #endif // AUI_POLICY_USE_DOUBLES
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#if defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE) || defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER)
 	double dDivider = 1.0;
-#else
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
-	double dDivider = 1.0;
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif
 
 	CvPolicyBranchEntry* pkPolicyBranchInfo = GC.getPolicyBranchInfo(eBranch);
 	if(pkPolicyBranchInfo)
