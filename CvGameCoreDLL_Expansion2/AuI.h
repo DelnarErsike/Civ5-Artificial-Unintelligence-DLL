@@ -798,6 +798,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// If the civilian support unit can heal adjacent tiles, consider the health of adjacent units as well
 #define AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_CONSIDER_MEDIC
 #endif
+/// Runs moves for each operation twice, in case the operation switches states mid-move
+#define AUI_TACTICAL_PLOT_OPERATIONAL_ARMY_MOVES_MOVE_TWICE
 
 // Tactical Analysis Map Stuff
 /// Enables a minor adjustment for ranged units to account for possibly being able to move and shoot at a tile

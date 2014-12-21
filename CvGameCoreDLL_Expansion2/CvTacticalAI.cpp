@@ -2703,6 +2703,27 @@ void CvTacticalAI::PlotOperationalArmyMoves()
 	{
 		if(nextOp->GetLastTurnMoved() < GC.getGame().getGameTurn())
 		{
+#ifdef AUI_TACTICAL_PLOT_OPERATIONAL_ARMY_MOVES_MOVE_TWICE
+			switch (nextOp->GetMoveType())
+			{
+			case AI_OPERATION_MOVETYPE_SINGLE_HEX:
+				PlotSingleHexOperationMoves((CvAIEscortedOperation*)nextOp);
+				break;
+
+			case AI_OPERATION_MOVETYPE_ENEMY_TERRITORY:
+				PlotEnemyTerritoryOperationMoves((CvAIEnemyTerritoryOperation*)nextOp);
+				break;
+
+			case AI_OPERATION_MOVETYPE_NAVAL_ESCORT:
+				PlotNavalEscortOperationMoves((CvAINavalEscortedOperation*)nextOp);
+				break;
+
+			case AI_OPERATION_MOVETYPE_FREEFORM_NAVAL:
+				PlotFreeformNavalOperationMoves((CvAINavalOperation*)nextOp);
+				break;
+			}
+			nextOp->CheckOnTarget();
+#endif // AUI_TACTICAL_PLOT_OPERATIONAL_ARMY_MOVES_MOVE_TWICE
 			switch(nextOp->GetMoveType())
 			{
 			case AI_OPERATION_MOVETYPE_SINGLE_HEX:
