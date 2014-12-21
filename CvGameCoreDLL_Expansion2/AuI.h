@@ -532,6 +532,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_RELIGION_SCORE_BELIEF_TWEAK_PANTHEON_DIVIDER (6.0)
 /// Weighs different yield types differently depending on flavor and citizen value
 #define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
+/// When adding the terrain yield change of a belief, only do so if the current feature on the plot is additive (so eg. Dance with the Aurora won't be overvalued)
+#define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_SCORE_TERRAIN_CONSIDER_FEATURE
 /// Reduces the score given to a tile from a feature if it has a resource on it, as chance are the resource will require the feature to be removed
 #define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REDUCE_FEATURE_SCORE_IF_WILL_BE_CHOPPED
 /// When scoring beliefs, the AI will only consider resources that it can see

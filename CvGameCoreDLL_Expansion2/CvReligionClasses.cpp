@@ -5633,7 +5633,12 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 
 		// Terrain
 		TerrainTypes eTerrain = pPlot->getTerrainType();
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_SCORE_TERRAIN_CONSIDER_FEATURE
+		FeatureTypes eFeature = pPlot->getFeatureType();
+		if(eTerrain != NO_TERRAIN && (eFeature == NO_FEATURE || !GC.getFeatureInfo(eFeature)->isYieldNotAdditive()))
+#else
 		if(eTerrain != NO_TERRAIN)
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_SCORE_TERRAIN_CONSIDER_FEATURE
 		{
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
 			dTempValue += pEntry->GetTerrainYieldChange(eTerrain, iI);
@@ -5647,7 +5652,9 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 		}
 
 		// Feature
+#ifndef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_SCORE_TERRAIN_CONSIDER_FEATURE
 		FeatureTypes eFeature = pPlot->getFeatureType();
+#endif // AUI_RELIGION_SCORE_BELIEF_AT_PLOT_SCORE_TERRAIN_CONSIDER_FEATURE
 		if(eFeature != NO_FEATURE)
 		{
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
