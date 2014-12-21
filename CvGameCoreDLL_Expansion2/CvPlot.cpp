@@ -10619,19 +10619,7 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 			if (pLoopPlot->isImpassable() || pLoopPlot->isMountain())
 			{
 				aiPlotDomains[iI] = 4;
-				// Check for straits
-				if (bSkipLandStrait || GC.getMap().getArea(pLoopPlot->getArea())->getNumTiles() < 2)
-					continue;
-				for (it = aiLandAreas.begin(); it != aiLandAreas.end(); ++it)
-				{
-					if (pLoopPlot->getArea() == (*it))
-					{
-						bAddThis = false;
-						break;
-					}
-				}
-				if (bAddThis)
-					aiLandAreas.push_back(pLoopPlot->getArea());
+				// Do not check for straits on peaks
 			}
 			else if (pLoopPlot->isWater())
 			{
@@ -10763,11 +10751,11 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 		iRtnValue += (iStrategicPlots + iHighValueStrategicPlots) * GC.getCHOKEPOINT_STRATEGIC_VALUE();
 	}
 
-	// Straits are extremely strategic
+	// Straits are extremely strategic 
 #ifdef AUI_FAST_COMP
-	int iStraitCount = FASTMAX((int)aiLandAreas.size(), 1) - 1 + FASTMAX((int)aiWaterAreas.size(), 1) - 1;
+	int iStraitCount = FASTMAX((int)aiLandAreas.size(), 1) - 1 + NUM_DIRECTION_TYPES * (FASTMAX((int)aiWaterAreas.size(), 1) - 1);
 #else
-	int iStraitCount = MAX((int)aiLandAreas.size(), 1) - 1 + MAX((int)aiWaterAreas.size(), 1) - 1;
+	int iStraitCount = MAX((int)aiLandAreas.size(), 1) - 1 + NUM_DIRECTION_TYPES * (MAX((int)aiWaterAreas.size(), 1) - 1);
 #endif // AUI_FAST_COMP
 	iRtnValue += (iStraitCount) * GC.getCHOKEPOINT_STRATEGIC_VALUE();
 
