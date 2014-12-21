@@ -7062,14 +7062,6 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 		iYield += kYield.getLakeChange();
 	}
 
-#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
-	// Yield from unique improvement
-	if (eUniqueImprovement != NO_IMPROVEMENT)
-	{
-		iYield += calculateImprovementYieldChange(eUniqueImprovement, eYield, eOwner);
-	}
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
-
 	if(!bIgnoreFeature)
 	{
 		if(getFeatureType() != NO_FEATURE)
@@ -7168,6 +7160,14 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 			}
 		}
 	}
+
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
+	// Yield from unique improvement
+	if (eUniqueImprovement != NO_IMPROVEMENT)
+	{
+		iYield += calculateImprovementYieldChange(eUniqueImprovement, eYield, eOwner);
+	}
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 
 	if(eTeam != NO_TEAM)
 	{
