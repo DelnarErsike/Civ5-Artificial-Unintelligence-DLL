@@ -95,20 +95,17 @@ inline int hexDistance(int iDX, int iDY)
 {
 	// I'm assuming iDX and iDY are in hex-space
 #ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+	// Delnar: Using abs() because I trust the compiler to generate more efficient code than if I'd write an abs(int) function myself, especially if the CPU has an abs(int) operation
 	if((iDX ^ iDY) >= 0)  // the signs match
 	{
-#ifdef AUI_FAST_COMP
-		return FASTMAX(iDX, -iDX) + FASTMAX(iDY, -iDY);
-#else
-		return MAX(iDX, -iDX) + MAX(iDY, -iDY);
-#endif // AUI_FAST_COMP
+		return abs(iDX) + abs(iDY);
 	}
 	else
 	{
 #ifdef AUI_FAST_COMP
-		return FASTMAX(FASTMAX(iDX, -iDX), FASTMAX(iDY, -iDY));
+		return FASTMAX(abs(iDX), abs(iDY));
 #else
-		return MAX(MAX(iDX, -iDX), MAX(iDY, -iDY));
+		return MAX(abs(iDX), abs(iDY));
 #endif // AUI_FAST_COMP
 	}
 #else
