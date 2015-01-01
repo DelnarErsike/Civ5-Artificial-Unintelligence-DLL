@@ -1846,7 +1846,8 @@ void CreateMiniDump(EXCEPTION_POINTERS *pep)
 		mdei.ExceptionPointers	= pep;
 		mdei.ClientPointers		= FALSE;
 
-		MINIDUMP_TYPE mdt = MiniDumpNormal;
+		// Delnar: MiniDumpNormal doesn't always provide enough info, especially if crashes are with an older version
+		MINIDUMP_TYPE mdt = MiniDumpWithPrivateReadWriteMemory;
 
 		BOOL result = MiniDumpWriteDump(GetCurrentProcess(),
 										 GetCurrentProcessId(),
