@@ -74,9 +74,9 @@ typedef wchar_t          wchar;
 #define MIN(a, b) std::min(a, b)
 
 #ifdef AUI_PERF_LOGGING_ENABLED
-#define AI_PERF(perfFileName, baseStringName) if (GC.getAIPerfLogging()) {cvStopWatch kPerfTimer(baseStringName, perfFileName, FILogFile::kDontTimeStamp, false, true);}
-#define AI_PERF_FORMAT(perfFileName, FormatValue) if (GC.getAIPerfLogging()) {CvString szPerfString; szPerfString.Format##FormatValue; cvStopWatch kPerfTimer(szPerfString, perfFileName, FILogFile::kDontTimeStamp, false, true);}
-#define AI_PERF_FORMAT_NESTED(perfFileName, FormatValue) if (GC.getAIPerfLogging()) {CvString szPerfString2; szPerfString2.Format##FormatValue; cvStopWatch kPerfTimer2(szPerfString2, perfFileName, FILogFile::kDontTimeStamp, false, true);}
+#define AI_PERF(perfFileName, baseStringName) if (GC.getLogging() && GC.getAIPerfLogging()) {cvStopWatch kPerfTimer(baseStringName, perfFileName, FILogFile::kDontTimeStamp, false, true);}
+#define AI_PERF_FORMAT(perfFileName, FormatValue) if (GC.getLogging() && GC.getAIPerfLogging()) {CvString szPerfString; szPerfString.Format##FormatValue; cvStopWatch kPerfTimer(szPerfString, perfFileName, FILogFile::kDontTimeStamp, false, true);}
+#define AI_PERF_FORMAT_NESTED(perfFileName, FormatValue) if (GC.getLogging() && GC.getAIPerfLogging()) {CvString szPerfString2; szPerfString2.Format##FormatValue; cvStopWatch kPerfTimer2(szPerfString2, perfFileName, FILogFile::kDontTimeStamp, false, true);}
 #else
 #if !defined(FINAL_RELEASE)
 #define AI_PERF_LOGGING
