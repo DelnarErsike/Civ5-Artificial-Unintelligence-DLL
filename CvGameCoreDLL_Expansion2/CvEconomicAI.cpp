@@ -978,7 +978,7 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 #endif // AUI_FAST_COMP
 		{
 			// No need for range check because loops are set up properly
-			pEvalPlot = plotXY(pPlot->getX(), pPlot->getY(), iX, iY);
+			pEvalPlot = plotXY(iPlotX, iPlotY, iX, iY);
 #else
 	for(int iX = -iRange; iX <= iRange; iX++)
 	{
@@ -1002,12 +1002,12 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 			}
 
 #ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
-			int iDistance = hexDistance(iX, iY);
+			int iMainDistance = hexDistance(iX, iY);
 #endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 			if(pEvalPlot->isAdjacentRevealed(eTeam))
 			{
 #ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
-				if (iDistance > 1)
+				if (iMainDistance > 1)
 #else
 				if(plotDistance(iPlotX, iPlotY, pEvalPlot->getX(), pEvalPlot->getY()) > 1)
 #endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
@@ -1089,10 +1089,12 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 				iResultValue += iGoodScore;
 			}
 
-#ifndef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+			iResultValue += (iRange - iMainDistance) * iAdjacencyBonus;
+#else
 			int iDistance = plotDistance(iPlotX, iPlotY, pEvalPlot->getX(), pEvalPlot->getY());
-#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 			iResultValue += (iRange - iDistance) * iAdjacencyBonus;
+#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
 		}
 	}
 
@@ -1780,14 +1782,12 @@ void CvEconomicAI::DoHurry()
 			// Can we rush it?
 			if (pOrder && pLoopCity->IsCanGoldPurchase(pOrder))
 			{
-				// We skip if the build order is more than 2/3 done.
-				if (iIndex == 0 && iProdPercentRemaining < 33)
-				{
-					continue;
-				}
 				if (iIndex == 0)
 				{
-					iTurnsSaved = pLoopCity->getProductionTurnsLeft() - 1;
+					// We skip if the build order is more than 2/3 done.
+					if (iProdPercentRemaining < 33)
+						continue;
+					iTurnsSaved = pLoopCity->getProductionTurnsLeft();
 				}
 				else
 				{
