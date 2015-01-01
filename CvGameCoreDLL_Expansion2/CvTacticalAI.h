@@ -938,7 +938,11 @@ private:
 #else
 	bool MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, bool &bMoveWasSafe);
 #endif // AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
+#ifdef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+	CvPlot* FindBestBarbarianLandMove(UnitHandle pUnit, bool &bIsCombatMove);
+#else
 	CvPlot* FindBestBarbarianLandMove(UnitHandle pUnit);
+#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
 	CvPlot* FindPassiveBarbarianLandMove(UnitHandle pUnit);
 	CvPlot* FindBestBarbarianSeaMove(UnitHandle pUnit);
 	CvPlot* FindBarbarianExploreTarget(UnitHandle pUnit);

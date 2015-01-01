@@ -3166,7 +3166,7 @@ void CvTacticalAI::PlotCampDefenseMoves()
 		UnitHandle pCampDefender = pPlot->getBestDefender(m_pPlayer->GetID());
 		if ((!pCampDefender || pCampDefender->isRanged()) &&
 			FindClosestUnit(pPlot, 1, false, false /* bMustBeRangedUnit */, 2, false, true /* bMustBeMeleeUnit */) &&
-			(!pCampDefender || ExecuteMoveOfBlockingUnit(pCampDefender, m_pPlayer->getUnit(m_CurrentMoveUnits[0].GetID()), true)))
+			(!pCampDefender || (m_CurrentMoveUnits.size() > 0 && ExecuteMoveOfBlockingUnit(pCampDefender, m_pPlayer->getUnit(m_CurrentMoveUnits[0].GetID()), true))))
 #else
 		if(FindUnitsWithinStrikingDistance(pPlot, 1, 0, true /* bNoRangedUnits */, false /*bNavalOnly*/, false /*bMustMoveThrough*/))
 #endif // AUI_TACTICAL_FIX_USE_FIND_CLOSEST_TARGET	
@@ -7983,6 +7983,10 @@ void CvTacticalAI::ExecuteBarbarianMoves(bool bAggressive)
 #ifdef AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_PATROL_IF_ON_TARGET
 	CvPlot* pRepositionPlot;
 #endif // AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_PATROL_IF_ON_TARGET
+#ifdef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+	bool bIsCombatMove = false;
+	bool bMoveWasSafe;
+#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
 	CvPlot* pCurrentDestination;
 	CvString strTemp;
 
@@ -7998,18 +8002,34 @@ void CvTacticalAI::ExecuteBarbarianMoves(bool bAggressive)
 				// LAND MOVES
 				if(pUnit->getDomainType() == DOMAIN_LAND)
 				{
+#ifdef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+					if (FindNearbyTarget(pUnit, 0, AI_TACTICAL_TARGET_BARBARIAN_CAMP))
+					{
+						continue;
+					}
+#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+
 					AI_PERF_FORMAT("AI-perf-tact.csv", ("Barb Land Move, Turn %03d, %s", GC.getGame().getElapsedGameTurns(), m_pPlayer->getCivilizationShortDescription()) );
 
 					if(bAggressive)
 					{
+#ifdef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+						pBestPlot = FindBestBarbarianLandMove(pUnit, bIsCombatMove);
+#else
 						pBestPlot = FindBestBarbarianLandMove(pUnit);
+#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
 					}
 					else
 					{
 						pBestPlot = FindPassiveBarbarianLandMove(pUnit);
 					}
 
+#ifdef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+					if (pBestPlot && ((bIsCombatMove && MoveToEmptySpaceNearTarget(pUnit, pBestPlot)) ||
+						(!bIsCombatMove && MoveToUsingSafeEmbark(pUnit, pBestPlot, bMoveWasSafe))))
+#else
 					if(pBestPlot && MoveToEmptySpaceNearTarget(pUnit, pBestPlot))
+#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
 					{
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 						CheckAndExecuteFreePillageMoves(pUnit);
@@ -8044,8 +8064,6 @@ void CvTacticalAI::ExecuteBarbarianMoves(bool bAggressive)
 						CheckAndExecuteFreePillageMoves(pUnit);
 #endif // AUI_TACTICAL_FREE_PILLAGE
 #ifdef AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_PATROL_IF_ON_TARGET
-						if (!pBestPlot)
-							pBestPlot = pUnit->plot();
 						if (pBestPlot == pUnit->plot() && m_pPlayer->GetPlotDanger(*pUnit->plot()) > 0 && pUnit->getMoves() > 0)
 						{
 							pRepositionPlot = GetBestRepositionPlot(pUnit, pBestPlot, 1);
@@ -8059,8 +8077,10 @@ void CvTacticalAI::ExecuteBarbarianMoves(bool bAggressive)
 							}
 						}
 #endif // AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_PATROL_IF_ON_TARGET
+#ifndef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
 						pUnit->finishMoves();
 						UnitProcessed(m_CurrentMoveUnits[iI].GetID());
+#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
 						if(GC.getLogging() && GC.getAILogging())
 						{
 							CvString strLogString;
@@ -8517,7 +8537,15 @@ void CvTacticalAI::ExecuteMoveToPlot(UnitHandle pUnit, CvPlot* pTarget, bool bSa
 #else
 		pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), pTarget->getX(), pTarget->getY(), MOVE_UNITS_IGNORE_DANGER);
 #endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#ifdef AUI_TACTICAL_FIX_EXECUTE_MOVE_TO_PLOT_UNIT_PROCESSED
+		if (pTarget == pUnit->plot() && pUnit->getMoves() > 0)
+		{
+			ExecuteMoveToPlot(pUnit, pTarget, bSaveMoves, iTurnsToTarget);
+		}
+		else if (!bSaveMoves)
+#else
 		if(!bSaveMoves)
+#endif // AUI_TACTICAL_FIX_EXECUTE_MOVE_TO_PLOT_UNIT_PROCESSED
 		{
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 			CheckAndExecuteFreePillageMoves(pUnit);
@@ -10588,7 +10616,6 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 									CvTacticalUnit unit;
 									unit.SetID(pLoopUnit->GetID());
 
-									// Want ranged units to attack first, so inflate this
 #ifdef AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_STRENGTH
 									if (bIsCityTarget)
 									{
@@ -10599,6 +10626,7 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 										unit.SetAttackStrength(pLoopUnit->GetMaxRangedCombatStrength(pTarget->getBestDefender(NO_PLAYER, m_pPlayer->GetID()).pointer(), /*pCity*/ NULL, true, true));
 									}
 #else
+									// Want ranged units to attack first, so inflate this
 									unit.SetAttackStrength(100 * pLoopUnit->GetMaxRangedCombatStrength(NULL, /*pCity*/ NULL, true, true));
 #endif // AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_STRENGTH
 									unit.SetHealthPercent(100, 100);  // Don't take damage from bombarding, so show as fully healthy
@@ -10612,6 +10640,12 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 									}
 #endif // AUI_TACTICAL_FIND_UNITS_WITHIN_STRIKING_DISTANCE_AIR_SWEEPS
 								}
+#ifdef AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
+								else
+								{
+									bIsRangedNoDamage = true;
+								}
+#endif // AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
 							}
 #ifdef AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
 							else
@@ -10895,7 +10929,11 @@ bool CvTacticalAI::FindClosestUnit(CvPlot* pTarget, int iNumTurnsAway, bool bMus
 				{
 					if (pLoopUnit->canParadropAt(pTarget, pTarget->getX(), pTarget->getY(), bIgnoreUnits) && iTurns > 1)
 					{
-						iTurns = 1;
+#ifdef AUI_FAST_COMP
+						iTurns = FASTMIN(iTurns, 1);
+#else
+						iTurns = MIN(iTurns, 1);
+#endif // AUI_FAST_COMP
 						bWillParadrop = true;
 					}
 					else
@@ -10908,7 +10946,11 @@ bool CvTacticalAI::FindClosestUnit(CvPlot* pTarget, int iNumTurnsAway, bool bMus
 							{
 								if (pLoopUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY(), bIgnoreUnits) && iTurns > 2)
 								{
-									iTurns = 2;
+#ifdef AUI_FAST_COMP
+									iTurns = FASTMIN(iTurns, 2);
+#else
+									iTurns = MIN(iTurns, 2);
+#endif // AUI_FAST_COMP
 									bWillParadrop = true;
 									break;
 								}
@@ -11873,7 +11915,11 @@ bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, 
 }
 
 /// Find a multi-turn target for a land barbarian to wander towards
+#ifdef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+CvPlot* CvTacticalAI::FindBestBarbarianLandMove(UnitHandle pUnit, bool &bIsCombatMove)
+#else
 CvPlot* CvTacticalAI::FindBestBarbarianLandMove(UnitHandle pUnit)
+#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
 {
 	CvPlot* pBestMovePlot = FindNearbyTarget(pUnit, m_iLandBarbarianRange);
 	
@@ -11881,6 +11927,13 @@ CvPlot* CvTacticalAI::FindBestBarbarianLandMove(UnitHandle pUnit)
 	if (pBestMovePlot == NULL)
 	{
 		pBestMovePlot = FindBarbarianGankTradeRouteTarget(pUnit);
+#ifdef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+		bIsCombatMove = false;
+	}
+	else
+	{
+		bIsCombatMove = true;
+#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
 	}
 
 	// explore wander
@@ -11901,9 +11954,6 @@ CvPlot* CvTacticalAI::FindPassiveBarbarianLandMove(UnitHandle pUnit)
 
 	iBestValue = MAX_INT;
 	pBestMovePlot = NULL;
-#ifdef AUI_TACTICAL_FIX_FIND_PASSIVE_BARBARIAN_LAND_MOVE_ONLY_UNDEFENDED_CAMPS
-	UnitHandle pCampDefender;
-#endif // AUI_TACTICAL_FIX_FIND_PASSIVE_BARBARIAN_LAND_MOVE_ONLY_UNDEFENDED_CAMPS
 
 	for(unsigned int iI = 0; iI < m_AllTargets.size(); iI++)
 	{
@@ -11911,8 +11961,7 @@ CvPlot* CvTacticalAI::FindPassiveBarbarianLandMove(UnitHandle pUnit)
 		if(m_AllTargets[iI].GetTargetType()==AI_TACTICAL_TARGET_BARBARIAN_CAMP)
 		{
 #ifdef AUI_TACTICAL_FIX_FIND_PASSIVE_BARBARIAN_LAND_MOVE_ONLY_UNDEFENDED_CAMPS
-			pCampDefender = GC.getMap().plot(m_AllTargets[iI].GetTargetX(), m_AllTargets[iI].GetTargetY())->getBestDefender(m_pPlayer->GetID());
-			if (pCampDefender && (!pCampDefender->isRanged() || pUnit->isRanged()))
+			if (GC.getMap().plot(m_AllTargets[iI].GetTargetX(), m_AllTargets[iI].GetTargetY())->getNumDefenders(m_pPlayer->GetID()) > 0)
 				continue;
 #endif // AUI_TACTICAL_FIX_FIND_PASSIVE_BARBARIAN_LAND_MOVE_ONLY_UNDEFENDED_CAMPS
 			iValue = plotDistance(pUnit->getX(), pUnit->getY(), m_AllTargets[iI].GetTargetX(), m_AllTargets[iI].GetTargetY());
@@ -11938,7 +11987,11 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 	CvPlot* pBestMovePlot = NULL;
 	int iBestValue;
 	int iValue;
+#ifdef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_SEA_MOVE_POSSIBLE_NULL_POINTER
+	CvPlot* pPlot = NULL;
+#else
 	CvPlot* pPlot;
+#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_SEA_MOVE_POSSIBLE_NULL_POINTER
 	CvTacticalTarget* pTarget;
 	int iMovementRate;
 
@@ -11954,7 +12007,11 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 		if(plotDistance(pUnit->getX(), pUnit->getY(), pTarget->GetTargetX(), pTarget->GetTargetY()) < m_iSeaBarbarianRange)
 		{
 			pPlot = GC.getMap().plot(pTarget->GetTargetX(), pTarget->GetTargetY());
+#ifdef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_SEA_MOVE_POSSIBLE_NULL_POINTER
+			if (pPlot && pUnit->getArea() == pPlot->getArea())
+#else
 			if(pUnit->getArea() == pPlot->getArea())
+#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_SEA_MOVE_POSSIBLE_NULL_POINTER
 			{
 				iValue = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/);
 				if(iValue < iBestValue)
@@ -12030,6 +12087,9 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 	// No obvious target, let's scan nearby tiles for the best choice, borrowing some of the code from the explore AI
 	if(pBestMovePlot == NULL)
 	{
+#ifdef AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
+		const int iCurrentDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()));
+#endif // AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
 		// Now looking for BEST score
 		iBestValue = 0;
 		int iMovementRange = pUnit->movesLeft() / GC.getMOVE_DENOMINATOR();
@@ -12074,6 +12134,13 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 					continue;
 				}
 
+#ifdef AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
+				if (m_pPlayer->GetPlotDanger(*pConsiderPlot) > iCurrentDanger)
+				{
+					continue;
+				}
+#endif // AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
+
 #ifdef AUI_ASTAR_PARADROP
 				if (!CanReachInXTurns(pUnit, pConsiderPlot, 1, false, true))
 #else
@@ -12088,14 +12155,28 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 				iValue = CvEconomicAI::ScoreExplorePlot(pConsiderPlot, pUnit->getTeam(), pUnit->getUnitInfo().GetBaseSightRange(), eDomain);
 
 				// Add special value for being near enemy lands
+#ifdef AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
+				if (iValue > 0)
+				{
+					if (pConsiderPlot->isOwned())
+					{
+						iValue += 200;
+					}
+					else if (pConsiderPlot->isAdjacentOwned())
+#else
 				if(pConsiderPlot->isAdjacentOwned())
+#endif // AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
 				{
 					iValue += 100;
 				}
+#ifdef AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
+				}
+#else
 				else if(pConsiderPlot->isOwned())
 				{
 					iValue += 200;
 				}
+#endif // AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
 
 				// If still have no value, score equal to distance from my current plot
 				if(iValue == 0)
@@ -12125,6 +12206,10 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 	CvPlot* pBestMovePlot = NULL;
 	int iBestValue;
 	int iValue;
+
+#ifdef AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
+	const int iCurrentDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()));
+#endif // AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
 
 	// Now looking for BEST score
 	iBestValue = 0;
@@ -12170,6 +12255,13 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 				continue;
 			}
 
+#ifdef AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
+			if (m_pPlayer->GetPlotDanger(*pPlot) > iCurrentDanger)
+			{
+				continue;
+			}
+#endif // AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
+
 #ifdef AUI_ASTAR_PARADROP
 			if (!CanReachInXTurns(pUnit, pPlot, 1, false, true))
 #else
@@ -12184,14 +12276,32 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 			iValue = CvEconomicAI::ScoreExplorePlot(pPlot, pUnit->getTeam(), pUnit->getUnitInfo().GetBaseSightRange(), eDomain);
 
 			// Add special value for popping up on hills or near enemy lands
+#ifdef AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
+			if (iValue > 0)
+			{
+				if (pPlot->isHills())
+				{
+					iValue += 50;
+				}
+			if(pPlot->isOwned())
+			{
+				iValue += 200;
+			}
+			else if(pPlot->isAdjacentOwned())
+#else
 			if(pPlot->isAdjacentOwned())
+#endif // AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
 			{
 				iValue += 100;
 			}
+#ifdef AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
+			}
+#else
 			else if(pPlot->isOwned())
 			{
 				iValue += 200;
 			}
+#endif // AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
 
 			// If still have no value, score equal to distance from my current plot
 			if(iValue == 0)
@@ -12361,6 +12471,10 @@ CvPlot* CvTacticalAI::FindNearbyTarget(UnitHandle pUnit, int iRange, AITacticalT
 			        m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_MEDIUM_PRIORITY_UNIT ||
 			        m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_LOW_PRIORITY_UNIT ||
 			        m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_CITY ||
+#ifdef AUI_TACTICAL_FIX_FIND_NEARBY_TARGET_ALL_IMPROVEMENT_TYPES_POSSIBLE
+					m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_CITADEL ||
+					m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_IMPROVEMENT_RESOURCE ||
+#endif // AUI_TACTICAL_FIX_FIND_NEARBY_TARGET_ALL_IMPROVEMENT_TYPES_POSSIBLE
 			        m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_IMPROVEMENT)
 			{
 				bTypeMatch = true;
