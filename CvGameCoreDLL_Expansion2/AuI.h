@@ -185,7 +185,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Scales the GetLastTurnWorkerDisbanded() computation to game speed
 #define AUI_CITYSTRATEGY_FIX_TILE_IMPROVERS_LAST_DISBAND_WORKER_TURN_SCALE
 /// Disables the minimum population requirement for the "first faith building" strategy
-#define AUI_CITYSTRATEGY_FIX_FIRST_FAITH_BUILDING_NO_MINIMUM_POP
+//#define AUI_CITYSTRATEGY_FIX_FIRST_FAITH_BUILDING_NO_MINIMUM_POP
 /// The sanity check to ensure water units are not built on small inland seas now requires at least one other civ (minors too!) to have a city coastal to that area
 #define AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_ACCURATE_SEA_SANITY_CHECK
 /// Instead of ignoring all military training buildings (eg. stables, kreposts, etc.), puppets will instead nullify the Military Training and Naval flavors
@@ -193,7 +193,9 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Priorities for sneak attack military units are no longer artificially inflated at the highest difficulty levels
 #define AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NO_HIGH_DIFFICULTY_SKEW
 /// If the number of buildables is greater than the number of possible choices, normalize all weights in the list (ie. subtract the lowest score from all scores)
-#define AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
+//#define AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
+/// If the player has yet to unlock an ideology, multiply the base weight of buildings that can unlock ideologies by this value
+#define AUI_CITYSTRATEGY_EMPHASIZE_FACTORIES_IF_NO_IDEOLOGY (8)
 
 // Culture Classes Stuff
 /// AI only wants propaganda diplomats with players of different ideologies (since that's the only time they get the tourism bonus)
@@ -325,7 +327,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_GS_GET_PERSONALITY_AND_GRAND_STRATEGY_USE_COMPARE_TO_LOWEST_RATIO
 #endif
 /// Multiplies the science flavor of buildings, wonders, and techs depending on how well the tech requirements of significant GS's is met (eg. have Archaeology, have Internet, etc.)
-#define AUI_GS_SCIENCE_FLAVOR_BOOST (8)
+#define AUI_GS_SCIENCE_FLAVOR_BOOST (6)
 /// Replaces the logging function with one that allows for easy creation of graphs within Excel
 #define AUI_GS_BETTER_LOGGING
 
@@ -802,6 +804,16 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 /// Runs moves for each operation twice, in case the operation switches states mid-move
 #define AUI_TACTICAL_PLOT_OPERATIONAL_ARMY_MOVES_MOVE_TWICE
+/// A plot's extra explore score from being owned is check before the check for being adjacent to an owned tile, so it is applied properly
+#define AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
+/// If the best barbarian land target is not a combat move, have the unit move onto the tile instead of next to it
+#define AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+/// If a target type is not specified, all improvement types are now valid targets (not just non-citadel improvements without resources)
+#define AUI_TACTICAL_FIX_FIND_NEARBY_TARGET_ALL_IMPROVEMENT_TYPES_POSSIBLE
+/// Ignore tiles with a higher danger value than the barbarian's current tile when finding explore tiles
+//#define AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
+/// Fixes a possible null pointer when converting a target's coordinates to a plot
+#define AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_SEA_MOVE_POSSIBLE_NULL_POINTER
 
 // Tactical Analysis Map Stuff
 /// Enables a minor adjustment for ranged units to account for possibly being able to move and shoot at a tile
@@ -828,6 +840,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Applies the necessary science flavor boost to techs in addition to buildings, wonders, policies, and units
 #define AUI_PLAYERTECHS_ADD_FLAVOR_AS_STRATEGIES_USE_SCIENCE_FLAVOR_BOOST
 #endif
+/// Buildings that contribute towards getting an ideology act as a unique building for the purposes of tech scoring
+#define AUI_PLAYERTECHS_RESET_IDEOLOGY_UNLOCKERS_COUNT_AS_UNIQUE
 
 // Tech AI Stuff
 /// The AI wants an expensive tech if it's selecting a free tech
