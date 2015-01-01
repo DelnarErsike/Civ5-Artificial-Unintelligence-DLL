@@ -860,6 +860,14 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 
 			iTempWeight = m_pBuildingProductionAI->GetWeight(eLoopBuilding);
 
+#ifdef AUI_CITYSTRATEGY_EMPHASIZE_FACTORIES_IF_NO_IDEOLOGY
+			if (kPlayer.GetPlayerPolicies()->GetLateGamePolicyTree() == NO_POLICY_BRANCH_TYPE && 
+				pkBuildingInfo->GetXBuiltTriggersIdeologyChoice() > 0)
+			{
+				iTempWeight *= AUI_CITYSTRATEGY_EMPHASIZE_FACTORIES_IF_NO_IDEOLOGY;
+			}
+#endif // AUI_CITYSTRATEGY_EMPHASIZE_FACTORIES_IF_NO_IDEOLOGY
+
 			// Don't build the UN if you aren't going for the diplo victory
 			if(pkBuildingInfo->IsDiplomaticVoting())
 			{
