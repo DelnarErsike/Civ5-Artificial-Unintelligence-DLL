@@ -18794,7 +18794,7 @@ void CvUnit::GetMovablePlotListOpt(FFastVector<CvPlot*>& plotData, CvPlot* pTarg
 							}
 							if (pNode)
 							{
-								if (pNode->m_iData2 == 1 && pNode->m_iData1 > (isMustSetUpToRangedAttack() ? 1 : 0))
+								if (pNode->m_iData2 == 1 && pNode->m_iData1 > getMustSetUpToRangedAttackCount())
 								{
 									plotData.push_back(pLoopPlot);
 
@@ -18838,14 +18838,14 @@ void CvUnit::GetMovablePlotListOpt(FFastVector<CvPlot*>& plotData, CvPlot* pTarg
 			}
 		}
 	}
-	// Not making anything larger, AI turns would take forever
+	// Delnar: Not implementing anything larger for now, AI turns would take forever
 	else if (iWithinTurns == 1)
 	{
 		int iMaxDX;
 #ifdef AUI_FAST_COMP
-		int iRange = FASTMIN(getMoves(), baseMoves());
+		int iRange = FASTMIN((getMoves() + GC.getMOVE_DENOMINATOR() - 1) / GC.getMOVE_DENOMINATOR(), baseMoves());
 #else
-		int iRange = MIN(getMoves(), maxMoves());
+		int iRange = MIN((getMoves() + GC.getMOVE_DENOMINATOR() - 1) / GC.getMOVE_DENOMINATOR(), baseMoves());
 #endif // AUI_FAST_COMP
 		for (iDY = -iRange; iDY <= iRange; iDY++)
 		{
