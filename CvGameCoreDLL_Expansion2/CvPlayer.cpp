@@ -23857,6 +23857,10 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 		GC.GetTacticalAnalysisMapFinder().SetData(pUnit);
 #endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE
 
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_CHECK_ADJACENT_FOR_CITY_TARGET
+	CvPlot* pAdjacentPlot;
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_CHECK_ADJACENT_FOR_CITY_TARGET
+
 	int iBestFoundValue = 0;
 	CvPlot* pBestFoundPlot = NULL;
 
@@ -23932,7 +23936,8 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 		bool bAdjacentTargettedForCity = false;
 		for (int jJ = 0; jJ < NUM_DIRECTION_TYPES; jJ++)
 		{
-			if (IsPlotTargetedForCity(plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)jJ)))
+			pAdjacentPlot = plotDirection(pPlot->getX(), pPlot->getY(), (DirectionTypes)jJ);
+			if (pAdjacentPlot && IsPlotTargetedForCity(pAdjacentPlot))
 			{
 				bAdjacentTargettedForCity = true;
 				break;
