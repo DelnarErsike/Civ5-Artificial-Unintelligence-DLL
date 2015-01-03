@@ -6986,7 +6986,7 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 	PlayerTypes eOwner = (PlayerTypes)m_eOwner;
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
-	ImprovementTypes eUniqueImprovement = NO_IMPROVEMENT;
+	FFastVector<ImprovementTypes, false, 2> veUniqueImprovement;
 #endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 	if (eFutureOwner != NO_PLAYER && eOwner == NO_PLAYER)
 	{
@@ -6997,10 +6997,6 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 		for (int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
 		{
 			eBuild = (BuildTypes)iBuildIndex;
-			if (!canBuild(eBuild, eOwner, false, false))
-			{
-				continue;
-			}
 			CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
 			if (pkBuild)
 			{
@@ -7012,8 +7008,10 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 					{
 						if (pkImprovement->GetRequiredCivilization() == GET_PLAYER(eOwner).getCivilizationType())
 						{
-							eUniqueImprovement = eImprovement;
-							break;
+							if (canBuild(eBuild, eOwner, false, false))
+							{
+								veUniqueImprovement.push_back(eImprovement);
+							}
 						}
 					}
 				}
@@ -7163,9 +7161,25 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 	// Yield from unique improvement
-	if (eUniqueImprovement != NO_IMPROVEMENT)
+	if (veUniqueImprovement.size() > 0)
 	{
-		iYield += calculateImprovementYieldChange(eUniqueImprovement, eYield, eOwner);
+		int iMaxImprovementYieldChange = calculateImprovementYieldChange(veUniqueImprovement.at(0), eYield, eOwner);
+		if (GC.getImprovementInfo(veUniqueImprovement.at(0))->IsNoTwoAdjacent())
+			iMaxImprovementYieldChange /= 4;
+		for (uint uiI = 1; uiI < veUniqueImprovement.size(); uiI++)
+		{
+			if (GC.getImprovementInfo(veUniqueImprovement.at(0))->IsNoTwoAdjacent())
+#ifdef AUI_FAST_COMP
+				iMaxImprovementYieldChange = FASTMAX(iMaxImprovementYieldChange, calculateImprovementYieldChange(veUniqueImprovement.at(uiI), eYield, eOwner) / 4);
+			else
+				iMaxImprovementYieldChange = FASTMAX(iMaxImprovementYieldChange, calculateImprovementYieldChange(veUniqueImprovement.at(uiI), eYield, eOwner));
+#else
+				iMaxImprovementYieldChange = MAX(iMaxImprovementYieldChange, calculateImprovementYieldChange(veUniqueImprovement.at(uiI), eYield, eOwner) / 4);
+			else
+				iMaxImprovementYieldChange = MAX(iMaxImprovementYieldChange, calculateImprovementYieldChange(veUniqueImprovement.at(uiI), eYield, eOwner));
+#endif // AUI_FAST_COMP
+		}
+		iYield += iMaxImprovementYieldChange;
 	}
 #endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 
@@ -10603,9 +10617,9 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 
 	// For straits
 	bool bAddThis;
-	std::vector<int> aiLandAreas;
-	std::vector<int> aiWaterAreas;
-	std::vector<int>::iterator it;
+	FFastVector<int, true, 6> aiLandAreas;
+	FFastVector<int, true, 6> aiWaterAreas;
+	FFastVector<int, true, 6>::iterator it;
 	bool bSkipLandStrait = GC.getMap().getNumLandAreas() < 2;
 	bool bSkipWaterStrait = GC.getMap().getNumAreas() - GC.getMap().getNumLandAreas() < 2;
 
