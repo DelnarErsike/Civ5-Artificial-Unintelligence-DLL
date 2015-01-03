@@ -2002,6 +2002,48 @@ void CvEconomicAI::DoReconState()
 
 	bool bNeedToLookAtDeepWaterAlso = GET_TEAM(m_pPlayer->getTeam()).canEmbarkAllWaterPassage();
 
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
+	FFastVector<int, true, 8> viAreasToCheck;
+	FFastVector<int, true, 8>::iterator it;
+	bool bAddThisArea;
+	int iCurrentArea;
+	CvCity* pLoopCity;
+	int iCityLoop = 0;
+	for (pLoopCity = m_pPlayer->firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iCityLoop))
+	{
+		bAddThisArea = true;
+		iCurrentArea = pLoopCity->getArea();
+		for (it = viAreasToCheck.begin(); it != viAreasToCheck.end(); ++it)
+		{
+			if (iCurrentArea == *it)
+			{
+				bAddThisArea = false;
+				break;
+			}
+		}
+		if (bAddThisArea)
+		{
+			viAreasToCheck.push_back(iCurrentArea);
+		}
+		if (pLoopCity->waterArea())
+		{
+		bAddThisArea = true;
+		iCurrentArea = pLoopCity->waterArea()->GetID();
+		for (it = viAreasToCheck.begin(); it != viAreasToCheck.end(); ++it)
+		{
+			if (iCurrentArea == *it)
+			{
+				bAddThisArea = false;
+				break;
+			}
+		}
+		if (bAddThisArea)
+		{
+			viAreasToCheck.push_back(iCurrentArea);
+		}
+	}
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
+
 	// Look at map size and gauge how much of it we know about
 	for(iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
 	{
@@ -2009,6 +2051,13 @@ void CvEconomicAI::DoReconState()
 
 		if(pPlot->isRevealed(m_pPlayer->getTeam()))
 		{
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
+			iCurrentArea = pPlot->getArea();
+			for (it = viAreasToCheck.begin(); it != viAreasToCheck.end(); ++it)
+			{
+				if (iCurrentArea == *it)
+				{
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
 			bIsLand = false;
 			bIsCoastalWater = false;
 
@@ -2052,6 +2101,11 @@ void CvEconomicAI::DoReconState()
 					}
 				}
 			}
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
+				}
+				break;
+			}
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
 		}
 	}
 
@@ -2194,14 +2248,21 @@ void CvEconomicAI::DoReconState()
 	// NAVAL RECON ACROSS THE ENTIRE MAP
 
 	// No coastal cities?  Moot point...
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
+	iCityLoop = 0;
+#else
 	CvCity* pLoopCity;
 	int iCityLoop;
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
 	bool bFoundCoastalCity = false;
 	for(pLoopCity = m_pPlayer->firstCity(&iCityLoop); pLoopCity != NULL && !bFoundCoastalCity; pLoopCity = m_pPlayer->nextCity(&iCityLoop))
 	{
 		if(pLoopCity->isCoastal())
 		{
 			bFoundCoastalCity = true;
+#ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
+			break;
+#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
 		}
 	}
 

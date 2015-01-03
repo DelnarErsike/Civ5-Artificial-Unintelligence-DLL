@@ -244,7 +244,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 
 // EconomicAI Stuff
-/// VITAL FOR MOST FUNCTIONS! Use float instead of int for certain variables (to retain information during division)
+/// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
 #define AUI_ECONOMIC_USE_DOUBLES
 #ifdef AUI_CITY_FIX_CREATE_UNIT_EXPLORE_ASSIGNMENT_TO_ECONOMIC
 /// Assigning non-scout units to become explorers is now done in EconomicAI instead of at City
@@ -256,6 +256,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_ECONOMIC_FIX_DO_RECON_STATE_SKIP_FIRST_ONLY_IF_NO_EXPLORERS
 /// The code to remove scouting non-scouts is more generalized (ie. doesn't depend on UNITAI_ATTACK)
 #define AUI_ECONOMIC_FIX_DO_RECON_STATE_MALLEABLE_REMOVE_NONSCOUTS
+/// When counting the number of tiles with adjacent fog, only count tiles that are on the same landmass as one of our cities (if land) or are accessible by one of our cities (if water)
+#define AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
 /// Adds a setter for m_iLastTurnWorkerDisbanded (so if a worker is disbanded in another class, they can reference this)
 #define AUI_ECONOMIC_SETTER_LAST_TURN_WORKER_DISBANDED
 /// Checks that would force the function to return false happen earlier in the function
