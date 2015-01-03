@@ -2027,19 +2027,20 @@ void CvEconomicAI::DoReconState()
 		}
 		if (pLoopCity->waterArea())
 		{
-		bAddThisArea = true;
-		iCurrentArea = pLoopCity->waterArea()->GetID();
-		for (it = viAreasToCheck.begin(); it != viAreasToCheck.end(); ++it)
-		{
-			if (iCurrentArea == *it)
+			bAddThisArea = true;
+			iCurrentArea = pLoopCity->waterArea()->GetID();
+			for (it = viAreasToCheck.begin(); it != viAreasToCheck.end(); ++it)
 			{
-				bAddThisArea = false;
-				break;
+				if (iCurrentArea == *it)
+				{
+					bAddThisArea = false;
+					break;
+				}
 			}
-		}
-		if (bAddThisArea)
-		{
-			viAreasToCheck.push_back(iCurrentArea);
+			if (bAddThisArea)
+			{
+				viAreasToCheck.push_back(iCurrentArea);
+			}
 		}
 	}
 #endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
