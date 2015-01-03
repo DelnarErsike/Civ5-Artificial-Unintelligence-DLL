@@ -871,10 +871,11 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 				// Start with strength of the city itself
 #ifdef AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_CITY_GIMPING
 				int iCityHitPoints = pClosestCity->GetMaxHitPoints() - pClosestCity->getDamage() * GC.getWOUNDED_DAMAGE_MULTIPLIER() / 100;
+				int iStrength = m_iTacticalRange * pClosestCity->getStrengthValue() * iCityHitPoints / pClosestCity->GetMaxHitPoints();
 #else
 				int iCityHitPoints = pClosestCity->GetMaxHitPoints() - pClosestCity->getDamage();
-#endif // AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_CITY_GIMPING
 				int iStrength = m_iTacticalRange * pClosestCity->getStrengthValue() * iCityHitPoints / GC.getMAX_CITY_HIT_POINTS();
+#endif // AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_CITY_GIMPING
 				if(pZone->GetTerritoryType() == TACTICAL_TERRITORY_FRIENDLY)
 				{
 					pZone->AddFriendlyStrength(iStrength);
@@ -908,9 +909,7 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 							else if (pLoopUnit->isRanged() && pLoopUnit->canMoveAndRangedStrike(pClosestCity->getX(), pClosestCity->getY()))
 								iDistance = 1;
 							else
-								iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true);
-							if (iDistance != MAX_INT)
-								iDistance *= 2;
+								iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true) - (pLoopUnit->isRanged() && !pLoopUnit->isMustSetUpToRangedAttack() ? 1 : 0);
 #else
 							iDistance = plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pClosestCity->getX(), pClosestCity->getY());
 #endif // AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
@@ -989,9 +988,7 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 										else if (pLoopUnit->isRanged() && pLoopUnit->canMoveAndRangedStrike(pClosestCity->getX(), pClosestCity->getY()))
 											iDistance = 1;
 										else
-											iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true);
-										if (iDistance != MAX_INT)
-											iDistance *= 2;
+											iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true) - (pLoopUnit->isRanged() && !pLoopUnit->isMustSetUpToRangedAttack() ? 1 : 0);
 #else
 										iDistance = plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pClosestCity->getX(), pClosestCity->getY());
 #endif // AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
