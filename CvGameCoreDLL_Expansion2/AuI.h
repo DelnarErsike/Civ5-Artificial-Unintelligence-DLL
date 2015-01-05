@@ -166,6 +166,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_WORKER_GET_RESOURCE_WEIGHT_INCREASE_UNOWNED_LUXURY_WEIGHT (2.0)
 /// Consider extra sources of happiness once a resource is obtained (eg. extra happiness from luxury resources via policy, extra happiness from resource variety)
 #define AUI_WORKER_GET_RESOURCE_WEIGHT_CONSIDER_EXTRAS_FOR_HAPPINESS_FROM_RESOURCE
+/// Removes the isAdjacent check for whether a work boat can access an area different from its current one (pathfinder takes care of bad cases anyway, it's just a bit slower)
+#define AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_WORK_BOATS_CONSIDER_ALL_SEA_PLOTS
 
 // City Stuff
 /// Shifts the scout assignment code to EconomicAI
@@ -284,6 +286,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 /// Nearby cities that are damaged can also be targetted
 #define AUI_ECONOMIC_FIX_GET_BEST_GREAT_WORK_CITY_NO_DAMAGE_FILTER
+/// Player settlers captured by barbarians still add to the player's settler count
+#define AUI_ECONOMIC_EARLY_EXPANSION_CAPTURED_BARBARIAN_SETTLERS_COUNT
 
 // Flavor Manager Stuff
 /// Players that start as human no longer load in default flavor values
