@@ -6703,6 +6703,8 @@ void CvTacticalAI::ExecuteAttack(CvTacticalTarget* pTarget, CvPlot* pTargetPlot,
 #endif // AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK_POSTPONE_MELEE_MOVE
 	// List of melee units being blocked waiting for another unit to move out of melee range
 	std::vector<CvTacticalUnit, std::allocator<CvTacticalUnit>> apMeleeUnitsBlocked;
+	bool bLandMeleeBlocked = false;
+	bool bSeaMeleeBlocked = false;
 
 	// First loop for melee units just to reposition.
 	for (unsigned int iI = 0; iI < m_CurrentMoveUnits.size(); iI++)
@@ -6776,6 +6778,15 @@ void CvTacticalAI::ExecuteAttack(CvTacticalTarget* pTarget, CvPlot* pTargetPlot,
 											{
 												apMeleeUnitsBlocked.push_back(m_CurrentMoveUnits[iI]);
 												unitHasMoved = true;
+												if (pUnit->getDomainType() == DOMAIN_LAND)
+													bLandMeleeBlocked = true;
+												else if (pUnit->getDomainType() == DOMAIN_SEA)
+													bSeaMeleeBlocked = true;
+												else
+												{
+													bLandMeleeBlocked = true;
+													bSeaMeleeBlocked = true;
+												}
 												if (GC.getLogging() && GC.getAILogging())
 												{
 													CvString strMsg;
@@ -6993,9 +7004,11 @@ void CvTacticalAI::ExecuteAttack(CvTacticalTarget* pTarget, CvPlot* pTargetPlot,
 			{
 #ifdef AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK_NO_MELEE_SUICIDE_AGAINST_CITY
 				iCityRangedDamage = (pTargetCity && iDamageRemaining > 1 ? pTargetCity->rangeCombatDamage(pUnit.pointer(), NULL, false) / iMeleeUnitCount : 0);
-				if (pUnit->canMove() && (!bMustSurviveAttack || ((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() + iCityRangedDamage) < pUnit->GetMaxHitPoints())))
+				if (pUnit->canMove() && (!bMustSurviveAttack || ((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() + iCityRangedDamage) < pUnit->GetMaxHitPoints()) ||
+					(bLandMeleeBlocked && pUnit->getDomainType() != DOMAIN_SEA) || (bSeaMeleeBlocked && pUnit->getDomainType() != DOMAIN_LAND)))
 #else
-				if (pUnit->canMove() && (!bMustSurviveAttack || ((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage()) < pUnit->GetMaxHitPoints())))
+				if (pUnit->canMove() && (!bMustSurviveAttack || ((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage()) < pUnit->GetMaxHitPoints()) ||
+					(bLandMeleeBlocked && pUnit->getDomainType() != DOMAIN_SEA) || (bSeaMeleeBlocked && pUnit->getDomainType() != DOMAIN_LAND)))
 #endif // AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK_NO_MELEE_SUICIDE_AGAINST_CITY
 				{
 					// Are we a melee unit
@@ -10491,7 +10504,7 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 
 	bool rtnValue = false;
 #ifdef AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
-	bool bIsRangedNoDamage = false;
+	bool bIsRangedDamage = false;
 #endif // AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
 	m_CurrentMoveUnits.clear();
 
@@ -10561,7 +10574,7 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 					}
 				}
 #ifdef AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
-				bIsRangedNoDamage = false;
+				bIsRangedDamage = false;
 #endif // AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
 
 				int iTurnsCalculated = -1;	// If CanReachInXTurns does an actual pathfind, save the result so we don't just do the same one again.
@@ -10643,6 +10656,9 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 									unit.SetHealthPercent(100, 100);  // Don't take damage from bombarding, so show as fully healthy
 									m_CurrentMoveUnits.push_back(unit);
 									rtnValue = true;
+#ifdef AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
+									bIsRangedDamage = true;
+#endif // AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
 
 #ifdef AUI_TACTICAL_FIND_UNITS_WITHIN_STRIKING_DISTANCE_AIR_SWEEPS
 									if (pLoopUnit->getDomainType() == DOMAIN_AIR)
@@ -10651,24 +10667,12 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 									}
 #endif // AUI_TACTICAL_FIND_UNITS_WITHIN_STRIKING_DISTANCE_AIR_SWEEPS
 								}
-#ifdef AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
-								else
-								{
-									bIsRangedNoDamage = true;
-								}
-#endif // AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
 							}
-#ifdef AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
-							else
-							{
-								bIsRangedNoDamage = true;
-							}
-#endif // AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
 						}
 					}
 				}
 #ifdef AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
-				if (!pLoopUnit->IsCanAttackRanged() || !bIsRangedNoDamage)
+				if (!bIsRangedDamage && (!bTargetUndefended || iTurnsCalculated > iNumTurnsAway))
 #else
 				else
 #endif // AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
@@ -12290,10 +12294,6 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 #ifdef AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
 			if (iValue > 0)
 			{
-				if (pPlot->isHills())
-				{
-					iValue += 50;
-				}
 			if(pPlot->isOwned())
 			{
 				iValue += 200;
