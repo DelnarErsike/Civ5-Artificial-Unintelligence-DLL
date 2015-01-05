@@ -676,10 +676,6 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 			//int iRange = pUnit->baseMoves();
 			//FAssertMsg(iRange > 0, "0 range? Uh oh");
 
-#ifdef AUI_DANGER_PLOTS_TWEAKED_RANGED
-			int iTurnsAway = MAX_INT;
-#endif // AUI_DANGER_PLOTS_TWEAKED_RANGED
-
 			CvIgnoreUnitsPathFinder& kPathFinder = GC.getIgnoreUnitsPathFinder();
 			kPathFinder.SetData(pUnit);
 
@@ -687,20 +683,39 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 			int iPlotY = pPlot->getY();
 			
 #ifdef AUI_DANGER_PLOTS_TWEAKED_RANGED
+			int iTurnsAway = MAX_INT;
 			// if unit is ranged, different algorithm must be used
 			if (pUnit->isRanged())
 			{
+#ifdef AUI_DANGER_PLOTS_ADD_DANGER_CONSIDER_TERRAIN_STRENGTH_MODIFICATION
+				if (pUnit->plot() == pPlot)
+					iBaseUnitCombatValue = pUnit->GetMaxDefenseStrength(pUnit->plot(), NULL) * iCombatValueCalc;
+				else
+					iBaseUnitCombatValue = pUnit->GetMaxRangedCombatStrength(NULL, NULL, true, true) * iCombatValueCalc;
+#endif // AUI_DANGER_PLOTS_ADD_DANGER_CONSIDER_TERRAIN_STRENGTH_MODIFICATION
+#ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+				if (pUnit->canMoveAndRangedStrike(iPlotX, iPlotY))
+				{
+					iTurnsAway = 1;
+				}
+#else
 				if (pUnit->canEverRangeStrikeAt(iPlotX, iPlotY))
 				{
 					iTurnsAway = 1;
 				}
-#ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
-				else if (pUnit->canMoveAndRangedStrike(iPlotX, iPlotY))
-				{
-					iTurnsAway = 2;
-				}
 #endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 			}
+#ifdef AUI_DANGER_PLOTS_ADD_DANGER_CONSIDER_TERRAIN_STRENGTH_MODIFICATION
+			else
+			{
+				if (pUnit->plot() == pPlot)
+					iBaseUnitCombatValue = pUnit->GetMaxDefenseStrength(pUnit->plot(), NULL) * iCombatValueCalc;
+				else if (pUnit->plot()->isAdjacent(pPlot))
+					iBaseUnitCombatValue = pUnit->GetMaxAttackStrength(pUnit->plot(), pPlot, NULL) * iCombatValueCalc;
+				else
+					iBaseUnitCombatValue = pUnit->GetMaxAttackStrength(NULL, pPlot, NULL) * iCombatValueCalc;
+			}
+#endif // AUI_DANGER_PLOTS_ADD_DANGER_CONSIDER_TERRAIN_STRENGTH_MODIFICATION
 
 			// iTurnsAway is only greater than 1 if unit cannot ranged strike onto the tile
 			if (iTurnsAway > 1)
@@ -712,17 +727,16 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 					pNode = kPathFinder.GetLastNode();
 				}
 				
-#ifdef AUI_FAST_COMP
 				if (pNode)
-					iTurnsAway = FASTMIN(iTurnsAway, pNode->m_iData2);
-				if (iTurnsAway == MAX_INT)
+					iTurnsAway = pNode->m_iData2;
+				else
 					return;
+				if (pUnit->GetRange() > 1)
+					iTurnsAway -= 1;
+				iTurnsAway += pUnit->getMustSetUpToRangedAttackCount();
+#ifdef AUI_FAST_COMP
 				iTurnsAway = FASTMAX(iTurnsAway, 1);
 #else
-				if (pNode)
-					iTurnsAway = MIN(iTurnsAway, pNode->m_iData2);
-				if (iTurnsAway == MAX_INT)
-					return;
 				iTurnsAway = MAX(iTurnsAway, 1);
 #endif // AUI_FAST_COMP
 			}
