@@ -9918,9 +9918,9 @@ int CvUnit::GetRangePlusMoveToshot() const
 {
 	VALIDATE_OBJECT
 #ifdef AUI_FAST_COMP
-	return ((getDomainType() == DOMAIN_AIR) ? GetRange() : (FASTMAX(GetRange(), 1) + baseMoves() - 1 - (isMustSetUpToRangedAttack() ? 1 : 0)));
+	return ((getDomainType() == DOMAIN_AIR) ? GetRange() : FASTMAX(GetRange(), 1) + baseMoves() - 1 - getMustSetUpToRangedAttackCount());
 #else
-	return ((getDomainType() == DOMAIN_AIR) ? GetRange() : (MAX(GetRange(), 1) + baseMoves() - 1 - (isMustSetUpToRangedAttack() ? 1 : 0)));
+	return ((getDomainType() == DOMAIN_AIR) ? GetRange() : MAX(GetRange(), 1) + baseMoves() - 1 - getMustSetUpToRangedAttackCount());
 #endif // AUI_FAST_COMP
 }
 #endif // AUI_UNIT_RANGE_PLUS_MOVE
