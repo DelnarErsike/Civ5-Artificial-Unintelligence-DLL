@@ -909,7 +909,11 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 							else if (pLoopUnit->isRanged() && pLoopUnit->canMoveAndRangedStrike(pClosestCity->getX(), pClosestCity->getY()))
 								iDistance = 1;
 							else
-								iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true) - (pLoopUnit->isRanged() && !pLoopUnit->isMustSetUpToRangedAttack() ? 1 : 0);
+							{
+								iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true) + pLoopUnit->getMustSetUpToRangedAttackCount();
+								if (pLoopUnit->GetRange() > 1)
+									iDistance -= 1;
+							}
 #else
 							iDistance = plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pClosestCity->getX(), pClosestCity->getY());
 #endif // AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
@@ -988,7 +992,11 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 										else if (pLoopUnit->isRanged() && pLoopUnit->canMoveAndRangedStrike(pClosestCity->getX(), pClosestCity->getY()))
 											iDistance = 1;
 										else
-											iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true) - (pLoopUnit->isRanged() && !pLoopUnit->isMustSetUpToRangedAttack() ? 1 : 0);
+										{
+											iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true) + pLoopUnit->getMustSetUpToRangedAttackCount();
+											if (pLoopUnit->GetRange() > 1)
+												iDistance -= 1;
+										}
 #else
 										iDistance = plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pClosestCity->getX(), pClosestCity->getY());
 #endif // AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
