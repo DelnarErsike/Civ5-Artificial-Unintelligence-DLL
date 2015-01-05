@@ -7008,9 +7008,14 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 					{
 						if (pkImprovement->GetRequiredCivilization() == GET_PLAYER(eOwner).getCivilizationType())
 						{
-							if (canBuild(eBuild, eOwner, false, false))
+							eResource = getResourceType(GET_PLAYER(eOwner).getTeam());
+							if (eResource == NO_RESOURCE || pkImprovement->IsImprovementResourceTrade(eResource) || 
+								GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_BONUS)
 							{
-								veUniqueImprovement.push_back(eImprovement);
+								if (canBuild(eBuild, eOwner, false, false))
+								{
+									veUniqueImprovement.push_back(eImprovement);
+								}
 							}
 						}
 					}
