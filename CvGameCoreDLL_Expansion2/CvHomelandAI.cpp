@@ -1365,35 +1365,38 @@ void CvHomelandAI::PlotWorkerSeaMoves()
 		}
 #endif // AUI_HOMELAND_PLOT_SEA_WORKER_MOVES_EMPLOYS_AITYPE_FLIP
 #ifdef AUI_HOMELAND_PLOT_WORKER_SEA_MOVES_DISBAND_WORK_BOATS_WITHOUT_TARGET
-		bool bCanTarget = false;
-
-		// Loop through all possible resources
-		for (unsigned int iI = 0; iI < m_TargetedNavalResources.size(); iI++)
+		if (!m_pPlayer->isHuman())
 		{
-			// See if this unit can reach any this turn
-			CvPlot* pTarget = GC.getMap().plot(m_TargetedNavalResources[iI].GetTargetX(), m_TargetedNavalResources[iI].GetTargetY());
+			bool bCanTarget = false;
 
-			if (!pUnit->canBuild(pTarget, (BuildTypes)m_TargetedNavalResources[iI].GetAuxIntData()))
+			// Loop through all possible resources
+			for (unsigned int iI = 0; iI < m_TargetedNavalResources.size(); iI++)
 			{
-				continue;
-			}
+				// See if this unit can reach any this turn
+				CvPlot* pTarget = GC.getMap().plot(m_TargetedNavalResources[iI].GetTargetX(), m_TargetedNavalResources[iI].GetTargetY());
 
-			int iMoves = TurnsToReachTarget(pUnit.pointer(), pTarget, true, true);
-			if (iMoves < MAX_INT)
-			{
-				bCanTarget = true;
-				break;
+				if (!pUnit->canBuild(pTarget, (BuildTypes)m_TargetedNavalResources[iI].GetAuxIntData()))
+				{
+					continue;
+				}
+
+				int iMoves = TurnsToReachTarget(pUnit.pointer(), pTarget, true, true);
+				if (iMoves < MAX_INT)
+				{
+					bCanTarget = true;
+					break;
+				}
 			}
-		}
-		// Scrap work boats that cannot target anything (death is delayed, so it won't mess up the loop)
-		if (!bCanTarget)
-		{
-			pUnit->scrap();
-			if (GC.getLogging() && GC.getAILogging())
+			// Scrap work boats that cannot target anything (death is delayed, so it won't mess up the loop)
+			if (!bCanTarget)
 			{
-				CvString strLogString;
-				strLogString.Format("Disbanding work boat, cannot target anything. %s, X: %d, Y: %d, iNumWorkersSea: %d, iNumCities: %d", pUnit->getName().GetCString(), pUnit->getX(), pUnit->getY(), m_pPlayer->GetNumUnitsWithUnitAI(UNITAI_WORKER_SEA, true, true) + 1, m_pPlayer->getNumCities());
-				LogHomelandMessage(strLogString);
+				pUnit->scrap();
+				if (GC.getLogging() && GC.getAILogging())
+				{
+					CvString strLogString;
+					strLogString.Format("Disbanding work boat, cannot target anything. %s, X: %d, Y: %d, iNumWorkersSea: %d, iNumCities: %d", pUnit->getName().GetCString(), pUnit->getX(), pUnit->getY(), m_pPlayer->GetNumUnitsWithUnitAI(UNITAI_WORKER_SEA, true, true) + 1, m_pPlayer->getNumCities());
+					LogHomelandMessage(strLogString);
+				}
 			}
 		}
 #endif // AUI_HOMELAND_PLOT_WORKER_SEA_MOVES_DISBAND_WORK_BOATS_WITHOUT_TARGET
@@ -2891,22 +2894,6 @@ void CvHomelandAI::ExecuteWorkerMoves()
 			}
 #endif // AUI_HOMELAND_PLOT_WORKER_MOVES_EMPLOYS_AITYPE_FLIP
 
-#ifdef AUI_HOMELAND_PLOT_WORKER_MOVES_DISBAND_EXTRA_IDLE_WORKERS
-			// scrap extra idle workers (death is delayed, so it won't mess up the loop)
-			if (m_pPlayer->GetNumUnitsWithUnitAI(UNITAI_WORKER, true, false) > m_pPlayer->getNumCities())
-			{
-				pUnit->scrap();
-				m_pPlayer->GetEconomicAI()->SetLastTurnWorkerDisbanded(GC.getGame().getGameTurn());
-				if (GC.getLogging() && GC.getAILogging())
-				{
-					CvString strLogString;
-					strLogString.Format("Disbanding extra idle worker. %s, X: %d, Y: %d, iNumWorkers: %d, iNumCities: %d", pUnit->getName().GetCString(), pUnit->getX(), pUnit->getY(), m_pPlayer->GetNumUnitsWithUnitAI(UNITAI_WORKER, true, false) + 1, m_pPlayer->getNumCities());
-					LogHomelandMessage(strLogString);
-				}
-				continue;
-			}
-#endif // AUI_HOMELAND_PLOT_WORKER_MOVES_DISBAND_EXTRA_IDLE_WORKERS
-
 			// if there's nothing else to do, move to the safest spot nearby
 			if(MoveCivilianToSafety(pUnit.pointer(), true /*bIgnoreUnits*/))
 			{
@@ -2937,15 +2924,39 @@ void CvHomelandAI::ExecuteWorkerMoves()
 					pLog->Msg(strLog);
 				}
 
+#ifdef AUI_HOMELAND_PLOT_WORKER_MOVES_DISBAND_EXTRA_IDLE_WORKERS
+				if (!pUnit->canMove())
+				{
+#else
 				// slewis - this was removed because a unit would eat all its moves. So if it didn't do anything this turn, it wouldn't be able to work 
 				pUnit->PushMission(CvTypes::getMISSION_SKIP());
+#endif // AUI_HOMELAND_PLOT_WORKER_MOVES_DISBAND_EXTRA_IDLE_WORKERS
 				if (!m_pPlayer->isHuman())
 				{
 					pUnit->finishMoves();
 				}
 				UnitProcessed(pUnit->GetID());
 				continue;
+#ifdef AUI_HOMELAND_PLOT_WORKER_MOVES_DISBAND_EXTRA_IDLE_WORKERS
+				}
+#endif // AUI_HOMELAND_PLOT_WORKER_MOVES_DISBAND_EXTRA_IDLE_WORKERS
 			}
+
+#ifdef AUI_HOMELAND_PLOT_WORKER_MOVES_DISBAND_EXTRA_IDLE_WORKERS
+			// scrap extra idle workers (death is delayed, so it won't mess up the loop)
+			if (!m_pPlayer->isHuman() && m_pPlayer->GetNumUnitsWithUnitAI(UNITAI_WORKER, true, false) > m_pPlayer->getNumCities())
+			{
+				pUnit->scrap();
+				m_pPlayer->GetEconomicAI()->SetLastTurnWorkerDisbanded(GC.getGame().getGameTurn());
+				if (GC.getLogging() && GC.getAILogging())
+				{
+					CvString strLogString;
+					strLogString.Format("Disbanding extra idle worker. %s, X: %d, Y: %d, iNumWorkers: %d, iNumCities: %d", pUnit->getName().GetCString(), pUnit->getX(), pUnit->getY(), m_pPlayer->GetNumUnitsWithUnitAI(UNITAI_WORKER, true, false) + 1, m_pPlayer->getNumCities());
+					LogHomelandMessage(strLogString);
+				}
+				continue;
+			}
+#endif // AUI_HOMELAND_PLOT_WORKER_MOVES_DISBAND_EXTRA_IDLE_WORKERS
 
 			pUnit->PushMission(CvTypes::getMISSION_SKIP());
 			pUnit->finishMoves();
@@ -3379,6 +3390,20 @@ void CvHomelandAI::ExecuteWriterMoves()
 
 		case GREAT_PEOPLE_DIRECTIVE_USE_POWER:
 			{
+#ifdef AUI_HOMELAND_EXECUTE_GP_MOVE_INSTANT_GREAT_WORK_CHECK
+				if (pUnit->canCreateGreatWork(pUnit->plot()))
+				{
+					pUnit->PushMission(CvTypes::getMISSION_GREAT_WORK());
+					UnitProcessed(pUnit->GetID());
+					if (GC.getLogging() && GC.getAILogging())
+					{
+						CvString strLogString;
+						strLogString.Format("Creating Great Work at, X: %d, Y: %d", pUnit->getX(), pUnit->getY());
+						LogHomelandMessage(strLogString);
+						continue;
+					}
+				}
+#endif // AUI_HOMELAND_EXECUTE_GP_MOVE_INSTANT_GREAT_WORK_CHECK
 				// Do we want to create a Great Work?
 				GreatWorkType eGreatWorkType = pUnit->GetGreatWork();
 				CvCity* pTargetCity = m_pPlayer->GetEconomicAI()->GetBestGreatWorkCity(pUnit->plot(), eGreatWorkType);
@@ -3521,6 +3546,20 @@ void CvHomelandAI::ExecuteArtistMoves()
 
 		case GREAT_PEOPLE_DIRECTIVE_USE_POWER:
 			{
+#ifdef AUI_HOMELAND_EXECUTE_GP_MOVE_INSTANT_GREAT_WORK_CHECK
+				if (pUnit->canCreateGreatWork(pUnit->plot()))
+				{
+					pUnit->PushMission(CvTypes::getMISSION_GREAT_WORK());
+					UnitProcessed(pUnit->GetID());
+					if (GC.getLogging() && GC.getAILogging())
+					{
+						CvString strLogString;
+						strLogString.Format("Creating Great Work at, X: %d, Y: %d", pUnit->getX(), pUnit->getY());
+						LogHomelandMessage(strLogString);
+						continue;
+					}
+				}
+#endif // AUI_HOMELAND_EXECUTE_GP_MOVE_INSTANT_GREAT_WORK_CHECK
 				// Do we want to create a Great Work?
 				GreatWorkType eGreatWorkType = pUnit->GetGreatWork();
 				CvCity* pTargetCity = m_pPlayer->GetEconomicAI()->GetBestGreatWorkCity(pUnit->plot(), eGreatWorkType);
@@ -3662,6 +3701,20 @@ void CvHomelandAI::ExecuteMusicianMoves()
 
 		case GREAT_PEOPLE_DIRECTIVE_USE_POWER:
 			{
+#ifdef AUI_HOMELAND_EXECUTE_GP_MOVE_INSTANT_GREAT_WORK_CHECK
+				if (pUnit->canCreateGreatWork(pUnit->plot()))
+				{
+					pUnit->PushMission(CvTypes::getMISSION_GREAT_WORK());
+					UnitProcessed(pUnit->GetID());
+					if (GC.getLogging() && GC.getAILogging())
+					{
+						CvString strLogString;
+						strLogString.Format("Creating Great Work at, X: %d, Y: %d", pUnit->getX(), pUnit->getY());
+						LogHomelandMessage(strLogString);
+						continue;
+					}
+				}
+#endif // AUI_HOMELAND_EXECUTE_GP_MOVE_INSTANT_GREAT_WORK_CHECK
 				// Do we want to create a Great Work?
 				GreatWorkType eGreatWorkType = pUnit->GetGreatWork();
 				CvCity* pTargetCity = m_pPlayer->GetEconomicAI()->GetBestGreatWorkCity(pUnit->plot(), eGreatWorkType);
@@ -5002,6 +5055,9 @@ void CvHomelandAI::ExecuteAircraftMoves()
 		}
 
 		CvPlot* pUnitPlot = pUnit->plot();
+#ifdef AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
+		CvPlot* pAdjacentPlot = NULL;
+#endif // AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
 		CvUnit* pTransportUnit = NULL;
 		CvPlot* pBestPlot = NULL;
 		int iMostDangerous = 0;
@@ -5037,7 +5093,9 @@ void CvHomelandAI::ExecuteAircraftMoves()
 			iPlotDanger *= NUM_DIRECTION_TYPES;
 			for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
 			{
-				iPlotDanger += m_pPlayer->GetPlotDanger(*plotDirection(pLoopUnitPlot->getX(), pLoopUnitPlot->getY(), (DirectionTypes)iI));
+				pAdjacentPlot = plotDirection(pLoopUnitPlot->getX(), pLoopUnitPlot->getY(), (DirectionTypes)iI);
+				if (pAdjacentPlot)
+					iPlotDanger += m_pPlayer->GetPlotDanger(*pAdjacentPlot);
 			}
 			iPlotDanger /= NUM_DIRECTION_TYPES;
 #endif // AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
@@ -5050,7 +5108,9 @@ void CvHomelandAI::ExecuteAircraftMoves()
 					int iTempDanger = NUM_DIRECTION_TYPES * m_pPlayer->GetPlotDanger(*pTargetPlot);
 					for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
 					{
-						iTempDanger += m_pPlayer->GetPlotDanger(*plotDirection(pTargetPlot->getX(), pTargetPlot->getY(), (DirectionTypes)iI));
+						pAdjacentPlot = plotDirection(pTargetPlot->getX(), pTargetPlot->getY(), (DirectionTypes)iI);
+						if (pAdjacentPlot)
+							iTempDanger += m_pPlayer->GetPlotDanger(*pAdjacentPlot);
 					}
 					iTempDanger /= NUM_DIRECTION_TYPES;
 #ifdef AUI_FAST_COMP
@@ -5059,13 +5119,11 @@ void CvHomelandAI::ExecuteAircraftMoves()
 					iPlotDanger = MAX(iPlotDanger, iTempDanger);
 #endif // AUI_FAST_COMP
 				}
-#else
-				iPlotDanger += 5000;
-#endif // AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
 			}
-#ifdef AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
 			if (iPlotDanger > iMostDangerous)
 #else
+				iPlotDanger += 5000;
+			}
 			if(iPlotDanger >= iMostDangerous)
 #endif // AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
 			{
@@ -5106,11 +5164,11 @@ void CvHomelandAI::ExecuteAircraftMoves()
 			iPlotDanger *= NUM_DIRECTION_TYPES;
 			for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
 			{
-				iPlotDanger += m_pPlayer->GetPlotDanger(*plotDirection(pTarget->getX(), pTarget->getY(), (DirectionTypes)iI));
+				pAdjacentPlot = plotDirection(pTarget->getX(), pTarget->getY(), (DirectionTypes)iI);
+				if (pAdjacentPlot)
+					iPlotDanger += m_pPlayer->GetPlotDanger(*pAdjacentPlot);
 			}
 			iPlotDanger /= NUM_DIRECTION_TYPES;
-#endif // AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
-#ifdef AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
 			if (iPlotDanger > iMostDangerous)
 #else
 			if(iPlotDanger >= iMostDangerous)
@@ -5512,7 +5570,7 @@ void CvHomelandAI::ExecuteArchaeologistMoves()
 		}
 #ifdef AUI_HOMELAND_EXECUTE_ARCHAEOLOGIST_MOVES_DISBAND_IF_NO_AVAILABLE_SITES
 		// Check is to make sure we've run out of archeological sites, otherwise it's simply a case of an unavailable site due to danger levels
-		else if (iSitesStillAvailable <= 0)
+		else if (!m_pPlayer->isHuman() && iSitesStillAvailable <= 0)
 		{
 			// Disband unit if no more sites available
 			pUnit->scrap();
