@@ -839,7 +839,9 @@ CvCity* CvEconomicAI::GetBestGreatWorkCity(CvPlot *pStartPlot, GreatWorkType eGr
 	{
 		for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 		{
+#ifndef AUI_ECONOMIC_FIX_GET_BEST_GREAT_WORK_CITY_NO_DAMAGE_FILTER
 			if (pLoopCity->getDamage() == 0)
+#endif // AUI_ECONOMIC_FIX_GET_BEST_GREAT_WORK_CITY_NO_DAMAGE_FILTER
 			{
 				int iDistance = plotDistance(pStartPlot->getX(), pStartPlot->getY(), pLoopCity->getX(), pLoopCity->getY());
 				if(iDistance < iBestDistance)
