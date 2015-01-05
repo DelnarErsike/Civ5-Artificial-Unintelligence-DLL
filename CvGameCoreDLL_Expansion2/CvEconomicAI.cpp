@@ -3354,14 +3354,40 @@ bool EconomicAIHelpers::IsTestStrategy_TechLeader(CvPlayer* pPlayer)
 bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 {
 #ifdef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
-	if (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE) && pPlayer->isHuman())
+	if (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE) || pPlayer->isHuman())
 	{
 		return false;
 	}
 	if (pPlayer->getCapitalCity() == NULL || pPlayer->GetPlayerTraits()->IsNoAnnexing() || pPlayer->IsEmpireUnhappy() || 
 		pPlayer->GetNumUnitsWithDomain(DOMAIN_LAND, true) - pPlayer->GetNumUnitsWithUnitAI(UNITAI_EXPLORE, true) <= pPlayer->GetNumUnitsWithUnitAI(UNITAI_SETTLE, true))
 	{
-		return false; // Venice can't build settlers, we don't want unhappy empires to rush out settlers, and we don't want to keep building settlers without escorts
+		return false; // Venice can't build settlers and we don't want to keep building settlers without escorts
+	}
+	// Happiness Filter
+	if (!GC.getGame().isOption(GAMEOPTION_NO_HAPPINESS))
+	{
+		int iUnhappinessFromNewCity = GC.getUNHAPPINESS_PER_CITY();
+		iUnhappinessFromNewCity *= (100 + pPlayer->GetPlayerTraits()->GetCityUnhappinessModifier() + pPlayer->GetCityCountUnhappinessMod());
+		iUnhappinessFromNewCity /= 100;
+		iUnhappinessFromNewCity *= pPlayer->getHandicapInfo().getNumCitiesUnhappinessMod();
+		iUnhappinessFromNewCity /= 100;
+		iUnhappinessFromNewCity *= GC.getMap().getWorldInfo().getNumCitiesUnhappinessPercent();
+		iUnhappinessFromNewCity /= 100;
+		int iUnhappinessFromPop = GC.getUNHAPPINESS_PER_POPULATION();
+		iUnhappinessFromPop *= (100 + pPlayer->GetUnhappinessMod());
+		iUnhappinessFromPop /= 100;
+		iUnhappinessFromPop *= 100 + pPlayer->GetPlayerTraits()->GetPopulationUnhappinessModifier();
+		iUnhappinessFromPop /= 100;
+		iUnhappinessFromPop *= pPlayer->getHandicapInfo().getPopulationUnhappinessMod();
+		iUnhappinessFromPop /= 100;
+		iUnhappinessFromNewCity += iUnhappinessFromPop;
+		if (!pPlayer->isHuman() && !pPlayer->IsAITeammateOfHuman())
+		{
+			iUnhappinessFromNewCity *= GC.getGame().getHandicapInfo().getAIUnhappinessPercent();
+			iUnhappinessFromNewCity /= 100;
+		}
+		if (iUnhappinessFromNewCity + pPlayer->GetUnhappiness() > pPlayer->GetHappiness() + pPlayer->GetExtraHappinessPerCity())
+			return false; // Founding a new city would make us unhappy
 	}
 #endif // AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_EARLIER_CHECKS
 
@@ -3505,6 +3531,18 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 				int iOwnageRatio = iNumOwnedTiles * 100 / iNumTiles;
 				int iNumCities = pPlayer->getNumCities() - pPlayer->GetNumPuppetCities();
 				int iSettlersOnMap = pPlayer->GetNumUnitsWithUnitAI(UNITAI_SETTLE, true);
+#ifdef AUI_ECONOMIC_EARLY_EXPANSION_CAPTURED_BARBARIAN_SETTLERS_COUNT
+				CvPlayerAI& BarbPlayer = GET_PLAYER(BARBARIAN_PLAYER);
+				CvUnit* pLoopUnit = NULL;
+				int iLoop;
+				for (pLoopUnit = BarbPlayer.firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = BarbPlayer.nextUnit(&iLoop))
+				{
+					if (pLoopUnit->GetOriginalOwner() == pPlayer->GetID() && pLoopUnit->AI_getUnitAIType() == UNITAI_SETTLE)
+					{
+						iSettlersOnMap++;
+					}
+				}
+#endif // AUI_ECONOMIC_EARLY_EXPANSION_CAPTURED_BARBARIAN_SETTLERS_COUNT
 
 				if(iOwnageRatio < GC.getAI_STRATEGY_AREA_IS_FULL_PERCENT()
 #ifdef AUI_ECONOMIC_USE_DOUBLES
