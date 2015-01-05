@@ -1608,7 +1608,7 @@ void CvBuilderTaskingAI::AddImprovingMinorPlotsDirectives(CvUnit* pUnit, CvPlot*
 						if (pkResource && pkResource->getResourceUsage() == RESOURCEUSAGE_LUXURY)
 						{
 							iExtraWeight += GetResourceWeight((ResourceTypes)iI, eImprovement, iResouceCount);
-							iScore += 1;
+							iScore += iMoveTurnsAway;
 						}
 					}
 				}
@@ -1622,7 +1622,7 @@ void CvBuilderTaskingAI::AddImprovingMinorPlotsDirectives(CvUnit* pUnit, CvPlot*
 // Add other improvements that are advantageous when built on other players' territory here
 
 		// if we're going backward, bail out!
-		if (iScore <= 0 && iExtraWeight <= 0)
+		if (iScore <= 0)
 		{
 			continue;
 		}
@@ -2294,6 +2294,26 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 	// we should include here the ability for work boats to cross to other areas with cities
 	if(pPlot->area() != pUnit->area())
 	{
+#ifdef AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_WORK_BOATS_CONSIDER_ALL_SEA_PLOTS
+		if (pUnit->getDomainType() != DOMAIN_SEA && !pUnit->CanEverEmbark())
+		{
+			if (m_bLogging)
+			{
+				CvString strLog;
+				strLog.Format("unitx: %d unity: %d, plotx: %d ploty: %d, plot area: %d, unit area: %d,,Plot areas don't match and can't embark", pUnit->getX(), pUnit->getY(), pPlot->getX(), pPlot->getY(), pPlot->area(), pUnit->area());
+				if (pPlot->isWater() == pUnit->plot()->isWater())
+				{
+					strLog += ",This is weird";
+				}
+				else
+				{
+					strLog += ",This is normal";
+				}
+				LogInfo(strLog, m_pPlayer);
+			}
+			return false;
+		}
+#else
 		bool bCanCrossToNewArea = false;
 
 		if(pUnit->getDomainType() == DOMAIN_SEA)
@@ -2329,6 +2349,7 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 			}
 			return false;
 		}
+#endif // AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_WORK_BOATS_CONSIDER_ALL_SEA_PLOTS
 	}
 
 #ifndef AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
