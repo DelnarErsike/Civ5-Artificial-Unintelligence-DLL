@@ -4704,7 +4704,11 @@ void CvTacticalAI::PlotNavalEscortOperationMoves(CvAINavalEscortedOperation* pOp
 		if(iUnitID != -1)
 		{
 			pEscort = m_pPlayer->getUnit(iUnitID);
+#ifdef AUI_TACTICAL_FIX_PLOT_NAVAL_ESCORT_OPERATION_MOVES_POSSIBLE_NULL_POINTER
+			if (pEscort && pEscort->getDomainType() != DOMAIN_LAND)
+#else
 			if(pEscort->getDomainType() != DOMAIN_LAND)
+#endif // AUI_TACTICAL_FIX_PLOT_NAVAL_ESCORT_OPERATION_MOVES_POSSIBLE_NULL_POINTER
 			{
 				pEscort = NULL;   // Second unit wasn't the escort
 			}
