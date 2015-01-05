@@ -383,10 +383,12 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 
 	int iCelticForestCount = 0;
 	int iIroquoisForestCount = 0;
+#ifndef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 	int iBrazilJungleCount = 0;
 	int iNaturalWonderCount = 0;
 	int iDesertCount = 0;
 	int iWetlandsCount = 0;
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 
 	int iTotalFoodValue = 0;
 	int iTotalHappinessValue = 0;
@@ -599,11 +601,17 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 
 							FeatureTypes ePlotFeature = pLoopPlot->getFeatureType();
 							ImprovementTypes ePlotImprovement = pLoopPlot->getImprovementType();
+#ifndef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 							ResourceTypes ePlotResource = pLoopPlot->getResourceType();
+#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 
 							if (ePlotFeature == FEATURE_FOREST)
 							{
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+								if (iDistance <= 5 && iDistance != 0)
+#else
 								if (iDistance <= 5)
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 								{
 									++iIroquoisForestCount;
 									if (iDistance == 1)
@@ -615,6 +623,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 									}
 								}
 							}
+#ifndef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 							else if (ePlotFeature == FEATURE_JUNGLE)
 							{
 								if (iDistance <= NUM_CITY_RINGS)
@@ -649,7 +658,6 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 								}
 							}
 
-#ifndef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 							if (bIsInca)
 							{
 								if (pLoopPlot->isHills())
@@ -919,6 +927,7 @@ int CvCitySiteEvaluator::PlotFertilityValue(CvPlot* pPlot)
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 		rtnValue += ComputeCultureValue(pPlot, NULL);
 		rtnValue += ComputeFaithValue(pPlot, NULL);
+		rtnValue += ComputeHappinessValue(pPlot, NULL);
 #endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 		rtnValue += ComputeTradeableResourceValue(pPlot, NULL);
 	}
@@ -1844,11 +1853,14 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 	int iI;
 	CvPlot* pLoopPlot(NULL);
 	int iCelticForestCount = 0;
+#ifdef AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
+	int iIroquoisForestCount = 0;
+#endif // AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
 
 	CvAssert(pPlot);
-	if(!pPlot) return rtnValue;
+	if (!pPlot) return rtnValue;
 
-	if(!CanFound(pPlot, pPlayer, false))
+	if (!CanFound(pPlot, pPlayer, false))
 	{
 		return rtnValue;
 	}
@@ -1856,18 +1868,18 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 	// Is there any reason this site doesn't work for a start location?
 	//
 	// Not on top of a goody hut
-	if(pPlot->isGoody())
+	if (pPlot->isGoody())
 	{
 		return 0;
 	}
 
 	// We have our own special method of scoring, so don't call the base class for that (like settler version does)
-	for(iI = 0; iI < NUM_CITY_PLOTS; iI++)
+	for (iI = 0; iI < NUM_CITY_PLOTS; iI++)
 	{
 		pLoopPlot = plotCity(pPlot->getX(), pPlot->getY(), iI);
 
 		// Too close to map edge?
-		if(pLoopPlot == NULL)
+		if (pLoopPlot == NULL)
 		{
 			return 0;
 		}
@@ -1875,9 +1887,22 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 		{
 			int iDistance = plotDistance(pPlot->getX(), pPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY());
 			CvAssert(iDistance <= NUM_CITY_RINGS);
-			if(iDistance > NUM_CITY_RINGS) continue;
+			if (iDistance > NUM_CITY_RINGS) continue;
 			int iRingModifier = m_iRingModifier[iDistance];
 
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+			rtnValue += iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, iDistance == 0) * /*6*/ GC.getSTART_AREA_FOOD_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer) * /*12*/ GC.getSTART_AREA_HAPPINESS_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, iDistance == 0) * /*8*/ GC.getSTART_AREA_PRODUCTION_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, iDistance == 0) * /*2*/ GC.getSTART_AREA_GOLD_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER();
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+			rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+			rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER();
+#else
 			// Skip the city plot itself for now
 			if(iDistance != 0)
 			{
@@ -1886,13 +1911,30 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 				rtnValue += iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer) * /*8*/ GC.getSTART_AREA_PRODUCTION_MULTIPLIER();
 				rtnValue += iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer) * /*2*/ GC.getSTART_AREA_GOLD_MULTIPLIER();
 				rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER();
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+				rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
+#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 				rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
 				rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER();
 				rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER();
 			}
+#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 
 			if (pPlayer)
 			{
+#ifdef AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
+				if (pLoopPlot->getFeatureType() == FEATURE_FOREST)
+				{
+					if (iDistance != 0)
+					{
+						iIroquoisForestCount++;
+						if (iDistance == 1 && pLoopPlot->getImprovementType() == NO_IMPROVEMENT)
+						{
+							iCelticForestCount++;
+						}
+					}
+				}
+#else
 				if (iDistance == 1 && pLoopPlot->getFeatureType() == FEATURE_FOREST)
 				{
 					if (pLoopPlot->getImprovementType() == NO_IMPROVEMENT && pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest())
@@ -1900,10 +1942,31 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 						iCelticForestCount += 1;
 					}
 				}
+#endif // AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
 			}
 		}
 	}
 
+#ifdef AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
+	if (pPlayer)
+	{
+		if (pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest())
+		{
+			if (iCelticForestCount >= 3)
+			{
+				rtnValue += 2 * 1000 * m_iFlavorMultiplier[YIELD_FAITH];
+			}
+			else if (iCelticForestCount >= 1)
+			{
+				rtnValue += 1 * 1000 * m_iFlavorMultiplier[YIELD_FAITH];
+			}
+		}
+		else if (pPlayer->GetPlayerTraits()->IsMoveFriendlyWoodsAsRoad())
+		{
+			rtnValue += iIroquoisForestCount * 10;
+		}
+}
+#else
 	if (iCelticForestCount >= 3)
 	{
 		rtnValue += 2 * 1000 * m_iFlavorMultiplier[YIELD_FAITH];
@@ -1912,6 +1975,7 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 	{
 		rtnValue += 1 * 1000 * m_iFlavorMultiplier[YIELD_FAITH];
 	}
+#endif // AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
 
 	if(rtnValue < 0) rtnValue = 0;
 

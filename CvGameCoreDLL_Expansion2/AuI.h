@@ -19,6 +19,10 @@
 // Non-AI stuff (still used by AI routines, but could be used elsewhere as well)
 /// AUI's new GUID
 #define AUI_GUID
+/// Civilizations that are marked as coastal get the same coastal bias as maritime city-states
+#define AUI_STARTPOSITIONER_COASTAL_CIV_WATER_BIAS
+/// When calculating the founding value of a tile, tailor the SiteEvaluation function to the current player instead of the first one
+#define AUI_STARTPOSITIONER_FLAVORED_STARTS
 /// Enables performance logging based on ini settings like normal instead of hard-disabling
 #define AUI_PERF_LOGGING_ENABLED
 /// Fast comparison functions (to be used for built-in types like int, float, double, etc.)
@@ -218,6 +222,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS (5)
 /// Minors will ignore all units of players who are not at war with them
 #define AUI_DANGER_PLOTS_FIX_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_IGNORE_ALL_NONWARRED
+/// When adding danger from a source, the attack strength of the source onto the plot is added instead of the base attack strength
+#define AUI_DANGER_PLOTS_ADD_DANGER_CONSIDER_TERRAIN_STRENGTH_MODIFICATION
 /// Counts air unit strength into danger (commented out for now)
 //#define AUI_DANGER_PLOTS_COUNT_AIR_UNITS
 
@@ -276,6 +282,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Reenables the DoHurry() function, but using a reworked method instead of the original (originally from Ninakoru's Smart AI, but heavily modified since)
 #define AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
 #endif
+/// Nearby cities that are damaged can also be targetted
+#define AUI_ECONOMIC_FIX_GET_BEST_GREAT_WORK_CITY_NO_DAMAGE_FILTER
 
 // Flavor Manager Stuff
 /// Players that start as human no longer load in default flavor values
@@ -382,6 +390,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_HOMELAND_EXECUTE_ARCHAEOLOGIST_MOVES_DISBAND_IF_NO_AVAILABLE_SITES
 /// Disbands work boats that cannot target anything, even if units are ignored
 #define AUI_HOMELAND_PLOT_WORKER_SEA_MOVES_DISBAND_WORK_BOATS_WITHOUT_TARGET
+/// If the AI wants to use a unit for a Great Work, check if the unit can create one right there and then (performance improvement)
+#define AUI_HOMELAND_EXECUTE_GP_MOVE_INSTANT_GREAT_WORK_CHECK
 
 // Military AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
@@ -640,6 +650,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_NATURAL_WONDERS
 /// Considers a player's traits when computing the yield value of a plot (eg. Russia gets bonus hammers if the plot is a strategic resource)
 #define AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+/// Fixes missing code responsible for granting starting forest flavor to Iroquois
+#define AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
 
 // Tactical AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
@@ -816,6 +828,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 //#define AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
 /// Fixes a possible null pointer when converting a target's coordinates to a plot
 #define AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_SEA_MOVE_POSSIBLE_NULL_POINTER
+/// Fixes a possible null pointer when selecting a naval escort operation's escort
+#define AUI_TACTICAL_FIX_PLOT_NAVAL_ESCORT_OPERATION_MOVES_POSSIBLE_NULL_POINTER
 
 // Tactical Analysis Map Stuff
 /// Enables a minor adjustment for ranged units to account for possibly being able to move and shoot at a tile
