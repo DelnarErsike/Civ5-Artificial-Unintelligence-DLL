@@ -18774,41 +18774,13 @@ void CvUnit::GetMovablePlotListOpt(FFastVector<CvPlot*>& plotData, CvPlot* pTarg
 					pLoopPlot = GC.getMap().plotCheckInvalid(iDX, iDY);
 
 					// Check is empty plot not in current data set
-					if (pLoopPlot && !(bIsParthian && pLoopPlot->getNumTimesInList(plotData, true) == 0) && canEnterTerrain(*pLoopPlot))
+					if (pLoopPlot && !(bIsParthian && pLoopPlot->getNumTimesInList(plotData, true) == 0))
 					{
+						pNode = NULL;
 						// Can we attack the target from the plot?
-						if (canEverRangeStrikeAtFromPlot(pTarget->getX(), pTarget->getY(), pLoopPlot))
+						if (!isRanged())
 						{
 							// Run pathfinder to see if we can get to plot with movement left
-							pNode = NULL;
-							if (bIsParthian)
-							{
-								if (GC.getIgnoreUnitsPathFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, true /*bReuse*/))
-								{
-									pNode = GC.getIgnoreUnitsPathFinder().GetLastNode();
-								}
-							}
-							else if (GC.GetTacticalAnalysisMapFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
-							{
-								pNode = GC.GetTacticalAnalysisMapFinder().GetLastNode();
-							}
-							if (pNode)
-							{
-								if (pNode->m_iData2 == 1 && pNode->m_iData1 > getMustSetUpToRangedAttackCount())
-								{
-									plotData.push_back(pLoopPlot);
-
-									if (bExitOnFound)
-									{
-										return;
-									}
-								}
-							}
-						}
-						else if (!isRanged())
-						{
-							// Run pathfinder to see if we can get to plot with movement left
-							pNode = NULL;
 							if (bIsParthian)
 							{
 								if (GC.getIgnoreUnitsPathFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY | MOVE_IGNORE_STACKING, true /*bReuse*/))
@@ -18823,6 +18795,33 @@ void CvUnit::GetMovablePlotListOpt(FFastVector<CvPlot*>& plotData, CvPlot* pTarg
 							if (pNode)
 							{
 								if (pNode->m_iData2 == 1)
+								{
+									plotData.push_back(pLoopPlot);
+
+									if (bExitOnFound)
+									{
+										return;
+									}
+								}
+							}
+						}
+						else if (canEverRangeStrikeAtFromPlot(pTarget->getX(), pTarget->getY(), pLoopPlot))
+						{
+							// Run pathfinder to see if we can get to plot with movement left
+							if (bIsParthian)
+							{
+								if (GC.getIgnoreUnitsPathFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, true /*bReuse*/))
+								{
+									pNode = GC.getIgnoreUnitsPathFinder().GetLastNode();
+								}
+							}
+							else if (GC.GetTacticalAnalysisMapFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
+							{
+								pNode = GC.GetTacticalAnalysisMapFinder().GetLastNode();
+							}
+							if (pNode)
+							{
+								if (pNode->m_iData2 == 1 && pNode->m_iData1 > getMustSetUpToRangedAttackCount())
 								{
 									plotData.push_back(pLoopPlot);
 
