@@ -3756,7 +3756,6 @@ void AdjustDistanceFilterForRoads(const UnitHandle pUnit, int& iCutoffDistance)
 	const bool bIsIroquois = GET_PLAYER(pUnit->getOwner()).GetPlayerTraits()->IsMoveFriendlyWoodsAsRoad();
 	int iDX, iMaxDX;
 	CvPlot* pLoopPlot;
-	CvPlot* pAdjacentPlot;
 	FeatureTypes eFeature;
 	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
@@ -3792,7 +3791,7 @@ void AdjustDistanceFilterForRoads(const UnitHandle pUnit, int& iCutoffDistance)
 					iCutoffDistance -= 1;
 				}
 
-				if (iCutoffDistance <= 0);
+				if (iCutoffDistance <= 0)
 				{
 					iCutoffDistance = 0;
 					return;
