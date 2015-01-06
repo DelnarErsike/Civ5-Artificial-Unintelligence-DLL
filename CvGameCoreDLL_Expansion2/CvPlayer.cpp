@@ -23894,9 +23894,16 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 
 	CvMap& kMap = GC.getMap();
 	int iNumPlots = kMap.numPlots();
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_DEBUG_HELP
+	CvPlot* pPlot = NULL;
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_DEBUG_HELP
 	for(int iPlotLoop = 0; iPlotLoop < iNumPlots; iPlotLoop++)
 	{
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_DEBUG_HELP
+		pPlot = kMap.plotByIndexUnchecked(iPlotLoop);
+#else
 		CvPlot* pPlot = kMap.plotByIndexUnchecked(iPlotLoop);
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_DEBUG_HELP
 
 		if(!pPlot)
 		{
