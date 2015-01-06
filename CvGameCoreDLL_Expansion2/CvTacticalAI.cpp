@@ -2674,7 +2674,11 @@ void CvTacticalAI::PlotBarbarianPlunderTradeUnitMove(DomainTypes eDomain)
 		// See what units we have who can reach target this turn
 		CvPlot* pPlot = GC.getMap().plot(pTarget->GetTargetX(), pTarget->GetTargetY());
 
+#ifdef AUI_TACTICAL_FIX_PLOT_PLUNDER_TRADE_UNIT_MOVES_RANGED_UNITS
+		if (FindUnitsWithinStrikingDistance(pPlot, 0, 0, false /* bNoRangedUnits */, bNavalOnly, true /*bMustMoveThrough*/, false /*bIncludeBlockedUnits*/, false /*bWillPillage*/, true /*bTargetUndefeded*/))
+#else
 		if (FindUnitsWithinStrikingDistance(pPlot, 0, 0, false /* bNoRangedUnits */, bNavalOnly, true /*bMustMoveThrough*/, false /*bIncludeBlockedUnits*/, false /*bWillPillage*/))
+#endif // AUI_TACTICAL_FIX_PLOT_PLUNDER_TRADE_UNIT_MOVES_RANGED_UNITS
 		{
 			// Queue best one up to capture it
 			ExecutePlunderTradeUnit(pPlot);
@@ -2970,7 +2974,11 @@ void CvTacticalAI::PlotPlunderTradeUnitMoves (DomainTypes eDomain)
 		// See what units we have who can reach target this turn
 		CvPlot* pPlot = GC.getMap().plot(pTarget->GetTargetX(), pTarget->GetTargetY());
 
+#ifdef AUI_TACTICAL_FIX_PLOT_PLUNDER_TRADE_UNIT_MOVES_RANGED_UNITS
+		if (FindUnitsWithinStrikingDistance(pPlot, 0, 0, false /* bNoRangedUnits */, bNavalOnly, true /*bMustMoveThrough*/, false /*bIncludeBlockedUnits*/, false /*bWillPillage*/, true /*bTargetUndefeded*/))
+#else
 		if (FindUnitsWithinStrikingDistance(pPlot, 0, 0, false /* bNoRangedUnits */, bNavalOnly, true /*bMustMoveThrough*/, false /*bIncludeBlockedUnits*/, false /*bWillPillage*/))
+#endif // AUI_TACTICAL_FIX_PLOT_PLUNDER_TRADE_UNIT_MOVES_RANGED_UNITS
 		{
 			// Queue best one up to capture it
 			ExecutePlunderTradeUnit(pPlot);
@@ -3320,6 +3328,7 @@ void CvTacticalAI::PlotAirInterceptMoves()
 	CvTacticalUnit unit;
 #ifdef AUI_TACTICAL_TWEAKED_AIR_INTERCEPT
 	FFastVector<CvPlot*> checkedPlotList;
+	CvPlot* pUnitPlot;
 #else
 	CvTacticalDominanceZone *pZone;
 #endif
@@ -3333,8 +3342,8 @@ void CvTacticalAI::PlotAirInterceptMoves()
 			// Am I eligible to intercept?
 			if(pUnit->canAirPatrol(NULL) && !m_pPlayer->GetMilitaryAI()->WillAirUnitRebase(pUnit.pointer()))
 			{
-				CvPlot* pUnitPlot = pUnit->plot();
 #ifdef AUI_TACTICAL_TWEAKED_AIR_INTERCEPT
+				pUnitPlot = pUnit->plot();
 				int iNumNearbyBombers = m_pPlayer->GetMilitaryAI()->GetNumEnemyAirUnitsInRange(pUnitPlot, pUnit->GetRange()/*m_iRecruitRange*/, false/*bCountFighters*/, true/*bCountBombers*/);
 				int iNumNearbyFighters = m_pPlayer->GetMilitaryAI()->GetNumEnemyAirUnitsInRange(pUnitPlot, pUnit->GetRange()/*m_iRecruitRange*/, true/*bCountFighters*/, false/*bCountBombers*/);
 				int iNumPlotNumAlreadySet = pUnitPlot->getNumTimesInList(checkedPlotList);
@@ -3358,6 +3367,7 @@ void CvTacticalAI::PlotAirInterceptMoves()
 						strLogString.Format("Ready to intercept enemy air units at, X: %d, Y: %d", pUnit->getX(), pUnit->getY());
 						LogTacticalMessage(strLogString);
 #else
+				CvPlot* pUnitPlot = pUnit->plot();
 				CvCity* pCity = pUnitPlot->getPlotCity();
 				pZone = NULL;
 
@@ -7650,7 +7660,6 @@ void CvTacticalAI::ExecuteRepositionMoves()
 							if (pRepositionPlot)
 							{
 								pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), pRepositionPlot->getX(), pRepositionPlot->getY());
-								pBestPlot = pRepositionPlot; // for logging purposes
 							}
 						}
 #endif // AUI_TACTICAL_EXECUTE_REPOSITION_MOVES_PATROL_IF_MOVES_REMAIN
@@ -8059,7 +8068,8 @@ void CvTacticalAI::ExecuteBarbarianMoves(bool bAggressive)
 						CheckAndExecuteFreePillageMoves(pUnit);
 #endif // AUI_TACTICAL_FREE_PILLAGE
 #ifdef AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_PATROL_IF_ON_TARGET
-						if (pBestPlot == pUnit->plot() && m_pPlayer->GetPlotDanger(*pUnit->plot()) > 0 && pUnit->getMoves() > 0)
+						if ((pBestPlot == pUnit->plot() || (bIsCombatMove && pBestPlot->isAdjacent(pUnit->plot()))) &&
+							m_pPlayer->GetPlotDanger(*pUnit->plot()) > 0 && pUnit->getMoves() > 0)
 						{
 							pRepositionPlot = GetBestRepositionPlot(pUnit, pBestPlot, 1);
 							if (pRepositionPlot)
@@ -8068,7 +8078,6 @@ void CvTacticalAI::ExecuteBarbarianMoves(bool bAggressive)
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 								CheckAndExecuteFreePillageMoves(pUnit);
 #endif // AUI_TACTICAL_FREE_PILLAGE
-								pBestPlot = pRepositionPlot; // for logging
 							}
 						}
 #endif // AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_PATROL_IF_ON_TARGET
@@ -8097,7 +8106,6 @@ void CvTacticalAI::ExecuteBarbarianMoves(bool bAggressive)
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 								CheckAndExecuteFreePillageMoves(pUnit);
 #endif // AUI_TACTICAL_FREE_PILLAGE
-								pBestPlot = pRepositionPlot; // for logging
 							}
 						}
 #endif // AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_PATROL_IF_ON_TARGET
@@ -8148,14 +8156,14 @@ void CvTacticalAI::ExecuteBarbarianMoves(bool bAggressive)
 						pUnit->SetTacticalAIPlot(pBestPlot);
 						pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), pBestPlot->getX(), pBestPlot->getY());
 #ifdef AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_PATROL_IF_ON_TARGET
-						if (pBestPlot == pUnit->plot() && m_pPlayer->GetPlotDanger(*pUnit->plot()) > 0 && pUnit->getMoves() > 0)
+						if ((pBestPlot == pUnit->plot() || pBestPlot->isAdjacent(pUnit->plot())) &&
+							m_pPlayer->GetPlotDanger(*pUnit->plot()) > 0 && pUnit->getMoves() > 0)
 						{
 							pUnit->SetTacticalAIPlot(NULL);
 							pRepositionPlot = GetBestRepositionPlot(pUnit, pBestPlot, 1);
 							if (pRepositionPlot)
 							{
 								pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), pRepositionPlot->getX(), pRepositionPlot->getY());
-								pBestPlot = pRepositionPlot; // for logging
 							}
 						}
 #endif // AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_PATROL_IF_ON_TARGET
