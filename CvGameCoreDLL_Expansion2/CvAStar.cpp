@@ -3743,9 +3743,9 @@ void AdjustDistanceFilterForRoads(const UnitHandle pUnit, int& iCutoffDistance)
 {
 	// Initial Range to check for roads around the unit 
 #ifdef AUI_FAST_COMP
-	const int iRange = FASTMIN(pUnit->baseMoves() - (pUnit->isEmbarked() ? 1 : 0), iCutoffDistance);
+	const int iRange = FASTMIN(pUnit->baseMoves(), iCutoffDistance);
 #else
-	const int iRange = MIN(pUnit->baseMoves()  - (pUnit->isEmbarked() ? 1 : 0), iCutoffDistance);
+	const int iRange = MIN(pUnit->baseMoves(), iCutoffDistance);
 #endif // AUI_FAST_COMP
 	// Filtering out units that don't need road optimization
 	if (iRange <= 0 || pUnit->getDomainType() != DOMAIN_LAND || pUnit->flatMovementCost() || (!pUnit->IsCombatUnit() && pUnit->getArmyID() == FFreeList::INVALID_INDEX))
@@ -3754,15 +3754,11 @@ void AdjustDistanceFilterForRoads(const UnitHandle pUnit, int& iCutoffDistance)
 	}
 	// Don't want to call this on each loop, so we'll call it once out of loop and be done with it
 	const bool bIsIroquois = GET_PLAYER(pUnit->getOwner()).GetPlayerTraits()->IsMoveFriendlyWoodsAsRoad();
-	int iRoadPlots = 0;
-	int iRailPlots = 0;
-	int iDX, iDY, iI;
+	int iDX, iMaxDX;
 	CvPlot* pLoopPlot;
 	CvPlot* pAdjacentPlot;
 	FeatureTypes eFeature;
-#ifdef AUI_HEXSPACE_DX_LOOPS
-	int iMaxDX;
-	for (iDY = -iRange; iDY <= iRange; iDY++)
+	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
 #ifdef AUI_FAST_COMP
 		iMaxDX = iRange - FASTMAX(0, iDY);
@@ -3774,52 +3770,36 @@ void AdjustDistanceFilterForRoads(const UnitHandle pUnit, int& iCutoffDistance)
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
-#else
-	for (iDX = -(iRange); iDX <= iRange; iDX++)
-	{
-		for (iDY = -(iRange); iDY <= iRange; iDY++)
-		{
-			pLoopPlot = plotXYWithRangeCheck(pUnit->getX(), pUnit->getY(), iDX, iDY, iRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
 			if (pLoopPlot)
 			{
 				eFeature = pLoopPlot->getFeatureType();
-				if (bIsIroquois && pUnit->getOwner() == pLoopPlot->getOwner() && (eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE))
+				if (pLoopPlot->isValidRoute(pUnit.pointer()))
+				{
+					// Don't check for an adjacent road for performance reasons
+					switch (pLoopPlot->getRouteType())
+					{
+					case (ROUTE_ROAD) :
+						iCutoffDistance -= 1;
+						break;
+					case (ROUTE_RAILROAD) :
+						iCutoffDistance -= 2;
+						break;
+					}
+				}
+				else if (bIsIroquois && pUnit->getOwner() == pLoopPlot->getOwner() && (eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE))
 				{
 					// Iroquois don't need adjacent forests to use the road bonus (according to CvUnitMovement)
-					iRoadPlots++;
+					iCutoffDistance -= 1;
 				}
-				else if (pLoopPlot->isValidRoute(pUnit.pointer()))
+
+				if (iCutoffDistance <= 0);
 				{
-					// Check for an adjacent road before adding on this road type
-					for (iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
-					{
-						pAdjacentPlot = plotDirection(pLoopPlot->getX(), pLoopPlot->getY(), ((DirectionTypes)iI));
-						if (pAdjacentPlot && pAdjacentPlot->isValidRoute(pUnit.pointer()))
-						{
-							switch (pLoopPlot->getRouteType())
-							{
-							case (ROUTE_ROAD) :
-								iRoadPlots++;
-								break;
-							case (ROUTE_RAILROAD) :
-								iRailPlots++;
-								break;
-							}
-							break;
-						}
-					}
+					iCutoffDistance = 0;
+					return;
 				}
 			}
 		}
 	}
-
-	// Extra move distance to take account of if there are nearby roads or railroads
-#ifdef AUI_FAST_COMP
-	iCutoffDistance = FASTMAX(0, iCutoffDistance - iRoadPlots - 2 * iRailPlots);
-#else
-	iCutoffDistance = MAX(0, iCutoffDistance - iRoadPlots - 2 * iRailPlots);
-#endif // AUI_FAST_COMP
 }
 
 // AdjustDistanceFilterForRoads() call for when the distance isn't being stored
