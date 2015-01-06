@@ -5282,7 +5282,11 @@ int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 	dMultiplier = 0.75 + ((double)pPlayer->GetMilitaryAI()->GetHighestThreat() / 4.0) + ((double)iFlavorNaval / 40.0);
 	dNumUnitsWanted = dNumUnitsWanted * dMultiplier * /*0.67*/ GC.getAI_STRATEGY_NAVAL_UNITS_PER_CITY();
 
+#ifdef AUI_FAST_COMP
+	dNumUnitsWanted = FASTMAX(1.0, dNumUnitsWanted);
+#else
 	dNumUnitsWanted = MAX(1.0, dNumUnitsWanted);
+#endif // AUI_FAST_COMP
 
 	EconomicAIStrategyTypes eStrategyNavalMap = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_NAVAL_MAP");
 	EconomicAIStrategyTypes eExpandOtherContinents = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_EXPAND_TO_OTHER_CONTINENTS");
@@ -5300,21 +5304,45 @@ int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 
 	// if we are going for conquest we want at least one more task force
 	int iGT = GC.getGame().getGameTurn();
+#ifdef AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING
+	int iMaximumTurn = GC.getGame().getEstimateEndTurn() * 2 / 5;
+#ifdef AUI_FAST_COMP
+	iGT = FASTMIN(iGT, iMaximumTurn);
+#else
+	iGT = MIN(iGT, iMaximumTurn);
+#endif // AUI_FAST_COMP
+#else
+#ifdef AUI_FAST_COMP
+	iGT = FASTMIN(iGT, 200);
+#else
 	iGT = MIN(iGT, 200);
+#endif // AUI_FAST_COMP
+#endif // AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING
 	AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
 	if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
 	{
+#ifdef AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING
 #ifdef AUI_GS_PRIORITY_RATIO
-		dNumUnitsWanted += 10.0 * (double)iGT * pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy) / 200.0;
+		dNumUnitsWanted += 10.0 * iGT * pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy) / (double)iMaximumTurn;
 #else
 		if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
 		{
-			dNumUnitsWanted += 10.0 * (double)iGT / 200.0;
+			dNumUnitsWanted += 10.0 * iGT / (double)iMaximumTurn;
 		}
 #endif // AUI_GS_PRIORITY_RATIO
+#else
+#ifdef AUI_GS_PRIORITY_RATIO
+		dNumUnitsWanted += iGT * pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy) / 20.0;
+#else
+		if (pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
+		{
+			dNumUnitsWanted += iGT / 20.0;
+		}
+#endif // AUI_GS_PRIORITY_RATIO
+#endif // AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING
 	}
 
-	return (int)(dNumUnitsWanted + 0.5);
+	return (int)floor(dNumUnitsWanted + 0.5);
 #else
 	int iNumUnitsWanted = 0;
 	int iFlavorNaval = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_NAVAL"));
