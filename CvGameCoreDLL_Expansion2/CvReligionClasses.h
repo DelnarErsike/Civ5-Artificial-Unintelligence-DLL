@@ -505,6 +505,13 @@ private:
 	void BuyFaithBuilding(ReligionTypes eReligion, BuildingClassTypes eBuildingClass);
 	bool BuyAnyAvailableNonFaithBuilding();
 	bool BuyAnyAvailableFaithBuilding();
+#ifdef AUI_RELIGION_DO_FAITH_PURCHASES_PRIORITIZE_OTHER_RELIGION_HAPPINESS_BUILDINGS
+	bool BuyOtherReligionHappinessBuilding(ReligionTypes eAvoidReligion);
+	bool CanBuyOtherReligionHappinessBuilding(ReligionTypes eAvoidReligion);
+#endif // AUI_RELIGION_DO_FAITH_PURCHASES_PRIORITIZE_OTHER_RELIGION_HAPPINESS_BUILDINGS
+#ifdef AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
+	bool DoHurryWithFaith(ReligionTypes eAvoidReligion = NO_RELIGION);
+#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
 
 	int ScoreBelief(CvBeliefEntry* pEntry);
 #ifdef AUI_RELIGION_USE_DOUBLES

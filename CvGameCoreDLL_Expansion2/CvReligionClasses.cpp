@@ -2352,6 +2352,11 @@ ReligionTypes CvPlayerReligions::GetReligionCreatedByPlayer() const
 bool CvPlayerReligions::CanAffordFaithPurchase() const
 {
 	int iFaith = m_pPlayer->GetFaith();
+#ifdef AUI_RELIGION_FIX_CAN_AFFORD_FAITH_PURCHASE_NON_CAPITAL_RELIGION
+	int iCost;
+	int iLoop = 0;
+	CvCity* pLoopCity;
+#endif // AUI_RELIGION_FIX_CAN_AFFORD_FAITH_PURCHASE_NON_CAPITAL_RELIGION
 	CvCity* pCapital = m_pPlayer->getCapitalCity();
 	if(pCapital)
 	{
@@ -2363,11 +2368,22 @@ bool CvPlayerReligions::CanAffordFaithPurchase() const
 			{
 				if (m_pPlayer->IsCanPurchaseAnyCity(false, false, eUnit, NO_BUILDING, YIELD_FAITH))
 				{
+#ifdef AUI_RELIGION_FIX_CAN_AFFORD_FAITH_PURCHASE_NON_CAPITAL_RELIGION
+					for (pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
+					{
+						iCost = pLoopCity->GetFaithPurchaseCost(eUnit, true);
+						if (iCost != 0 && iFaith > iCost)
+						{
+							return true;
+						}
+					}
+#else
 					int iCost = pCapital->GetFaithPurchaseCost(eUnit, true);
 					if(iCost != 0 && iFaith > iCost)
 					{
 						return true;
 					}
+#endif // AUI_RELIGION_FIX_CAN_AFFORD_FAITH_PURCHASE_NON_CAPITAL_RELIGION
 				}
 			}
 		}
@@ -2379,7 +2395,11 @@ bool CvPlayerReligions::CanAffordFaithPurchase() const
 			{
 				if (m_pPlayer->IsCanPurchaseAnyCity(false, false, NO_UNIT, eBuilding, YIELD_FAITH))
 				{
+#ifdef AUI_RELIGION_FIX_CAN_AFFORD_FAITH_PURCHASE_NON_CAPITAL_RELIGION
+					iCost = pCapital->GetFaithPurchaseCost(eBuilding);
+#else
 					int iCost = pCapital->GetFaithPurchaseCost(eBuilding);
+#endif // #ifdef AUI_RELIGION_FIX_CAN_AFFORD_FAITH_PURCHASE_NON_CAPITAL_RELIGION
 					if(iCost != 0 && iFaith > iCost)
 					{
 						return true;
@@ -5077,12 +5097,31 @@ void CvReligionAI::DoFaithPurchases()
 	if(pMyReligion == NULL || !pMyReligion->m_bEnhanced)
 	{
 		// Unless all religions gone and we didn't start one
+#ifdef AUI_RELIGION_FIX_DO_FAITH_PURCHASES_ENHANCE_INDUSTRIAL_RELIGION
+		bool bIndustrialEnhance = (pMyReligion && !pMyReligion->m_bEnhanced && m_pPlayer->GetCurrentEra() >= GC.getInfoTypeForString("ERA_INDUSTRIAL"));
+		if ((pMyReligion == NULL && pReligions->GetNumReligionsStillToFound() <= 0) || bIndustrialEnhance)
+		{
+			// Fill our cities with any Faith buildings possible
+			if (bIndustrialEnhance || !BuyAnyAvailableFaithBuilding())
+#else
 		if(pMyReligion == NULL && pReligions->GetNumReligionsStillToFound() <= 0)
 		{
 			// Fill our cities with any Faith buildings possible
 			if(!BuyAnyAvailableFaithBuilding())
+#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_ENHANCE_INDUSTRIAL_RELIGION
 			{
+#ifdef AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
+				if (DoHurryWithFaith())
+				{
+					if (GC.getLogging())
+					{
+						strLogMsg += ", Hurried With Faith";
+					}
+				}
+				else if (m_pPlayer->GetCurrentEra() >= GC.getInfoTypeForString("ERA_INDUSTRIAL"))
+#else
 				if(m_pPlayer->GetCurrentEra() >= GC.getInfoTypeForString("ERA_INDUSTRIAL"))
+#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
 				{
 					UnitTypes eGPType = GetDesiredFaithGreatPerson();
 					if (eGPType != NO_UNIT)
@@ -5117,6 +5156,29 @@ void CvReligionAI::DoFaithPurchases()
 				strLogMsg += GC.getUnitInfo(eProphetType)->GetDescription();
 			}				
 		}
+#ifdef AUI_RELIGION_DO_FAITH_PURCHASES_PRIORITIZE_OTHER_RELIGION_HAPPINESS_BUILDINGS
+		// Next, purchase happiness buildings that other religions have made available to us, since we'll still want the building after the city has converted
+		else if (CanBuyOtherReligionHappinessBuilding(eReligion))
+		{
+			if (!BuyOtherReligionHappinessBuilding(eReligion))
+			{
+				if (GC.getLogging())
+				{
+					strLogMsg += ", Saving for Happiness Building, From Another Religion";
+				}
+			}
+		}
+#endif // AUI_RELIGION_DO_FAITH_PURCHASES_PRIORITIZE_OTHER_RELIGION_HAPPINESS_BUILDINGS
+#ifdef AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
+		// Hurry with faith at cities with a religion other than our own, so we can make use of another civ's faith purchase beliefs
+		else if (DoHurryWithFaith(eReligion))
+		{
+			if (GC.getLogging())
+			{
+				strLogMsg += ", Hurried with Faith, From Another Religion";
+			}
+		}
+#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
 
 		// Besides prophets, first priority is to convert all our non-puppet cities
 		else if(!bTooManyMissionaries && !AreAllOurCitiesConverted(eReligion, false /*bIncludePuppets*/))
@@ -5148,6 +5210,16 @@ void CvReligionAI::DoFaithPurchases()
 				strLogMsg += ", Saving for Faith Building, For Our Non-Puppet Cities";
 			}
 		}
+#ifdef AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
+		// Hurry with faith at all cities
+		else if (DoHurryWithFaith())
+		{
+			if (GC.getLogging())
+			{
+				strLogMsg += ", Hurried with Faith, From Our Religion";
+			}
+		}
+#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
 
 		// Try to build other buildings with Faith if we took that belief
 		else if (CanBuyNonFaithBuilding())
@@ -5389,6 +5461,171 @@ bool CvReligionAI::BuyAnyAvailableFaithBuilding()
 	}
 	return false;
 }
+
+#ifdef AUI_RELIGION_DO_FAITH_PURCHASES_PRIORITIZE_OTHER_RELIGION_HAPPINESS_BUILDINGS
+/// Purchase buildings with faith that provide happiness and are unlocked by a religion other than our own
+bool CvReligionAI::BuyOtherReligionHappinessBuilding(ReligionTypes eAvoidReligion)
+{
+	PlayerTypes ePlayer = m_pPlayer->GetID();
+
+	int iLoop;
+	CvCity* pLoopCity;
+	for (pLoopCity = GET_PLAYER(ePlayer).firstCity(&iLoop); pLoopCity != NULL; pLoopCity = GET_PLAYER(ePlayer).nextCity(&iLoop))
+	{
+		if (pLoopCity->GetCityReligions()->GetReligiousMajority() != eAvoidReligion)
+		{
+			for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+			{
+				BuildingTypes eBuilding = (BuildingTypes)m_pPlayer->getCivilizationInfo().getCivilizationBuildings(iI);
+				if (eBuilding != NO_BUILDING)
+				{
+					CvBuildingEntry* pBuildingEntry = GC.GetGameBuildings()->GetEntry(eBuilding);
+
+					// Check to make sure this is a happiness-generating building
+					if (pBuildingEntry && pBuildingEntry->GetHappiness() + pBuildingEntry->GetHappinessPerCity() + pBuildingEntry->GetHappinessPerXPolicies() > 0)
+					{
+						if (pLoopCity->IsCanPurchase(true, true, (UnitTypes)-1, eBuilding, (ProjectTypes)-1, YIELD_FAITH))
+						{
+							pLoopCity->Purchase((UnitTypes)-1, eBuilding, (ProjectTypes)-1, YIELD_FAITH);
+							return true;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+bool CvReligionAI::CanBuyOtherReligionHappinessBuilding(ReligionTypes eAvoidReligion)
+{
+	PlayerTypes ePlayer = m_pPlayer->GetID();
+
+	int iLoop;
+	CvCity* pLoopCity;
+	for (pLoopCity = GET_PLAYER(ePlayer).firstCity(&iLoop); pLoopCity != NULL; pLoopCity = GET_PLAYER(ePlayer).nextCity(&iLoop))
+	{
+		if (pLoopCity->GetCityReligions()->GetReligiousMajority() != eAvoidReligion)
+		{
+			for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+			{
+				BuildingTypes eBuilding = (BuildingTypes)m_pPlayer->getCivilizationInfo().getCivilizationBuildings(iI);
+				if (eBuilding != NO_BUILDING)
+				{
+					CvBuildingEntry* pBuildingEntry = GC.GetGameBuildings()->GetEntry(eBuilding);
+
+					// Check to make sure this is a happiness-generating building
+					if (pBuildingEntry && pBuildingEntry->GetHappiness() + pBuildingEntry->GetHappinessPerCity() + pBuildingEntry->GetHappinessPerXPolicies() > 0)
+					{
+						if (pLoopCity->IsCanPurchase(true, true, (UnitTypes)-1, eBuilding, (ProjectTypes)-1, YIELD_FAITH))
+						{
+							return true;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return false;
+}
+#endif // AUI_RELIGION_DO_FAITH_PURCHASES_PRIORITIZE_OTHER_RELIGION_HAPPINESS_BUILDINGS
+
+#ifdef AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
+/// See if we want to finish any of our builds by rushing with faith (similar to DoHurry() in CvEconomicAI)
+bool CvReligionAI::DoHurryWithFaith(ReligionTypes eAvoidReligion)
+{
+	int iLoop = 0;
+	OrderData* pOrder = 0;
+	CvCity* pLoopCity = 0;
+	int iTurnsSaved = 0;
+	CvCity* pBestHurryCity = NULL;
+	int iBestHurryTurnsSaved = 0;
+	int iBestHurryIndex = 0;
+	// Look at each of our cities
+	for (pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
+	{
+		if (pLoopCity->GetCityReligions()->GetReligiousMajority() == eAvoidReligion)
+			continue;
+
+		int iProdPercentRemaining = ((pLoopCity->getProductionNeeded() - pLoopCity->getProduction()) * 100) / pLoopCity->getProductionNeeded();
+
+		// Loop through all orders in the city
+		for (int iIndex = 0; iIndex < pLoopCity->getOrderQueueLength(); iIndex++)
+		{
+			// What are we currently looking at?
+			pOrder = pLoopCity->getOrderFromQueue(iIndex);
+
+			// Can we rush it?
+			if (pOrder && pLoopCity->IsCanPurchase(pOrder, YIELD_FAITH))
+			{
+				if (iIndex == 0)
+				{
+					// We skip if the build order is more than 2/3 done.
+					if (iProdPercentRemaining < 33)
+						continue;
+					iTurnsSaved = pLoopCity->getProductionTurnsLeft();
+				}
+				else
+				{
+					int iProductionNeeded = MAX_INT;
+					switch (pOrder->eOrderType)
+					{
+					case ORDER_TRAIN:
+						iProductionNeeded = m_pPlayer->getProductionNeeded((UnitTypes)pOrder->iData1) * 100 - pLoopCity->getUnitProductionTimes100((UnitTypes)pOrder->iData1);
+						break;
+					case ORDER_CONSTRUCT:
+						iProductionNeeded = m_pPlayer->getProductionNeeded((BuildingTypes)pOrder->iData1) * 100 - pLoopCity->GetCityBuildings()->GetBuildingProductionTimes100((BuildingTypes)pOrder->iData1);
+						break;
+					case ORDER_CREATE:
+						iProductionNeeded = m_pPlayer->getProductionNeeded((ProjectTypes)pOrder->iData1) * 100 - pLoopCity->getProjectProductionTimes100((ProjectTypes)pOrder->iData1);
+						break;
+					case ORDER_PREPARE:
+						iProductionNeeded = m_pPlayer->getProductionNeeded((SpecialistTypes)pOrder->iData1) * 100 - pLoopCity->getSpecialistProductionTimes100((SpecialistTypes)pOrder->iData1);
+						break;
+					}
+					iTurnsSaved = iProductionNeeded / pLoopCity->getRawProductionDifferenceTimes100(true, false);
+				}
+				// Also skip if we don't save any turns
+				if (iIndex == 0 && iTurnsSaved < 2)
+				{
+					continue;
+				}
+				if (iBestHurryTurnsSaved * MAX(1, iIndex) < iTurnsSaved)
+				{
+					iBestHurryTurnsSaved = iTurnsSaved;
+					pBestHurryCity = pLoopCity;
+					iBestHurryIndex = iIndex;
+					if (GC.getLogging() && GC.getAILogging())
+					{
+						static const char* orderTypeStrings[] = { "ORDER_TRAIN", "ORDER_CONSTRUCT", "ORDER_CREATE", "ORDER_PREPARE", "ORDER_MAINTAIN", "NO_ORDER" };
+						int orderIndex = ((pOrder->eOrderType < 0) || (pOrder->eOrderType > 4)) ? 5 : pOrder->eOrderType;
+						CvString strLogString;
+						strLogString.Format("DoHurryWithFaith Option: order type %s, Index %d, Turns Saved: %d,remaining percent = %d", orderTypeStrings[orderIndex], iIndex, iTurnsSaved, (iIndex == 0 ? iProdPercentRemaining : 0));
+						m_pPlayer->GetHomelandAI()->LogHomelandMessage(strLogString);
+					}
+				}
+			}
+		}
+	}
+
+	// Now enact the best hurry we've found (only hurry one item per turn for now)
+	if (pBestHurryCity != NULL)
+	{
+		pBestHurryCity->PurchaseOrder(iBestHurryIndex, YIELD_FAITH);
+		if (iBestHurryIndex == 0)
+		{
+			pBestHurryCity->AI_chooseProduction(false);
+		}
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
 
 /// AI's perceived worth of a belief
 int CvReligionAI::ScoreBelief(CvBeliefEntry* pEntry)
@@ -7403,6 +7640,10 @@ bool CvReligionAI::AreAllOurCitiesConverted(ReligionTypes eReligion, bool bInclu
 bool CvReligionAI::AreAllOurCitiesHaveFaithBuilding(ReligionTypes eReligion, bool bIncludePuppets) const
 {
 	bool bRtnValue = true;
+#ifdef AUI_RELIGION_FIX_ARE_ALL_OUR_CITIES_HAVE_FAITH_BUILDING_VENICE_PUPPETS
+	if (m_pPlayer->GetPlayerTraits()->IsNoAnnexing())
+		bIncludePuppets = true;
+#endif // AUI_RELIGION_FIX_ARE_ALL_OUR_CITIES_HAVE_FAITH_BUILDING_VENICE_PUPPETS
 #ifdef AUI_RELIGION_FIX_MULTIPLE_FAITH_BUILDINGS
 	std::vector<BuildingClassTypes> eFaithBuildingClass = FaithBuildingAvailable(eReligion);
 	if (eFaithBuildingClass.size() == 0)
@@ -7756,6 +7997,11 @@ UnitTypes CvReligionAI::GetDesiredFaithGreatPerson() const
 							dScore = 750.0;
 						}
 						dScore /= (1.0 + m_pPlayer->GetReligions()->GetNumProphetsSpawned());
+#ifdef AUI_RELIGION_FIX_DO_FAITH_PURCHASES_ENHANCE_INDUSTRIAL_RELIGION
+						const CvReligion* pMyReligion = GC.getGame().GetGameReligions()->GetReligion(eReligion, m_pPlayer->GetID());
+						if (pMyReligion && !pMyReligion->m_bEnhanced)
+							dScore *= 2;
+#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_ENHANCE_INDUSTRIAL_RELIGION
 #else
 							iScore = 1500;
 						}
@@ -7764,6 +8010,11 @@ UnitTypes CvReligionAI::GetDesiredFaithGreatPerson() const
 							iScore = 750;
 						}
 						iScore /= (1+ m_pPlayer->GetReligions()->GetNumProphetsSpawned());
+#ifdef AUI_RELIGION_FIX_DO_FAITH_PURCHASES_ENHANCE_INDUSTRIAL_RELIGION
+						const CvReligion* pMyReligion = GC.getGame().GetGameReligions()->GetReligion(eReligion, m_pPlayer->GetID());
+						if (pMyReligion && !pMyReligion->m_bEnhanced)
+							iScore *= 2;
+#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_ENHANCE_INDUSTRIAL_RELIGION
 #endif // AUI_RELIGION_USE_DOUBLES
 					}
 				}

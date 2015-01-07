@@ -1782,7 +1782,7 @@ void CvEconomicAI::DoHurry()
 			pOrder = pLoopCity->getOrderFromQueue(iIndex);
 
 			// Can we rush it?
-			if (pOrder && pLoopCity->IsCanGoldPurchase(pOrder))
+			if (pOrder && pLoopCity->IsCanPurchase(pOrder))
 			{
 				if (iIndex == 0)
 				{

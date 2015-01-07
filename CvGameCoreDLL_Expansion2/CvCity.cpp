@@ -12422,9 +12422,9 @@ bool CvCity::CanPlaceUnitHere(UnitTypes eUnitType)
 	return true;
 }
 
-#ifdef AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+#if defined(AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD) || defined(AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH)
 /// Can we purchase this production order with gold?
-bool CvCity::IsCanGoldPurchase(OrderData* pOrder)
+bool CvCity::IsCanPurchase(OrderData* pOrder, YieldTypes eCurrency)
 {
 	UnitTypes eUnitType = NO_UNIT;
 	BuildingTypes eBuildingType = NO_BUILDING;
@@ -12448,9 +12448,9 @@ bool CvCity::IsCanGoldPurchase(OrderData* pOrder)
 		return false;
 	}
 
-	return IsCanPurchase(true, true, eUnitType, eBuildingType, eProjectType, YIELD_GOLD);
+	return IsCanPurchase(true, true, eUnitType, eBuildingType, eProjectType, eCurrency);
 }
-#endif // AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+#endif
 
 //	--------------------------------------------------------------------------------
 // Is this city allowed to purchase something right now?
@@ -12701,9 +12701,9 @@ bool CvCity::IsCanPurchase(bool bTestPurchaseCost, bool bTestTrainable, UnitType
 	return true;
 }
 
-#ifdef AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+#if defined(AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD) || defined(AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH)
 /// AMS: Purchase the order at the specified index (0 is what we're currently producing)
-void CvCity::PurchaseOrder(int iIndex)
+void CvCity::PurchaseOrder(int iIndex, YieldTypes eCurrency)
 {	
 	UnitTypes eUnitType = NO_UNIT;
 	BuildingTypes eBuildingType = NO_BUILDING;
@@ -12731,9 +12731,9 @@ void CvCity::PurchaseOrder(int iIndex)
 		}
 	}
 
-	Purchase(eUnitType, eBuildingType, eProjectType, YIELD_GOLD);
+	Purchase(eUnitType, eBuildingType, eProjectType, eCurrency);
 }
-#endif // AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+#endif
 
 //	--------------------------------------------------------------------------------
 // purchase something at the city

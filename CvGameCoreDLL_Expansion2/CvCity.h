@@ -800,10 +800,10 @@ public:
 	void			clearCombat();
 	bool			isFighting() const;
 
-#ifdef AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
-	bool IsCanGoldPurchase(OrderData* pOrder);
-	void PurchaseOrder(int iIndex = 0);
-#endif // AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+#if defined(AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD) || defined(AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH)
+	bool IsCanPurchase(OrderData* pOrder, YieldTypes eCurrency = YIELD_GOLD);
+	void PurchaseOrder(int iIndex = 0, YieldTypes eCurrency = YIELD_GOLD);
+#endif
 
 	int iScratch; // know the scope of your validity
 
