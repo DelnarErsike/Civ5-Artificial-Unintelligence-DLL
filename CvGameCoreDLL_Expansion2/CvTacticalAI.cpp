@@ -8036,7 +8036,7 @@ void CvTacticalAI::ExecuteBarbarianMoves(bool bAggressive)
 				if(pUnit->getDomainType() == DOMAIN_LAND)
 				{
 #ifdef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
-					if (FindNearbyTarget(pUnit, 0, AI_TACTICAL_TARGET_BARBARIAN_CAMP))
+					if (pUnit->plot()->getImprovementType() == GC.getBARBARIAN_CAMP_IMPROVEMENT())
 					{
 						continue;
 					}
@@ -10298,6 +10298,8 @@ void CvTacticalAI::ExecuteEscortEmbarkedMoves()
 //AMS: Get best plot of the array of possible plots, based on plot danger.
 CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget, int iWithinTurns)
 {
+	if (pUnit->isBarbarian() && pUnit->plot()->getImprovementType() == GC.getBARBARIAN_CAMP_IMPROVEMENT())
+		return NULL;
 	CvPlot* pBestRepositionPlot = NULL;
 	FFastVector<CvPlot*> movePlotList;
 	pUnit->GetMovablePlotListOpt(movePlotList, plotTarget, false, iWithinTurns);
@@ -10307,11 +10309,13 @@ CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget
 		int iMinDanger = MAX_INT;
 		int iMaxDefense = 0;
 		int iCurrentDanger, iCurrentDefense;
+		
 		for (FFastVector<CvPlot*>::iterator it = movePlotList.begin(); it != movePlotList.end(); it++)
 		{
 			if ((*it) == pUnit->plot())
 				continue;
 			iCurrentDanger = m_pPlayer->GetPlotDanger(*(*it));
+			
 			if (iCurrentDanger <= iMinDanger)
 			{
 				iCurrentDefense = (*it)->defenseModifier(m_pPlayer->getTeam(), false);

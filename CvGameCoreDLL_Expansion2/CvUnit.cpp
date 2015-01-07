@@ -18701,6 +18701,11 @@ bool CvUnit::canMoveAndRangedStrike(int iX, int iY)
 		return true;
 	}
 
+	if (isBarbarian() && plot()->getImprovementType() == GC.getBARBARIAN_CAMP_IMPROVEMENT())
+	{
+		return false;
+	}
+
 	// We only compute if distance is reasonable (ignore roads).
 	if (GetRangePlusMoveToshot() < plotDistance(getX(), getY(), iX, iY))
 	{
