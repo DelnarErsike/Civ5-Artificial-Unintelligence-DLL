@@ -432,6 +432,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_MILITARY_ROLL_FOR_NUKES_CONSIDER_NUKE_COUNT
 /// Adds the difference between players' strengths to the nuke flavor for nuke rolls
 #define AUI_MILITARY_ROLL_FOR_NUKES_CONSIDER_STRENGTH_DIFFERENCE
+/// The game turn portion of calculating the recommended navy size now changes based on game speed
+#define AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING
 
 // Player Stuff (PlayerAI is later)
 /// Fixes AI Shoshone Pathfinders not getting any goody hut bonuses (TODO: have AI Shoshone actually choose their goody hut bonus instead of getting a random one)
@@ -454,6 +456,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_PLAYER_GET_BEST_SETTLE_PLOT_CONSIDER_ENEMY_CAPITALS
 /// Switches the function over to using the XML-loaded fertility value
 #define AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_MINIMUM_FERTILITY
+/// Minor code modifications that are minor optimizations and help with debugging
+#define AUI_PLAYER_GET_BEST_SETTLE_PLOT_DEBUG_HELP
 
 // PlayerAI Stuff
 /// Great prophet will be chosen as a free great person if the AI can still found a religion with them
@@ -624,6 +628,16 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_RELIGION_GET_DESIRED_FAITH_GREAT_PERSON_SCALE_MISSIONARY_INQUISITOR_WITH_TURNS_ELAPSED (1000)
 /// When comparing the final score for beliefs, the score of the lowest scored belief will be subtracted from all beliefs
 #define AUI_RELIGION_RELATIVE_BELIEF_SCORE
+/// All cities' faith costs are checked in this function, not just the capital's (mainly if there are more than one religions in an empire)
+#define AUI_RELIGION_FIX_CAN_AFFORD_FAITH_PURCHASE_NON_CAPITAL_RELIGION
+/// Fixes the initial check not properly triggering for industrial era civilizations that want to enhance their religion
+#define AUI_RELIGION_FIX_DO_FAITH_PURCHASES_ENHANCE_INDUSTRIAL_RELIGION
+/// Since Venice can purchase stuff at puppets, the function will no longer treat Venice's puppets as ordinary puppets
+#define AUI_RELIGION_FIX_ARE_ALL_OUR_CITIES_HAVE_FAITH_BUILDING_VENICE_PUPPETS
+/// Buildings purchasable with faith that give happiness and are provided by the religion other than what the AI wants to spread are prioritized
+#define AUI_RELIGION_DO_FAITH_PURCHASES_PRIORITIZE_OTHER_RELIGION_HAPPINESS_BUILDINGS
+/// The AI will now hurry units and buildings with faith that are in their current production queue
+#define AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
 
 // Site Evaluation Stuff
 /// Tweaks the multiplier given to the happiness score luxury resources that the player does not have (multiplier is applied once for importing, twice and times 2 for don't have at all)
@@ -834,6 +848,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_SEA_MOVE_POSSIBLE_NULL_POINTER
 /// Fixes a possible null pointer when selecting a naval escort operation's escort
 #define AUI_TACTICAL_FIX_PLOT_NAVAL_ESCORT_OPERATION_MOVES_POSSIBLE_NULL_POINTER
+/// Alters the parameters for finding units to plunder a trade route so ranged units do not want to attack the target instead of plundering
+#define AUI_TACTICAL_FIX_PLOT_PLUNDER_TRADE_UNIT_MOVES_RANGED_UNITS
 
 // Tactical Analysis Map Stuff
 /// Enables a minor adjustment for ranged units to account for possibly being able to move and shoot at a tile
