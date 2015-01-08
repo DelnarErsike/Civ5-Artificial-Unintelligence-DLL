@@ -5305,7 +5305,7 @@ int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 	// if we are going for conquest we want at least one more task force
 	int iGT = GC.getGame().getGameTurn();
 #ifdef AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING
-	int iMaximumTurn = GC.getGame().getEstimateEndTurn() * 2 / 5;
+	int iMaximumTurn = (int)floor(GC.getGame().getEstimateEndTurn() * AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING);
 #ifdef AUI_FAST_COMP
 	iGT = FASTMIN(iGT, iMaximumTurn);
 #else
