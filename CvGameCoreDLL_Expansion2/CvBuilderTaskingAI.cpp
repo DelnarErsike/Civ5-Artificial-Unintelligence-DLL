@@ -2253,7 +2253,12 @@ void CvBuilderTaskingAI::AddScrubFalloutDirectives(CvUnit* pUnit, CvPlot* pPlot,
 bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 {
 	// if plot is impassable, bail!
+#ifdef AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_FLYING_WORKER_DISREGARDS_PEAKS
+	if (!pUnit->canMoveAllTerrain() && ((pPlot->isImpassable() && !pUnit->canMoveImpassable()) ||
+		(pPlot->isMountain() && !pUnit->IsHoveringUnit() && !m_pPlayer->GetPlayerTraits()->IsAbleToCrossMountains())))
+#else
 	if(pPlot->isImpassable() || pPlot->isMountain())
+#endif //AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_FLYING_WORKER_DISREGARDS_PEAKS
 	{
 		if(m_bLogging)
 		{
