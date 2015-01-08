@@ -5853,15 +5853,14 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorGold, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_GOLD(), 1));
 			break;
 		case YIELD_SCIENCE:
-			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorScience, 1)) / 4.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_SCIENCE(), 1));
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorScience, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_SCIENCE(), 1));
 			break;
 		case YIELD_CULTURE:
-			// Greater culture flavor factor is to account for fewer sources of culture
-			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorCulture, 1)) / 2.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_CULTURE(), 1));
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorCulture, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_CULTURE(), 1));
 			break;
 		case YIELD_FAITH:
-			// Since we're calculating beliefs, faith gets 3x its regular value and even more religion flavor factor value
-			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorReligion, 1)) + log10((double)FASTMAX(iFlavorExpansion, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FAITH() * 3, 1));
+			// Since we're calculating beliefs, faith gets 2x its regular value and a bit more flavor
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorReligion, 1) / 2.0) + log10((double)FASTMAX(iFlavorExpansion, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FAITH() * 2, 1));
 			if (pEntry->IsPantheonBelief())
 				dCitizenValue *= M_PI;
 			break;
@@ -6359,15 +6358,14 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorGold, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_GOLD(), 1));
 			break;
 		case YIELD_SCIENCE:
-			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorScience, 1)) / 4.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_SCIENCE(), 1));
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorScience, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_SCIENCE(), 1));
 			break;
 		case YIELD_CULTURE:
-			// Greater culture flavor factor is to account for fewer sources of culture
-			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorCulture, 1)) / 2.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_CULTURE(), 1));
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorCulture, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_CULTURE(), 1));
 			break;
 		case YIELD_FAITH:
-			// Since we're calculating beliefs, faith gets 3x its regular value and even more religion flavor factor value
-			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorReligion, 1)) + log10((double)FASTMAX(iFlavorExpansion, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FAITH() * 3, 1));
+			// Since we're calculating beliefs, faith gets 2x its regular value and a bit more flavor
+			dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorReligion, 1) / 2.0) + log10((double)FASTMAX(iFlavorExpansion, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FAITH() * 2, 1));
 			if (pEntry->IsPantheonBelief())
 				dCitizenValue *= M_PI;
 			break;
@@ -6683,10 +6681,6 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 			dTemp *= 2;
 		}
 #endif // AUI_GS_PRIORITY_RATIO
-#ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
-		// since we're getting faith, calculate the value of faith as a resouce for a flat, unreliable source
-		dTemp *= (1.0 + log10((double)iFlavorReligion) / 8.0);
-#endif // AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
 		dRtnValue += dTemp;
 #else
 		int iTemp = pEntry->GetFaithFromKills() * pEntry->GetMaxDistance() * iFlavorOffense / 100;
@@ -6795,15 +6789,14 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorGold, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_GOLD(), 1));
 						break;
 					case YIELD_SCIENCE:
-						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorScience, 1)) / 4.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_SCIENCE(), 1));
+						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorScience, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_SCIENCE(), 1));
 						break;
 					case YIELD_CULTURE:
-						// Greater culture flavor factor is to account for fewer sources of culture
-						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorCulture, 1)) / 2.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_CULTURE(), 1));
+						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorCulture, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_CULTURE(), 1));
 						break;
 					case YIELD_FAITH:
-						// Since we're calculating beliefs, faith gets 3x its regular value and even more religion flavor factor value
-						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorReligion, 1)) + log10((double)FASTMAX(iFlavorExpansion, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FAITH() * 3, 1));
+						// Since we're calculating beliefs, faith gets 2x its regular value and a bit more flavor
+						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorReligion, 1) / 2.0) + log10((double)FASTMAX(iFlavorExpansion, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FAITH() * 2, 1));
 						if (pEntry->IsPantheonBelief())
 							dCitizenValue *= M_PI;
 						break;
