@@ -174,6 +174,15 @@ public:
 	void SetHealthPercent(int curHitPoints, int maxHitPoints)
 	{
 		CvAssert(maxHitPoints != 0);
+#ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+		if (curHitPoints == maxHitPoints)
+		{
+			m_iHealthPercent = 100;
+			return;
+		}
+		curHitPoints = maxHitPoints - 
+			(maxHitPoints - curHitPoints) * (GC.getWOUNDED_DAMAGE_MULTIPLIER() + GET_PLAYER(m_eOwner).GetWoundedUnitDamageMod()) / 100;
+#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 		m_iHealthPercent = curHitPoints * 100 / maxHitPoints;
 	}
 	int GetHealthPercent() const
@@ -212,6 +221,16 @@ public:
 	{
 		return m_iMovesToTarget;
 	};
+#ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+	void SetOwner(PlayerTypes eOwner)
+	{
+		m_eOwner = eOwner;
+	};
+	PlayerTypes GetOwner() const
+	{
+		return m_eOwner;
+	};
+#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 
 	// Derived
 	int GetAttackPriority() const
@@ -226,6 +245,9 @@ private:
 	int m_iMovesToTarget;
 	int m_iExpectedTargetDamage;
 	int m_iExpectedSelfDamage;
+#ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+	PlayerTypes m_eOwner;
+#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 };
 
 // Object stored in the list of current move cities (m_CurrentMoveCities)
