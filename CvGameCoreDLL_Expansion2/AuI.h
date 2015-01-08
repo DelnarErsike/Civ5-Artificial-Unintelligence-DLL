@@ -168,6 +168,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_WORKER_GET_RESOURCE_WEIGHT_CONSIDER_EXTRAS_FOR_HAPPINESS_FROM_RESOURCE
 /// Removes the isAdjacent check for whether a work boat can access an area different from its current one (pathfinder takes care of bad cases anyway, it's just a bit slower)
 #define AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_WORK_BOATS_CONSIDER_ALL_SEA_PLOTS
+/// Only disregard an impassable plot if the unit cannot enter impassable plots
+#define AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_FLYING_WORKER_DISREGARDS_PEAKS
 
 // City Stuff
 /// Shifts the scout assignment code to EconomicAI
@@ -433,7 +435,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Adds the difference between players' strengths to the nuke flavor for nuke rolls
 #define AUI_MILITARY_ROLL_FOR_NUKES_CONSIDER_STRENGTH_DIFFERENCE
 /// The game turn portion of calculating the recommended navy size now changes based on game speed
-#define AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING
+#define AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING (0.6)
 
 // Player Stuff (PlayerAI is later)
 /// Fixes AI Shoshone Pathfinders not getting any goody hut bonuses (TODO: have AI Shoshone actually choose their goody hut bonus instead of getting a random one)
@@ -842,14 +844,30 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
 /// If a target type is not specified, all improvement types are now valid targets (not just non-citadel improvements without resources)
 #define AUI_TACTICAL_FIX_FIND_NEARBY_TARGET_ALL_IMPROVEMENT_TYPES_POSSIBLE
-/// Ignore tiles with a higher danger value than the barbarian's current tile when finding explore tiles
-//#define AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
+/// Civilian units are also eligible targets when target a target type is not specified
+#define AUI_TACTICAL_FIX_FIND_NEARBY_TARGET_CIVILIANS_POSSIBLE
+/// Cities are no longer a valid target for individual barbarian units when a target type is not specified
+#define AUI_TACTICAL_FIND_NEARBY_TARGET_BARBARIANS_DONT_TARGET_CITIES
 /// Fixes a possible null pointer when converting a target's coordinates to a plot
 #define AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_SEA_MOVE_POSSIBLE_NULL_POINTER
 /// Fixes a possible null pointer when selecting a naval escort operation's escort
 #define AUI_TACTICAL_FIX_PLOT_NAVAL_ESCORT_OPERATION_MOVES_POSSIBLE_NULL_POINTER
 /// Alters the parameters for finding units to plunder a trade route so ranged units do not want to attack the target instead of plundering
 #define AUI_TACTICAL_FIX_PLOT_PLUNDER_TRADE_UNIT_MOVES_RANGED_UNITS
+/// Cities with a garrisoned unit now use the city's data instead of the garrisoned unit's data
+#define AUI_TACTICAL_FIX_EXECUTE_SAFE_BOMBARDS_CITIES_WITH_GARRISON
+/// Check if a unit can actually attack from a plot (in range, in LoS, etc.) before attempting to attack
+#define AUI_TACTICAL_FIX_EXECUTE_SAFE_BOMBARDS_CHECK_RANGE
+/// Functions that check the priority of a civilian unit are optimized and a few extras are added in
+#define AUI_TACTICAL_IS_N_PRIORITY_CIVILIAN_FIXES
+/// Functions that only serve to set a boolean return value and return it are optimized to simply just use return true/false
+#define AUI_TACTICAL_RETURN_VALUE_OPTIMIZATIONS
+/// Civilians that are not moved with BarbarianCivilianEscortMove now move using passive barbarian move
+#define AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_CIVILIANS_MOVE_PASSIVELY
+/// Civilians are identified with IsCanDefend() instead of IsCanAttack()
+#define AUI_TACTICAL_FIX_PLOT_BARBARIAN_CIVILIAN_ESCORT_MOVE_CIVILIAN_CATCH
+/// When saving the health percent of a tactical unit, its health percent's effect on damage is saved instead of the actual health percent (primarily for the sorting function)
+#define AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 
 // Tactical Analysis Map Stuff
 /// Enables a minor adjustment for ranged units to account for possibly being able to move and shoot at a tile
