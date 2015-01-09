@@ -1928,8 +1928,6 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 			}
 
 			kSearchList.clear();
-
-			iLoop = 0;
 #else
 			int iLoop = 0;
 #endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CALCULATE_PERFECT_MATCH_FIRST
@@ -2043,9 +2041,6 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 			}
 
 			kSearchList.clear();
-#ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_ITERATOR
-			iLoop = 0;
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_ITERATOR
 			// Loop again this time through secondary units
 			for(CvUnit* pLoopUnit = ownerPlayer.firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = ownerPlayer.nextUnit(&iLoop))
 			{
