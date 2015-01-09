@@ -1005,7 +1005,6 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 								CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iI);
 								if(kPlayer.isAlive() && kPlayer.GetID() != kThisPlayer.GetID())
 								{
-									iLoop = 0;
 									for(pLoopCity = kPlayer.firstCity(&iLoop); pLoopCity != NULL; pLoopCity = kPlayer.nextCity(&iLoop))
 									{
 										if (pLoopCity->waterArea())
