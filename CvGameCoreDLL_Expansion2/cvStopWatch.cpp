@@ -62,13 +62,12 @@ void cvStopWatch::EndPerfTest()
 	LARGE_INTEGER newTimerVal;
 	QueryPerformanceCounter(&newTimerVal);
 
-#ifdef AUI_STOPWATCH_LONG_DOUBLE_PRECISION
-	long double dtTime = (long double)(newTimerVal.QuadPart - m_oldTimerVal.QuadPart);
-	long double dTicksPerSecond = (long double)ms_ticksPerSecond.QuadPart;
+#ifdef AUI_STOPWATCH_SUBTRACT_BEFORE_DELTA_CAST
+	double dtTime = (double)(newTimerVal.QuadPart - m_oldTimerVal.QuadPart);
 #else
 	double dtTime = (double)newTimerVal.QuadPart - m_oldTimerVal.QuadPart;
+#endif // AUI_STOPWATCH_SUBTRACT_BEFORE_DELTA_CAST
 	double dTicksPerSecond = (double)ms_ticksPerSecond.QuadPart;
-#endif // AUI_STOPWATCH_LONG_DOUBLE_PRECISION
 
 	m_dtseconds = dtTime/dTicksPerSecond;
 
@@ -77,11 +76,7 @@ void cvStopWatch::EndPerfTest()
 //------------------------------------------------------------------------------
 double cvStopWatch::GetDeltaInSeconds() const
 {
-#ifdef AUI_STOPWATCH_LONG_DOUBLE_PRECISION
-	return (double)m_dtseconds;
-#else
 	return m_dtseconds;
-#endif // AUI_STOPWATCH_LONG_DOUBLE_PRECISION
 }
 //------------------------------------------------------------------------------
 void cvStopWatch::PerfLog(const char* szName, double dtSeconds)
