@@ -102,6 +102,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// If it's available, opts for the binomial RNG for the boldness check's random factor instead of the flat RNG
 #define AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_BINOMIAL
 #endif
+/// Fixes a possible null pointer in the function
+#define AUI_OPERATION_FIX_CHECK_ON_TARGET_POSSIBLE_NULL_POINTER
 /// FindBestFitReserveUnit() no longer ignores units that can paradrop
 #define AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
 /// The filter to filter out scouting units only applies to units whose default AI is scouting

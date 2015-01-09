@@ -502,7 +502,11 @@ bool CvAIOperation::CheckOnTarget()
 	pCivilian = NULL;
 #endif // AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
 	CvPlot* pCivilianPlot = NULL;
+#ifdef AUI_OPERATION_FIX_CHECK_ON_TARGET_POSSIBLE_NULL_POINTER
+	CvUnit* pEscort = NULL;
+#else
 	CvPlot* pEscortPlot;
+#endif // AUI_OPERATION_FIX_CHECK_ON_TARGET_POSSIBLE_NULL_POINTER
 
 	if(GetFirstArmyID() == -1)
 	{
@@ -536,8 +540,13 @@ bool CvAIOperation::CheckOnTarget()
 					}
 					else
 					{
+#ifdef AUI_OPERATION_FIX_CHECK_ON_TARGET_POSSIBLE_NULL_POINTER
+						pEscort = GET_PLAYER(m_eOwner).getUnit(pThisArmy->GetNextUnitID());
+						if (pEscort && pCivilianPlot == pEscort->plot())
+#else
 						pEscortPlot = GET_PLAYER(m_eOwner).getUnit(pThisArmy->GetNextUnitID())->plot();
 						if(pCivilianPlot == pEscortPlot)
+#endif // AUI_OPERATION_FIX_CHECK_ON_TARGET_POSSIBLE_NULL_POINTER
 						{
 							ArmyInPosition(pThisArmy);
 							return true;
