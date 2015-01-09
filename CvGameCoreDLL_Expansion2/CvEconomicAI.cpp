@@ -1003,16 +1003,16 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 				continue;
 			}
 
-#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 			int iMainDistance = hexDistance(iX, iY);
-#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 			if(pEvalPlot->isAdjacentRevealed(eTeam))
 			{
-#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 				if (iMainDistance > 1)
 #else
 				if(plotDistance(iPlotX, iPlotY, pEvalPlot->getX(), pEvalPlot->getY()) > 1)
-#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 				{
 					CvPlot* pAdjacentPlot;
 					bool bViewBlocked = true;
@@ -1091,12 +1091,12 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 				iResultValue += iGoodScore;
 			}
 
-#ifdef AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 			iResultValue += (iRange - iMainDistance) * iAdjacencyBonus;
 #else
 			int iDistance = plotDistance(iPlotX, iPlotY, pEvalPlot->getX(), pEvalPlot->getY());
 			iResultValue += (iRange - iDistance) * iAdjacencyBonus;
-#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 		}
 	}
 
