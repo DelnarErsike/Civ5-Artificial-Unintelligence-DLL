@@ -5305,7 +5305,7 @@ int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 	// if we are going for conquest we want at least one more task force
 	int iGT = GC.getGame().getGameTurn();
 #ifdef AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING
-	int iMaximumTurn = (int)floor(GC.getGame().getEstimateEndTurn() * AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING);
+	int iMaximumTurn = int(GC.getGame().getEstimateEndTurn() * AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING + 0.5);
 #ifdef AUI_FAST_COMP
 	iGT = FASTMIN(iGT, iMaximumTurn);
 #else
@@ -5342,7 +5342,7 @@ int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 #endif // AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING
 	}
 
-	return (int)floor(dNumUnitsWanted + 0.5);
+	return int(dNumUnitsWanted + 0.5);
 #else
 	int iNumUnitsWanted = 0;
 	int iFlavorNaval = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_NAVAL"));
