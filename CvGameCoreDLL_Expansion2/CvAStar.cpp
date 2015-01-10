@@ -866,14 +866,12 @@ int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 		return TRUE;
 	}
 
-#ifdef AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
-	if(pToPlot->isMountain() && !pUnit->canEnterTerrain(*pToPlot))
-#else
+#ifndef AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 	if(pToPlot->isMountain() && (!pCacheData->isHuman() || pCacheData->IsAutomated()))
-#endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 	{
 		return FALSE;
 	}
+#endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 
 	if(pCacheData->IsImmobile())
 	{
@@ -1202,6 +1200,13 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 /// Standard path finder - check validity of a coordinate
 int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 {
+#ifdef AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
+	// If this is the first node in the path, it is always valid (starting location)
+	if (parent == NULL)
+	{
+		return TRUE;
+	}
+#endif // AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
 	CvMap& theMap = GC.getMap();
 
 	CvPlot* pToPlot = theMap.plotUnchecked(node->m_iX, node->m_iY);
@@ -1239,11 +1244,13 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 	kToNodeCacheData.bContainsVisibleEnemy = pToPlot->isVisibleEnemyUnit(pUnit);
 	kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
 
+#ifndef AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
 	// If this is the first node in the path, it is always valid (starting location)
 	if (parent == NULL)
 	{
 		return TRUE;
 	}
+#endif // AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
 
 	CvPlot* pFromPlot = theMap.plotUnchecked(parent->m_iX, parent->m_iY);
 	PREFETCH_FASTAR_CVPLOT(reinterpret_cast<char*>(pFromPlot));
@@ -1304,6 +1311,12 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 		// This is a safeguard against the algorithm believing a plot to be impassable before actually knowing it (mid-search)
 		if(iOldNumTurns != -1 || (iDestX == iNodeX && iDestY == iNodeY))
 		{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+			if (!kNodeCacheData.bCanEnterTerrain)
+			{
+				return FALSE;
+			}
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 			// This plot is of greater distance than previously, so we know the unit is ending its turn here (pNode), or it's trying to attack through a unit (and might end up on this tile if an attack fails to kill the enemy)
 			if(iNumTurns != iOldNumTurns || bPreviousNodeHostile || !bPreviousVisibleToTeam)
 			{
@@ -1325,10 +1338,12 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 						}
 #endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 
+#ifndef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 						if(kNodeCacheData.bIsMountain && !kNodeCacheData.bCanEnterTerrain)
 						{
 							return FALSE;
 						}
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 
 						if ((iFinderInfo & CvUnit::MOVEFLAG_STAY_ON_LAND) && kNodeCacheData.bIsWater)
 						{
@@ -1496,14 +1511,22 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 	{
 		if(iFinderInfo & MOVE_UNITS_THROUGH_ENEMY)
 		{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+			if (!(pUnit->canMoveOrAttackInto(*pFromPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE, kFromNodeCacheData.bCanEnterTerrain, true)))
+#else
 			if(!(pUnit->canMoveOrAttackInto(*pFromPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE)))
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 			{
 				return FALSE;
 			}
 		}
 		else
 		{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+			if(!(pUnit->canMoveThrough(*pFromPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE, kFromNodeCacheData.bCanEnterTerrain, true)))
+#else
 			if(!(pUnit->canMoveThrough(*pFromPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE)))
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 			{
 				return FALSE;
 			}
@@ -1629,14 +1652,12 @@ int IgnoreUnitsDestValid(int iToX, int iToY, const void* pointer, CvAStar* finde
 		return FALSE;
 	}
 
-#ifdef AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
-	if (pToPlot->isMountain() && !pUnit->canEnterTerrain(*pToPlot))
-#else
+#ifndef AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 	if(pToPlot->isMountain() && (!pCacheData->isHuman() || pCacheData->IsAutomated()))
-#endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 	{
 		return FALSE;
 	}
+#endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 
 	if ((finder->GetInfo() & CvUnit::MOVEFLAG_STAY_ON_LAND) && (pToPlot->isWater() && !pToPlot->IsAllowsWalkWater()))
 	{
@@ -2050,11 +2071,11 @@ int StepValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 		return FALSE;
 	}
 
-#ifdef AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
-	if(pNewPlot->isImpassable())
+#ifdef AUI_ASTAR_FIX_STEP_VALID_CONSIDERS_MOUNTAINS
+	if (pNewPlot->isImpassable())
 #else
 	if(pNewPlot->isImpassable() || pNewPlot->isMountain())
-#endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
+#endif // AUI_ASTAR_FIX_STEP_VALID_CONSIDERS_MOUNTAINS
 	{
 		return FALSE;
 	}
@@ -2652,7 +2673,11 @@ int BuildRouteValid(CvAStarNode* parent, CvAStarNode* node, int data, const void
 		return FALSE;
 	}
 
+#ifdef AUI_ASTAR_FIX_STEP_VALID_CONSIDERS_MOUNTAINS
+	if (pNewPlot->isImpassable())
+#else
 	if(pNewPlot->isImpassable() || pNewPlot->isMountain())
+#endif // AUI_ASTAR_FIX_STEP_VALID_CONSIDERS_MOUNTAINS
 	{
 		return FALSE;
 	}
@@ -3220,11 +3245,13 @@ int UIPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* po
 		}
 	}
 
+#ifndef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 	if(pToPlot->isVisible(pUnit->getTeam()) && pToPlot->isVisibleEnemyUnit(pUnit))
 	{
 		if (!pUnit->canMoveInto(*pToPlot, CvUnit::MOVEFLAG_ATTACK))
 			return FALSE;
 	}
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 
 	if(pUnit->getDomainType() == DOMAIN_LAND)
 	{
@@ -3247,6 +3274,14 @@ int UIPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* po
 	{
 		return FALSE;
 	}
+
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	if (pToPlot->isVisible(pUnit->getTeam()) && pToPlot->isVisibleEnemyUnit(pUnit))
+	{
+		if (!pUnit->canMoveInto(*pToPlot, CvUnit::MOVEFLAG_ATTACK, true, true))
+			return FALSE;
+	}
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 
 	if(!PathValid(parent,node,data,pointer,finder))
 	{
@@ -3477,6 +3512,12 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 		// This is a safeguard against the algorithm believing a plot to be impassable before actually knowing it (mid-search)
 		if(iOldNumTurns != -1 || (iDestX == iNodeX && iDestY == iNodeY))
 		{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+			if (!kNodeCacheData.bCanEnterTerrain)	// since this gets cached for each node anyway during buildup, it should be used whereever possible
+			{
+				return FALSE;
+			}
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 			// This plot is of greater distance than previously, so we know the unit is ending its turn here (pNode), or it's trying to attack through a unit (and might end up on this tile if an attack fails to kill the enemy)
 			if(iNumTurns != iOldNumTurns || bPreviousNodeHostile)
 			{
@@ -3499,10 +3540,12 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 						}
 #endif // AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 
+#ifndef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 						if(kNodeCacheData.bIsMountain && !kNodeCacheData.bCanEnterTerrain)	// only doing canEnterTerrain on mountain plots because it is expensive, though it probably should always be called and some other checks in this loop could be removed.
 						{
 							return FALSE;
 						}
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 
 						if ((finder->GetInfo() & CvUnit::MOVEFLAG_STAY_ON_LAND) && kNodeCacheData.bIsWater)
 						{
@@ -3670,14 +3713,22 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 	{
 		if(iFinderInfo & MOVE_UNITS_THROUGH_ENEMY)
 		{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+			if(!(pUnit->canMoveOrAttackInto(*pFromPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE, kFromNodeCacheData.bCanEnterTerrain, true)))
+#else
 			if(!(pUnit->canMoveOrAttackInto(*pFromPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE)))
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 			{
 				return FALSE;
 			}
 		}
 		else
 		{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+			if (!(pUnit->canMoveThrough(*pFromPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE, kFromNodeCacheData.bCanEnterTerrain, true)))
+#else
 			if(!(pUnit->canMoveThrough(*pFromPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE)))
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 			{
 				return FALSE;
 			}
@@ -4123,7 +4174,11 @@ int TradeRouteLandValid(CvAStarNode* parent, CvAStarNode* node, int data, const 
 		return FALSE;
 	}
 
+#ifdef AUI_ASTAR_FIX_STEP_VALID_CONSIDERS_MOUNTAINS
+	if (pNewPlot->isImpassable())
+#else
 	if(pNewPlot->isMountain() || pNewPlot->isImpassable())
+#endif // AUI_ASTAR_FIX_STEP_VALID_CONSIDERS_MOUNTAINS
 	{
 		return FALSE;
 	}

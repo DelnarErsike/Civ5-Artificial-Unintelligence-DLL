@@ -159,9 +159,26 @@ public:
 	TeamTypes GetDeclareWarMove(const CvPlot& pPlot) const;
 	PlayerTypes GetBullyMinorMove(const CvPlot* pPlot) const;
 	TeamTypes GetDeclareWarRangeStrike(const CvPlot& pPlot) const;
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	bool canMoveInto(const CvPlot& pPlot, byte bMoveFlags = 0, bool bCanEnterTerrain = false, bool bIsPrecalcCanEnterTerrain = false) const;
+	bool canMoveOrAttackInto(const CvPlot& pPlot, byte bMoveFlags = 0, bool bCanEnterTerrain = false, bool bIsPrecalcCanEnterTerrain = false) const;
+#else
 	bool canMoveInto(const CvPlot& pPlot, byte bMoveFlags = 0) const;
 	bool canMoveOrAttackInto(const CvPlot& pPlot, byte bMoveFlags = 0) const;
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+#ifdef AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	bool canMoveOrAttackIntoCommon(const CvPlot& plot, byte bMoveFlags = 0, bool bCanEnterTerrain = false, bool bIsPrecalcCanEnterTerrain = false) const;
+#else
+	bool canMoveOrAttackIntoCommon(const CvPlot& plot, byte bMoveFlags = 0) const;
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	bool canMoveOrAttackIntoAttackOnly(const CvPlot& plot, byte bMoveFlags = 0) const;
+#endif // AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	bool canMoveThrough(const CvPlot& pPlot, byte bMoveFlags = 0, bool bCanEnterTerrain = false, bool bIsPrecalcCanEnterTerrain = false) const;
+#else
 	bool canMoveThrough(const CvPlot& pPlot, byte bMoveFlags = 0) const;
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 
 	bool IsAngerFreeUnit() const;
 

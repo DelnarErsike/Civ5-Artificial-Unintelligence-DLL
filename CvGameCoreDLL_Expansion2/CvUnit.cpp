@@ -2504,10 +2504,25 @@ bool CvUnit::willRevealByMove(const CvPlot& plot) const
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+bool CvUnit::canMoveInto(const CvPlot& plot, byte bMoveFlags, bool bCanEnterTerrain, bool bIsPrecalcCanEnterTerrain) const
+#else
 bool CvUnit::canMoveInto(const CvPlot& plot, byte bMoveFlags) const
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 {
 	VALIDATE_OBJECT
 	TeamTypes ePlotTeam;
+
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	if (bIsPrecalcCanEnterTerrain && !bCanEnterTerrain)
+	{
+		return false;
+	}
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+#ifdef AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
+	// This check gets called so many times it's probably faster just to store the result into a bool
+	bool bMoveFlagAttack = (bMoveFlags & MOVEFLAG_ATTACK);
+#endif // AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
 
 	if(atPlot(plot))
 	{
@@ -2530,7 +2545,11 @@ bool CvUnit::canMoveInto(const CvPlot& plot, byte bMoveFlags) const
 	if(bMoveFlags & MOVEFLAG_DESTINATION)
 	{
 		// Don't let another player's unit inside someone's city
+#ifdef AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
+		if (!bMoveFlagAttack && !(bMoveFlags & MOVEFLAG_DECLARE_WAR))
+#else
 		if(!(bMoveFlags & MOVEFLAG_ATTACK) && !(bMoveFlags & MOVEFLAG_DECLARE_WAR))
+#endif // AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
 		{
 			if(plot.isCity() && plot.getPlotCity()->getOwner() != getOwner())
 				return false;
@@ -2547,6 +2566,9 @@ bool CvUnit::canMoveInto(const CvPlot& plot, byte bMoveFlags) const
 		}
 	}
 
+#ifdef AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
+	if(bMoveFlagAttack)
+#else
 	if(isNoCapture())
 	{
 		if(!(bMoveFlags & MOVEFLAG_ATTACK))
@@ -2559,6 +2581,7 @@ bool CvUnit::canMoveInto(const CvPlot& plot, byte bMoveFlags) const
 	}
 
 	if(bMoveFlags & MOVEFLAG_ATTACK)
+#endif // AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
 	{
 		if(isOutOfAttacks())
 		{
@@ -2571,26 +2594,46 @@ bool CvUnit::canMoveInto(const CvPlot& plot, byte bMoveFlags) const
 			return false;
 		}
 	}
+#ifdef AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
+	else if (isNoCapture() && plot.isEnemyCity(*this))
+	{
+		return false;
+	}
+#endif // AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
 
 	// Can't enter an enemy city until it's "defeated"
 	if(plot.isEnemyCity(*this))
 	{
+#ifdef AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
+		if(bMoveFlagAttack)
+#else
 		if(plot.getPlotCity()->getDamage() < plot.getPlotCity()->GetMaxHitPoints() && !(bMoveFlags & MOVEFLAG_ATTACK))
 		{
 			return false;
 		}
 		if(bMoveFlags & MOVEFLAG_ATTACK)
+#endif // AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
 		{
 			if(getDomainType() == DOMAIN_AIR)
 				return false;
 			if(isHasPromotion((PromotionTypes)GC.getPROMOTION_ONLY_DEFENSIVE()))
 				return false;	// Can't advance into an enemy city
 		}
+#ifdef AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
+		else if (plot.getPlotCity()->getDamage() < plot.getPlotCity()->GetMaxHitPoints())
+		{
+			return false;
+		}
+#endif // AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
 	}
 
 	if(getDomainType() == DOMAIN_AIR)
 	{
+#ifdef AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
+		if (bMoveFlagAttack)
+#else
 		if(bMoveFlags & MOVEFLAG_ATTACK)
+#endif // AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
 		{
 			if(!canRangeStrikeAt(plot.getX(), plot.getY()))
 			{
@@ -2600,7 +2643,11 @@ bool CvUnit::canMoveInto(const CvPlot& plot, byte bMoveFlags) const
 	}
 	else
 	{
+#ifdef AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
+		if (bMoveFlagAttack)
+#else
 		if(bMoveFlags & MOVEFLAG_ATTACK)
+#endif // AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
 		{
 			if(!IsCanAttack())  // trying to give an attack order to a unit that can't fight. That doesn't work!
 			{
@@ -2659,12 +2706,21 @@ bool CvUnit::canMoveInto(const CvPlot& plot, byte bMoveFlags) const
 
 				if(!bCanAdvanceOnDeadUnit)
 				{
+#ifdef AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
+					if (!plot.isVisibleEnemyUnit(this))
+					{
+						// Prevent an attack from failing if a city is empty but still an "enemy" capable of being attacked (this wouldn't happen before in Civ 4)
+						if(!plot.isEnemyCity(*this))
+						{
+							if(plot.isVisibleOtherUnit(getOwner()) == (plot.getPlotCity() && !isNoCapture()))
+#else
 					if(plot.isVisibleEnemyUnit(this) != (bMoveFlags & MOVEFLAG_ATTACK))
 					{
 						// Prevent an attack from failing if a city is empty but still an "enemy" capable of being attacked (this wouldn't happen before in Civ 4)
 						if(!(bMoveFlags & MOVEFLAG_ATTACK) || !plot.isEnemyCity(*this))
 						{
 							if(!(bMoveFlags & MOVEFLAG_DECLARE_WAR) || (plot.isVisibleOtherUnit(getOwner()) != (bMoveFlags & MOVEFLAG_ATTACK) && !((bMoveFlags & MOVEFLAG_ATTACK) && plot.getPlotCity() && !isNoCapture())))
+#endif // AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
 							{
 								return false;
 							}
@@ -2774,7 +2830,11 @@ bool CvUnit::canMoveInto(const CvPlot& plot, byte bMoveFlags) const
 	}
 
 	// Make sure we can enter the terrain.  Somewhat expensive call, so we do this last.
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	if (!bIsPrecalcCanEnterTerrain && !canEnterTerrain(plot, bMoveFlags))
+#else
 	if(!canEnterTerrain(plot, bMoveFlags))
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 	{
 		return false;
 	}
@@ -2782,20 +2842,370 @@ bool CvUnit::canMoveInto(const CvPlot& plot, byte bMoveFlags) const
 	return true;
 }
 
-
+#ifdef AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
 //	--------------------------------------------------------------------------------
-bool CvUnit::canMoveOrAttackInto(const CvPlot& plot, byte bMoveFlags) const
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+bool CvUnit::canMoveOrAttackIntoCommon(const CvPlot& plot, byte bMoveFlags, bool bCanEnterTerrain, bool bIsPrecalcCanEnterTerrain) const
+#else
+bool CvUnit::canMoveOrAttackIntoCommon(const CvPlot& plot, byte bMoveFlags) const
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 {
 	VALIDATE_OBJECT
+	TeamTypes ePlotTeam;
+
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	if (bIsPrecalcCanEnterTerrain && !bCanEnterTerrain)
+	{
+		return false;
+	}
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+
+	if (atPlot(plot))
+	{
+		return false;
+	}
+
+	// Cannot move around in unrevealed land freely
+	if (!(bMoveFlags & MOVEFLAG_PRETEND_UNEMBARKED) && isNoRevealMap() && willRevealByMove(plot))
+	{
+		return false;
+	}
+
+	// Barbarians have special restrictions early in the game
+	if (isBarbarian() && (GC.getGame().getGameTurn() < GC.getGame().GetBarbarianReleaseTurn()) && (plot.isOwned()))
+	{
+		return false;
+	}
+
+	// Added in Civ 5: Destination plots can't allow stacked Units of the same type
+	if (bMoveFlags & MOVEFLAG_DESTINATION)
+	{
+		// Check to see if any units are present at this full-turn move plot (borrowed from CvGameCoreUtils::pathDestValid())
+		if (!(bMoveFlags & MOVEFLAG_IGNORE_STACKING) && GC.getPLOT_UNIT_LIMIT() > 0)
+		{
+			// pSelectionGroup has no Team but the HeadUnit does... ???
+			if (plot.isVisible(getTeam()) && plot.getNumFriendlyUnitsOfType(this) >= GC.getPLOT_UNIT_LIMIT())
+			{
+				return FALSE;
+			}
+		}
+	}
+
+	if (getDomainType() != DOMAIN_AIR)
+	{
+		ePlotTeam = ((isHuman()) ? plot.getRevealedTeam(getTeam()) : plot.getTeam());
+
+		if (!canEnterTerritory(ePlotTeam, false /*bIgnoreRightOfPassage*/, plot.isCity(), bMoveFlags & MOVEFLAG_DECLARE_WAR))
+		{
+			CvAssert(ePlotTeam != NO_TEAM);
+
+			if (!(GET_TEAM(getTeam()).canDeclareWar(ePlotTeam)))
+			{
+				return false;
+			}
+
+			if (isHuman())
+			{
+				if (!(bMoveFlags & MOVEFLAG_DECLARE_WAR))
+				{
+					return false;
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	// Make sure we can enter the terrain.  Somewhat expensive call, so we do this last.
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	if (!bIsPrecalcCanEnterTerrain && !canEnterTerrain(plot, bMoveFlags))
+#else
+	if (!canEnterTerrain(plot, bMoveFlags))
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	{
+		return false;
+	}
+
+	return true;
+}
+
+//	--------------------------------------------------------------------------------
+bool CvUnit::canMoveOrAttackIntoAttackOnly(const CvPlot& plot, byte bMoveFlags) const
+{
+	VALIDATE_OBJECT
+	TeamTypes ePlotTeam;
+	// This check gets called so many times it's probably faster just to store the result into a bool
+	bool bMoveFlagAttack = (bMoveFlags & MOVEFLAG_ATTACK);
+
+	// Added in Civ 5: Destination plots can't allow stacked Units of the same type
+	if (bMoveFlags & MOVEFLAG_DESTINATION)
+	{
+		// Don't let another player's unit inside someone's city
+		if (!bMoveFlagAttack && !(bMoveFlags & MOVEFLAG_DECLARE_WAR))
+		{
+			if (plot.isCity() && plot.getPlotCity()->getOwner() != getOwner())
+				return false;
+		}
+	}
+
+	if (bMoveFlagAttack)
+	{
+		if (isOutOfAttacks())
+		{
+			return false;
+		}
+
+		// Does unit only attack cities?
+		if (IsCityAttackOnly() && !plot.isEnemyCity(*this) && plot.getBestDefender(NO_PLAYER))
+		{
+			return false;
+		}
+	}
+	else if (isNoCapture() && plot.isEnemyCity(*this))
+	{
+		return false;
+	}
+
+	// Can't enter an enemy city until it's "defeated"
+	if (plot.isEnemyCity(*this))
+	{
+		if (bMoveFlagAttack)
+		{
+			if (getDomainType() == DOMAIN_AIR)
+				return false;
+			if (isHasPromotion((PromotionTypes)GC.getPROMOTION_ONLY_DEFENSIVE()))
+				return false;	// Can't advance into an enemy city
+		}
+		else if (plot.getPlotCity()->getDamage() < plot.getPlotCity()->GetMaxHitPoints())
+		{
+			return false;
+		}
+	}
+
+	if (getDomainType() == DOMAIN_AIR)
+	{
+		if (bMoveFlagAttack)
+		{
+			if (!canRangeStrikeAt(plot.getX(), plot.getY()))
+			{
+				return false;
+			}
+		}
+	}
+	else
+	{
+		if (bMoveFlagAttack)
+		{
+			if (!IsCanAttack())  // trying to give an attack order to a unit that can't fight. That doesn't work!
+			{
+				return false;
+			}
+
+			if (getDomainType() == DOMAIN_LAND && plot.isWater() && !canMoveAllTerrain() && !plot.IsAllowsWalkWater())
+			{
+				return false;
+			}
+
+			if (!isHuman() || (plot.isVisible(getTeam())))
+			{
+				// This stuff to the next if statement is to get units to advance into a tile with an enemy if that enemy is dying...
+				bool bCanAdvanceOnDeadUnit = false;
+
+				const IDInfo* pUnitNode = plot.headUnitNode();
+				const CvUnit* pLoopUnit;
+
+				bool bPlotContainsCombat = false;
+				while (pUnitNode != NULL)
+				{
+					pLoopUnit = ::getUnit(*pUnitNode);
+					CvAssertMsg(pLoopUnit, "pUnitNode data should lead to a unit");
+
+					pUnitNode = plot.nextUnitNode(pUnitNode);
+
+					// NULL check is always a good thing to do.
+					if (pLoopUnit)
+					{
+						if (GET_TEAM(getTeam()).isAtWar(GET_PLAYER(pLoopUnit->getOwner()).getTeam()))
+						{
+							if (!pLoopUnit->IsDead() && pLoopUnit->isInCombat())
+							{
+								if (pLoopUnit->getCombatUnit() != this)
+									bPlotContainsCombat = true;
+							}
+
+							if (pLoopUnit->IsDead() || !pLoopUnit->IsCombatUnit())
+							{
+								bCanAdvanceOnDeadUnit = true;
+							}
+							else
+							{
+								bCanAdvanceOnDeadUnit = false;
+								break;
+							}
+						}
+					}
+				}
+
+				if (bPlotContainsCombat)
+				{
+					return false;		// Can't enter a plot that contains combat that doesn't involve us.
+				}
+
+				if (!bCanAdvanceOnDeadUnit)
+				{
+					if (!plot.isVisibleEnemyUnit(this))
+					{
+						// Prevent an attack from failing if a city is empty but still an "enemy" capable of being attacked (this wouldn't happen before in Civ 4)
+						if (!plot.isEnemyCity(*this))
+						{
+							if (plot.isVisibleOtherUnit(getOwner()) == (plot.getPlotCity() && !isNoCapture()))
+							{
+								return false;
+							}
+						}
+					}
+				}
+			}
+
+			if (plot.isVisible(getTeam()))
+			{
+				const UnitHandle pDefender = plot.getBestDefender(NO_PLAYER, getOwner(), this, true);
+				if (pDefender)
+				{
+					if (pDefender->getDamage() >= GetCombatLimit())
+					{
+						return false;
+					}
+
+					// EFB: Check below is not made when capturing civilians
+					else if (pDefender->GetBaseCombatStrength() > 0)	// Note: this value will be 0 for embarked Units
+					{
+						// EFB: Added so units can't come out of cities to attack (but so that units in city's pathing doesn't fail all the time)
+						if (!(bMoveFlags & MOVEFLAG_NOT_ATTACKING_THIS_TURN) && !IsCanAttackWithMoveNow())
+						{
+							return false;
+						}
+					}
+				}
+			}
+		}
+		else //if !bMoveFlagAttack
+		{
+			bool bEmbarkedAndAdjacent = false;
+			bool bEnemyUnitPresent = false;
+
+			// Without this code, Embarked Units can move on top of enemies because they have no visibility
+			if (isEmbarked() || (bMoveFlags & MOVEFLAG_PRETEND_EMBARKED))
+			{
+				if (plotDistance(getX(), getY(), plot.getX(), plot.getY()) == 1)
+				{
+					bEmbarkedAndAdjacent = true;
+				}
+			}
+
+			bool bPlotContainsCombat = false;
+			if (plot.getNumUnits())
+			{
+				for (int iUnitLoop = 0; iUnitLoop < plot.getNumUnits(); iUnitLoop++)
+				{
+					CvUnit* loopUnit = plot.getUnitByIndex(iUnitLoop);
+
+					if (loopUnit && GET_TEAM(getTeam()).isAtWar(plot.getUnitByIndex(iUnitLoop)->getTeam()))
+					{
+						bEnemyUnitPresent = true;
+						if (!loopUnit->IsDead() && loopUnit->isInCombat())
+						{
+							if (loopUnit->getCombatUnit() != this)
+								bPlotContainsCombat = true;
+						}
+						break;
+					}
+				}
+			}
+
+			if (bPlotContainsCombat)
+			{
+				return false;		// Can't enter a plot that contains combat that doesn't involve us.
+			}
+
+			if (!isHuman() || plot.isVisible(getTeam()) || bEmbarkedAndAdjacent)
+			{
+				if (plot.isEnemyCity(*this))
+				{
+					return false;
+				}
+
+				if (plot.isVisibleEnemyUnit(this) || (bEmbarkedAndAdjacent && bEnemyUnitPresent))
+				{
+					return false;
+				}
+			}
+		}
+
+		ePlotTeam = ((isHuman()) ? plot.getRevealedTeam(getTeam()) : plot.getTeam());
+
+		if (!canEnterTerritory(ePlotTeam, false /*bIgnoreRightOfPassage*/, plot.isCity(), bMoveFlags & MOVEFLAG_DECLARE_WAR))
+		{
+			CvAssert(ePlotTeam != NO_TEAM);
+
+			if (!(GET_TEAM(getTeam()).canDeclareWar(ePlotTeam)))
+			{
+				return false;
+			}
+
+			if (isHuman())
+			{
+				if (!(bMoveFlags & MOVEFLAG_DECLARE_WAR))
+				{
+					return false;
+				}
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+#endif // AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
+
+//	--------------------------------------------------------------------------------
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+bool CvUnit::canMoveOrAttackInto(const CvPlot& plot, byte bMoveFlags, bool bCanEnterTerrain, bool bIsPrecalcCanEnterTerrain) const
+#else
+bool CvUnit::canMoveOrAttackInto(const CvPlot& plot, byte bMoveFlags) const
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+{
+	VALIDATE_OBJECT
+#ifdef AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
+	return ((canMoveOrAttackIntoAttackOnly(plot, bMoveFlags & ~(MOVEFLAG_ATTACK)) || canMoveOrAttackIntoAttackOnly(plot, bMoveFlags | MOVEFLAG_ATTACK)) &&
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+		canMoveOrAttackIntoCommon(plot, bMoveFlags, bCanEnterTerrain, bIsPrecalcCanEnterTerrain));
+#else
+		canMoveOrAttackIntoCommon(plot, bMoveFlags));
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+#else
 	return (canMoveInto(plot, bMoveFlags & ~(MOVEFLAG_ATTACK)) || canMoveInto(plot, bMoveFlags | MOVEFLAG_ATTACK));
+#endif // AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
 }
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+bool CvUnit::canMoveThrough(const CvPlot& plot, byte bMoveFlags, bool bCanEnterTerrain, bool bIsPrecalcCanEnterTerrain) const
+{
+	VALIDATE_OBJECT
+	return canMoveInto(plot, bMoveFlags, bCanEnterTerrain, bIsPrecalcCanEnterTerrain);
+#else
 bool CvUnit::canMoveThrough(const CvPlot& plot, byte bMoveFlags) const
 {
 	VALIDATE_OBJECT
 	return canMoveInto(plot, bMoveFlags);
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 }
 
 //	--------------------------------------------------------------------------------
