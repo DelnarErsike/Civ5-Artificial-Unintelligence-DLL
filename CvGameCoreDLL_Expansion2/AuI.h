@@ -27,8 +27,8 @@
 #define AUI_PERF_LOGGING_ENABLED
 /// Fast comparison functions (to be used for built-in types like int, float, double, etc.)
 #define AUI_FAST_COMP
-/// Increases stopwatch (performance counter) precision by using long double types instead of double
-#define AUI_STOPWATCH_LONG_DOUBLE_PRECISION
+/// Slightly increases stopwatch (performance counter) precision by performing the time delta subtraction bit before casting the result as a double
+#define AUI_STOPWATCH_SUBTRACT_BEFORE_DELTA_CAST
 /// Can cache doubles from XML (DatabaseUtility actually supports double-type, don't know why Firaxis didn't bother putting this in for good measure)
 #define AUI_CACHE_DOUBLE
 /// Enables the Binomial Random Number Generator
@@ -63,6 +63,14 @@
 #define AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 /// Implements the missing erase(iterator) function for FFastVector
 #define AUI_FIX_FFASTVECTOR_ERASE
+/// CvUnit::canMoveOrAttackInto() no longer calls certain expensive calls twice (also improves pathfinder performance)
+#define AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
+/// CvUnit::canMoveInto() is optimized to not perform redundant checks for attack flag (also improves pathfinder performance)
+#define AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
+/// A* functions no longer run the canEnterTerrain() functions during validation (it should normally be run once and cached, but Firaxis did a bunch of stupids)
+//#define AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+/// Moves the check for whether a node has no parent to the beginning of PathValid() (originally from Community Patch)
+#define AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code
@@ -88,8 +96,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 /// If the pathfinder does not ignore danger, use the unit's combat strength times this value as the danger limit instead of 0 (important for combat units)
 #define AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH (6)
-/// AI-controlled units no longer ignore all paths with peaks; since the peak plots are check anyway for whether or not a unit can enter them, this check is pointless 
+/// AI-controlled units no longer ignore all paths with peaks; since the peak plots are checked anyway for whether or not a unit can enter them, this check is pointless 
 #define AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
+/// Mountain tiles are no longer automatically marked as invalid steps
+#define AUI_ASTAR_FIX_STEP_VALID_CONSIDERS_MOUNTAINS
 
 // AI Operations Stuff
 /// If a settler tries and fails the no escort check, keep rerolling each turn
@@ -112,8 +122,6 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
 /// Before considering units that fit the primary type first in FindBestFitReserveUnit(), "perfect match" units that fit both primary and secondary type are looked for
 #define AUI_OPERATION_FIND_BEST_FIT_RESERVE_CALCULATE_PERFECT_MATCH_FIRST
-/// Resets the loop iterator before the secondary unit types are considered in FindBestFitReserveUnit()
-#define AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_ITERATOR
 /// GetClosestUnit() will now consider whether a unit can paradrop to the target location
 #define AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
 /// GetClosestUnit() will no longer terminate early after finding a single unit with "good enough" range (very important once roads start being used)
