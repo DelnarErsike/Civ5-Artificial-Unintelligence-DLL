@@ -94,13 +94,13 @@ public:
 
 	typedef BaseVector< T, bPODType > THIS_TYPE;
 
-    typedef T& reference;
-    typedef const T& const_reference;
-    typedef unsigned int size_type;
-    typedef size_type difference_type;
-    typedef T value_type;
-    typedef T* pointer;
-    typedef const T* const_pointer;
+	typedef T& reference;
+	typedef const T& const_reference;
+	typedef unsigned int size_type;
+	typedef size_type difference_type;
+	typedef T value_type;
+	typedef T* pointer;
+	typedef const T* const_pointer;
 
 
 	~BaseVector(){};
@@ -126,36 +126,36 @@ public:
 	};
 	
 
-    inline const T& operator[](unsigned int ui) const{
+	inline const T& operator[](unsigned int ui) const{
 		FAssert(ui < m_uiCurrSize);
 		return m_pData[ui];
 	};
 
-    inline const T& at( unsigned int i ) const {
-	    FAssert(i < m_uiCurrSize);
+	inline const T& at( unsigned int i ) const {
+		FAssert(i < m_uiCurrSize);
 		return m_pData[i];
-    };
+	};
 
-    inline T& at( unsigned int i ) {
-	    FAssert(i < m_uiCurrSize);
+	inline T& at( unsigned int i ) {
+		FAssert(i < m_uiCurrSize);
 		return m_pData[i];
-    };
+	};
 
-    inline T& front() { 
-        return *m_pData; 
-    };
+	inline T& front() { 
+		return *m_pData; 
+	};
 	inline T& back(){
 		FAssert( m_uiCurrSize );
-        return *(m_pData+m_uiCurrSize-1); 
-    };
-    
-    inline const T& front() const { 
-        return *m_pData; 
-    };
-    inline const T& back() const { 
+		return *(m_pData+m_uiCurrSize-1); 
+	};
+	
+	inline const T& front() const { 
+		return *m_pData; 
+	};
+	inline const T& back() const { 
 		FAssert( m_uiCurrSize );
-        return *(m_pData+m_uiCurrSize-1);
-    };
+		return *(m_pData+m_uiCurrSize-1);
+	};
 
 	bool empty() const{
 		return size() == 0;
@@ -185,27 +185,27 @@ public:
 		return m_pData+ui;
 	};
 
-    inline T* begin() { 
-        return m_pData; 
-    };
-    inline T* end() { 
-        return m_pData+m_uiCurrSize; 
-    };
+	inline T* begin() { 
+		return m_pData; 
+	};
+	inline T* end() { 
+		return m_pData+m_uiCurrSize; 
+	};
 
-    inline const T* begin() const { 
-        return m_pData; 
-    };
-    inline const T* end() const { 
-        return m_pData+m_uiCurrSize; 
-    };
+	inline const T* begin() const { 
+		return m_pData; 
+	};
+	inline const T* end() const { 
+		return m_pData+m_uiCurrSize; 
+	};
 
-    void InPlaceInit(const BaseVector& rhs, T* pInPlaceData)
-    {
-        m_uiCurrSize    = rhs.m_uiCurrSize;
-        m_uiCurrMaxSize = rhs.m_uiCurrMaxSize;
-        m_pData = pInPlaceData;
-        memcpy(m_pData,rhs.m_pData, sizeof(T) * m_uiCurrSize);
-    }
+	void InPlaceInit(const BaseVector& rhs, T* pInPlaceData)
+	{
+		m_uiCurrSize    = rhs.m_uiCurrSize;
+		m_uiCurrMaxSize = rhs.m_uiCurrMaxSize;
+		m_pData = pInPlaceData;
+		memcpy(m_pData,rhs.m_pData, sizeof(T) * m_uiCurrSize);
+	}
 
 protected:
 	BaseVector() : m_uiCurrSize(0), m_uiCurrMaxSize(0), m_pData(NULL) {};
@@ -264,7 +264,7 @@ template<
 	bool bPODType,
 	unsigned int AllocPool, 
 	unsigned int nSubID,
-    class FAST_VEC_ALLOC
+	class FAST_VEC_ALLOC
 > class FFastVector : public BaseVector< T, bPODType >
 {
 public:
@@ -274,18 +274,18 @@ public:
 	typedef T TYPE;
 
 	typedef TYPE* iterator;
-    typedef const TYPE* const_iterator;
-    typedef TYPE& reference;
-    typedef const TYPE& const_reference;
-    typedef BASE_TYPE::size_type size_type;
-    typedef size_type difference_type;
-    typedef TYPE value_type;
-    typedef T* pointer;
-    typedef const T* const_pointer;
+	typedef const TYPE* const_iterator;
+	typedef TYPE& reference;
+	typedef const TYPE& const_reference;
+	typedef BASE_TYPE::size_type size_type;
+	typedef size_type difference_type;
+	typedef TYPE value_type;
+	typedef T* pointer;
+	typedef const T* const_pointer;
 
 
 
-    /////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////
 	// Default constructor, copy constructor, destructor and operator=
 	/////////////////////////////////////////////////////////////////////////////////////
 	FFastVector(const THIS_TYPE& RHS)
@@ -524,8 +524,8 @@ protected:
 	//Allocate memory as bytes
 	T* Alloc( unsigned int uiSize ){
 		if( uiSize > 0 ){
-            
-            T* pRet = (T*)FAST_VEC_ALLOC::AllocAligned( uiSize*sizeof(T), __alignof(T), AllocPool, nSubID );
+			
+			T* pRet = (T*)FAST_VEC_ALLOC::AllocAligned( uiSize*sizeof(T), __alignof(T), AllocPool, nSubID );
 			m_uiCurrMaxSize = uiSize;
 			return pRet;
 		}
@@ -536,7 +536,7 @@ protected:
 	void Free(T* pVal, unsigned int uiNumElements)
 	{
 		if( !bPODType) 
-            Destroy(pVal, uiNumElements);
+			Destroy(pVal, uiNumElements);
 
 		FAST_VEC_ALLOC::FreeAligned( (void*)pVal );
 	};
@@ -597,17 +597,17 @@ template<
 
 public:
 	typedef T* iterator;
-    typedef const T* const_iterator;
+	typedef const T* const_iterator;
 
-    typedef T& reference;
-    typedef const T& const_reference;
-    typedef unsigned int size_type;
-    typedef size_type difference_type;
-    typedef T value_type;
-    typedef T* pointer;
-    typedef const T* const_pointer;
+	typedef T& reference;
+	typedef const T& const_reference;
+	typedef unsigned int size_type;
+	typedef size_type difference_type;
+	typedef T value_type;
+	typedef T* pointer;
+	typedef const T* const_pointer;
 
-    /////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////
 	// Default constructor, copy constructor, destructor and operator=
 	/////////////////////////////////////////////////////////////////////////////////////
 	FStaticVector(const THIS_TYPE& RHS)
@@ -621,13 +621,13 @@ public:
 		Copy(RHS);
 	};
 	FStaticVector()
-    {
+	{
 		m_uiCurrMaxSize = L;
 		m_pData = Alloc(m_uiCurrMaxSize);
 #ifdef BREAK_ON_STATIC_RESIZE
 		m_iNumResized = 0;
 #endif
-    };
+	};
 	FStaticVector(unsigned int uiStartingMaxSize)
 	{
 		m_uiCurrMaxSize = uiStartingMaxSize;
@@ -649,22 +649,22 @@ public:
 		Copy(RHS);
 	};
 
-    bool operator == (const THIS_TYPE& RHS) const {
-        bool bResult = false;
+	bool operator == (const THIS_TYPE& RHS) const {
+		bool bResult = false;
 
-        if( m_uiCurrSize != RHS.m_uiCurrSize )
-        {
-            goto Cleanup;
-        }
+		if( m_uiCurrSize != RHS.m_uiCurrSize )
+		{
+			goto Cleanup;
+		}
 
-        for( UINT uIdx = 0; uIdx < m_uiCurrSize; ++uIdx )
-        {
-            if( m_pData[ uIdx ] != RHS.m_pData[ uIdx ] )
-            {
-                goto Cleanup;
-            }
-        }
-        bResult = true;
+		for( UINT uIdx = 0; uIdx < m_uiCurrSize; ++uIdx )
+		{
+			if( m_pData[ uIdx ] != RHS.m_pData[ uIdx ] )
+			{
+				goto Cleanup;
+			}
+		}
+		bResult = true;
 
 Cleanup:
 
@@ -719,17 +719,17 @@ Cleanup:
 		
 		m_uiCurrSize = uNewSize;
 	}
-    // remove the element pointed to by 'it' and shrink the list
-    void erase( iterator it )
+	// remove the element pointed to by 'it' and shrink the list
+	void erase( iterator it )
 	{
 		m_bIsResized = false;
 
 		unsigned int uIndex = it - m_pData;
 
-        for(unsigned int i = uIndex; i + 1< m_uiCurrSize; ++i)
-        {
-            m_pData[i] = m_pData[i+1];
-        }
+		for(unsigned int i = uIndex; i + 1< m_uiCurrSize; ++i)
+		{
+			m_pData[i] = m_pData[i+1];
+		}
 		
 		--m_uiCurrSize;
 	}
@@ -860,227 +860,283 @@ template<
 > class FFastSmallFixedList 
 {
 public:
-    FFastSmallFixedList()
-    {
-        clear();
-    };
+	FFastSmallFixedList()
+	{
+		clear();
+	};
 
-    void
-    clear()
-    {
-        mVec.resize( 0 );
-    };
+	void
+	clear()
+	{
+		mVec.resize( 0 );
+	};
 
-    T*
-    nodeNum( int iIndex )
-    {
-        return getAt( iIndex );
-    };
+	T*
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	nodeNum(unsigned int iIndex)
+#else
+	nodeNum( int iIndex )
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	{
+		return getAt( iIndex );
+	};
 
-    const T*
-    nodeNum( int iIndex ) const
-    {
+	const T*
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	nodeNum(unsigned int iIndex) const
+#else
+	nodeNum( int iIndex ) const
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	{
 
-        return getAt( iIndex );
-    };
+		return getAt( iIndex );
+	};
 
-    T*
-    getAt( INT iIndex )
-    {
-        if ( (UINT)iIndex < mVec.size() )
-	    {
-		    return &mVec[ iIndex ];
-	    }
-	    else
-	    {
-		    return NULL;
-	    }
-    };
+	T*
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	getAt(unsigned int iIndex)
+	{
+		if (iIndex < mVec.size())
+#else
+	getAt( INT iIndex)
+	{
+		if ( (UINT)iIndex < mVec.size() )
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		{
+			return &mVec[ iIndex ];
+		}
+		else
+		{
+			return NULL;
+		}
+	};
 
-    const T*
-    getAt( INT iIndex ) const 
-    {
-        if ( (UINT)iIndex < mVec.size() )
-	    {
-		    return &mVec[ iIndex ];
-	    }
-	    else
-	    {
-		    return NULL;
-	    }
-    };
+	const T*
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	getAt(unsigned int iIndex) const
+	{
+		if (iIndex < mVec.size())
+#else
+	getAt( INT iIndex ) const 
+	{
+		if ( (UINT)iIndex < mVec.size() )
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		{
+			return &mVec[ iIndex ];
+		}
+		else
+		{
+			return NULL;
+		}
+	};
 
-    T*
-    next( T* pNode )
-    {
-        INT iIndex = ( pNode + 1 ) - &mVec[ 0 ];
-        return getAt( iIndex );
-    }
+	T*
+	next( T* pNode )
+	{
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		unsigned int iIndex = (pNode + 1) - &mVec[0];
+#else
+		INT iIndex = ( pNode + 1 ) - &mVec[ 0 ];
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		return getAt( iIndex );
+	}
 
-    T*
-    prev( T* pNode )
-    {
+	T*
+	prev( T* pNode )
+	{
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		unsigned int iIndex = (pNode - 1) - &mVec[0];
+#else
+		INT iIndex = ( pNode - 1 ) - &mVec[ 0 ];
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		return getAt( iIndex );
+	}
 
-        INT iIndex = ( pNode - 1 ) - &mVec[ 0 ];
-        return getAt( iIndex );
-    }
+	const T*
+	next( const T* pNode ) const 
+	{
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		unsigned int iIndex = (pNode + 1) - &mVec[0];
+#else
+		INT iIndex = ( pNode + 1 ) - &mVec[ 0 ];
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		return getAt( iIndex );
+	}
 
-    const T*
-    next( const T* pNode ) const 
-    {
+	const T*
+	prev( const T* pNode ) const
+	{
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		unsigned int iIndex = (pNode - 1) - &mVec[0];
+#else
+		INT iIndex = ( pNode - 1 ) - &mVec[ 0 ];
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		return getAt( iIndex );
+	}
 
-        INT iIndex = ( pNode + 1 ) - &mVec[ 0 ];
-        return getAt( iIndex );
-    }
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	unsigned int
+#else
+	int
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	getLength() const
+	{
+		return mVec.size();
+	}
 
-    const T*
-    prev( const T* pNode ) const
-    {
-        INT iIndex = ( pNode - 1 ) - &mVec[ 0 ];
-        return getAt( iIndex );
-    }
+	__forceinline
+	T* head()
+	{
+		UINT uSize = mVec.size();
 
-    int
-    getLength() const
-    {
-        return mVec.size();
-    }
+		if( uSize > 0 )
+		{
+			return &mVec[ 0 ];
+		}
+		else
+		{
+			return NULL;
+		}
+	};
 
-    __forceinline
-    T* head()
-    {
-        UINT uSize = mVec.size();
+	__forceinline
+	T* tail()
+	{
+		UINT uSize = mVec.size();
 
-        if( uSize > 0 )
-        {
-            return &mVec[ 0 ];
-        }
-        else
-        {
-            return NULL;
-        }
-    };
+		if( uSize > 0 )
+		{
+			return &mVec[ uSize - 1 ];
+		}
+		else
+		{
+			return NULL;
+		}
+	};
+	__forceinline
+	const T* head() const
+	{
+		UINT uSize = mVec.size();
 
-    __forceinline
-    T* tail()
-    {
-        UINT uSize = mVec.size();
+		if( uSize > 0 )
+		{
+			return &mVec[ 0];
+		}
+		else
+		{
+			return NULL;
+		}
+	};
 
-        if( uSize > 0 )
-        {
-            return &mVec[ uSize - 1 ];
-        }
-        else
-        {
-            return NULL;
-        }
-    };
-    __forceinline
-    const T* head() const
-    {
-        UINT uSize = mVec.size();
+	__forceinline
+	const T* tail() const 
+	{
+		UINT uSize = mVec.size();
 
-        if( uSize > 0 )
-        {
-            return &mVec[ 0];
-        }
-        else
-        {
-            return NULL;
-        }
-    };
+		if( uSize > 0 )
+		{
+			return &mVec[ uSize - 1 ];
+		}
+		else
+		{
+			return NULL;
+		}
+	};
 
-    __forceinline
-    const T* tail() const 
-    {
-        UINT uSize = mVec.size();
+	__forceinline void
+	insertAtEnd( T* ptData )
+	{ 
+		mVec.push_back( *ptData );       
+	};
 
-        if( uSize > 0 )
-        {
-            return &mVec[ uSize - 1 ];
-        }
-        else
-        {
-            return NULL;
-        }
-    };
+	__forceinline void
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	swapUp(unsigned int iIndex)
+	{
+		if (iIndex + 1 < mVec.size())
+#else
+	swapUp( int iIndex )
+	{
+		if ( iIndex + 1 < (INT)mVec.size() && iIndex >= 0)
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		{
+			T Temp = mVec[ iIndex + 1];
+			mVec[ iIndex + 1 ] = mVec[ iIndex ];
+			mVec[ iIndex ] = Temp;
+		}
+	}
+		
+	__forceinline void
+	insertBefore( T* ptData, T* ptBefore )
+	{        
+		UINT uSize = mVec.size();
 
-    __forceinline void
-    insertAtEnd( T* ptData )
-    { 
-        mVec.push_back( *ptData );       
-    };
-
-    __forceinline void
-    swapUp( int iIndex )
-    {
-        if ( iIndex + 1 < (INT)mVec.size() && iIndex >= 0)
-        {
-            T Temp = mVec[ iIndex + 1];
-            mVec[ iIndex + 1 ] = mVec[ iIndex ];
-            mVec[ iIndex ] = Temp;
-        }
-    }
-        
-    __forceinline void
-    insertBefore( T* ptData, T* ptBefore )
-    {        
-        UINT uSize = mVec.size();
-
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		unsigned int iIndex = ptBefore - &mVec[0];
+#else
 		INT iIndex = ptBefore - &mVec[ 0 ];
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
 
 		mVec.resize( uSize + 1 );
 
-        for( INT iIdx = (INT)uSize; iIdx > iIndex; --iIdx )
-        {
-            mVec[ iIdx ] = mVec[ iIdx - 1 ];
-        }
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		for (unsigned int iIdx = uSize; iIdx > iIndex; --iIdx)
+#else
+		for( INT iIdx = (INT)uSize; iIdx > iIndex; --iIdx )
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		{
+			mVec[ iIdx ] = mVec[ iIdx - 1 ];
+		}
 
-        mVec[ iIndex ] = *ptData;
+		mVec[ iIndex ] = *ptData;
 
-    }
+	}
 
-    __forceinline void
-    insertAtBeginning( T* ptData )
+	__forceinline void
+	insertAtBeginning( T* ptData )
 	{        
 		UINT uSize = mVec.size();
 
 		mVec.resize( uSize + 1 );
 
-        for( INT iIdx = (INT)uSize; iIdx >= 1; --iIdx )
-        {
-            mVec[ iIdx ] = mVec[ iIdx - 1 ];
-        }
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		for (unsigned int iIdx = uSize; iIdx >= 1; --iIdx)
+#else
+		for( INT iIdx = (INT)uSize; iIdx >= 1; --iIdx )
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+		{
+			mVec[ iIdx ] = mVec[ iIdx - 1 ];
+		}
 
-        mVec[ 0 ] = *ptData;
-    };
-    
-    __forceinline T*
-    deleteNode( T* tData )
-    {
-        UINT uDeletePos = tData - &mVec[ 0 ];
+		mVec[ 0 ] = *ptData;
+	};
+	
+	__forceinline T*
+	deleteNode( T* tData )
+	{
+		UINT uDeletePos = tData - &mVec[ 0 ];
 
-        for( UINT uIdx = uDeletePos; uIdx + 1 < mVec.size(); ++uIdx )
-        {
-            mVec[ uIdx ] = mVec[ uIdx + 1 ];
-        }
+		for( UINT uIdx = uDeletePos; uIdx + 1 < mVec.size(); ++uIdx )
+		{
+			mVec[ uIdx ] = mVec[ uIdx + 1 ];
+		}
 
-        //  List shrinks by 1
-        mVec.resize( mVec.size() - 1 );
+		//  List shrinks by 1
+		mVec.resize( mVec.size() - 1 );
 
-        if( uDeletePos < mVec.size() )
-        {
-	        return &mVec[ uDeletePos ];
-        }
-        else
-        {
-            return NULL;
-        }
-    };
+		if( uDeletePos < mVec.size() )
+		{
+			return &mVec[ uDeletePos ];
+		}
+		else
+		{
+			return NULL;
+		}
+	};
 
 private:
-    
-    FStaticVector< T, L, bPODType, AllocPool, nSubID>  mVec;
+	
+	FStaticVector< T, L, bPODType, AllocPool, nSubID>  mVec;
  
 };
 
@@ -1132,17 +1188,17 @@ template<
 
 public:
 	typedef T* iterator;
-    typedef const T* const_iterator;
+	typedef const T* const_iterator;
 
-    typedef T& reference;
-    typedef const T& const_reference;
-    typedef unsigned int size_type;
-    typedef size_type difference_type;
-    typedef T value_type;
-    typedef T* pointer;
-    typedef const T* const_pointer;
+	typedef T& reference;
+	typedef const T& const_reference;
+	typedef unsigned int size_type;
+	typedef size_type difference_type;
+	typedef T value_type;
+	typedef T* pointer;
+	typedef const T* const_pointer;
 
-    /////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////
 	// Default constructor, copy constructor, destructor and operator=
 	/////////////////////////////////////////////////////////////////////////////////////
 	FFixedVector(const THIS_TYPE& RHS)
@@ -1156,10 +1212,10 @@ public:
 	};
 
 	FFixedVector()
-    {
+	{
 		m_uiCurrMaxSize = 0;
 		m_pData = Alloc(m_uiCurrMaxSize);
-    };
+	};
 	FFixedVector(unsigned int uiStartingMaxSize)
 	{
 		m_uiCurrMaxSize = uiStartingMaxSize;
@@ -1173,22 +1229,22 @@ public:
 		CopyMin(RHS);
 	};
 
-    bool operator == (const THIS_TYPE& RHS) const {
-        bool bResult = false;
+	bool operator == (const THIS_TYPE& RHS) const {
+		bool bResult = false;
 
-        if( m_uiCurrSize != RHS.m_uiCurrSize )
-        {
-            goto Cleanup;
-        }
+		if( m_uiCurrSize != RHS.m_uiCurrSize )
+		{
+			goto Cleanup;
+		}
 
-        for( UINT uIdx = 0; uIdx < m_uiCurrSize; ++uIdx )
-        {
-            if( m_pData[ uIdx ] != RHS.m_pData[ uIdx ] )
-            {
-                goto Cleanup;
-            }
-        }
-        bResult = true;
+		for( UINT uIdx = 0; uIdx < m_uiCurrSize; ++uIdx )
+		{
+			if( m_pData[ uIdx ] != RHS.m_pData[ uIdx ] )
+			{
+				goto Cleanup;
+			}
+		}
+		bResult = true;
 
 Cleanup:
 
@@ -1252,15 +1308,15 @@ Cleanup:
 			m_uiCurrSize = uNewSize;
 		}
 	}
-    // remove the element pointed to by 'it' and shrink the list
-    void erase( iterator it )
+	// remove the element pointed to by 'it' and shrink the list
+	void erase( iterator it )
 	{
 		unsigned int uIndex = it - m_pData;
 
-        for(unsigned int i = uIndex; i + 1< m_uiCurrSize; ++i)
-        {
-            m_pData[i] = m_pData[i+1];
-        }
+		for(unsigned int i = uIndex; i + 1< m_uiCurrSize; ++i)
+		{
+			m_pData[i] = m_pData[i+1];
+		}
 		
 		--m_uiCurrSize;
 	}
