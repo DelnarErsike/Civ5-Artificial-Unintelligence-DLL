@@ -3597,10 +3597,6 @@ void CvMilitaryAI::DisbandObsoleteUnits()
 	int iUnitLoop = 0;
 	for (pLoopUnit = m_pPlayer->firstUnit(&iUnitLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iUnitLoop))
 	{
-		if (!pLoopUnit->IsCombatUnit())
-		{
-			continue;
-		}
 		// Is this a unit who has an obsolete tech that I have researched?
 		CvUnitEntry& pUnitInfo = pLoopUnit->getUnitInfo();
 		if ((TechTypes)pUnitInfo.GetObsoleteTech() == NO_TECH)
@@ -3806,10 +3802,10 @@ UnitHandle CvMilitaryAI::FindBestUnitToScrap(bool bLand, bool bDeficitForcedDisb
 
 	for(pLoopUnit = m_pPlayer->firstUnit(&iUnitLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iUnitLoop))
 	{
-		bool bSkipThisOne = false;
 #ifdef AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
 		iDivider = 1;
 #endif // AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
+		bool bSkipThisOne = false;
 
 		if(!pLoopUnit->IsCombatUnit())
 		{
@@ -3908,7 +3904,11 @@ UnitHandle CvMilitaryAI::FindBestUnitToScrap(bool bLand, bool bDeficitForcedDisb
 				CvUnitEntry* pUpgradeUnitInfo = GC.GetGameUnits()->GetEntry(eUpgradeUnit);
 				if(pUpgradeUnitInfo != NULL)
 				{
+#ifdef AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
+					for (int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 					for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos() && !bSkipThisOne; iResourceLoop++)
+#endif // AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
 					{
 						ResourceTypes eResource = (ResourceTypes) iResourceLoop;
 						int iNumResourceNeeded = pUpgradeUnitInfo->GetResourceQuantityRequirement(eResource);
@@ -3920,10 +3920,16 @@ UnitHandle CvMilitaryAI::FindBestUnitToScrap(bool bLand, bool bDeficitForcedDisb
 								if(bLand && m_eLandDefenseState > DEFENSE_STATE_NEUTRAL)
 								{
 									bSkipThisOne  = true;    // We'll wait and try to upgrade this one, our unit count isn't that bad
+#ifdef AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
+									break;
+#endif // AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
 								}
 								else if(!bLand && m_eNavalDefenseState > DEFENSE_STATE_NEUTRAL)
 								{
 									bSkipThisOne  = true;    // We'll wait and try to upgrade this one, our unit count isn't that bad
+#ifdef AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
+									break;
+#endif // AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
 								}
 							}
 						}
@@ -3933,7 +3939,7 @@ UnitHandle CvMilitaryAI::FindBestUnitToScrap(bool bLand, bool bDeficitForcedDisb
 		}
 
 		// Can I scrap this unit?
-		if(!bSkipThisOne && pLoopUnit->canScrap())
+		if (!bSkipThisOne && pLoopUnit->canScrap())
 		{
 #ifdef AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
 			iScore = pLoopUnit->GetPower() / iDivider;
