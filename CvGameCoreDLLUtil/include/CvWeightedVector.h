@@ -219,6 +219,31 @@ public:
 	};
 
 	/// Pick an element from the top iNumChoices
+#ifdef AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_USE_UNSIGNED
+	T ChooseFromTopChoices(unsigned int iNumChoices, RandomNumberDelegate *rndFcn, const char *szRollName)
+	{
+		// Loop through the top choices, or the total vector size, whichever is smaller
+		if (iNumChoices > m_pItems.size())
+		{
+			iNumChoices = m_pItems.size();
+		}
+
+#ifdef AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_TIE
+		while (iNumChoices + 1 < m_pItems.size() && m_pItems[iNumChoices].m_iWeight == m_pItems[iNumChoices + 1].m_iWeight)
+		{
+			iNumChoices++;
+		}
+#endif // AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_TIE
+
+		WeightedElement elem;
+		unsigned int i;
+		int iChoice;
+		int iTotalTopChoicesWeight = 0;
+
+		// Get the total weight
+		for (i = 0; i < iNumChoices; i++)
+		{
+#else
 	T ChooseFromTopChoices(int iNumChoices, RandomNumberDelegate *rndFcn, const char *szRollName)
 	{
 		// Loop through the top choices, or the total vector size, whichever is smaller
@@ -228,9 +253,12 @@ public:
 		}
 
 #ifdef AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_TIE
-		while (iNumChoices < (int) m_pItems.size() && iNumChoices > 0 && m_pItems[iNumChoices - 1].m_iWeight == m_pItems[iNumChoices].m_iWeight)
+		if (iNumChoices >= 0)
 		{
-			iNumChoices++;
+			while (iNumChoices + 1 < (int) m_pItems.size() && m_pItems[iNumChoices].m_iWeight == m_pItems[iNumChoices + 1].m_iWeight)
+			{
+				iNumChoices++;
+			}
 		}
 #endif // AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_TIE
 
@@ -242,6 +270,7 @@ public:
 		// Get the total weight
 		for (i = 0; i < iNumChoices; i++)
 		{
+#endif // AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_USE_UNSIGNED
 			elem = m_pItems[i];
 			iTotalTopChoicesWeight += elem.m_iWeight;
 		}
