@@ -18853,7 +18853,11 @@ void CvUnit::write(FDataStream& kStream) const
 
 	//  Write mission list
 	kStream << m_missionQueue.getLength();
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	for (unsigned int uIdx = 0; uIdx < m_missionQueue.getLength(); ++uIdx)
+#else
 	for(int uIdx = 0; uIdx < m_missionQueue.getLength(); ++uIdx)
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
 	{
 		MissionQueueNode* pNode = m_missionQueue.getAt(uIdx);
 
@@ -20906,10 +20910,18 @@ const MissionData* CvUnit::GetHeadMissionData()
 }
 
 //	---------------------------------------------------------------------------
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+const MissionData* CvUnit::GetMissionData(unsigned int iIndex)
+#else
 const MissionData* CvUnit::GetMissionData(int iIndex)
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
 {
 	VALIDATE_OBJECT
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	if (iIndex < m_missionQueue.getLength())
+#else
 	if(iIndex >= 0 && iIndex < m_missionQueue.getLength())
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
 		return m_missionQueue.getAt(iIndex);
 
 	return NULL;

@@ -1174,7 +1174,11 @@ public:
 	void ClearMissionQueue(int iUnitCycleTimer = 1);
 	int GetLengthMissionQueue() const;
 	const MissionData* GetHeadMissionData();
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+	const MissionData* GetMissionData(unsigned int iIndex);
+#else
 	const MissionData* GetMissionData(int iIndex);
+#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
 	CvPlot* GetMissionAIPlot();
 	MissionAITypes GetMissionAIType();
 	void SetMissionAI(MissionAITypes eNewMissionAI, CvPlot* pNewPlot, CvUnit* pNewUnit);
