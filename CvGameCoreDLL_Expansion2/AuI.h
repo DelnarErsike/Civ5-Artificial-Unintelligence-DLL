@@ -45,6 +45,8 @@
 #define AUI_UNIT_HEALRATE_ASSUME_EXTRA_HEALRATE_FROM_UNIT
 /// Removes the cap of 8 range for unit sight; this was only needed because the for() loops weren't set up properly, resulting in too many unused cycles
 #define AUI_PLOT_SEE_FROM_SIGHT_NO_MAXIMUM_SIGHT_RANGE
+/// CvWeightedVector's Top n Choices function now uses unsigned integers for indexes and choice numbers
+#define AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_USE_UNSIGNED
 /// When choosing the top n choices from a weighted vector, choices with weight equal to the last choice are also included
 #define AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_TIE
 /// Adds a new function to CvPlot that calculates the strategic value of a plot based on river crossing count, whether it's hills, and chokepoint factor
@@ -63,12 +65,14 @@
 #define AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 /// Implements the missing erase(iterator) function for FFastVector
 #define AUI_FIX_FFASTVECTOR_ERASE
+/// Functions that called ints for variables used for indexes and choice numbers now call unsigned ints instead
+#define AUI_FIX_FFASTVECTOR_USE_UNSIGNED
 /// CvUnit::canMoveOrAttackInto() no longer calls certain expensive calls twice (also improves pathfinder performance)
 #define AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
 /// CvUnit::canMoveInto() is optimized to not perform redundant checks for attack flag (also improves pathfinder performance)
 #define AUI_UNIT_FIX_CAN_MOVE_INTO_OPTIMIZED
 /// A* functions no longer run the canEnterTerrain() functions during validation (it should normally be run once and cached, but Firaxis did a bunch of stupids)
-//#define AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+#define AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 /// Moves the check for whether a node has no parent to the beginning of PathValid() (originally from Community Patch)
 #define AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
 
