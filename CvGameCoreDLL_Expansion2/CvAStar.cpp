@@ -1200,13 +1200,6 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 /// Standard path finder - check validity of a coordinate
 int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 {
-#ifdef AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
-	// If this is the first node in the path, it is always valid (starting location)
-	if (parent == NULL)
-	{
-		return TRUE;
-	}
-#endif // AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
 	CvMap& theMap = GC.getMap();
 
 	CvPlot* pToPlot = theMap.plotUnchecked(node->m_iX, node->m_iY);
@@ -1224,6 +1217,34 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 	}
 
 	CvTeam& kUnitTeam = GET_TEAM(eUnitTeam);
+
+#ifdef AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
+	// If this is the first node in the path, it is always valid (starting location)
+	if (parent == NULL)
+	{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+		// Cache values for this node that we will use in the loop
+		CvPathNodeCacheData& kToNodeCacheData = node->m_kCostCacheData;
+		kToNodeCacheData.bPlotVisibleToTeam = true;
+		kToNodeCacheData.iNumFriendlyUnitsOfType = pToPlot->getNumFriendlyUnitsOfType(pUnit);
+		kToNodeCacheData.bIsMountain = pToPlot->isMountain();
+		kToNodeCacheData.bIsWater = (pToPlot->isWater() && !pToPlot->IsAllowsWalkWater());
+		kToNodeCacheData.bCanEnterTerrain = true;
+		kToNodeCacheData.bIsRevealedToTeam = true;
+		kToNodeCacheData.bContainsOtherFriendlyTeamCity = false;
+		CvCity* pCity = pToPlot->getPlotCity();
+		if (pCity)
+		{
+			if (unit_owner != pCity->getOwner() && !kUnitTeam.isAtWar(pCity->getTeam()))
+				kToNodeCacheData.bContainsOtherFriendlyTeamCity = true;
+		}
+		kToNodeCacheData.bContainsEnemyCity = pToPlot->isEnemyCity(*pUnit);
+		kToNodeCacheData.bContainsVisibleEnemy = pToPlot->isVisibleEnemyUnit(pUnit);
+		kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+		return TRUE;
+	}
+#endif // AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
 
 	// Cache values for this node that we will use in the loop
 	CvPathNodeCacheData& kToNodeCacheData = node->m_kCostCacheData;
@@ -3421,6 +3442,34 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 	CvTacticalAnalysisCell* pToPlotCell = pTAMap->GetCell(pToPlot->GetPlotIndex());
 	FAssert(pToPlotCell != NULL);
 
+#ifdef AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
+		// If this is the first node in the path, it is always valid (starting location)
+		if (parent == NULL)
+		{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+			// Cache values for this node that we will use in the loop
+			CvPathNodeCacheData& kToNodeCacheData = node->m_kCostCacheData;
+			kToNodeCacheData.bPlotVisibleToTeam = true;
+			kToNodeCacheData.iNumFriendlyUnitsOfType = pToPlot->getNumFriendlyUnitsOfType(pUnit);
+			kToNodeCacheData.bIsMountain = pToPlot->isMountain();
+			kToNodeCacheData.bIsWater = pToPlotCell->IsWater();
+			kToNodeCacheData.bCanEnterTerrain = true;
+			kToNodeCacheData.bIsRevealedToTeam = true;
+			kToNodeCacheData.bContainsOtherFriendlyTeamCity = false;
+			CvCity* pCity = pToPlot->getPlotCity();
+			if (pCity)
+			{
+				if (unit_owner != pCity->getOwner() && !kUnitTeam.isAtWar(pCity->getTeam()))
+					kToNodeCacheData.bContainsOtherFriendlyTeamCity = true;
+			}
+			kToNodeCacheData.bContainsEnemyCity = pToPlot->isEnemyCity(*pUnit);
+			kToNodeCacheData.bContainsVisibleEnemy = pToPlotCell->GetEnemyMilitaryUnit() != NULL;
+			kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
+#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+			return TRUE;
+		}
+#endif // AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
+
 	// Cache the data for the node
 	CvPathNodeCacheData& kToNodeCacheData = node->m_kCostCacheData;
 	kToNodeCacheData.bPlotVisibleToTeam = pToPlotCell->IsVisible();
@@ -3443,11 +3492,13 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 	kToNodeCacheData.bContainsVisibleEnemy = pToPlotCell->GetEnemyMilitaryUnit() != NULL;
 	kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
 
+#ifndef AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
 	// If this is the first node in the path, it is always valid (starting location)
 	if (parent == NULL)
 	{
 		return TRUE;
 	}
+#endif // AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
 
 	CvPlot* pFromPlot = theMap.plotUnchecked(parent->m_iX, parent->m_iY);
 	PREFETCH_FASTAR_CVPLOT(reinterpret_cast<char*>(pFromPlot));
