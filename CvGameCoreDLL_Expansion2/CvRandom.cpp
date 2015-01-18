@@ -193,8 +193,7 @@ unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
 	{
 		// no need to worry about masking with MAX_UNSIGNED_SHORT, max cycle number takes care of it
 		usRet += (ulNewSeed >> BINOM_SHIFT) & 1; // need the shift so results only repeat after 2^BINOM_SHIFT iterations
-		ulNewSeed = (RANDOM_A * m_ulRandomSeed) + RANDOM_C;
-		m_ulRandomSeed = ulNewSeed;
+		ulNewSeed = (RANDOM_A * ulNewSeed) + RANDOM_C;
 	}
 
 	if (GC.getLogging())
@@ -247,6 +246,7 @@ unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
 		}
 	}
 
+	m_ulRandomSeed = ulNewSeed;
 	return usRet;
 }
 #endif // AUI_BINOM_RNG
