@@ -7,9 +7,9 @@
 	------------------------------------------------------------------------------------------------------- */
 #pragma once
 
-FDataStream& operator<<(FDataStream&, const YieldTypes&);
-FDataStream& operator>>(FDataStream&, YieldTypes&);
+FDataStream& operator << (FDataStream&, const YieldTypes&);
+FDataStream& operator >> (FDataStream&, YieldTypes&);
 namespace FSerialization
 {
-std::string toString(const YieldTypes&);
+	std::string toString(const YieldTypes&);
 }

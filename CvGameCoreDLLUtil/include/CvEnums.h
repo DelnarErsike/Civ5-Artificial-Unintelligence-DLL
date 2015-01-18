@@ -105,9 +105,9 @@ enum DiploStatementTypes
 	DIPLO_STATEMENT_FYI_BEFRIEND_HUMAN_FRIEND,
 	DIPLO_STATEMENT_FYI_BEFRIEND_HUMAN_FRIEND_RANDFAILED,
 
-    DIPLO_STATEMENT_SAME_POLICIES_FREEDOM,
-    DIPLO_STATEMENT_SAME_POLICIES_ORDER,
-    DIPLO_STATEMENT_SAME_POLICIES_AUTOCRACY,
+	DIPLO_STATEMENT_SAME_POLICIES_FREEDOM,
+	DIPLO_STATEMENT_SAME_POLICIES_ORDER,
+	DIPLO_STATEMENT_SAME_POLICIES_AUTOCRACY,
 
 	DIPLO_STATEMENT_STOP_DIGGING,
 
@@ -1207,10 +1207,10 @@ enum ImprovementTypes
 
 enum ImprovementUsageTypes
 {
-    IMPROVEMENTUSAGE_BASIC,
-    IMPROVEMENTUSAGE_LANDMARK,
+	IMPROVEMENTUSAGE_BASIC,
+	IMPROVEMENTUSAGE_LANDMARK,
 
-    NUM_IMPROVEMENTUSAGE_TYPES
+	NUM_IMPROVEMENTUSAGE_TYPES
 };
 
 enum RouteTypes						
@@ -2498,30 +2498,30 @@ enum LeaderheadAnimationTypes
 {
 	NO_LEADERHEAD_ANIM = -1,
 
-    // The numeric values of these enums correspond to magic numbers embedded in the leaderhead assets
-    // Changing them will lead to discord and confusion
+	// The numeric values of these enums correspond to magic numbers embedded in the leaderhead assets
+	// Changing them will lead to discord and confusion
 
-    LEADERHEAD_ANIM_INTRO           =   1,    
-    LEADERHEAD_ANIM_NEUTRAL_HELLO   =   2,    
-    LEADERHEAD_ANIM_PEACEFUL        =   3,
-    LEADERHEAD_ANIM_OPENING_GLOAT   =   4,  // gloats, then transitions to neutral
-    LEADERHEAD_ANIM_DECLARE_WAR     =   5,
-    LEADERHEAD_ANIM_ATTACKED        =   6,
-    LEADERHEAD_ANIM_HATE_HELLO      =   7,
-    LEADERHEAD_ANIM_DEFEATED        =   8,
-    LEADERHEAD_ANIM_REQUEST         =   9,
-    LEADERHEAD_ANIM_DEMAND          =   10,
-    LEADERHEAD_ANIM_NEUTRAL_IDLE    =   11,
-    LEADERHEAD_ANIM_HATE_IDLE       =   12,
+	LEADERHEAD_ANIM_INTRO           =   1,    
+	LEADERHEAD_ANIM_NEUTRAL_HELLO   =   2,    
+	LEADERHEAD_ANIM_PEACEFUL        =   3,
+	LEADERHEAD_ANIM_OPENING_GLOAT   =   4,  // gloats, then transitions to neutral
+	LEADERHEAD_ANIM_DECLARE_WAR     =   5,
+	LEADERHEAD_ANIM_ATTACKED        =   6,
+	LEADERHEAD_ANIM_HATE_HELLO      =   7,
+	LEADERHEAD_ANIM_DEFEATED        =   8,
+	LEADERHEAD_ANIM_REQUEST         =   9,
+	LEADERHEAD_ANIM_DEMAND          =   10,
+	LEADERHEAD_ANIM_NEUTRAL_IDLE    =   11,
+	LEADERHEAD_ANIM_HATE_IDLE       =   12,
 
-    LEADERHEAD_ANIM_LETS_HEAR_IT     = 15,
-    LEADERHEAD_ANIM_YES              = 16,
-    LEADERHEAD_ANIM_NO               = 17,
-    LEADERHEAD_ANIM_POSITIVE         = 30,
-    LEADERHEAD_ANIM_NEGATIVE         = 31,
+	LEADERHEAD_ANIM_LETS_HEAR_IT     = 15,
+	LEADERHEAD_ANIM_YES              = 16,
+	LEADERHEAD_ANIM_NO               = 17,
+	LEADERHEAD_ANIM_POSITIVE         = 30,
+	LEADERHEAD_ANIM_NEGATIVE         = 31,
 
-    LEADERHEAD_ANIM_HATE_POSITIVE = 40,
-    LEADERHEAD_ANIM_HATE_NEGATIVE = 41
+	LEADERHEAD_ANIM_HATE_POSITIVE = 40,
+	LEADERHEAD_ANIM_HATE_NEGATIVE = 41
 };
 
 enum EndTurnBlockingTypes
