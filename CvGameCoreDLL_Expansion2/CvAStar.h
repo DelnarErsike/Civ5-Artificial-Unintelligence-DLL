@@ -90,6 +90,14 @@ public:
 		return m_pBest;
 	}
 
+//#ifdef AUI_ASTAR_GET_PENULTIMATE_NODE
+//	// Gets the node before the last node in the path (from the origin)
+//	inline CvAStarNode* GetPenultimateNode()
+//	{
+//		return m_pBest->m_pParent;
+//	}
+//#endif
+
 	inline bool IsPathStart(int iX, int iY)
 	{
 		return ((m_iXstart == iX) && (m_iYstart == iY));
@@ -134,11 +142,32 @@ public:
 		m_bForceReset = true;
 	}
 
+#ifdef AUI_ASTAR_TURN_LIMITER
+	inline int GetMaxTurns() const
+	{
+		return m_iMaxTurns;
+	}
+
+	inline void SetMaxTurns(int iMaxTurns)
+	{
+		if (m_bDataChangeInvalidatesCache && m_iMaxTurns != iMaxTurns)
+			m_bForceReset = true;
+		m_iMaxTurns = iMaxTurns;
+	}
+
+	inline void SetData(const void* pData, int iMaxTurns = MAX_INT)
+	{
+		if(m_bDataChangeInvalidatesCache && (m_pData != pData || m_iMaxTurns != iMaxTurns))
+#else
 	inline void SetData(const void* pData)
 	{
 		if(m_bDataChangeInvalidatesCache && m_pData != pData)
+#endif // AUI_ASTAR_TURN_LIMITER
 			m_bForceReset = true;
 		m_pData = pData;
+#ifdef AUI_ASTAR_TURN_LIMITER
+		m_iMaxTurns = iMaxTurns;
+#endif // AUI_ASTAR_TURN_LIMITER
 	}
 
 	inline bool IsMPCacheSafe() const
@@ -272,7 +301,11 @@ public:
 	void* GetScratchPointer2() { return m_pScratchPtr2; }
 	void  SetScratchPointer2(void* pPtr) { m_pScratchPtr1 = pPtr; }
 
+#ifdef AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
+	void* GetScratchBuffer() { return m_ScratchBuffer; }
+#else
 	void* GetScratchBuffer() { return &m_ScratchBuffer[0]; }
+#endif
 	//--------------------------------------- PROTECTED FUNCTIONS -------------------------------------------
 protected:
 
@@ -284,6 +317,9 @@ protected:
 
 	CvAStarNode*	GetBest();
 
+#ifdef AUI_ASTAR_PRECALCULATE_NEIGHBORS_ON_INITIALIZE
+	void PrecalcNeighbors(CvAStarNode* node);
+#endif // AUI_ASTAR_PRECALCULATE_NEIGHBORS_ON_INITIALIZE
 	void CreateChildren(CvAStarNode* node);
 	void LinkChild(CvAStarNode* node, CvAStarNode* check);
 	void UpdateOpenNode(CvAStarNode* node);
@@ -314,6 +350,9 @@ protected:
 
 
 	const void* m_pData;			// Data passed back to functions
+#ifdef AUI_ASTAR_TURN_LIMITER
+	int m_iMaxTurns;				// Pathfinder never lets a path's turn cost become higher than this number
+#endif // AUI_ASTAR_TURN_LIMITER
 
 	int m_iColumns;					// Used to calculate node->number
 	int m_iRows;					// Used to calculate node->number
@@ -341,7 +380,11 @@ protected:
 	void* m_pScratchPtr1;						// Will be cleared to NULL before each GeneratePath call
 	void* m_pScratchPtr2;						// Will be cleared to NULL before each GeneratePath call
 
+#ifdef AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
+	char*  m_ScratchBuffer;
+#else
 	char  m_ScratchBuffer[SCRATCH_BUFFER_SIZE];	// Will NOT be modified directly by CvAStar
+#endif
 };
 
 
@@ -457,7 +500,11 @@ int AttackCityPathDest(int iToX, int iToY, const void* pointer, CvAStar* finder)
 int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int FindValidDestinationDest(int iToX, int iToY, const void* pointer, CvAStar* finder);
 int FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
+#ifdef AUI_ASTAR_TURN_LIMITER
+int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, int iTargetTurns = MAX_INT);
+#else
 int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths=false, bool bIgnoreUnits=false, bool bIgnoreStacking=false);
+#endif // AUI_ASTAR_TURN_LIMITER
 #ifdef AUI_ASTAR_PARADROP
 bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnoreUnits = false, bool bIgnoreParadrop = false, int* piTurns = NULL);
 #else
@@ -489,7 +536,11 @@ public:
 	CvAStarNode* GetPartialMoveNode(int iCol, int iRow);
 	CvPlot* GetPathEndTurnPlot() const;
 
+#ifdef AUI_ASTAR_TURN_LIMITER
+	bool GenerateUnitPath(const CvUnit* pkUnit, int iXstart, int iYstart, int iXdest, int iYdest, int iInfo = 0, bool bReuse = false, int iTargetTurns = MAX_INT);
+#else
 	bool GenerateUnitPath(const CvUnit* pkUnit, int iXstart, int iYstart, int iXdest, int iYdest, int iInfo = 0, bool bReuse = false);
+#endif // AUI_ASTAR_TURN_LIMITER
 
 private:
 	CvAStarNode** m_ppaaPartialMoveNodes;
