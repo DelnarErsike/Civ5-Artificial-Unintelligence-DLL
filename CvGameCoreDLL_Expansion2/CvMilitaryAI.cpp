@@ -3998,11 +3998,15 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 	bool bNeedsToMove = false;
 	if (pUnitPlot->isCity())
 	{
+#ifdef AUI_DANGER_PLOTS_REMADE
+		if (m_pPlayer->GetPlotDanger(*pUnitPlot, pUnitPlot->getPlotCity()) + pUnitPlot->getPlotCity()->getDamage() >= pUnitPlot->getPlotCity()->GetMaxHitPoints())
+#else
 #ifdef AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
 		if (5 * pUnitPlot->getPlotCity()->getDamage() > pUnitPlot->getPlotCity()->GetMaxHitPoints() && m_pPlayer->IsPlotUnderImmediateThreat(*pUnitPlot))
 #else
 		if (pUnitPlot->getPlotCity()->getDamage() > (pUnitPlot->getPlotCity()->GetMaxHitPoints() / 5))
 #endif // AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
+#endif // AUI_DANGER_PLOTS_REMADE
 		{
 			bNeedsToMove = true;
 		}
@@ -4012,11 +4016,15 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 		CvUnit *pCarrier = pUnit->getTransportUnit();
 		if (pCarrier)
 		{
+#ifdef AUI_DANGER_PLOTS_REMADE
+			if (m_pPlayer->GetPlotDanger(*pUnitPlot, pCarrier) >= pCarrier->GetCurrHitPoints())
+#else
 #ifdef AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
 			if (5 * pCarrier->getDamage() > pCarrier->GetMaxHitPoints() && m_pPlayer->IsPlotUnderImmediateThreat(*pUnitPlot))
 #else
 			if (pCarrier->getDamage() > (GC.getMAX_HIT_POINTS() / 5))
 #endif // AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
+#endif // AUI_DANGER_PLOTS_REMADE
 			{
 				bNeedsToMove = true;
 			}
@@ -4044,11 +4052,15 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 	{
 		CvPlot* pLoopUnitPlot = pLoopUnit->plot();
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+		if (m_pPlayer->GetPlotDanger(*pLoopUnitPlot, pLoopUnit) >= pLoopUnit->GetCurrHitPoints())
+#else
 #ifdef AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
 		if (5 * pLoopUnit->getDamage() > pLoopUnit->GetMaxHitPoints() && m_pPlayer->IsPlotUnderImmediateThreat(*pLoopUnitPlot))
 #else
 		if(pLoopUnit->getDamage() > (GC.getMAX_HIT_POINTS() / 5))  // this might not be a good place to land
 #endif // AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
+#endif // AUI_DANGER_PLOTS_REMADE
 		{
 			continue;
 		}
@@ -4111,11 +4123,15 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 	{
 		CvPlot* pTarget = pLoopCity->plot();
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+		if (m_pPlayer->GetPlotDanger(*pTarget, pLoopCity) + pLoopCity->getDamage() >= pLoopCity->GetMaxHitPoints())
+#else
 #ifdef AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
 		if (5 * pLoopCity->getDamage() > pLoopCity->GetMaxHitPoints() && m_pPlayer->IsPlotUnderImmediateThreat(*pTarget))
 #else
 		if(pLoopCity->getDamage() > (pLoopCity->GetMaxHitPoints() / 5))
 #endif // AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
+#endif // AUI_DANGER_PLOTS_REMADE
 		{
 			continue;
 		}

@@ -4069,7 +4069,11 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 		{
 			break;
 		}
+#ifdef AUI_DANGER_PLOTS_REMADE
+		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot, m_pPlayer->GetID());
+#else
 		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot);
+#endif // AUI_DANGER_PLOTS_REMADE
 		if (iDangerValue == 0)
 		{
 #ifdef AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
@@ -4328,7 +4332,11 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 		{
 			break;
 		}
+#ifdef AUI_DANGER_PLOTS_REMADE
+		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot, m_pPlayer->GetID());
+#else
 		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot);
+#endif // AUI_DANGER_PLOTS_REMADE
 		if (iDangerValue == 0)
 		{
 #ifdef AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
@@ -4505,7 +4513,11 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 		{
 			break;
 		}
+#ifdef AUI_DANGER_PLOTS_REMADE
+		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot, m_pPlayer->GetID());
+#else
 		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot);
+#endif // AUI_DANGER_PLOTS_REMADE
 		if (iDangerValue == 0)
 		{
 #ifdef AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER

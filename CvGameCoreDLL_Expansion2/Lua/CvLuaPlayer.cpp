@@ -7420,7 +7420,11 @@ int CvLuaPlayer::lGetPlotDanger(lua_State* L)
 	CvPlayerAI* pkPlayer = GetInstance(L);
 	CvPlot* pkPlot = CvLuaPlot::GetInstance(L, 2);
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+	lua_pushinteger(L, pkPlayer->GetPlotDanger(*pkPlot, pkPlayer->GetID()));
+#else
 	lua_pushinteger(L, pkPlayer->GetPlotDanger(*pkPlot));
+#endif // AUI_DANGER_PLOTS_REMADE
 	return 1;
 }
 //------------------------------------------------------------------------------
@@ -8629,7 +8633,11 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 
 				iDistanceDropoff = (iDistanceDropoffMod * iSettlerDistance) / iEvalDistance;
 				iValue = iValue * (100 - iDistanceDropoff) / 100;
+#ifdef AUI_DANGER_PLOTS_REMADE
+				iDanger = pkPlayer->GetPlotDanger(*pPlot, pFoundingUnit);
+#else
 				iDanger = pkPlayer->GetPlotDanger(*pPlot);
+#endif // AUI_DANGER_PLOTS_REMADE
 				if(iDanger < 1000)
 				{
 					iValue = ((1000 - iDanger) * iValue) / 1000;

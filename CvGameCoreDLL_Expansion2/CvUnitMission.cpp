@@ -53,7 +53,13 @@ void CvUnitMission::AutoMission(UnitHandle hUnit)
 				}
 			}
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+			if(!hUnit->IsIgnoringDangerWakeup() && 
+				((!bEscortedBuilder && !hUnit->IsCombatUnit() && GET_PLAYER(hUnit->getOwner()).IsPlotUnderImmediateThreat(*(hUnit->plot()), hUnit.pointer())) ||
+				(bEscortedBuilder && GET_PLAYER(hUnit->getOwner()).GetPlotDanger(*(hUnit->plot()), hUnit.pointer()) >= hUnit->plot()->getBestDefender(hUnit->getOwner())->GetCurrHitPoints())))
+#else
 			if(!bEscortedBuilder && !hUnit->IsIgnoringDangerWakeup() && !hUnit->IsCombatUnit() && GET_PLAYER(hUnit->getOwner()).IsPlotUnderImmediateThreat(*(hUnit->plot())))
+#endif // AUI_DANGER_PLOTS_REMADE
 			{
 				hUnit->ClearMissionQueue();
 				hUnit->SetIgnoreDangerWakeup(true);
@@ -110,9 +116,16 @@ void CvUnitMission::PushMission(UnitHandle hUnit, MissionTypes eMission, int iDa
 			CvBuildInfo* pkBuildInfo = GC.getBuildInfo(eBuild);
 			if(pkBuildInfo)
 			{
+#ifdef AUI_DANGER_PLOTS_REMADE
+				UnitHandle hBestDefender = hUnit->plot()->getBestDefender(hUnit->getOwner());
+				if ((!hUnit->IsCombatUnit() && !hBestDefender && GET_PLAYER(hUnit->getOwner()).IsPlotUnderImmediateThreat(*(hUnit->plot()), hUnit.pointer())) ||
+					(hBestDefender && GET_PLAYER(hUnit->getOwner()).GetPlotDanger(*(hUnit->plot()), hBestDefender.pointer()) >= hBestDefender->GetCurrHitPoints()))
+				{
+#else
 				if (GET_PLAYER(hUnit->getOwner()).IsPlotUnderImmediateThreat(*(hUnit->plot())))
 				{
 					if(hUnit->plot()->getNumDefenders(hUnit->getOwner()) <= 0)
+#endif AUI_DANGER_PLOTS_REMADE
 					{
 						hUnit->SetIgnoreDangerWakeup(true);
 					}

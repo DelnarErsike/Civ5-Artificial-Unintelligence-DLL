@@ -310,7 +310,11 @@ int CvDllPlayer::GetPlotDanger(ICvPlot1* pPlot) const
 {
 	CvDllPlot* pDllPlot = static_cast<CvDllPlot*>(pPlot);
 	CvPlot& kPlot = (*pDllPlot->GetInstance());
+#ifdef AUI_DANGER_PLOTS_REMADE
+	return m_pPlayer->GetPlotDanger(kPlot, m_pPlayer->GetID());
+#else
 	return m_pPlayer->GetPlotDanger(kPlot);
+#endif // AUI_DANGER_PLOTS_REMADE
 }
 //------------------------------------------------------------------------------
 int CvDllPlayer::GetCityDistanceHighwaterMark() const
