@@ -482,7 +482,11 @@ public:
 	int GetBaseCombatStrength(bool bIgnoreEmbarked = false) const;
 	int GetBaseCombatStrengthConsideringDamage() const;
 
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	int GetGenericMaxStrengthModifier(const CvUnit* pOtherUnit, const CvPlot* pBattlePlot, bool bIgnoreUnitAdjacency, const CvPlot* pFromPlot = NULL) const;
+#else
 	int GetGenericMaxStrengthModifier(const CvUnit* pOtherUnit, const CvPlot* pBattlePlot, bool bIgnoreUnitAdjacency) const;
+#endif
 	int GetMaxAttackStrength(const CvPlot* pFromPlot, const CvPlot* pToPlot, const CvUnit* pDefender) const;
 	int GetMaxDefenseStrength(const CvPlot* pInPlot, const CvUnit* pAttacker, bool bFromRangedAttack = false) const;
 	int GetEmbarkedUnitDefense() const;
@@ -490,19 +494,34 @@ public:
 	bool canSiege(TeamTypes eTeam) const;
 
 	int GetBaseRangedCombatStrength() const;
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	int GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL) const;
+
+	int GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL) const;
+	int GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL) const;
+#else
 	int GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack) const;
 
 	int GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0) const;
 	int GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0) const;
+#endif
 
 	bool canAirAttack() const;
 	bool canAirDefend(const CvPlot* pPlot = NULL) const;
 
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	int GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand = true, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL) const;
+#else
 	int GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand = true) const;
+#endif
 
 	CvUnit* GetBestInterceptor(const CvPlot& pPlot, CvUnit* pkDefender = NULL, bool bLandInterceptorsOnly=false, bool bVisibleInterceptorsOnly=false) const;
 	int GetInterceptorCount(const CvPlot& pPlot, CvUnit* pkDefender = NULL, bool bLandInterceptorsOnly=false, bool bVisibleInterceptorsOnly=false) const;
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	int GetInterceptionDamage(const CvUnit* pAttacker, bool bIncludeRand = true, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL) const;
+#else
 	int GetInterceptionDamage(const CvUnit* pAttacker, bool bIncludeRand = true) const;
+#endif
 
 	int GetCombatLimit() const;
 	int GetRangedCombatLimit() const;
@@ -593,11 +612,19 @@ public:
 	int evasionProbability() const;
 	int withdrawalProbability() const;
 
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	int GetNumEnemyUnitsAdjacent(const CvUnit* pUnitToExclude = NULL, const CvPlot* pAtPlot = NULL) const;
+	bool IsEnemyCityAdjacent(const CvPlot* pAtPlot = NULL) const;
+	bool IsEnemyCityAdjacent(const CvCity* pSpecifyCity, const CvPlot* pAtPlot = NULL) const;
+	int GetNumSpecificEnemyUnitsAdjacent(const CvUnit* pUnitToExclude = NULL, const CvUnit* pUnitCompare = NULL, const CvPlot* pAtPlot = NULL) const;
+	bool IsFriendlyUnitAdjacent(bool bCombatUnit, const CvPlot* pAtPlot = NULL) const;
+#else
 	int GetNumEnemyUnitsAdjacent(const CvUnit* pUnitToExclude = NULL) const;
 	bool IsEnemyCityAdjacent() const;
 	bool IsEnemyCityAdjacent(const CvCity* pSpecifyCity) const;
 	int GetNumSpecificEnemyUnitsAdjacent(const CvUnit* pUnitToExclude = NULL, const CvUnit* pUnitCompare = NULL) const;
 	bool IsFriendlyUnitAdjacent(bool bCombatUnit) const;
+#endif
 
 	int GetAdjacentModifier() const;
 	void ChangeAdjacentModifier(int iValue);
@@ -893,6 +920,16 @@ public:
 	void changeExtraAttacks(int iChange);
 
 	// Citadel
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	bool IsNearEnemyCitadel(int& iCitadelDamage, const CvPlot* pInPlot = NULL) const;
+
+	// Great General Stuff
+	bool IsNearGreatGeneral(const CvPlot* pAtPlot = NULL) const;
+	bool IsStackedGreatGeneral(const CvPlot* pAtPlot = NULL) const;
+	int GetGreatGeneralStackMovement(const CvPlot* pAtPlot = NULL) const;
+	int GetReverseGreatGeneralModifier(const CvPlot* pAtPlot = NULL) const;
+	int GetNearbyImprovementModifier(const CvPlot* pAtPlot = NULL) const;
+#else
 	bool IsNearEnemyCitadel(int& iCitadelDamage);
 
 	// Great General Stuff
@@ -901,6 +938,7 @@ public:
 	int GetGreatGeneralStackMovement() const;
 	int GetReverseGreatGeneralModifier() const;
 	int GetNearbyImprovementModifier() const;
+#endif
 
 	bool IsGreatGeneral() const;
 	int GetGreatGeneralCount() const;
@@ -1106,7 +1144,12 @@ public:
 	bool isPotentialEnemy(TeamTypes eTeam, const CvPlot* pPlot = NULL) const;
 
 	bool canRangeStrike() const;
+#ifdef AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
+	bool canEverRangeStrikeAt(int iX, int iY, const CvPlot* pFromPlot = NULL) const;
+	bool canEverRangeStrikeAt(const CvPlot* pTargetPlot, const CvPlot* pFromPlot = NULL) const;
+#else
 	bool canEverRangeStrikeAt(int iX, int iY) const;
+#endif
 	bool canRangeStrikeAt(int iX, int iY, bool bNeedWar = true, bool bNoncombatAllowed = true) const;
 
 	bool IsAirSweepCapable() const;
@@ -1254,12 +1297,10 @@ public:
 #ifdef AUI_UNIT_RANGE_PLUS_MOVE
 	int GetRangePlusMoveToshot() const;
 #endif // AUI_UNIT_RANGE_PLUS_MOVE
-#ifdef AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
-	bool canEverRangeStrikeAtFromPlot(int iX, int iY, CvPlot* sourcePlot) const;
-#endif // AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
-	bool canMoveAndRangedStrike(int iX, int iY);
-	void GetMovablePlotListOpt(FFastVector<CvPlot*>& plotData, CvPlot* pTarget, bool bExitOnFound = false, int iWithinTurns = 0, CvPlot* pFromPlot = NULL) const;
+	bool canMoveAndRangedStrike(int iX, int iY) const;
+	bool canMoveAndRangedStrike(const CvPlot* pTargetPlot) const;
+	bool GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bExitOnFound = false, int iWithinTurns = 0, const CvPlot* pFromPlot = NULL) const;
 #endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 #ifdef AUI_UNIT_DO_AITYPE_FLIP
 	bool DoSingleUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert = false, bool bForceOff = false);
