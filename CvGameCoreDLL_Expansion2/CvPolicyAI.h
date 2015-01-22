@@ -76,7 +76,6 @@ private:
 	bool IsBranchEffectiveInGame(PolicyBranchTypes eBranch);
 #ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 	double BoostFlavorDueToUniqueGP(CvPolicyEntry* pEntry);
-	void UpdateUniqueGPVector(bool bAlwaysUpdate = true);
 #endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 
 	// Logging functions
@@ -89,10 +88,6 @@ private:
 	// Private data
 	CvPlayerPolicies* m_pCurrentPolicies;
 	CvWeightedVector<int, SAFE_ESTIMATE_NUM_POLICIES, true> m_PolicyAIWeights;
-#ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
-	// vector index = Great Person type; true/false value = is it unique?
-	std::vector<bool> m_bUniqueGreatPersons;
-#endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 
 	// First NUM_POLICY_BRANCH_TYPE entries are branches; policies start after that
 	CvWeightedVector<int, SAFE_ESTIMATE_NUM_POLICIES, true> m_AdoptablePolicies;

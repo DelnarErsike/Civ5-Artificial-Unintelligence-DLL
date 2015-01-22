@@ -9882,6 +9882,19 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		}
 #endif // AUI_GS_PRIORITY_RATIO
 
+#ifdef AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
+		int iUniqueGreatPersons = m_pPlayer->GetUniqueGreatPersons();
+		// We have a sciencey unique GP
+		if (iUniqueGreatPersons & (UNIQUE_GP_SCIENTIST | UNIQUE_GP_MERCHANT | UNIQUE_GP_ENGINEER))
+		{
+			dScore += 60.0 * dScienceyGreatPersonRateMod;
+		}
+		// We have an artsy unique GP
+		if (iUniqueGreatPersons & (UNIQUE_GP_WRITER | UNIQUE_GP_ARTIST | UNIQUE_GP_MUSICIAN))
+		{
+			dScore += 60.0 * dArtsyGreatPersonRateMod;
+		}
+#else
 		// Do we have a sciencey Great Person unique unit? (ie. Merchant of Venice)
 
 		bool bScienceyUniqueUnit = false;
@@ -9995,6 +10008,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		{
 			dScore += 60.0 * dArtsyGreatPersonRateMod;
 		}
+#endif // AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
 
 		// Do we have a trait that alters sciencey Great Person rate?
 		if (GetPlayer()->GetPlayerTraits()->GetGreatScientistRateModifier() != 0)

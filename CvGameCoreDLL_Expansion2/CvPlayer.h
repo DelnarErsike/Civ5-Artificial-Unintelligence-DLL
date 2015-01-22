@@ -1079,6 +1079,26 @@ public:
 	void SetIncomingUnitCountdown(PlayerTypes eFromPlayer, int iNumTurns);
 	void ChangeIncomingUnitCountdown(PlayerTypes eFromPlayer, int iChange);
 
+#ifdef AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
+	uint GetNumUniqueImprovements() const;
+	BuildTypes GetUniqueImprovementBuild(uint uiID) const;
+	ImprovementTypes GetUniqueImprovement(uint uiID) const;
+	void RecalculateUniqueImprovements();
+#endif
+
+#ifdef AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
+#define UNIQUE_GP_WRITER		1
+#define UNIQUE_GP_ARTIST		2
+#define UNIQUE_GP_MUSICIAN		4
+#define UNIQUE_GP_SCIENTIST		8
+#define UNIQUE_GP_MERCHANT		16
+#define UNIQUE_GP_ENGINEER		32
+#define UNIQUE_GP_GENERAL		64
+#define UNIQUE_GP_ADMIRAL		128
+	int GetUniqueGreatPersons() const;
+	void UpdateUniqueGreatPersons();
+#endif
+
 	bool isOption(PlayerOptionTypes eIndex) const;
 	void setOption(PlayerOptionTypes eIndex, bool bNewValue);
 
@@ -1318,8 +1338,16 @@ public:
 	int GetUnitPurchaseCostModifier() const;
 	void ChangeUnitPurchaseCostModifier(int iChange);
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+	int GetPlotDanger(CvPlot& Plot, CvUnit* pUnit) const;
+	int GetPlotDanger(CvPlot& Plot, CvCity* pCity, CvUnit* pPretendGarrison = NULL) const;
+	int GetPlotDanger(CvPlot& Plot, PlayerTypes ePlayer) const;
+	bool IsPlotUnderImmediateThreat(CvPlot& Plot, CvUnit* pUnit) const;
+	bool IsPlotUnderImmediateThreat(CvPlot& Plot, PlayerTypes ePlayer) const;
+#else
 	int GetPlotDanger(CvPlot& Plot) const;
 	bool IsPlotUnderImmediateThreat(CvPlot& Plot) const;
+#endif // AUI_DANGER_PLOTS_REMADE
 	CvCity* GetClosestFriendlyCity(CvPlot& plot, int iSearchRadius);
 
 	int GetNumPuppetCities() const;
@@ -1761,12 +1789,17 @@ protected:
 	FAutoVariable<int, CvPlayer> m_iSpecialistCultureChange;
 	FAutoVariable<int, CvPlayer> m_iGreatPeopleSpawnCounter;
 
+#ifdef AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
+	// bit index = Great Person type; 0/1 value = is it unique?
+	int m_iUniqueGreatPersons;
+#endif
+
 	FAutoVariable<int, CvPlayer> m_iFreeTechCount;
 	int m_iMedianTechPercentage;
 	FAutoVariable<int, CvPlayer> m_iNumFreePolicies;
 	FAutoVariable<int, CvPlayer> m_iNumFreePoliciesEver; 
 	int m_iNumFreeTenets;
-    int m_iMaxEffectiveCities;
+	int m_iMaxEffectiveCities;
 
 	int m_iLastSliceMoved;
 
@@ -1805,6 +1838,10 @@ protected:
 	FAutoVariable<std::vector<int>, CvPlayer> m_aiResearchAgreementCounter;
 	FAutoVariable<std::vector<int>, CvPlayer> m_aiIncomingUnitTypes;
 	FAutoVariable<std::vector<int>, CvPlayer> m_aiIncomingUnitCountdowns;
+#ifdef AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
+	// Saved its BuildType and ImprovementType as a pair so we don't have to go looking for them
+	FAutoVariable<std::vector<std::pair<BuildTypes, ImprovementTypes>>, CvPlayer> m_aeUniqueImprovements;
+#endif
 	FAutoVariable<std::vector<int>, CvPlayer> m_aiMinorFriendshipAnchors; // DEPRECATED
 	std::vector<int> m_aiSiphonLuxuryCount;
 	std::vector<int> m_aiGreatWorkYieldChange;
@@ -1961,7 +1998,7 @@ protected:
 	int m_iNumFreeGreatPeople;
 	int m_iNumMayaBoosts;
 	int m_iNumFaithGreatPeople;
-    int m_iNumArchaeologyChoices;
+	int m_iNumArchaeologyChoices;
 
 	FaithPurchaseTypes m_eFaithPurchaseType;
 	int m_iFaithPurchaseIndex;

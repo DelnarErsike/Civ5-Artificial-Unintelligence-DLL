@@ -51,10 +51,6 @@ void CvPolicyAI::Reset()
 			}
 		}
 	}
-
-#ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
-	m_bUniqueGreatPersons.clear();
-#endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 }
 
 /// Serialization read
@@ -89,10 +85,6 @@ void CvPolicyAI::Read(FDataStream& kStream)
 		if(ePolicy != NO_POLICY && (uint)ePolicy < uiPolicyArraySize)
 			m_PolicyAIWeights.SetWeight((uint)ePolicy, iWeight);
 	}
-
-#ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
-	kStream >> m_bUniqueGreatPersons;
-#endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 }
 
 /// Serialization write
@@ -114,18 +106,11 @@ void CvPolicyAI::Write(FDataStream& kStream)
 		CvInfosSerializationHelper::WriteHashed(kStream, static_cast<const PolicyTypes>(i));
 		kStream << m_PolicyAIWeights.GetWeight(i);
 	}
-
-#ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
-	kStream << m_bUniqueGreatPersons;
-#endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 }
 
 /// Establish weights for one flavor; can be called multiple times to layer strategies
 void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropagationPercent)
 {
-#ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
-	UpdateUniqueGPVector();
-#endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 	int iPolicy;
 	CvPolicyEntry* entry;
 	int* paiTempWeights;
@@ -212,17 +197,17 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 				dWeight /= m_pCurrentPolicies->GetPlayer()->GetGrandStrategyAI()->ScienceFlavorBoost();
 			}
 #ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
-			paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight * BoostFlavorDueToUniqueGP(entry) + 0.5);
+			paiTempWeights[iPolicy] = int(entry->GetFlavorValue(eFlavor) * dWeight * BoostFlavorDueToUniqueGP(entry) + 0.5);
 #else
-			paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
+			paiTempWeights[iPolicy] = int(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
 #endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 		}
 #else
 #ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
-			paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight * BoostFlavorDueToUniqueGP(entry) + 0.5);
+			paiTempWeights[iPolicy] = int(entry->GetFlavorValue(eFlavor) * dWeight * BoostFlavorDueToUniqueGP(entry) + 0.5);
 #else
 #if defined(AUI_MINOR_CIV_RATIO) || defined(AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY) || defined(AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION) || defined(AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER)
-			paiTempWeights[iPolicy] = (int)(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
+			paiTempWeights[iPolicy] = int(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
 #else
 			paiTempWeights[iPolicy] = entry->GetFlavorValue(eFlavor) * iWeight;
 #endif // AUI_MINOR_CIV_RATIO
@@ -1324,246 +1309,68 @@ bool CvPolicyAI::IsBranchEffectiveInGame(PolicyBranchTypes eBranch)
 /// Returns number to multiply flavor weight by if the policy would boost generation of a unique unit great person
 double CvPolicyAI::BoostFlavorDueToUniqueGP(CvPolicyEntry* pEntry)
 {	
-	double dMultiplier = 1;
+	double dMultiplier = 1.0;
+	int iUniqueGreatPersons = m_pCurrentPolicies->GetPlayer()->GetUniqueGreatPersons();
 
-	for (std::vector<bool>::iterator it = m_bUniqueGreatPersons.begin(); it != m_bUniqueGreatPersons.end(); ++it)
+	int iBranchType = pEntry->GetPolicyBranchType();
+	if (iUniqueGreatPersons & UNIQUE_GP_WRITER)
 	{
-		if ((*it))
-		{
-			switch (it - m_bUniqueGreatPersons.begin())
-			{
-			// Great Writer
-			case 0:
-				if (pEntry->GetPolicyBranchType() == (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_AESTHETICS", true /*bHideAssert*/))
-				{
-					dMultiplier *= 2;
-				}
-				if (pEntry->GetGreatWriterRateModifier() != 0)
-				{
-					dMultiplier *= (pEntry->GetGreatWriterRateModifier() > 0 ? 2.0 : 0.5);
-				}
-				break;
-			// Great Artist
-			case 1:
-				if (pEntry->GetPolicyBranchType() == (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_AESTHETICS", true /*bHideAssert*/))
-				{
-					dMultiplier *= 2;
-				}
-				if (pEntry->GetGreatArtistRateModifier() != 0)
-				{
-					dMultiplier *= (pEntry->GetGreatArtistRateModifier() > 0 ? 2.0 : 0.5);
-				}
-				break;
-			// Great Musician
-			case 2:
-				if (pEntry->GetPolicyBranchType() == (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_AESTHETICS", true /*bHideAssert*/))
-				{
-					dMultiplier *= 2;
-				}
-				if (pEntry->GetGreatMusicianRateModifier() != 0)
-				{
-					dMultiplier *= (pEntry->GetGreatMusicianRateModifier() > 0 ? 2.0 : 0.5);
-				}
-				break;
-			// Great Scientist
-			case 3:
-				if (pEntry->GetPolicyBranchType() == (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_RATIONALISM", true /*bHideAssert*/))
-				{
-					dMultiplier *= 2;
-				}
-				if (pEntry->GetGreatScientistRateModifier() != 0)
-				{
-					dMultiplier *= (pEntry->GetGreatScientistRateModifier() > 0 ? 2.0 : 0.5);
-				}
-				break;
-			// Great Merchant
-			case 4:
-				if (pEntry->GetPolicyBranchType() == (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_COMMERCE", true /*bHideAssert*/))
-				{
-					dMultiplier *= 2;
-				}
-				if (pEntry->GetGreatMerchantRateModifier() != 0)
-				{
-					dMultiplier *= (pEntry->GetGreatMerchantRateModifier() > 0 ? 2.0 : 0.5);
-				}
-				break;
-			// Great Engineer
-			case 5:
-				if (pEntry->GetPolicyBranchType() == (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_TRADITION", true /*bHideAssert*/))
-				{
-					dMultiplier *= 2;
-				}
-				break;
-			// Great General
-			case 6:
-				if (pEntry->GetPolicyBranchType() == (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_HONOR", true /*bHideAssert*/))
-				{
-					dMultiplier *= 2;
-				}
-				if (pEntry->GetGreatGeneralRateModifier() != 0)
-				{
-					dMultiplier *= (pEntry->GetGreatGeneralRateModifier() > 0 ? 2.0 : 0.5);
-				}
-				if (pEntry->GetDomesticGreatGeneralRateModifier() != 0)
-				{
-					dMultiplier *= (pEntry->GetDomesticGreatGeneralRateModifier() > 0 ? 2.0 : 0.5);
-				}
-				break;
-			// Great Admiral
-			case 7:
-				if (pEntry->GetPolicyBranchType() == (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_EXPLORATION", true /*bHideAssert*/))
-				{
-					dMultiplier *= 2;
-				}
-				if (pEntry->GetGreatAdmiralRateModifier() != 0)
-				{
-					dMultiplier *= (pEntry->GetGreatAdmiralRateModifier() > 0 ? 2.0 : 0.5);
-				}
-				break;
-			}
-		}
+		if (iBranchType == GC.getInfoTypeForString("POLICY_BRANCH_AESTHETICS", true /*bHideAssert*/))
+			dMultiplier *= 2.0;
+		if (pEntry->GetGreatWriterRateModifier() != 0)
+			dMultiplier *= (pEntry->GetGreatWriterRateModifier() > 0 ? 2.0 : 0.5);
+	}
+	if (iUniqueGreatPersons & UNIQUE_GP_ARTIST)
+	{
+		if (iBranchType == GC.getInfoTypeForString("POLICY_BRANCH_AESTHETICS", true /*bHideAssert*/))
+			dMultiplier *= 2.0;
+		if (pEntry->GetGreatWriterRateModifier() != 0)
+			dMultiplier *= (pEntry->GetGreatArtistRateModifier() > 0 ? 2.0 : 0.5);
+	}
+	if (iUniqueGreatPersons & UNIQUE_GP_MUSICIAN)
+	{
+		if (iBranchType == GC.getInfoTypeForString("POLICY_BRANCH_AESTHETICS", true /*bHideAssert*/))
+			dMultiplier *= 2.0;
+		if (pEntry->GetGreatWriterRateModifier() != 0)
+			dMultiplier *= (pEntry->GetGreatMusicianRateModifier() > 0 ? 2.0 : 0.5);
+	}
+	if (iUniqueGreatPersons & UNIQUE_GP_SCIENTIST)
+	{
+		if (iBranchType == GC.getInfoTypeForString("POLICY_BRANCH_RATIONALISM", true /*bHideAssert*/))
+			dMultiplier *= 2.0;
+		if (pEntry->GetGreatWriterRateModifier() != 0)
+			dMultiplier *= (pEntry->GetGreatScientistRateModifier() > 0 ? 2.0 : 0.5);
+	}
+	if (iUniqueGreatPersons & UNIQUE_GP_MERCHANT)
+	{
+		if (iBranchType == GC.getInfoTypeForString("POLICY_BRANCH_COMMERCE", true /*bHideAssert*/))
+			dMultiplier *= 2.0;
+		if (pEntry->GetGreatWriterRateModifier() != 0)
+			dMultiplier *= (pEntry->GetGreatMerchantRateModifier() > 0 ? 2.0 : 0.5);
+	}
+	if (iUniqueGreatPersons & UNIQUE_GP_ENGINEER)
+	{
+		if (iBranchType == GC.getInfoTypeForString("POLICY_BRANCH_TRADITION", true /*bHideAssert*/))
+			dMultiplier *= 2.0;
+	}
+	if (iUniqueGreatPersons & UNIQUE_GP_GENERAL)
+	{
+		if (iBranchType == GC.getInfoTypeForString("POLICY_BRANCH_HONOR", true /*bHideAssert*/))
+			dMultiplier *= 2.0;
+		if (pEntry->GetGreatGeneralRateModifier() != 0)
+			dMultiplier *= (pEntry->GetGreatGeneralRateModifier() > 0 ? 2.0 : 0.5);
+		if (pEntry->GetDomesticGreatGeneralRateModifier() != 0)
+			dMultiplier *= (pEntry->GetDomesticGreatGeneralRateModifier() > 0 ? 2.0 : 0.5);
+	}
+	if (iUniqueGreatPersons & UNIQUE_GP_ADMIRAL)
+	{
+		if (iBranchType == GC.getInfoTypeForString("POLICY_BRANCH_EXPLORATION", true /*bHideAssert*/))
+			dMultiplier *= 2.0;
+		if (pEntry->GetGreatWriterRateModifier() != 0)
+			dMultiplier *= (pEntry->GetGreatAdmiralRateModifier() > 0 ? 2.0 : 0.5);
 	}
 
 	return dMultiplier;
-}
-
-/// Updates the vector for UU Great Persons if it's not been set
-void  CvPolicyAI::UpdateUniqueGPVector(bool bAlwaysUpdate)
-{
-	if (bAlwaysUpdate || m_bUniqueGreatPersons.size() != 8)
-	{
-		UnitClassTypes eGPUnitClass;
-		CvPlayer* pPlayer = m_pCurrentPolicies->GetPlayer();
-		// Too lazy to do the next 8 steps in loops
-		m_bUniqueGreatPersons.push_back(false);
-		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_WRITER", true);
-		if (eGPUnitClass != NO_UNITCLASS)
-		{
-			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
-			if (pGPUnitClassInfo)
-			{
-				UnitTypes eGPUnitType = (UnitTypes)pPlayer->getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
-				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
-				if (eGPUnitType != eDefault)
-				{
-					m_bUniqueGreatPersons.pop_back();
-					m_bUniqueGreatPersons.push_back(true);
-				}
-			}
-		}
-		m_bUniqueGreatPersons.push_back(false);
-		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_ARTIST", true);
-		if (eGPUnitClass != NO_UNITCLASS)
-		{
-			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
-			if (pGPUnitClassInfo)
-			{
-				UnitTypes eGPUnitType = (UnitTypes)pPlayer->getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
-				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
-				if (eGPUnitType != eDefault)
-				{
-					m_bUniqueGreatPersons.pop_back();
-					m_bUniqueGreatPersons.push_back(true);
-				}
-			}
-		}
-		m_bUniqueGreatPersons.push_back(false);
-		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_MUSICIAN", true);
-		if (eGPUnitClass != NO_UNITCLASS)
-		{
-			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
-			if (pGPUnitClassInfo)
-			{
-				UnitTypes eGPUnitType = (UnitTypes)pPlayer->getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
-				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
-				if (eGPUnitType != eDefault)
-				{
-					m_bUniqueGreatPersons.pop_back();
-					m_bUniqueGreatPersons.push_back(true);
-				}
-			}
-		}
-		m_bUniqueGreatPersons.push_back(false);
-		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_SCIENTIST", true);
-		if (eGPUnitClass != NO_UNITCLASS)
-		{
-			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
-			if (pGPUnitClassInfo)
-			{
-				UnitTypes eGPUnitType = (UnitTypes)pPlayer->getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
-				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
-				if (eGPUnitType != eDefault)
-				{
-					m_bUniqueGreatPersons.pop_back();
-					m_bUniqueGreatPersons.push_back(true);
-				}
-			}
-		}
-		m_bUniqueGreatPersons.push_back(false);
-		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_MERCHANT", true);
-		if (eGPUnitClass != NO_UNITCLASS)
-		{
-			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
-			if (pGPUnitClassInfo)
-			{
-				UnitTypes eGPUnitType = (UnitTypes)pPlayer->getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
-				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
-				if (eGPUnitType != eDefault)
-				{
-					m_bUniqueGreatPersons.pop_back();
-					m_bUniqueGreatPersons.push_back(true);
-				}
-			}
-		}
-		m_bUniqueGreatPersons.push_back(false);
-		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_ENGINEER", true);
-		if (eGPUnitClass != NO_UNITCLASS)
-		{
-			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
-			if (pGPUnitClassInfo)
-			{
-				UnitTypes eGPUnitType = (UnitTypes)pPlayer->getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
-				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
-				if (eGPUnitType != eDefault)
-				{
-					m_bUniqueGreatPersons.pop_back();
-					m_bUniqueGreatPersons.push_back(true);
-				}
-			}
-		}
-		m_bUniqueGreatPersons.push_back(false);
-		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_GREAT_GENERAL", true);
-		if (eGPUnitClass != NO_UNITCLASS)
-		{
-			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
-			if (pGPUnitClassInfo)
-			{
-				UnitTypes eGPUnitType = (UnitTypes)pPlayer->getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
-				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
-				if (eGPUnitType != eDefault)
-				{
-					m_bUniqueGreatPersons.pop_back();
-					m_bUniqueGreatPersons.push_back(true);
-				}
-			}
-		}
-		m_bUniqueGreatPersons.push_back(false);
-		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_GREAT_ADMIRAL", true);
-		if (eGPUnitClass != NO_UNITCLASS)
-		{
-			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
-			if (pGPUnitClassInfo)
-			{
-				UnitTypes eGPUnitType = (UnitTypes)pPlayer->getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
-				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
-				if (eGPUnitType != eDefault)
-				{
-					m_bUniqueGreatPersons.pop_back();
-					m_bUniqueGreatPersons.push_back(true);
-				}
-			}
-		}
-	}
 }
 #endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 

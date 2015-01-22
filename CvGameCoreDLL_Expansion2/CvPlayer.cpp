@@ -62,7 +62,11 @@
 // Version 1 
 //	 * CvPlayer save version reset for expansion pack 2.
 //------------------------------------------------------------------------------
+#if defined(AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS) || defined(AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE)
+const int g_CurrentCvPlayerVersion = 17;
+#else
 const int g_CurrentCvPlayerVersion = 16;
+#endif
 
 //Simply empty check utility.
 bool isEmpty(const char* szString)
@@ -345,6 +349,12 @@ CvPlayer::CvPlayer() :
 	, m_aiResearchAgreementCounter("CvPlayer::m_aiResearchAgreementCounter", m_syncArchive)
 	, m_aiIncomingUnitTypes("CvPlayer::m_aiIncomingUnitTypes", m_syncArchive, true)
 	, m_aiIncomingUnitCountdowns("CvPlayer::m_aiIncomingUnitCountdowns", m_syncArchive, true)
+#ifdef AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
+	, m_aeUniqueImprovements("CvPlayer::m_aeUniqueImprovements", m_syncArchive, true)
+#endif
+#ifdef AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
+	, m_iUniqueGreatPersons(0)
+#endif
 	, m_aiMinorFriendshipAnchors("CvPlayer::m_aiMinorFriendshipAnchors", m_syncArchive, true)
 	, m_aOptions("CvPlayer::m_aOptions", m_syncArchive, true)
 	, m_strReligionKey("CvPlayer::m_strReligionKey", m_syncArchive)
@@ -943,6 +953,9 @@ void CvPlayer::uninit()
 	m_iFaithPurchaseIndex = 0;
 	m_iMaxEffectiveCities = 1;
 	m_iLastSliceMoved = 0;
+#ifdef AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
+	m_iUniqueGreatPersons = 0;
+#endif
 
 	m_bHasBetrayedMinorCiv = false;
 	m_bAlive = false;
@@ -1033,6 +1046,10 @@ void CvPlayer::reset(PlayerTypes eID, bool bConstructorCall)
 
 	m_aiIncomingUnitCountdowns.clear();
 	m_aiIncomingUnitCountdowns.resize(MAX_PLAYERS, -1);
+
+#ifdef AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
+	RecalculateUniqueImprovements();
+#endif
 
 	m_aiMinorFriendshipAnchors.clear();
 	m_aiMinorFriendshipAnchors.resize(MAX_PLAYERS, 0);
@@ -4081,6 +4098,10 @@ void CvPlayer::doTurn()
 		ChangeTurnsSinceSettledLastCity(1);
 
 	setConscriptCount(0);
+
+#ifdef AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
+	UpdateUniqueGreatPersons();
+#endif
 
 	DoUpdateCramped();
 
@@ -16451,15 +16472,14 @@ void CvPlayer::DoUpdateCramped()
 	for(pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
 	{
 #ifdef AUI_HEXSPACE_DX_LOOPS
-		int iMaxDX, iDX;
 		for (int iDY = -iRange; iDY <= iRange; iDY++)
 		{
 #ifdef AUI_FAST_COMP
-			iMaxDX = iRange - FASTMAX(0, iDY);
-			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+			int iMaxDX = iRange - FASTMAX(0, iDY);
+			for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #else
-			iMaxDX = iRange - MAX(0, iDY);
-			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+			int iMaxDX = iRange - MAX(0, iDY);
+			for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #endif // AUI_FAST_COMP
 			{
 				pPlot = plotXY(pLoopCity->getX(), pLoopCity->getY(), iDX, iDY);
@@ -16473,13 +16493,22 @@ void CvPlayer::DoUpdateCramped()
 
 				if(pPlot != NULL)
 				{
+#ifdef AUI_PLAYER_FIX_DO_UPDATE_CRAMPED_ACCURATE_PLOT_TYPES
+					// Plot not owned by me
+					if((!pPlot->isOwned() || pPlot->getOwner() != GetID()) && pPlot->calculateTotalBestNatureYield(getTeam()) > 0)
+#else
 					// Plot not owned by me
 					if(!pPlot->isOwned() || pPlot->getOwner() != GetID())
+#endif // AUI_PLAYER_FIX_DO_UPDATE_CRAMPED_ACCURATE_PLOT_TYPES
 					{
 						iTotalPlotsNearby++;
 
 						// A "good" unowned Plot
+#ifdef AUI_PLAYER_FIX_DO_UPDATE_CRAMPED_ACCURATE_PLOT_TYPES
+						if(!pPlot->isOwned())
+#else
 						if(!pPlot->isOwned() && !pPlot->isImpassable() && !pPlot->isMountain() && !pPlot->isWater())
+#endif // AUI_PLAYER_FIX_DO_UPDATE_CRAMPED_ACCURATE_PLOT_TYPES
 						{
 							iUsablePlotsNearby++;
 						}
@@ -16489,16 +16518,21 @@ void CvPlayer::DoUpdateCramped()
 		}
 	}
 
+#ifdef AUI_PLAYER_FIX_DO_UPDATE_CRAMPED_ACCURATE_PLOT_TYPES
+	m_bCramped = false;
+#endif // AUI_PLAYER_FIX_DO_UPDATE_CRAMPED_ACCURATE_PLOT_TYPES
 	if(iTotalPlotsNearby > 0)
 	{
 		if(100 * iUsablePlotsNearby / iTotalPlotsNearby <= GC.getCRAMPED_USABLE_PLOT_PERCENT())	// 20
 		{
 			m_bCramped = true;
 		}
+#ifndef AUI_PLAYER_FIX_DO_UPDATE_CRAMPED_ACCURATE_PLOT_TYPES
 		else
 		{
 			m_bCramped = false;
 		}
+#endif
 	}
 }
 
@@ -17638,6 +17672,197 @@ void CvPlayer::ChangeIncomingUnitCountdown(PlayerTypes eFromPlayer, int iChange)
 	if(iChange != 0)
 		SetIncomingUnitCountdown(eFromPlayer, GetIncomingUnitCountdown(eFromPlayer) + iChange);
 }
+
+#ifdef AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
+//	--------------------------------------------------------------------------------
+uint CvPlayer::GetNumUniqueImprovements() const
+{
+	return m_aeUniqueImprovements.size();
+}
+
+//	--------------------------------------------------------------------------------
+BuildTypes CvPlayer::GetUniqueImprovementBuild(uint uiID) const
+{
+	CvAssertMsg(uiID < m_aeUniqueImprovements.size(), "uiID is expected to be within maximum bounds (invalid Index)");
+	return (m_aeUniqueImprovements[uiID].first);
+}
+
+//	--------------------------------------------------------------------------------
+ImprovementTypes CvPlayer::GetUniqueImprovement(uint uiID) const
+{
+	CvAssertMsg(uiID < m_aeUniqueImprovements.size(), "uiID is expected to be within maximum bounds (invalid Index)");
+	return (m_aeUniqueImprovements[uiID].second);
+}
+
+//	--------------------------------------------------------------------------------
+void CvPlayer::RecalculateUniqueImprovements()
+{
+	m_aeUniqueImprovements.clear();
+	m_aeUniqueImprovements.resize(2);
+	if (m_eID != NO_PLAYER)
+	{
+		BuildTypes eBuild;
+		for (int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+		{
+			eBuild = (BuildTypes)iBuildIndex;
+			CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
+			if (pkBuild)
+			{
+				ImprovementTypes eImprovement = (ImprovementTypes)pkBuild->getImprovement();
+				if (eImprovement != NO_IMPROVEMENT)
+				{
+					CvImprovementEntry* pkImprovement = GC.getImprovementInfo(eImprovement);
+					if (pkImprovement && pkImprovement->IsSpecificCivRequired())
+					{
+						if (pkImprovement->GetRequiredCivilization() == getCivilizationType())
+						{
+							m_aeUniqueImprovements.push_back(std::make_pair(eBuild, eImprovement));
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#endif
+
+#ifdef AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
+//	--------------------------------------------------------------------------------
+int CvPlayer::GetUniqueGreatPersons() const
+{
+	return m_iUniqueGreatPersons;
+}
+
+//	--------------------------------------------------------------------------------
+void CvPlayer::UpdateUniqueGreatPersons()
+{
+	if (m_iUniqueGreatPersons == 0 && m_eID != NO_PLAYER)
+	{
+		UnitClassTypes eGPUnitClass;
+		// Too lazy to write the next 8 steps in a loop
+		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_WRITER", true);
+		if (eGPUnitClass != NO_UNITCLASS)
+		{
+			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
+			if (pGPUnitClassInfo)
+			{
+				UnitTypes eGPUnitType = (UnitTypes)getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
+				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
+				if (eGPUnitType != eDefault)
+				{
+					m_iUniqueGreatPersons |= UNIQUE_GP_WRITER;
+				}
+			}
+		}
+		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_ARTIST", true);
+		if (eGPUnitClass != NO_UNITCLASS)
+		{
+			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
+			if (pGPUnitClassInfo)
+			{
+				UnitTypes eGPUnitType = (UnitTypes)getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
+				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
+				if (eGPUnitType != eDefault)
+				{
+					m_iUniqueGreatPersons |= UNIQUE_GP_ARTIST;
+				}
+			}
+		}
+		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_MUSICIAN", true);
+		if (eGPUnitClass != NO_UNITCLASS)
+		{
+			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
+			if (pGPUnitClassInfo)
+			{
+				UnitTypes eGPUnitType = (UnitTypes)getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
+				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
+				if (eGPUnitType != eDefault)
+				{
+					m_iUniqueGreatPersons |= UNIQUE_GP_MUSICIAN;
+				}
+			}
+		}
+		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_SCIENTIST", true);
+		if (eGPUnitClass != NO_UNITCLASS)
+		{
+			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
+			if (pGPUnitClassInfo)
+			{
+				UnitTypes eGPUnitType = (UnitTypes)getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
+				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
+				if (eGPUnitType != eDefault)
+				{
+					m_iUniqueGreatPersons |= UNIQUE_GP_SCIENTIST;
+				}
+			}
+		}
+		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_MERCHANT", true);
+		if (eGPUnitClass != NO_UNITCLASS)
+		{
+			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
+			if (pGPUnitClassInfo)
+			{
+				UnitTypes eGPUnitType = (UnitTypes)getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
+				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
+				if (eGPUnitType != eDefault)
+				{
+					m_iUniqueGreatPersons |= UNIQUE_GP_MERCHANT;
+				}
+			}
+		}
+		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_ENGINEER", true);
+		if (eGPUnitClass != NO_UNITCLASS)
+		{
+			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
+			if (pGPUnitClassInfo)
+			{
+				UnitTypes eGPUnitType = (UnitTypes)getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
+				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
+				if (eGPUnitType != eDefault)
+				{
+					m_iUniqueGreatPersons |= UNIQUE_GP_ENGINEER;
+				}
+			}
+		}
+		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_GREAT_GENERAL", true);
+		if (eGPUnitClass != NO_UNITCLASS)
+		{
+			// If the player has a trait that makes great generals more powerful, they count as a UU for the purpose of policies
+			if (GetPlayerTraits()->GetGreatGeneralExtraBonus() > 0)
+			{
+				m_iUniqueGreatPersons |= UNIQUE_GP_GENERAL;
+			}
+			else
+			{
+				CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
+				if (pGPUnitClassInfo)
+				{
+					UnitTypes eGPUnitType = (UnitTypes)getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
+					UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
+					if (eGPUnitType != eDefault)
+					{
+						m_iUniqueGreatPersons |= UNIQUE_GP_GENERAL;
+					}
+				}
+			}
+		}
+		eGPUnitClass = (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_GREAT_ADMIRAL", true);
+		if (eGPUnitClass != NO_UNITCLASS)
+		{
+			CvUnitClassInfo* pGPUnitClassInfo = GC.getUnitClassInfo(eGPUnitClass);
+			if (pGPUnitClassInfo)
+			{
+				UnitTypes eGPUnitType = (UnitTypes)getCivilizationInfo().getCivilizationUnits(eGPUnitClass);
+				UnitTypes eDefault = (UnitTypes)pGPUnitClassInfo->getDefaultUnitIndex();
+				if (eGPUnitType != eDefault)
+				{
+					m_iUniqueGreatPersons |= UNIQUE_GP_ADMIRAL;
+				}
+			}
+		}
+	}
+}
+#endif
 
 //	--------------------------------------------------------------------------------
 bool CvPlayer::isOption(PlayerOptionTypes eID) const
@@ -22159,6 +22384,16 @@ void CvPlayer::Read(FDataStream& kStream)
 	}
 
 	kStream >> m_iLastSliceMoved;
+#ifdef AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
+	if (uiVersion >= 17)
+	{
+		kStream >> m_iUniqueGreatPersons;
+	}
+	else
+	{
+		UpdateUniqueGreatPersons();
+	}
+#endif
 	kStream >> m_bHasBetrayedMinorCiv;
 	kStream >> m_bAlive;
 	kStream >> m_bEverAlive;
@@ -22216,6 +22451,17 @@ void CvPlayer::Read(FDataStream& kStream)
 		m_aiIncomingUnitCountdowns.clear();
 		m_aiIncomingUnitCountdowns.resize(MAX_PLAYERS, -1);
 	}
+
+#ifdef AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
+	if (uiVersion >= 17)
+	{
+		kStream >> m_aeUniqueImprovements;
+	}
+	else
+	{
+		RecalculateUniqueImprovements();
+	}
+#endif
 	
 	kStream >> m_aiMinorFriendshipAnchors;
 	if (uiVersion >= 7)
@@ -22637,6 +22883,9 @@ void CvPlayer::Write(FDataStream& kStream) const
 	kStream << m_iFaithPurchaseIndex;
 	kStream << m_iMaxEffectiveCities;
 	kStream << m_iLastSliceMoved;
+#ifdef AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
+	kStream << m_iUniqueGreatPersons;
+#endif
 
 	kStream << m_bHasBetrayedMinorCiv;
 	kStream << m_bAlive;
@@ -22674,6 +22923,9 @@ void CvPlayer::Write(FDataStream& kStream) const
 	kStream << m_aiResearchAgreementCounter;   // Added in Version 2
 	kStream << m_aiIncomingUnitTypes;
 	kStream << m_aiIncomingUnitCountdowns;
+#ifdef AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
+	kStream << m_aeUniqueImprovements;
+#endif
 	kStream << m_aiMinorFriendshipAnchors; // Version 38
 	kStream << m_aiSiphonLuxuryCount;
 
@@ -23591,6 +23843,37 @@ void CvPlayer::ChangeUnitPurchaseCostModifier(int iChange)
 	}
 }
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+//	--------------------------------------------------------------------------------
+int CvPlayer::GetPlotDanger(CvPlot& pPlot, CvUnit* pUnit) const
+{
+	return m_pDangerPlots->GetDanger(pPlot, pUnit);
+}
+
+//	--------------------------------------------------------------------------------
+int CvPlayer::GetPlotDanger(CvPlot& pPlot, CvCity* pCity, CvUnit* pPretendGarrison) const
+{
+	return m_pDangerPlots->GetDanger(pPlot, pCity, pPretendGarrison);
+}
+
+//	--------------------------------------------------------------------------------
+int CvPlayer::GetPlotDanger(CvPlot& pPlot, PlayerTypes ePlayer) const
+{
+	return m_pDangerPlots->GetDanger(pPlot, ePlayer);
+}
+
+//	--------------------------------------------------------------------------------
+bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, PlayerTypes ePlayer) const
+{
+	return m_pDangerPlots->IsUnderImmediateThreat(pPlot, ePlayer);
+}
+
+//	--------------------------------------------------------------------------------
+bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, CvUnit* pUnit) const
+{
+	return m_pDangerPlots->IsUnderImmediateThreat(pPlot, pUnit);
+}
+#else
 //	--------------------------------------------------------------------------------
 int CvPlayer::GetPlotDanger(CvPlot& pPlot) const
 {
@@ -23602,6 +23885,7 @@ bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot) const
 {
 	return m_pDangerPlots->IsUnderImmediateThreat(pPlot);
 }
+#endif // AUI_DANGER_PLOTS_REMADE
 
 //	--------------------------------------------------------------------------------
 /// Find closest city to a plot (within specified search radius)
@@ -23824,9 +24108,9 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 	if(!pUnit)
 		return NULL;
 
+#ifndef AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
 	int iSettlerX = pUnit->getX();
 	int iSettlerY = pUnit->getY();
-#ifndef AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
 	int iUnitArea = pUnit->getArea();
 #endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
 	PlayerTypes eOwner = pUnit->getOwner();
@@ -24003,10 +24287,13 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 				}
 				if (iBestDistance < MAX_INT)
 					iSettlerDistance = iBestDistance;
-				else if (AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE &&
+				else
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
+#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
+					iSettlerDistance = iTurnsToDestination;
 #else
 				if (AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_PATHFINDER_FOR_EVALDISTANCE &&
-#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
+
 					GC.getIgnoreUnitsPathFinder().GeneratePath(iSettlerX, iSettlerY, pPlot->getX(), pPlot->getY(), iFlags, true))
 				{
 					pNode = GC.getIgnoreUnitsPathFinder().GetLastNode();
@@ -24022,6 +24309,7 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 				}
 				if (iSettlerDistance < MAX_INT)
 					iSettlerDistance *= pUnit->maxMoves() / GC.getMOVE_DENOMINATOR();
+#endif // AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
 #else
 #ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
 				iLoop = 0;
