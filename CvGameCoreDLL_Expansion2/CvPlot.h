@@ -97,8 +97,8 @@ public:
 	void erase(bool bEraseUnits);
 
 #ifdef AUI_PLOT_COUNT_OCCURANCES_IN_LIST
-	int getNumTimesInList(std::vector<CvPlot*> aPlotList, bool bTerminateAfterFirst = false) const;
-	int getNumTimesInList(FFastVector<CvPlot*> aPlotList, bool bTerminateAfterFirst = false) const;
+	int getNumTimesInList(std::vector<CvPlot*>& aPlotList, bool bTerminateAfterFirst = false) const;
+	int getNumTimesInList(BaseVector<CvPlot*, true>& aPlotList, bool bTerminateAfterFirst = false) const;
 #endif // AUI_PLOT_COUNT_OCCURANCES_IN_LIST
 
 	void doTurn();
@@ -550,7 +550,19 @@ public:
 	int countNumAirUnits(TeamTypes eTeam) const;
 
 #ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
-	int getStrategicValue(bool bCheckNeighbors = true, bool bCheckThisType = true) const;
+	int getStrategicValue() const
+	{
+		return m_iStrategicValueAlone;
+	}
+	int getStrategicValueWithNeighbors() const
+	{
+		return m_iStrategicValueWithNeighbors;
+	}
+	int getStrategicValueAsCity() const
+	{
+		return m_iStrategicValueAsCity;
+	}
+	void calculateStrategicValue(bool bForCity, bool bForInitialize = false, bool bDoNeighbors = true);
 #endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 
 	int getFoundValue(PlayerTypes eIndex);
@@ -841,6 +853,12 @@ protected:
 	char m_iResourceNum;
 	char m_cContinentType;
 	char m_cRiverCrossing;	// bit field
+
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+	int m_iStrategicValueAlone;
+	int m_iStrategicValueWithNeighbors;
+	int m_iStrategicValueAsCity;
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 
 	bool m_bImprovementPillaged:1;
 	bool m_bRoutePillaged:1;

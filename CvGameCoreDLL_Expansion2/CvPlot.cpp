@@ -217,6 +217,11 @@ void CvPlot::reset(int iX, int iY, bool bConstructorCall)
 	m_iRiverCrossingCount = 0;
 	m_iResourceNum = 0;
 	m_cContinentType = 0;
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+	m_iStrategicValueAlone = 0;
+	m_iStrategicValueWithNeighbors = 0;
+	m_iStrategicValueAsCity = 0;
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 
 	m_uiTradeRouteBitFlags = 0;
 
@@ -5550,6 +5555,11 @@ void CvPlot::setPlotType(PlotTypes eNewValue, bool bRecalculate, bool bRebuildGr
 					}
 
 					setArea(pNewArea->GetID());
+
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+					calculateStrategicValue(false);
+					calculateStrategicValue(true);
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 				}
 			}
 		}
@@ -6985,46 +6995,12 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 	CvCity* pWorkingCity = getWorkingCity();
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 	PlayerTypes eOwner = (PlayerTypes)m_eOwner;
-#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
-	FFastVector<ImprovementTypes, false, 2> veUniqueImprovement;
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 	if (eFutureOwner != NO_PLAYER && eOwner == NO_PLAYER)
 	{
 		eOwner = eFutureOwner;
 		pWorkingCity = GET_PLAYER(eFutureOwner).getCapitalCity();
-#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
-		BuildTypes eBuild;
-		for (int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
-		{
-			eBuild = (BuildTypes)iBuildIndex;
-			CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
-			if (pkBuild)
-			{
-				ImprovementTypes eImprovement = (ImprovementTypes)pkBuild->getImprovement();
-				if (eImprovement != NO_IMPROVEMENT)
-				{
-					CvImprovementEntry* pkImprovement = GC.getImprovementInfo(eImprovement);
-					if (pkImprovement && pkImprovement->IsSpecificCivRequired())
-					{
-						if (pkImprovement->GetRequiredCivilization() == GET_PLAYER(eOwner).getCivilizationType())
-						{
-							eResource = getResourceType(GET_PLAYER(eOwner).getTeam());
-							if (eResource == NO_RESOURCE || pkImprovement->IsImprovementResourceTrade(eResource) || 
-								GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_BONUS)
-							{
-								if (canBuild(eBuild, eOwner, false, false))
-								{
-									veUniqueImprovement.push_back(eImprovement);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 	}
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 	if(pWorkingCity)
 	{
 		eMajority = pWorkingCity->GetCityReligions()->GetReligiousMajority();
@@ -7083,7 +7059,7 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 			if(m_eOwner != NO_PLAYER && getImprovementType() == NO_IMPROVEMENT)
 			{
 				iYieldChange +=  GET_PLAYER((PlayerTypes)m_eOwner).GetPlayerTraits()->GetUnimprovedFeatureYieldChange(getFeatureType(), eYield);
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 			}
 
 			// Leagues
@@ -7111,7 +7087,7 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 			if(eOwner != NO_PLAYER && pFeatureInfo->IsNaturalWonder())
 #else
 			if(m_eOwner != NO_PLAYER && pFeatureInfo->IsNaturalWonder())
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 			{
 				int iMod = 0;
 
@@ -7145,7 +7121,7 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 				iYieldChange += GET_PLAYER((PlayerTypes)m_eOwner).GetPlayerTraits()->GetYieldChangeNaturalWonder(eYield);
 
 				iMod += GET_PLAYER((PlayerTypes)m_eOwner).GetPlayerTraits()->GetNaturalWonderYieldModifier();
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 				if(iMod > 0)
 				{
 					iYieldChange *= (100 + iMod);
@@ -7166,24 +7142,103 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 	// Yield from unique improvement
-	if (veUniqueImprovement.size() > 0)
+	if (eFutureOwner != NO_PLAYER && GET_PLAYER(eFutureOwner).GetNumUniqueImprovements() > 0)
 	{
-		int iMaxImprovementYieldChange = calculateImprovementYieldChange(veUniqueImprovement.at(0), eYield, eOwner);
-		if (GC.getImprovementInfo(veUniqueImprovement.at(0))->IsNoTwoAdjacent())
-			iMaxImprovementYieldChange /= 4;
-		for (uint uiI = 1; uiI < veUniqueImprovement.size(); uiI++)
+		int iMaxImprovementYieldChange = 0;
+		int iCurrentImprovementYieldChange = 0;
+
+		bool bNoResource = false;
+		eResource = getResourceType(GET_PLAYER(eFutureOwner).getTeam());
+		if (eResource == NO_RESOURCE || GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_BONUS)
+			bNoResource = true;
+
+#ifdef AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
+		for (uint iI = 0; iI < GET_PLAYER(eFutureOwner).GetNumUniqueImprovements(); iI++)
 		{
-			if (GC.getImprovementInfo(veUniqueImprovement.at(0))->IsNoTwoAdjacent())
-#ifdef AUI_FAST_COMP
-				iMaxImprovementYieldChange = FASTMAX(iMaxImprovementYieldChange, calculateImprovementYieldChange(veUniqueImprovement.at(uiI), eYield, eOwner) / 4);
-			else
-				iMaxImprovementYieldChange = FASTMAX(iMaxImprovementYieldChange, calculateImprovementYieldChange(veUniqueImprovement.at(uiI), eYield, eOwner));
+			if (bNoResource || GC.getImprovementInfo(GET_PLAYER(eFutureOwner).GetUniqueImprovement(iI))->IsImprovementResourceTrade(eResource))
+			{
+				if (canBuild(GET_PLAYER(eFutureOwner).GetUniqueImprovementBuild(iI), eFutureOwner, false, false))
 #else
-				iMaxImprovementYieldChange = MAX(iMaxImprovementYieldChange, calculateImprovementYieldChange(veUniqueImprovement.at(uiI), eYield, eOwner) / 4);
-			else
-				iMaxImprovementYieldChange = MAX(iMaxImprovementYieldChange, calculateImprovementYieldChange(veUniqueImprovement.at(uiI), eYield, eOwner));
-#endif // AUI_FAST_COMP
+		BuildTypes eBuild;
+		eResource = getResourceType(GET_PLAYER(eOwner).getTeam());
+		for (int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+		{
+			eBuild = (BuildTypes)iBuildIndex;
+			CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
+			if (pkBuild)
+			{
+				ImprovementTypes eImprovement = (ImprovementTypes)pkBuild->getImprovement();
+				if (eImprovement != NO_IMPROVEMENT)
+				{
+					CvImprovementEntry* pkImprovement = GC.getImprovementInfo(eImprovement);
+					if (pkImprovement && pkImprovement->IsSpecificCivRequired())
+					{
+						if (pkImprovement->GetRequiredCivilization() == GET_PLAYER(eOwner).getCivilizationType())
+						{
+							if (bNoResource || pkImprovement->IsImprovementResourceTrade(eResource))
+							{
+								if (canBuild(eBuild, eOwner, false, false))
+#endif
+				{
+					iCurrentImprovementYieldChange = calculateImprovementYieldChange(GET_PLAYER(eFutureOwner).GetUniqueImprovement(iI), eYield, eOwner);
+					if (GC.getImprovementInfo((GET_PLAYER(eFutureOwner).GetUniqueImprovement(iI)))->IsNoTwoAdjacent())
+					{
+						iCurrentImprovementYieldChange /= 4;
+					}
+					// Assuming improvements that can be built on natural wonders do not remove them
+					if (!bIgnoreFeature && getFeatureType() != NO_FEATURE)
+					{
+						// Minus from improving an unimproved plot with unique improvement
+						iCurrentImprovementYieldChange -= GET_PLAYER(eOwner).GetPlayerTraits()->GetUnimprovedFeatureYieldChange(getFeatureType(), eYield);
+						// Minus from removing feature
+						if (GC.getBuildInfo(GET_PLAYER(eFutureOwner).GetUniqueImprovementBuild(iI))->isFeatureRemove(getFeatureType()))
+						{
+							CvFeatureInfo* pFeatureInfo = GC.getFeatureInfo(getFeatureType());
+							if (!pFeatureInfo->isYieldNotAdditive())
+							{
+								iCurrentImprovementYieldChange -= pFeatureInfo->getYieldChange(eYield);
+
+								// Player Trait
+								if (eOwner != NO_PLAYER && getImprovementType() == NO_IMPROVEMENT)
+								{
+									iCurrentImprovementYieldChange -= GET_PLAYER(eOwner).GetPlayerTraits()->GetUnimprovedFeatureYieldChange(getFeatureType(), eYield);
+								}
+
+								// Leagues
+								if (pWorkingCity != NULL)
+								{
+									iCurrentImprovementYieldChange -= GC.getGame().GetGameLeagues()->GetFeatureYieldChange(pWorkingCity->getOwner(), getFeatureType(), eYield);
+								}
+
+								// Religion
+								if (pWorkingCity != NULL && eMajority != NO_RELIGION)
+								{
+									const CvReligion* pReligion = GC.getGame().GetGameReligions()->GetReligion(eMajority, pWorkingCity->getOwner());
+									if (pReligion)
+									{
+										iCurrentImprovementYieldChange -= pReligion->m_Beliefs.GetFeatureYieldChange(getFeatureType(), eYield);
+										if (eSecondaryPantheon != NO_BELIEF)
+										{
+											iCurrentImprovementYieldChange -= GC.GetGameBeliefs()->GetEntry(eSecondaryPantheon)->GetFeatureYieldChange(getFeatureType(), eYield);
+										}
+									}
+								}
+							}
+						}
+					}
+					if (iMaxImprovementYieldChange < iCurrentImprovementYieldChange)
+					{
+						iMaxImprovementYieldChange = iCurrentImprovementYieldChange;
+					}
+				}
+			}
 		}
+#ifndef AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
+					}
+				}
+			}
+		}
+#endif
 		iYield += iMaxImprovementYieldChange;
 	}
 #endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
@@ -9453,36 +9508,34 @@ void CvPlot::setScriptData(const char* szNewValue)
 
 #ifdef AUI_PLOT_COUNT_OCCURANCES_IN_LIST
 // How many times does a vector contain this plot?
-int CvPlot::getNumTimesInList(std::vector<CvPlot*> aPlotList, bool bTerminateAfterFirst) const
+int CvPlot::getNumTimesInList(std::vector<CvPlot*>& aPlotList, bool bTerminateAfterFirst) const
 {
 	int rtnValue = 0;
-	std::vector<CvPlot*>::iterator it;
 
-	for (it = aPlotList.begin(); it != aPlotList.end(); it++)
+	for (std::vector<CvPlot*>::iterator it = aPlotList.begin(); it != aPlotList.end(); it++)
 	{
-		if (((*it)->getX() == getX()) && ((*it)->getY() == getY()))
+		if ((*it) == this)
 		{
 			rtnValue++;
 			if (bTerminateAfterFirst)
-				return rtnValue;
+				return 1;
 		}
 	}
 
 	return rtnValue;
 }
 // How many times does a vector contain this plot?
-int CvPlot::getNumTimesInList(FFastVector<CvPlot*> aPlotList, bool bTerminateAfterFirst) const
+int CvPlot::getNumTimesInList(BaseVector<CvPlot*, true>& aPlotList, bool bTerminateAfterFirst) const
 {
 	int rtnValue = 0;
-	FFastVector<CvPlot*>::iterator it;
 
-	for (it = aPlotList.begin(); it != aPlotList.end(); it++)
+	for (BaseVector<CvPlot*, true>::iterator it = aPlotList.begin(); it != aPlotList.end(); it++)
 	{
-		if (((*it)->getX() == getX()) && ((*it)->getY() == getY()))
+		if ((*it) == this)
 		{
 			rtnValue++;
 			if (bTerminateAfterFirst)
-				return rtnValue;
+				return 1;
 		}
 	}
 
@@ -9616,6 +9669,11 @@ void CvPlot::read(FDataStream& kStream)
 	kStream >> m_eBuilderAIScratchPadRoute;
 	kStream >> m_iLandmass;
 	kStream >> m_uiTradeRouteBitFlags;
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+	kStream >> m_iStrategicValueAlone;
+	kStream >> m_iStrategicValueWithNeighbors;
+	kStream >> m_iStrategicValueAsCity;
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 
 	// the following members specify bit packing and do not resolve to
 	// any serializable type.
@@ -9832,6 +9890,11 @@ void CvPlot::write(FDataStream& kStream) const
 	kStream << m_eBuilderAIScratchPadRoute;
 	kStream << m_iLandmass;
 	kStream << m_uiTradeRouteBitFlags;
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+	kStream << m_iStrategicValueAlone;
+	kStream << m_iStrategicValueWithNeighbors;
+	kStream << m_iStrategicValueAsCity;
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 
 	kStream << m_bStartingPlot;
 	kStream << m_bHills;
@@ -10586,29 +10649,46 @@ int CvPlot::countNumAirUnits(TeamTypes eTeam) const
 }
 
 #ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
-// TODO: Make this fire off only once and store its value to an internal parameter
-int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
+void CvPlot::calculateStrategicValue(bool bForCity, bool bForInitialize, bool bDoNeighbors)
 {
-	// Only passable terrain can have strategic value
-	if (!isImpassable() && !isMountain())
-	{
-		return 0;
-	}
-	
-	int iRtnValue = 0;
+#define TERRAIN_DOMAIN_LAND		1
+#define TERRAIN_DOMAIN_WATER	2
+#define TERRAIN_DOMAIN_PEAK		4
 
-	int iI;
+	// Only passable terrain can have strategic value
+	if (isImpassable() || isMountain())
+	{
+		m_iStrategicValueAlone = m_iStrategicValueWithNeighbors = m_iStrategicValueAsCity = 0;
+		return;
+	}
+	// If we've already calculated this plot value during initialization, just skip it
+	else if (bForInitialize)
+	{
+		if (bForCity)
+		{
+			if (m_iStrategicValueAsCity > 0)
+			{
+				return;
+			}
+		}
+		else if (m_iStrategicValueAlone > 0)
+		{
+			return;
+		}
+	}
+
 	CvPlot* pLoopPlot;
+	int iRtnValue = 0, iI = 0;
 
 	int aiPlotDomains[NUM_DIRECTION_TYPES];
-	int iThisPlotDomain = 1;
-	if (!bCheckThisType)
+	int iThisPlotDomain = TERRAIN_DOMAIN_LAND;
+	if (bForCity)
 	{
-		iThisPlotDomain = 3;
+		iThisPlotDomain |= TERRAIN_DOMAIN_WATER;
 	}
 	else if (isWater())
 	{
-		iThisPlotDomain = 2;
+		iThisPlotDomain = TERRAIN_DOMAIN_WATER;
 	}
 
 	int iStrategicPlots = 0;
@@ -10622,11 +10702,9 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 
 	// For straits
 	bool bAddThis;
-	FFastVector<int, true, 6> aiLandAreas;
-	FFastVector<int, true, 6> aiWaterAreas;
-	FFastVector<int, true, 6>::iterator it;
-	bool bSkipLandStrait = GC.getMap().getNumLandAreas() < 2;
-	bool bSkipWaterStrait = GC.getMap().getNumAreas() - GC.getMap().getNumLandAreas() < 2;
+	FFastVector<int, true, NUM_DIRECTION_TYPES> aiLandAreas;
+	FFastVector<int, true, NUM_DIRECTION_TYPES> aiWaterAreas;
+	FFastVector<int, true, NUM_DIRECTION_TYPES>::iterator it;
 
 	// Strategic value of purely this plot first
 	for (iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
@@ -10637,14 +10715,14 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 			bAddThis = true;
 			if (pLoopPlot->isImpassable() || pLoopPlot->isMountain())
 			{
-				aiPlotDomains[iI] = 4;
+				aiPlotDomains[iI] = TERRAIN_DOMAIN_PEAK;
 				// Do not check for straits on peaks
 			}
 			else if (pLoopPlot->isWater())
 			{
-				aiPlotDomains[iI] = 2;
+				aiPlotDomains[iI] = TERRAIN_DOMAIN_WATER;
 				// Check for straits
-				if (bSkipWaterStrait || pLoopPlot->isLake())
+				if (pLoopPlot->isLake())
 					continue;
 				for (it = aiWaterAreas.begin(); it != aiWaterAreas.end(); ++it)
 				{
@@ -10659,13 +10737,11 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 			}
 			else
 			{
-				aiPlotDomains[iI] = 1;
+				aiPlotDomains[iI] = TERRAIN_DOMAIN_LAND;
 				// Check for neighboring hills
 				if (pLoopPlot->isHills())
 					iNeighboringHills++;
 				// Check for straits
-				if (bSkipLandStrait || GC.getMap().getArea(pLoopPlot->getArea())->getNumTiles() < 2)
-					continue;
 				for (it = aiLandAreas.begin(); it != aiLandAreas.end(); ++it)
 				{
 					if (pLoopPlot->getArea() == (*it))
@@ -10684,8 +10760,8 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 	{
 		for (iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
 		{
-			if (aiPlotDomains[iI] == 2)
-				aiPlotDomains[iI] = 4;
+			if (aiPlotDomains[iI] == TERRAIN_DOMAIN_WATER)
+				aiPlotDomains[iI] = TERRAIN_DOMAIN_PEAK;
 		}
 	}
 
@@ -10733,7 +10809,6 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 	int iCWI = 1;
 	for (iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
 	{
-		// Plot domains are: 4 for peak, 2 for water, 1 for land
 		int iCCWPlotDomain = aiPlotDomains[iCCWI];
 		int iCWPlotDomain = aiPlotDomains[iCWI];
 		if (iCCWPlotDomain != aiPlotDomains[iI] && aiPlotDomains[iI] != iCWPlotDomain && 
@@ -10755,8 +10830,8 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 					iHighValueStrategicPlots++;
 			}
 		}
-		iCCWI++;
-		iCWI++;
+		++iCCWI;
+		++iCWI;
 		// Two conditionals are faster than constant modulos
 		if (iCCWI == NUM_DIRECTION_TYPES)
 			iCCWI = 0;
@@ -10772,9 +10847,9 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 
 	// Straits are extremely strategic 
 #ifdef AUI_FAST_COMP
-	int iStraitCount = FASTMAX((int)aiLandAreas.size(), 1) - 1 + NUM_DIRECTION_TYPES * (FASTMAX((int)aiWaterAreas.size(), 1) - 1);
+	int iStraitCount = FASTMAX(aiLandAreas.size(), (uint)1) - 1 + NUM_DIRECTION_TYPES * (FASTMAX(aiWaterAreas.size(), (uint)1) - 1);
 #else
-	int iStraitCount = MAX((int)aiLandAreas.size(), 1) - 1 + NUM_DIRECTION_TYPES * (MAX((int)aiWaterAreas.size(), 1) - 1);
+	int iStraitCount = MAX(aiLandAreas.size(), (uint)1) - 1 + NUM_DIRECTION_TYPES * (MAX(aiWaterAreas.size(), (uint)1) - 1);
 #endif // AUI_FAST_COMP
 	iRtnValue += (iStraitCount) * GC.getCHOKEPOINT_STRATEGIC_VALUE();
 
@@ -10787,16 +10862,24 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 	// River crossings are to melee units what neighboring hills are to ranged units (-ish)
 	iRtnValue += getRiverCrossingCount() * GC.getHILL_STRATEGIC_VALUE();
 
-	// We could theoretically keep looping through tiles for chokepoints, but
-	if (bCheckNeighbors)
+	if (!bForCity)
 	{
+		m_iStrategicValueAlone = iRtnValue / NUM_DIRECTION_TYPES;
+	}
+
+	if (bDoNeighbors)
+	{
+		// We could theoretically keep looping through tiles for chokepoints, but it would get a bit unwieldy after the second round
 		for (iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
 		{
 			if (abPlotsToCheck[iI])
 			{
 				pLoopPlot = plotDirection(getX(), getY(), (DirectionTypes)iI);
 				if (pLoopPlot)
-					iRtnValue += pLoopPlot->getStrategicValue(false);
+				{
+					pLoopPlot->calculateStrategicValue(false, bForInitialize, false);
+					iRtnValue += pLoopPlot->getStrategicValue();
+				}
 			}
 		}
 	}
@@ -10804,7 +10887,14 @@ int CvPlot::getStrategicValue(bool bCheckNeighbors, bool bCheckThisType) const
 	// For having multiplied the strait and chokepoint scores by this number earlier
 	iRtnValue /= NUM_DIRECTION_TYPES;
 
-	return iRtnValue;
+	if (bForCity)
+	{
+		m_iStrategicValueAsCity = iRtnValue;
+	}
+	else if (bDoNeighbors)
+	{
+		m_iStrategicValueWithNeighbors = iRtnValue;
+	}
 }
 #endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 

@@ -1662,12 +1662,15 @@ int CvCitySiteEvaluator::ComputeStrategicValue(CvPlot* pPlot, CvPlayer* pPlayer,
 	if(!pPlot) return rtnValue;
 
 #ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
-	// Strategic value calculation now happens on the plot side
-#ifdef AUI_FAST_COMP
-	rtnValue += pPlot->getStrategicValue(true, (iPlotsFromCity == 0)) * (iPlotsFromCity == 0 ? 2 : 1) / FASTMAX(1, iPlotsFromCity);
-#else
-	rtnValue += pPlot->getStrategicValue(true, (iPlotsFromCity == 0)) * (iPlotsFromCity == 0 ? 2 : 1) / MAX(1, iPlotsFromCity);
-#endif // AUI_FAST_COMP
+	if (iPlotsFromCity == 0)
+	{
+		// Strategic value calculation now happens on the plot side
+		rtnValue += pPlot->getStrategicValueAsCity() * 2;
+	}
+	else
+	{
+		rtnValue += pPlot->getStrategicValueWithNeighbors() / iPlotsFromCity;
+	}
 #else
 #ifdef AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_TWEAKED_CHOKEPOINT_CALCULATION
 	// Each neighboring plot where the tiles both CW and CCW to that plot have a different land type are considered "strategic"
@@ -1734,13 +1737,13 @@ int CvCitySiteEvaluator::ComputeStrategicValue(CvPlot* pPlot, CvPlayer* pPlayer,
 		rtnValue += /*5*/ GC.getCHOKEPOINT_STRATEGIC_VALUE();
 	}
 #endif // AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_TWEAKED_CHOKEPOINT_CALCULATION
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 
 	// Hills in first ring are useful for defense and production
 	if(iPlotsFromCity == 1 && pPlot->isHills())
 	{
 		rtnValue += /*3*/ GC.getHILL_STRATEGIC_VALUE();
 	}
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 
 	// Some Features are less attractive to settle in, (e.g. Jungles, since it takes a while before you can clear them and they slow down movement)
 	if(pPlot->getFeatureType() != NO_FEATURE)

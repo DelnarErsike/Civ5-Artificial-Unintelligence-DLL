@@ -254,7 +254,12 @@ public:
 	CvArea* firstArea(int* pIterIdx, bool bRev=false);
 	CvArea* nextArea(int* pIterIdx, bool bRev=false);
 
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+	void recalculateAreas(bool bForInitialize = false);
+	void calculateStrategicValues(bool bForInitialize = false);
+#else
 	void recalculateAreas();
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 	void calculateAreas();
 
 	// Landmass

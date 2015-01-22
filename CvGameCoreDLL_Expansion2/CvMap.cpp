@@ -1362,7 +1362,11 @@ CvArea* CvMap::nextArea(int* pIterIdx, bool bRev)
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+void CvMap::recalculateAreas(bool bForInitialize)
+#else
 void CvMap::recalculateAreas()
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 {
 	int iI;
 
@@ -1377,7 +1381,24 @@ void CvMap::recalculateAreas()
 	calculateAreas();
 
 	recalculateLandmasses();
+
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+	calculateStrategicValues(bForInitialize);
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 }
+
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+//	--------------------------------------------------------------------------------
+void CvMap::calculateStrategicValues(bool bForInitialize)
+{
+	int iNumPlots = numPlots();
+	for (int iI = 0; iI < iNumPlots; iI++)
+	{
+		plotByIndexUnchecked(iI)->calculateStrategicValue(false, bForInitialize);
+		plotByIndexUnchecked(iI)->calculateStrategicValue(true, bForInitialize);
+	}
+}
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 
 
 //	--------------------------------------------------------------------------------

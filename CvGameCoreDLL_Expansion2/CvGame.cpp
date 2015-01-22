@@ -509,6 +509,10 @@ bool CvGame::InitMap(CvGameInitialItemsOverrides& kGameInitialItemsOverrides)
 	// Update some cached values
 	GC.getMap().updateAdjacency();
 
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+	kMap.calculateStrategicValues(true);
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+
 	// Set all the observer teams to be able to see all the plots
 	for(int iI = 0; iI < MAX_PLAYERS; iI++)
 	{
