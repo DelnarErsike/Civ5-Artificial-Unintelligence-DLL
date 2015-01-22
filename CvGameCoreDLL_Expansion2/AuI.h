@@ -19,12 +19,14 @@
 // Non-AI stuff (still used by AI routines, but could be used elsewhere as well)
 /// AUI's new GUID
 #define AUI_GUID
+/// OpenMP is used to help with multithreading computationally expensive loops
+#define AUI_USE_OPENMP 
 /// Civilizations that are marked as coastal get the same coastal bias as maritime city-states
 #define AUI_STARTPOSITIONER_COASTAL_CIV_WATER_BIAS
 /// When calculating the founding value of a tile, tailor the SiteEvaluation function to the current player instead of the first one
 #define AUI_STARTPOSITIONER_FLAVORED_STARTS
-/// Enables performance logging based on ini settings like normal instead of hard-disabling
-#define AUI_PERF_LOGGING_ENABLED
+/// Enables performance logging based on ini settings like normal instead of hard-disabling (currently disabled because using a profiler is probably a better idea)
+//#define AUI_PERF_LOGGING_ENABLED
 /// Fast comparison functions (to be used for built-in types like int, float, double, etc.)
 #define AUI_FAST_COMP
 /// Slightly increases stopwatch (performance counter) precision by performing the time delta subtraction bit before casting the result as a double
@@ -63,10 +65,14 @@
 #define AUI_PLOT_XY_WITH_RANGE_CHECK_REFERENCE_DISTANCE
 /// Optimizations and fixes to reduce distance check overhead
 #define AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+/// Implements the missing iterator typedefs and empty push_back() functions for BaseVector (so it can now work as an interface... because C++ still makes using interfaces harder than it should be)
+#define AUI_FIX_FFASTVECTOR_BASEVECTOR_INTERFACE
 /// Implements the missing erase(iterator) function for FFastVector
 #define AUI_FIX_FFASTVECTOR_ERASE
 /// Functions that called ints for variables used for indexes and choice numbers now call unsigned ints instead
 #define AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+/// Minor optimizations to some FFastVector classes, justified by the fact that these classes are used extremely often and speed is of the essence when accessing their methods
+#define AUI_FIX_FFASTVECTOR_OPTIMIZATIONS
 /// CvUnit::canMoveOrAttackInto() no longer calls certain expensive calls twice (also improves pathfinder performance)
 #define AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
 /// CvUnit::canMoveInto() is optimized to not perform redundant checks for attack flag (also improves pathfinder performance)
@@ -75,6 +81,28 @@
 #define AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 /// Moves the check for whether a node has no parent to the beginning of PathValid() (originally from Community Patch)
 #define AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
+/// Reorders some checks to make sure ones that process faster get executed first (if they fail, then the function skips checking the slower ones)
+#define AUI_ASTAR_FIX_FASTER_CHECKS
+/// Calculates the neighbors of a tile on pathfinder initialization instead of at path construction (originally from Community Patch)
+#define AUI_ASTAR_PRECALCULATE_NEIGHBORS_ON_INITIALIZE
+/// Minor A* optimizations
+#define AUI_ASTAR_MINOR_OPTIMIZATION
+/// New parameters added to various functions that can simulate damage modifiers in other plots (also fixes miscellaneous bugs)
+#define AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+/// Pathfinders now have a built-in turn limiter that invalidates too long paths they are being built instead of after the best path has been calculated
+#define AUI_ASTAR_TURN_LIMITER
+/// Danger plots have been completely remade to return possible damage a unit can take at a tile instead of total strength value (value is Save version)
+#define AUI_DANGER_PLOTS_REMADE (2)
+/// Caches a player's unique improvements at startup
+#define AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
+/// Caches a player's unique great people at startup
+#define AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
+/// Fixes badly set up damage modifier checks (eg. Friendly lands modifier gets applied twice to melee attackers, Friendly/Enemy territory bonus for ranged units applied based on plot target intead of unit plot)
+#define AUI_UNIT_FIX_BAD_BONUS_STACKS
+/// Scratch buffer for pathfinders is instantiated and stored as a separate array to avoid cases where something will overwrite the data stored at its address
+#define AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
+/// Gets the last node before the parent (used for planning melee attacks to know where they'd attack from)
+#define AUI_ASTAR_GET_PENULTIMATE_NODE
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code
@@ -85,6 +113,11 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define FASTMIN(a, b) FastMin(a, b)
 #endif // AUI_FAST_COMP
 
+#ifdef AUI_USE_OPENMP
+// OpenMP for multithreading AI loops
+#include <omp.h>
+#endif // AUI_USE_OPENMP
+
 // A* Pathfinding Stuff
 /// Adds a new function that is a middle-of-the-road fix for allowing the functions to take account of roads and railroads without calling pathfinder too often
 #define AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
@@ -92,6 +125,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_ASTAR_PARADROP
 /// The danger of a tile will only be considered when checking path nodes, not when checking the destination (stops units from freezing in panic)
 #define AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_PATH
+#ifndef AUI_DANGER_PLOTS_REMADE
 /// The path's destination's danger value will be considered instead of the original plot's danger value, otherwise we're just immobilizing AI units (oddly enough, the Civ4 algorithm is fine, only the Civ5 ones needed to be fixed)
 #define AUI_ASTAR_FIX_CONSIDER_DANGER_USES_TO_PLOT_NOT_FROM_PLOT
 #ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_TO_PLOT_NOT_FROM_PLOT
@@ -100,6 +134,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 /// If the pathfinder does not ignore danger, use the unit's combat strength times this value as the danger limit instead of 0 (important for combat units)
 #define AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH (6)
+#endif
 /// AI-controlled units no longer ignore all paths with peaks; since the peak plots are checked anyway for whether or not a unit can enter them, this check is pointless 
 #define AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 /// Mountain tiles are no longer automatically marked as invalid steps
@@ -164,8 +199,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL "ERA_INDUSTRIAL"
 /// Automated workers value strategic resources that a player has none of higher than strategic resources that the player has used all of
 #define AUI_WORKER_TWEAKED_DONT_HAVE_MULTIPLIER (6)
+#ifndef AUI_DANGER_PLOTS_REMADE
 /// Combat workers will increase the maximum allowed plot danger value to their current strength times this value
 #define AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH (6)
+#endif
 /// FindTurnsAway() no longer returns raw distance, parameter dictates whether we're reusing paths and ignoring units (fast but rough) or not (slow but accurate)
 #define AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER (true)
 #ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
@@ -235,6 +272,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// The ignore visibility switch also works on the plot visibility check
 #define AUI_DANGER_PLOTS_FIX_SHOULD_IGNORE_UNIT_IGNORE_VISIBILITY_PLOT
 /// Majors will always "see" barbarians in tiles that have been revealed when plotting danger values (kind of a cheat, but it's a knowledge cheat, so it's OK-ish)
+/// If Danger Plots Remade is enabled, this now only applied to revealed tiles adjacent to visible ones
 #define AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
 /// Minors will always "see" units of major civs in tiles (value) away from their city (since minors don't scout) when plotting danger values (stops excessive worker stealing)
 #define AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS (5)
@@ -378,6 +416,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_HOMELAND_TWEAKED_MOVE_CIVILIAN_TO_SAFETY_POW_ALLIED_STRENGTH (2.0)
 /// When finding patrol targets for civilian units, subtract off danger value from plot score
 #define AUI_HOMELAND_TWEAKED_FIND_PATROL_TARGET_CIVILIAN_NO_DANGER
+/// Border plots and plots containing routes are preferred over others when patrolling
+#define AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
 #ifdef AUI_ASTAR_PARADROP
 /// Paradropping is now inserted into relevant tactical moves and the AI will execute them when favorable
 #define AUI_HOMELAND_PARATROOPERS_PARADROP
@@ -412,6 +452,12 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_HOMELAND_PLOT_WORKER_SEA_MOVES_DISBAND_WORK_BOATS_WITHOUT_TARGET
 /// If the AI wants to use a unit for a Great Work, check if the unit can create one right there and then (performance improvement)
 #define AUI_HOMELAND_EXECUTE_GP_MOVE_INSTANT_GREAT_WORK_CHECK
+/// If an AI or automated worker can still move after it has reached its target, allow it to queue up a build order
+#define AUI_HOMELAND_FIX_EXECUTE_WORKER_MOVE_MOVE_AND_BUILD
+/// AI explorers can now scout and sell goods in the same turn
+#define AUI_HOMELAND_EXECUTE_EXPLORER_MOVES_EXPLORE_AND_SELL_IN_SAME_TURN
+/// AI/Automated explorers now move after popping goody huts
+#define AUI_HOMELAND_FIX_EXECUTE_EXPLORER_MOVES_MOVE_AFTER_GOODY
 
 // Military AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
@@ -474,6 +520,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_PLAYER_GET_BEST_SETTLE_PLOT_USE_MINIMUM_FERTILITY
 /// Minor code modifications that are minor optimizations and help with debugging
 #define AUI_PLAYER_GET_BEST_SETTLE_PLOT_DEBUG_HELP
+/// Fixes the fact that the AI will automatically assume all unowned water tiles and most natural wonders are "bad" plots for being cramped, even if they are unowned
+#define AUI_PLAYER_FIX_DO_UPDATE_CRAMPED_ACCURATE_PLOT_TYPES
 
 // PlayerAI Stuff
 /// Great prophet will be chosen as a free great person if the AI can still found a religion with them
@@ -676,8 +724,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_CLOSER_THAN_SWEET_SPOT_MULTIPLIER 2 / 3
 /// Resets the faith value of a tile back to 0 (like for all other yields) at the start of each loop
 #define AUI_SITE_EVALUATION_FIX_PLOT_FOUND_VALUE_RESET_FAITH_VALUE_EACH_LOOP
+#ifndef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 /// Identification of a possible choke point is now much more accurate
 #define AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_TWEAKED_CHOKEPOINT_CALCULATION
+#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 /// The helper values to compute the yield values of plots will recognize when the plot being targetted will be settled, so future yield will be different
 #define AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 /// Adds the happiness value of natural wonders to the happiness value of a plot
@@ -696,8 +746,6 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TACTICAL_HELPERS_POSITIONING_AND_ORDER
 /// Adds a new function that is similar to ExecuteMoveToPlot(), but swaps two units instead (which is eg. useful when moving blocking units out of the way)
 #define AUI_TACTICAL_EXECUTE_SWAP_TO_PLOT
-/// Changes the AcceptableDanger value in PlotDangerMoves to be a function of the unit's current HP percent
-#define AUI_TACTICAL_TWEAKED_ACCEPTABLE_DANGER (1.0)
 /// Multiply total range strength with average range strength when considering ranged dominance
 #define AUI_TACTICAL_SELECT_POSTURE_CONSIDER_AVERAGE_RANGED_STRENGTH
 /// Always withdraw from a city if the AI has no melee units left in the zone
@@ -744,6 +792,9 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Fix for units that can attack multiple times per turn so they can now participate in the same ExecuteAttackMove()
 #define AUI_TACTICAL_FIX_EXECUTE_ATTACK_BLITZ
 #endif
+#ifndef AUI_DANGER_PLOTS_REMADE
+/// Changes the AcceptableDanger value in PlotDangerMoves to be a function of the unit's current HP percent
+#define AUI_TACTICAL_TWEAKED_ACCEPTABLE_DANGER (1.0)
 /// Sets a very high danger value for water tiles if a unit needs to embark onto the tile (originally from Ninakoru's Smart AI)
 #define AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_HIGH_DANGER_EMBARK
 /// Sets a lower danger value for city tiles depending on the health of the city
@@ -752,6 +803,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Considers units of the same type when executing move to safety (important if health is a factor in selecting units for this movetype)
 #define AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_CONSIDER_SAME_UNIT_TYPE
 #endif
+#endif // AUI_DANGER_PLOTS_REMADE
 /// Immediately skips some heavy computation if the function is not looking for ranged units and unit being checked is a ranged unit (originally from Ninakoru's Smart AI)
 #define AUI_TACTICAL_FIND_UNITS_WITHIN_STRIKING_DISTANCE_NO_RANGED_SHORTCUT
 /// When calculating the expected damage on a target from a melee unit, the AI will now use pTargetPlot and pDefender parameters when appropriate (instead of having them as NULL)
@@ -882,6 +934,12 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TACTICAL_FIX_PLOT_BARBARIAN_CIVILIAN_ESCORT_MOVE_CIVILIAN_CATCH
 /// When saving the health percent of a tactical unit, its health percent's effect on damage is saved instead of the actual health percent (primarily for the sorting function)
 #define AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+/// Civilians that could not move to a safe plot are used up or disbanded (WIP)
+//#define AUI_TACTICAL_DISBAND_UNSAFE_CIVILIANS
+/// Fixes the incorrect logic behind determining whether a unit could make it to an operation's next muster point in time
+#define AUI_TACTICAL_FIX_ALL_OPERATION_MOVES_CATCH_UP_TURNS
+/// When finding naval units to move to a target, the AI no longer ignores units for its pathfinder portion (so it now essentially works the same way as the land-based one)
+#define AUI_TACTICAL_FIX_FIND_CLOSEST_NAVAL_OPERATION_UNIT_DOESNT_IGNORE_UNITS
 
 // Tactical Analysis Map Stuff
 /// Enables a minor adjustment for ranged units to account for possibly being able to move and shoot at a tile
@@ -951,9 +1009,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Adds a function to return whether a unit can range strike at a target from a plot (originally from Ninakoru's Smart AI)
 #define AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
 #ifdef AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_FROM_PLOT
-/// Overloads the vanilla canEverRangeStrikeAt() function to call the new canEverRangeStrikeAtFromPlot() function if it's enabled (originally from Ninakoru's Smart AI)
-#define AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_OVERLOAD
-#if defined(AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_OVERLOAD) && defined(AUI_UNIT_RANGE_PLUS_MOVE)
+#if defined(AUI_UNIT_RANGE_PLUS_MOVE)
 /// Adds two new functions that return whether a unit can move and ranged strike at a plot (originally from Ninakoru's Smart AI)
 #define AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 #endif
