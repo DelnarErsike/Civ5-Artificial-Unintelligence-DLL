@@ -2338,7 +2338,11 @@ CvPlot* CvAIEnemyTerritoryOperation::SelectInitialMusterPoint(CvArmyAI* pThisArm
 					else
 					{
 						// Is this a dangerous plot?
+#ifdef AUI_DANGER_PLOTS_REMADE
+						if (GET_PLAYER(m_eOwner).IsPlotUnderImmediateThreat(*pCurrentPlot, m_eOwner))
+#else
 						if(GET_PLAYER(m_eOwner).GetPlotDanger(*pCurrentPlot) > 0)
+#endif // AUI_DANGER_PLOTS_REMADE
 						{
 							iDangerousPlots++;
 						}
@@ -4695,7 +4699,11 @@ static CvPlot* GetReachablePlot(UnitHandle pUnit, WeightedPlotVector& aPlots, in
 				if (iWeight > iFoundWeight)
 					break;		// Already found one of a lower weight
 			
+#ifdef AUI_ASTAR_TURN_LIMITER
+				int iTurnsCalculated = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, false, false, iFoundTurns);
+#else
 				int iTurnsCalculated = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, false);
+#endif // AUI_ASTAR_TURN_LIMITER
 				if (iTurnsCalculated != MAX_INT)
 				{
 					if (iTurnsCalculated < iFoundTurns)

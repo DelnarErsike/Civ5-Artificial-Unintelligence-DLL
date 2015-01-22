@@ -4706,7 +4706,11 @@ CvPlot* CvReligionAI::ChooseMissionaryTargetPlot(UnitHandle pUnit, int* piTurns)
 
 			if(pUnit->CanSpreadReligion(pLoopPlot))
 			{
+#ifdef AUI_ASTAR_TURN_LIMITER
+				iTurns = TurnsToReachTarget(pUnit, pLoopPlot, true /* bReusePaths */, false, false, iBestNumTurns);
+#else
 				iTurns = TurnsToReachTarget(pUnit, pLoopPlot, true /* bReusePaths */);
+#endif // AUI_ASTAR_TURN_LIMITER
 				if(iTurns < MAX_INT)
 				{
 					iDistance = plotDistance(pUnit->getX(), pUnit->getY(), pLoopPlot->getX(), pLoopPlot->getY());
@@ -4820,7 +4824,11 @@ CvPlot* CvReligionAI::ChooseInquisitorTargetPlot(UnitHandle pUnit, int* piTurns)
 
 			if(pUnit->CanRemoveHeresy(pLoopPlot))
 			{
+#ifdef AUI_ASTAR_TURN_LIMITER
+				iTurns = TurnsToReachTarget(pUnit, pLoopPlot, true /* bReusePaths */, false, false, iBestNumTurns);
+#else
 				iTurns = TurnsToReachTarget(pUnit, pLoopPlot, true /* bReusePaths */);
+#endif // AUI_ASTAR_TURN_LIMITER
 				if(iTurns < MAX_INT)
 				{
 					iDistance = plotDistance(pUnit->getX(), pUnit->getY(), pLoopPlot->getX(), pLoopPlot->getY());
@@ -5015,7 +5023,11 @@ CvPlot* CvReligionAI::ChooseProphetTargetPlot(UnitHandle pUnit, int* piTurns)
 
 			if(pUnit->CanSpreadReligion(pLoopPlot))
 			{
+#ifdef AUI_ASTAR_TURN_LIMITER
+				iTurns = TurnsToReachTarget(pUnit, pLoopPlot, true /* bReusePaths */, false, false, iBestNumTurns);
+#else
 				iTurns = TurnsToReachTarget(pUnit, pLoopPlot, true /* bReusePaths */);
+#endif // AUI_ASTAR_TURN_LIMITER
 				if(iTurns < MAX_INT)
 				{
 					iDistance = plotDistance(pUnit->getX(), pUnit->getY(), pLoopPlot->getX(), pLoopPlot->getY());
@@ -7492,7 +7504,7 @@ int CvReligionAI::ScoreCityForMissionary(CvCity* pCity, UnitHandle pUnit)
 	// Skip if at war with city owner
 	if (GET_TEAM(m_pPlayer->getTeam()).isAtWar(GET_PLAYER(pCity->getOwner()).getTeam()))
 	{
-		return iScore;
+		return 0;
 	}
 #endif // AUI_RELIGION_FIX_SCORE_CITY_FOR_MISSIONARY_NO_WAR_TARGETTING
 
@@ -7536,7 +7548,11 @@ int CvReligionAI::ScoreCityForMissionary(CvCity* pCity, UnitHandle pUnit)
 	}
 
 #ifdef AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_USE_PATHFINDER_FOR_DISTANCE
+#ifdef AUI_ASTAR_TURN_LIMITER
+	int iDistance = TurnsToReachTarget(pUnit, pCity->plot(), AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_USE_PATHFINDER_FOR_DISTANCE, AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_USE_PATHFINDER_FOR_DISTANCE, false, int(sqrt((double)iScore) + 0.5));
+#else
 	int iDistance = TurnsToReachTarget(pUnit, pCity->plot(), AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_USE_PATHFINDER_FOR_DISTANCE, AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_USE_PATHFINDER_FOR_DISTANCE);
+#endif // AUI_ASTAR_TURN_LIMITER
 #ifdef AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_SUBTRACT_DISTANCE_SQUARED
 	// Then subtract distance squared
 	iScore -= (iDistance * iDistance);

@@ -1391,7 +1391,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 			int iBaseDefenseBonus = (pPlot->isHills() || pPlot->isMountain() ? GC.getHILLS_EXTRA_DEFENSE() :
 				(eFeature != NO_FEATURE && !pkBuild->isFeatureRemove(eFeature) ? GC.getFeatureInfo(eFeature)->getDefenseModifier() :
 				GC.getTerrainInfo(pPlot->getTerrainType())->getDefenseModifier() + GC.getFLAT_LAND_EXTRA_DEFENSE()));
-			iScore += (pImprovement->GetDefenseModifier() + iBaseDefenseBonus) * pPlot->getStrategicValue(false) / (100 * GC.getCHOKEPOINT_STRATEGIC_VALUE());
+			iScore += (pImprovement->GetDefenseModifier() + iBaseDefenseBonus) * pPlot->getStrategicValue() / (100 * GC.getCHOKEPOINT_STRATEGIC_VALUE());
 		}
 #else
 		UpdateProjectedPlotYields(pPlot, eBuild);
@@ -1615,7 +1615,7 @@ void CvBuilderTaskingAI::AddImprovingMinorPlotsDirectives(CvUnit* pUnit, CvPlot*
 				int iBaseDefenseBonus = (pPlot->isHills() || pPlot->isMountain() ? GC.getHILLS_EXTRA_DEFENSE() :
 					(eFeature != NO_FEATURE && !pkBuild->isFeatureRemove(eFeature) ? GC.getFeatureInfo(eFeature)->getDefenseModifier() :
 					GC.getTerrainInfo(pPlot->getTerrainType())->getDefenseModifier() + GC.getFLAT_LAND_EXTRA_DEFENSE()));
-				iScore += (pImprovement->GetDefenseModifier() + iBaseDefenseBonus) * pPlot->getStrategicValue(false) / (100 * GC.getCHOKEPOINT_STRATEGIC_VALUE());
+				iScore += (pImprovement->GetDefenseModifier() + iBaseDefenseBonus) * pPlot->getStrategicValue() / (100 * GC.getCHOKEPOINT_STRATEGIC_VALUE());
 			}
 		}
 
@@ -2375,17 +2375,26 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 	}
 #endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+	int iDanger = m_pPlayer->GetPlotDanger(*pPlot, pUnit);
+	if (iDanger >= pUnit->GetCurrHitPoints() || (!pUnit->IsCombatUnit() && iDanger > 0))
+#else
 #ifdef AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH
 	if ((!pUnit->IsCombatUnit() && m_pPlayer->GetPlotDanger(*pPlot) > 0) || 
 		m_pPlayer->GetPlotDanger(*pPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH)
 #else
 	if(m_pPlayer->GetPlotDanger(*pPlot) > 0)
 #endif // AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH
+#endif // AUI_DANGER_PLOTS_REMADE
 	{
 		if(m_bLogging)
 		{
 			CvString strLog;
+#ifdef AUI_DANGER_PLOTS_REMADE
+			strLog.Format("plotX: %d plotY: %d, danger: %d,, bailing due to danger", pPlot->getX(), pPlot->getY(), iDanger);
+#else
 			strLog.Format("plotX: %d plotY: %d, danger: %d,, bailing due to danger", pPlot->getX(), pPlot->getY(), m_pPlayer->GetPlotDanger(*pPlot));
+#endif // AUI_DANGER_PLOTS_REMADE
 			LogInfo(strLog, m_pPlayer, true);
 		}
 
@@ -2419,9 +2428,12 @@ int CvBuilderTaskingAI::FindTurnsAway(CvUnit* pUnit, CvPlot* pPlot)
 
 #ifdef AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER
 	int iPlotDistance = TurnsToReachTarget(pUnit, pPlot, AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER /*bReusePaths*/, AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER /*bIgnoreUnits*/);
+	if (iPlotDistance < MAX_INT)
+		return iPlotDistance;
+	else
+		return -1;
 #else
 	int iPlotDistance = plotDistance(pUnit->getX(), pUnit->getY(), pPlot->getX(), pPlot->getY());
-#endif // AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER
 #if 1
 	// Always return the raw distance
 	return iPlotDistance;
@@ -2441,6 +2453,7 @@ int CvBuilderTaskingAI::FindTurnsAway(CvUnit* pUnit, CvPlot* pPlot)
 		return iResult;
 	}
 #endif
+#endif // AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER
 }
 
 /// Get the weight determined by the cost of building the item

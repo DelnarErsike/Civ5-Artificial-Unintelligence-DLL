@@ -1901,6 +1901,13 @@ CvPlot* CvPlayerAI::FindBestMerchantTargetPlot(CvUnit* pGreatMerchant, bool bOnl
 
 		if(bMinorCivApproachIsCorrect && bNotAtWar && bNotPlanningAWar)
 		{
+#ifdef AUI_ASTAR_TURN_LIMITER
+#ifdef AUI_PLAYERAI_FIND_BEST_MERCHANT_TARGET_PLOT_VENICE_FILTERS
+			int iMaxTurns = int(iBestTurnsToReach * dTurnsMod + 0.5);
+#else
+			int iMaxTurns = iBestTurnsToReach;
+#endif // AUI_PLAYERAI_FIND_BEST_MERCHANT_TARGET_PLOT_VENICE_FILTERS
+#endif // AUI_ASTAR_TURN_LIMITER
 			// Search all the plots adjacent to this city (since can't enter the minor city plot itself)
 			for(int jJ = 0; jJ < NUM_DIRECTION_TYPES; jJ++)
 			{
@@ -1913,17 +1920,28 @@ CvPlot* CvPlayerAI::FindBestMerchantTargetPlot(CvUnit* pGreatMerchant, bool bOnl
 					bool bIsRevealed = pAdjacentPlot->isRevealed(getTeam());
 					if(bRightOwner && bIsRevealed)
 					{
+#ifdef AUI_ASTAR_TURN_LIMITER
+#ifdef AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
+						iPathTurns = TurnsToReachTarget(pMerchant, pAdjacentPlot, false /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/, false, iMaxTurns);
+#else
+						iPathTurns = TurnsToReachTarget(pMerchant, pAdjacentPlot, true /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/, false, iMaxTurns);
+#endif // AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
+#else
 #ifdef AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
 						iPathTurns = TurnsToReachTarget(pMerchant, pAdjacentPlot, false /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
 #else
 						iPathTurns = TurnsToReachTarget(pMerchant, pAdjacentPlot, true /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
 #endif // AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
+#endif // AUI_ASTAR_TURN_LIMITER
 #ifdef AUI_PLAYERAI_FIND_BEST_MERCHANT_TARGET_PLOT_VENICE_FILTERS
 						iPathTurns = int(iPathTurns * dTurnsMod + 0.5);
 #endif // AUI_PLAYERAI_FIND_BEST_MERCHANT_TARGET_PLOT_VENICE_FILTERS
 						if(iPathTurns < iBestTurnsToReach)
 						{
 							iBestTurnsToReach = iPathTurns;
+#ifdef AUI_ASTAR_TURN_LIMITER
+							iMaxTurns = iPathTurns;
+#endif // #ifdef AUI_ASTAR_TURN_LIMITER
 							pBestTargetPlot = pAdjacentPlot;
 						}
 					}

@@ -363,11 +363,15 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 #endif // AUI_TACTICAL_ANALYSIS_MAP_MARKING_ADJUST_RANGED
 							{
 								int iTurnsToReach;
+#ifdef AUI_ASTAR_TURN_LIMITER
+								iTurnsToReach = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, true /*bIgnoreUnits*/, false, (pUnit->isRanged() ? 3 : 1));	// Its ok to reuse paths because when ignoring units, we don't use the tactical analysis map (which we are building)
+#else
 								iTurnsToReach = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, true /*bIgnoreUnits*/);	// Its ok to reuse paths because when ignoring units, we don't use the tactical analysis map (which we are building)
+#endif // AUI_ASTAR_TURN_LIMITER
 #ifdef AUI_TACTICAL_ANALYSIS_MAP_MARKING_ADJUST_RANGED
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 								// Pathfinder gets called twice for ranged units unfortunately: once for moving, second time for move and shoot calculation
-								if (iTurnsToReach <= 1 || (iTurnsToReach < 4 && pUnit->isRanged() && pUnit->canMoveAndRangedStrike(pPlot->getX(), pPlot->getY())))
+								if (iTurnsToReach <= 1 || (iTurnsToReach <= 3 && pUnit->isRanged() && pUnit->canMoveAndRangedStrike(pPlot)))
 #else
 								// rough adjustment to account for ranged units
 								if (iTurnsToReach <= 1 || (pUnit->isRanged() && iTurnsToReach <= 2))
@@ -904,13 +908,18 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 						{
 #ifdef AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
 							iDistance = MAX_INT;
-							if (pLoopUnit->isRanged() && pLoopUnit->canEverRangeStrikeAt(pClosestCity->getX(), pClosestCity->getY()))
+							if (pLoopUnit->isRanged() && pLoopUnit->canEverRangeStrikeAt(pClosestCity->plot()))
 								iDistance = 0;
-							else if (pLoopUnit->isRanged() && pLoopUnit->canMoveAndRangedStrike(pClosestCity->getX(), pClosestCity->getY()))
+							else if (pLoopUnit->isRanged() && pLoopUnit->canMoveAndRangedStrike(pClosestCity->plot()))
 								iDistance = 1;
 							else
 							{
+#ifdef AUI_ASTAR_TURN_LIMITER
+								iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true, m_iTacticalRange - pLoopUnit->getMustSetUpToRangedAttackCount() + (pLoopUnit->GetRange() > 1 ? 1 : 0)) +
+									pLoopUnit->getMustSetUpToRangedAttackCount();
+#else
 								iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true) + pLoopUnit->getMustSetUpToRangedAttackCount();
+#endif // AUI_ASTAR_TURN_LIMITER
 								if (pLoopUnit->GetRange() > 1)
 									iDistance -= 1;
 							}
@@ -987,13 +996,18 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 										bool bVisible = true;
 #ifdef AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_USE_PATHFINDER
 										iDistance = MAX_INT;
-										if (pLoopUnit->isRanged() && pLoopUnit->canEverRangeStrikeAt(pClosestCity->getX(), pClosestCity->getY()))
+										if (pLoopUnit->isRanged() && pLoopUnit->canEverRangeStrikeAt(pClosestCity->plot()))
 											iDistance = 0;
-										else if (pLoopUnit->isRanged() && pLoopUnit->canMoveAndRangedStrike(pClosestCity->getX(), pClosestCity->getY()))
+										else if (pLoopUnit->isRanged() && pLoopUnit->canMoveAndRangedStrike(pClosestCity->plot()))
 											iDistance = 1;
 										else
 										{
+#ifdef AUI_ASTAR_TURN_LIMITER
+											iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true, m_iTacticalRange - pLoopUnit->getMustSetUpToRangedAttackCount() + (pLoopUnit->GetRange() > 1 ? 1 : 0)) +
+												pLoopUnit->getMustSetUpToRangedAttackCount();
+#else
 											iDistance = TurnsToReachTarget(pLoopUnit, pClosestCity->plot(), true, true, true) + pLoopUnit->getMustSetUpToRangedAttackCount();
+#endif // AUI_ASTAR_TURN_LIMITER
 											if (pLoopUnit->GetRange() > 1)
 												iDistance -= 1;
 										}

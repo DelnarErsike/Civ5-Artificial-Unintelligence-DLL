@@ -63,6 +63,9 @@ struct CvPathNodeCacheData
 	bool bContainsVisibleEnemy:1;
 	bool bContainsVisibleEnemyDefender:1;
 	int	iNumFriendlyUnitsOfType;
+#ifdef AUI_DANGER_PLOTS_REMADE
+	int iPlotDanger;
+#endif // AUI_DANGER_PLOTS_REMADE
 };
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -135,6 +138,11 @@ public:
 	short m_iX, m_iY;         // Coordinate position
 	short m_iNumChildren;
 	bool m_bOnStack;
+
+#ifdef AUI_ASTAR_PRECALCULATE_NEIGHBORS_ON_INITIALIZE
+	//for faster neighbor lookup (potential children)
+	CvAStarNode* m_apNeighbors[NUM_DIRECTION_TYPES];
+#endif
 
 	CvPathNodeCacheData m_kCostCacheData;
 };
