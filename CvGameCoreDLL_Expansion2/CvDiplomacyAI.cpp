@@ -3501,7 +3501,11 @@ MajorCivApproachTypes CvDiplomacyAI::GetBestApproachTowardsMajorCiv(PlayerTypes 
 	}
 
 	// This vector is what we'll use to sort
+#ifdef AUI_WEIGHTED_VECTOR_OPTIMIZATIONS
+	CvWeightedVector< MajorCivApproachTypes, NUM_MAJOR_CIV_APPROACHES, true > vApproachWeightsForSorting;
+#else
 	CvWeightedVector< MajorCivApproachTypes, 128 > vApproachWeightsForSorting;
+#endif
 	vApproachWeightsForSorting.clear();
 
 	// Transfer values from our normal int vector (which we need for logging) to the Weighted Vector we can sort
@@ -4341,7 +4345,11 @@ MinorCivApproachTypes CvDiplomacyAI::GetBestApproachTowardsMinorCiv(PlayerTypes 
 	}
 
 	// This vector is what we'll use to sort
+#ifdef AUI_WEIGHTED_VECTOR_OPTIMIZATIONS
+	CvWeightedVector< MinorCivApproachTypes, NUM_MINOR_CIV_APPROACHES, true > vApproachWeightsForSorting;
+#else
 	CvWeightedVector< MinorCivApproachTypes, 128 > vApproachWeightsForSorting;
+#endif
 	vApproachWeightsForSorting.clear();
 
 	// Transfer values from our normal int vector (which we need for logging) to the Weighted Vector we can sort
@@ -5530,7 +5538,11 @@ void CvDiplomacyAI::DoMakeWarOnPlayer(PlayerTypes eTargetPlayer)
 /// Handles declarations of War for this AI
 void CvDiplomacyAI::MakeWar()
 {
+#ifdef AUI_WEIGHTED_VECTOR_OPTIMIZATIONS
+	CvWeightedVector<int, MAX_CIV_PLAYERS, true> playerList;
+#else
 	CvWeightedVector<int> playerList;
+#endif
 	int iWeight;
 
 	if((int)m_eTargetPlayer >= (int)DIPLO_FIRST_PLAYER)

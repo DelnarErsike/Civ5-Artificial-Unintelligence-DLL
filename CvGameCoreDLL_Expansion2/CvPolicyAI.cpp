@@ -238,7 +238,7 @@ int CvPolicyAI::ChooseNextPolicy(CvPlayer* pPlayer)
 	int iRtnValue = (int)NO_POLICY;
 	int iPolicyLoop;
 #ifdef AUI_GS_PRIORITY_RATIO
-	CvWeightedVector<int> aLevel3Tenets;
+	CvWeightedVector<int, 64, true> aLevel3Tenets;
 #else
 	vector<int> aLevel3Tenets;
 #endif // AUI_GS_PRIORITY_RATIO
@@ -398,7 +398,7 @@ int CvPolicyAI::ChooseNextPolicy(CvPlayer* pPlayer)
 	{
 #ifdef AUI_GS_PRIORITY_RATIO
 		aLevel3Tenets.SortItems();
-		CvWeightedVector<int> aiPossibleChoices;
+		CvWeightedVector<int, 64, true> aiPossibleChoices;
 		CvPolicyEntry *pEntry;
 		for (int iI = 0; iI < aLevel3Tenets.size(); iI++)
 		{

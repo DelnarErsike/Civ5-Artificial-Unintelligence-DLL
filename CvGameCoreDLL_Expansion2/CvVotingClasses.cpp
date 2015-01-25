@@ -10957,7 +10957,7 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 #endif // AUI_GS_PRIORITY_RATIO
 
 #ifdef AUI_VOTING_SCORE_VOTING_CHOICE_PLAYER_ADJUST_FOR_FPTP
-	CvWeightedVector<PlayerTypes> vLeagueVoteCounts;
+	CvWeightedVector<PlayerTypes, MAX_MAJOR_CIVS, true> vLeagueVoteCounts;
 	for (int iLoopPlayer = 0; iLoopPlayer < MAX_MAJOR_CIVS; iLoopPlayer++)
 	{
 		if (pLeague->CanEverVote((PlayerTypes)iLoopPlayer))

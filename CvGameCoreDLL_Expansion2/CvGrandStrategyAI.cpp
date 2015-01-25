@@ -1476,7 +1476,7 @@ double CvGrandStrategyAI::GetCultureETAPriority()
 	PlayerTypes eLoopPlayer;
 		
 	// Weight is the amount of turns it would take to get influential with the player
-	CvWeightedVector<PlayerTypes> aePlayerInfluenceTurns;
+	CvWeightedVector<PlayerTypes, MAX_CIV_PLAYERS, true> aePlayerInfluenceTurns;
 
 	int iInfluentialCount = 0;
 
@@ -1584,7 +1584,7 @@ double CvGrandStrategyAI::GetUnitedNationsETAPriority()
 	std::vector<PlayerTypes> aeAlliedCityStates;
 	std::vector<PlayerTypes> aeUnalliedCityStates;
 	// Items are major civs, weights are their vote count
-	CvWeightedVector<PlayerTypes, MAX_CIV_PLAYERS> aeVotingList;
+	CvWeightedVector<PlayerTypes, MAX_CIV_PLAYERS, true> aeVotingList;
 
 	CvLeague* pLeague = GC.getGame().GetGameLeagues()->GetActiveLeague();
 	CvAssert(pLeague != NULL);
@@ -1700,7 +1700,7 @@ double CvGrandStrategyAI::GetUnitedNationsETAPriority()
 				
 				double dTotalGPTInfluence = 0;
 				// Weight is the amount of influence we need as a negative number (so sort() works properly)
-				CvWeightedVector<PlayerTypes> aePossibleCityStates;
+				CvWeightedVector<PlayerTypes, REALLY_MAX_PLAYERS, true> aePossibleCityStates;
 				for (std::vector<PlayerTypes>::iterator it = aeUnalliedCityStates.begin(); it != aeUnalliedCityStates.end(); ++it)
 				{
 					CvMinorCivAI* pLoopMinor = GET_PLAYER((*it)).GetMinorCivAI();
@@ -1790,7 +1790,7 @@ double CvGrandStrategyAI::GetSpaceshipETAPriority()
 	// TODO: Add mod compatibility for modded projects that unlock spaceship victory, more than one project unlocking spaceship victory, etc.
 
 	// Weight is the number of a part needed
-	CvWeightedVector<UnitTypes> apSpaceshipParts;
+	CvWeightedVector<UnitTypes, 5, true> apSpaceshipParts;
 	for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
 	{
 		const UnitTypes eUnitInfo = static_cast<UnitTypes>(iI);
