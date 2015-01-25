@@ -5140,6 +5140,13 @@ void CvHomelandAI::ExecuteAircraftInterceptions()
 {
 	FStaticVector<CvHomelandUnit, 64, true, c_eCiv5GameplayDLL>::iterator it;
 	FFastVector<CvPlot*, true, c_eCiv5GameplayDLL> checkedPlotList;
+#ifdef AUI_DANGER_PLOTS_REMADE
+	CvPlot* pEvalPlot;
+#endif
+	CvPlot* pLastPlot = NULL;
+	int iLastRange = 0;
+	int iNumNearbyBombers = 0;
+	int iNumNearbyFighters = 0;
 
 	for (it = m_CurrentMoveUnits.begin(); it != m_CurrentMoveUnits.end(); ++it)
 	{
@@ -5150,27 +5157,63 @@ void CvHomelandAI::ExecuteAircraftInterceptions()
 			// Am I eligible to intercept?
 			if (pUnit->canAirPatrol(NULL) && !m_pPlayer->GetMilitaryAI()->WillAirUnitRebase(pUnit.pointer()))
 			{
+				int iRange = GC.getUnitInfo(pUnit->getUnitType())->GetAirInterceptRange();
 				CvPlot* pUnitPlot = pUnit->plot();
-				int iNumNearbyBombers = m_pPlayer->GetMilitaryAI()->GetNumEnemyAirUnitsInRange(pUnitPlot, pUnit->GetRange()/*m_iRecruitRange*/, false/*bCountFighters*/, true/*bCountBombers*/);
-				int iNumNearbyFighters = m_pPlayer->GetMilitaryAI()->GetNumEnemyAirUnitsInRange(pUnitPlot, pUnit->GetRange()/*m_iRecruitRange*/, true/*bCountFighters*/, false/*bCountBombers*/);
+#ifdef AUI_DANGER_PLOTS_REMADE
+				if (m_pPlayer->GetPlotDanger(*pUnitPlot, pUnit.pointer(), AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
+				{
+					continue;
+				}
+				bool bCouldDieFromSweep = false;
+				for (int iDY = -iRange; iDY <= iRange; iDY++)
+				{
+#ifdef AUI_FAST_COMP
+					int iMaxDX = iRange - FASTMAX(0, iDY);
+					for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+					int iMaxDX = iRange - MAX(0, iDY);
+					for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+					{
+						pEvalPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
+						if (pEvalPlot && pEvalPlot != pUnitPlot)
+						{
+							if (m_pPlayer->GetPlotDanger(*pEvalPlot, pUnit.pointer(), AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
+							{
+								bCouldDieFromSweep = true;
+								goto EndLoop;
+							}
+						}
+					}
+				}
+			EndLoop:
+				if (bCouldDieFromSweep)
+					continue;
+#endif
+				if (pUnitPlot != pLastPlot || iRange != iLastRange)
+				{
+					pLastPlot = pUnitPlot;
+					iLastRange = iRange;
+					m_pPlayer->GetMilitaryAI()->GetNumEnemyAirUnitsInRange(pUnitPlot, iLastRange, iNumNearbyFighters, iNumNearbyBombers);
+				}
 				int iNumPlotNumAlreadySet = pUnitPlot->getNumTimesInList(checkedPlotList);
 
-				if (iNumNearbyBombers == 1)
+				int iMaxInterceptorsWanted = (iNumNearbyBombers / 2) + (iNumNearbyFighters / 4);
+
+				// If there's a bomber, at least one interceptor is sent out
+				if (iMaxInterceptorsWanted == 0 && iNumNearbyBombers == 1)
 				{
-					//AMS: To at least intercept once if only one bomber found.
-					iNumNearbyBombers++;
+					iMaxInterceptorsWanted = 1;
 				}
 
-				int maxInterceptorsWanted = ((iNumNearbyBombers / 2) + (iNumNearbyFighters / 4));
-
-				if (iNumPlotNumAlreadySet < maxInterceptorsWanted)
+				if (iNumPlotNumAlreadySet < iMaxInterceptorsWanted)
 				{
 					if (GC.getLogging() && GC.getAILogging())
 					{
 						CvString strTemp;
 						strTemp = GC.getUnitInfo(pUnit->getUnitType())->GetDescription();
 						CvString strLogString;
-						strLogString.Format("(%d of %d) - Ready to intercept enemy air units at, X: %d, Y: %d", iNumPlotNumAlreadySet, maxInterceptorsWanted, pUnit->getX(), pUnit->getY());
+						strLogString.Format("(%d of %d) - Ready to intercept enemy air units at, X: %d, Y: %d", iNumPlotNumAlreadySet, iMaxInterceptorsWanted, pUnit->getX(), pUnit->getY());
 						LogHomelandMessage(strLogString);
 					}
 
