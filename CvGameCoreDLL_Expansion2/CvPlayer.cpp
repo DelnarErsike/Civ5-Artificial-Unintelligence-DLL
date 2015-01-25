@@ -23845,15 +23845,15 @@ void CvPlayer::ChangeUnitPurchaseCostModifier(int iChange)
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 //	--------------------------------------------------------------------------------
-int CvPlayer::GetPlotDanger(CvPlot& pPlot, CvUnit* pUnit) const
+int CvPlayer::GetPlotDanger(CvPlot& pPlot, CvUnit* pUnit, int iAirAction, int iAfterNIntercepts) const
 {
-	return m_pDangerPlots->GetDanger(pPlot, pUnit);
+	return m_pDangerPlots->GetDanger(pPlot, pUnit, iAirAction, iAfterNIntercepts);
 }
 
 //	--------------------------------------------------------------------------------
-int CvPlayer::GetPlotDanger(CvPlot& pPlot, CvCity* pCity, CvUnit* pPretendGarrison) const
+int CvPlayer::GetPlotDanger(CvPlot& pPlot, CvCity* pCity, CvUnit* pPretendGarrison, int iAfterNIntercepts) const
 {
-	return m_pDangerPlots->GetDanger(pPlot, pCity, pPretendGarrison);
+	return m_pDangerPlots->GetDanger(pPlot, pCity, pPretendGarrison, iAfterNIntercepts);
 }
 
 //	--------------------------------------------------------------------------------
@@ -23872,6 +23872,15 @@ bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, PlayerTypes ePlayer) co
 bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, CvUnit* pUnit) const
 {
 	return m_pDangerPlots->IsUnderImmediateThreat(pPlot, pUnit);
+}
+
+bool CvPlayer::CouldAttackHere(CvPlot& Plot, CvUnit* pUnit) const
+{
+	return m_pDangerPlots->CouldAttackHere(pPlot, pUnit);
+}
+bool CvPlayer::CouldAttackHere(CvPlot& Plot, CvCity* pCity) const
+{
+	return m_pDangerPlots->CouldAttackHere(pPlot, pCity);
 }
 #else
 //	--------------------------------------------------------------------------------
