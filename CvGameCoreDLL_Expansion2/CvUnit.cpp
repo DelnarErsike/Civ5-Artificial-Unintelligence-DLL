@@ -12448,6 +12448,89 @@ CvUnit* CvUnit::GetBestInterceptor(const CvPlot& interceptPlot, CvUnit* pkDefend
 	return pBestUnit;
 }
 
+#ifdef AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
+//	--------------------------------------------------------------------------------
+void CvUnit::BuildInterceptorVector(CvWeightedVector<CvUnit*, 8, true>& kVector, const CvPlot& interceptPlot, CvUnit* pkDefender /* = NULL */, bool bLandInterceptorsOnly /*false*/, bool bVisibleInterceptorsOnly /*false*/) const
+{
+	VALIDATE_OBJECT
+
+	CvUnit* pLoopUnit;
+	int iLoop;
+
+	// Loop through all players' Units (that we're at war with) to see if they can intercept
+	for (int iI = 0; iI < MAX_PLAYERS; iI++)
+	{
+		CvPlayerAI& kLoopPlayer = GET_PLAYER((PlayerTypes)iI);
+		if (kLoopPlayer.isAlive())
+		{
+			TeamTypes eLoopTeam = kLoopPlayer.getTeam();
+			if (isEnemy(eLoopTeam) && !isInvisible(eLoopTeam, false, false))
+			{
+				for (pLoopUnit = kLoopPlayer.firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = kLoopPlayer.nextUnit(&iLoop))
+				{
+					// Must be able to intercept
+					if (pLoopUnit != pkDefender && !pLoopUnit->isDelayedDeath() && pLoopUnit->canAirDefend() && !pLoopUnit->isInCombat())
+					{
+						// Must not have already intercepted this turn
+						if (!pLoopUnit->isOutOfInterceptions())
+						{
+							// Must either be a non-air Unit, or an air Unit that hasn't moved this turn
+							if ((pLoopUnit->getDomainType() != DOMAIN_AIR) || !(pLoopUnit->hasMoved()))
+							{
+								// Must either be a non-air Unit or an air Unit on intercept
+								if ((pLoopUnit->getDomainType() != DOMAIN_AIR) || (pLoopUnit->GetActivityType() == ACTIVITY_INTERCEPT))
+								{
+									// Check input booleans
+									if (!bLandInterceptorsOnly || pLoopUnit->getDomainType() == DOMAIN_LAND)
+									{
+										if (!bVisibleInterceptorsOnly || pLoopUnit->plot()->isVisible(getTeam()))
+										{
+											// Test range
+											if (plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), interceptPlot.getX(), interceptPlot.getY()) <= pLoopUnit->getUnitInfo().GetAirInterceptRange())
+											{
+												kVector.push_back(pLoopUnit, pLoopUnit->currInterceptionProbability());
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+//	--------------------------------------------------------------------------------
+CvUnit* CvUnit::GetNthBestInterceptor(const CvPlot& interceptPlot, int iIndex, CvUnit* pkDefender /* = NULL */, bool bLandInterceptorsOnly /*false*/, bool bVisibleInterceptorsOnly /*false*/) const
+{
+	VALIDATE_OBJECT
+	if (iIndex <= 0)
+	{
+		return GetBestInterceptor(interceptPlot, pkDefender, bLandInterceptorsOnly, bVisibleInterceptorsOnly);
+	}
+	else if (iIndex == MAX_INT)
+	{
+		return NULL;
+	}
+
+	CvWeightedVector<CvUnit*, 8, true> vpInterceptors;
+
+	BuildInterceptorVector(vpInterceptors, interceptPlot, pkDefender, bLandInterceptorsOnly, bVisibleInterceptorsOnly);
+
+	if (vpInterceptors.size() > iIndex)
+	{
+		vpInterceptors.StableSortItems();
+		return vpInterceptors.GetElement(iIndex);
+	}
+	else
+	{
+		return NULL;
+	}
+}
+#endif
+
 //	--------------------------------------------------------------------------------
 int CvUnit::GetInterceptorCount(const CvPlot& interceptPlot, CvUnit* pkDefender /* = NULL */, bool bLandInterceptorsOnly /*false*/, bool bVisibleInterceptorsOnly /*false*/) const
 {
@@ -16905,7 +16988,11 @@ bool CvUnit::IsNearEnemyCitadel(int& iCitadelDamage)
 //	--------------------------------------------------------------------------------
 /// Great General close enough to give us a bonus?
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_NO_OVERLAP
+bool CvUnit::IsNearGreatGeneral(const CvPlot* pAtPlot, const CvUnit* pIgnoreThisGeneral) const
+#else
 bool CvUnit::IsNearGreatGeneral(const CvPlot* pAtPlot) const
+#endif
 #else
 bool CvUnit::IsNearGreatGeneral() const
 #endif
@@ -16970,7 +17057,11 @@ bool CvUnit::IsNearGreatGeneral() const
 						pUnitNode = pLoopPlot->nextUnitNode(pUnitNode);
 
 						// Owned by us
+#ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_NO_OVERLAP
+						if (pLoopUnit && pLoopUnit->getOwner() == getOwner() && pLoopUnit != pIgnoreThisGeneral)
+#else
 						if(pLoopUnit && pLoopUnit->getOwner() == getOwner())
+#endif
 						{
 							// Great General unit
 							if(pLoopUnit->IsGreatGeneral() || pLoopUnit->IsGreatAdmiral())
@@ -16994,7 +17085,11 @@ bool CvUnit::IsNearGreatGeneral() const
 //	--------------------------------------------------------------------------------
 /// Great General in our hex?
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_NO_OVERLAP
+bool CvUnit::IsStackedGreatGeneral(const CvPlot* pLoopPlot, const CvUnit* pIgnoreThisGeneral) const
+#else
 bool CvUnit::IsStackedGreatGeneral(const CvPlot* pLoopPlot) const
+#endif
 {
 	if (pLoopPlot == NULL)
 	{
@@ -17024,10 +17119,18 @@ bool CvUnit::IsStackedGreatGeneral() const
 				pLoopUnit = ::getUnit(*pUnitNode);
 				pUnitNode = pLoopPlot->nextUnitNode(pUnitNode);
 
+#ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_NO_OVERLAP
+				if (pLoopUnit && pLoopUnit != pIgnoreThisGeneral)
+#else
 				if(pLoopUnit)
+#endif
 				{
 					// Great General unit
+#ifdef AUI_UNIT_FIX_GET_STACKED_GREAT_GENERAL_WORKS_WITH_ADMIRAL
+					if (pLoopUnit->IsGreatGeneral() || pLoopUnit->IsGreatAdmiral())
+#else
 					if(pLoopUnit->IsGreatGeneral())
+#endif
 					{
 						// Same domain
 						if(pLoopUnit->getDomainType() == getDomainType())
@@ -19774,24 +19877,21 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 	int iDX, iDY;
 	bool bIsParthian = false;
 	bool bRet = false;
+	CvAStar& kPathfinder = GC.GetTacticalAnalysisMapFinder();
 	if (pFromPlot == NULL)
 	{
 		pFromPlot = plot();
-#ifdef AUI_ASTAR_TURN_LIMITER
-		GC.GetTacticalAnalysisMapFinder().SetData(this, 1);
-#else
-		GC.GetTacticalAnalysisMapFinder().SetData(this);
-#endif // AUI_ASTAR_TURN_LIMITER
 	}
 	else
 	{
-#ifdef AUI_ASTAR_TURN_LIMITER
-		GC.getIgnoreUnitsPathFinder().SetData(this, 1);
-#else
-		GC.getIgnoreUnitsPathFinder().SetData(this);
-#endif // AUI_ASTAR_TURN_LIMITER
+		kPathfinder = GC.getIgnoreUnitsPathFinder();
 		bIsParthian = true;
 	}
+#ifdef AUI_ASTAR_TURN_LIMITER
+	kPathfinder.SetData(this, 1);
+#else
+	kPathfinder.SetData(this);
+#endif // AUI_ASTAR_TURN_LIMITER
 	if (iWithinTurns == 0)
 	{
 		int xMin, xMax, yMin, yMax;
@@ -19833,16 +19933,9 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 					if (!isRanged())
 					{
 						// Run pathfinder to see if we can get to plot with movement left
-						if (bIsParthian)
+						if (kPathfinder.GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY | MOVE_IGNORE_STACKING, bExitOnFound /*bReuse*/))
 						{
-							if (GC.getIgnoreUnitsPathFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY | MOVE_IGNORE_STACKING, true /*bReuse*/))
-							{
-								pNode = GC.getIgnoreUnitsPathFinder().GetLastNode();
-							}
-						}
-						else if (GC.GetTacticalAnalysisMapFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY | MOVE_IGNORE_STACKING, bExitOnFound /*bReuse*/))
-						{
-							pNode = GC.GetTacticalAnalysisMapFinder().GetLastNode();
+							pNode = kPathfinder.GetLastNode();
 						}
 						if (pNode)
 						{
@@ -19862,16 +19955,9 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 					else if (canEverRangeStrikeAt(pTargetPlot, pLoopPlot))
 					{
 						// Run pathfinder to see if we can get to plot with movement left
-						if (bIsParthian)
+						if (kPathfinder.GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
 						{
-							if (GC.getIgnoreUnitsPathFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, true /*bReuse*/))
-							{
-								pNode = GC.getIgnoreUnitsPathFinder().GetLastNode();
-							}
-						}
-						else if (GC.GetTacticalAnalysisMapFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
-						{
-							pNode = GC.GetTacticalAnalysisMapFinder().GetLastNode();
+							pNode = kPathfinder.GetLastNode();
 						}
 						if (pNode)
 						{
@@ -19914,9 +20000,9 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 				{
 					// Run pathfinder to see if we can get to plot with movement left
 					pNode = NULL;
-					if (GC.GetTacticalAnalysisMapFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
+					if (kPathfinder.GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
 					{
-						pNode = GC.GetTacticalAnalysisMapFinder().GetLastNode();
+						pNode = kPathfinder.GetLastNode();
 					}
 					if (pNode)
 					{

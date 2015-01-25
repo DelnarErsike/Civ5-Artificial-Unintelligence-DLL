@@ -20,6 +20,9 @@
 #include "CvInfos.h"
 #include "CvPromotionClasses.h"
 #include "CvAStarNode.h"
+#ifdef AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
+#include "CvWeightedVector.h"
+#endif
 
 #define DEFAULT_UNIT_MAP_LAYER 0
 
@@ -516,6 +519,10 @@ public:
 #endif
 
 	CvUnit* GetBestInterceptor(const CvPlot& pPlot, CvUnit* pkDefender = NULL, bool bLandInterceptorsOnly=false, bool bVisibleInterceptorsOnly=false) const;
+#ifdef AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
+	void BuildInterceptorVector(CvWeightedVector<CvUnit*, 8, true>& kVector, const CvPlot& pPlot, CvUnit* pkDefender = NULL, bool bLandInterceptorsOnly = false, bool bVisibleInterceptorsOnly = false) const;
+	CvUnit* GetNthBestInterceptor(const CvPlot& pPlot, int iIndex = 0, CvUnit* pkDefender = NULL, bool bLandInterceptorsOnly = false, bool bVisibleInterceptorsOnly = false) const;
+#endif
 	int GetInterceptorCount(const CvPlot& pPlot, CvUnit* pkDefender = NULL, bool bLandInterceptorsOnly=false, bool bVisibleInterceptorsOnly=false) const;
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 	int GetInterceptionDamage(const CvUnit* pAttacker, bool bIncludeRand = true, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL) const;
@@ -924,8 +931,13 @@ public:
 	bool IsNearEnemyCitadel(int& iCitadelDamage, const CvPlot* pInPlot = NULL) const;
 
 	// Great General Stuff
+#ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_NO_OVERLAP
+	bool IsNearGreatGeneral(const CvPlot* pAtPlot = NULL, const CvUnit* pIgnoreThisGeneral = NULL) const;
+	bool IsStackedGreatGeneral(const CvPlot* pAtPlot = NULL, const CvUnit* pIgnoreThisGeneral = NULL) const;
+#else
 	bool IsNearGreatGeneral(const CvPlot* pAtPlot = NULL) const;
 	bool IsStackedGreatGeneral(const CvPlot* pAtPlot = NULL) const;
+#endif
 	int GetGreatGeneralStackMovement(const CvPlot* pAtPlot = NULL) const;
 	int GetReverseGreatGeneralModifier(const CvPlot* pAtPlot = NULL) const;
 	int GetNearbyImprovementModifier(const CvPlot* pAtPlot = NULL) const;
