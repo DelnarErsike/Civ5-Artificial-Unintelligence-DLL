@@ -4031,6 +4031,7 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 		}
 	}
 
+#ifndef AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
 	// Is this a fighter that doesn't have any useful missions nearby
 	if (pUnit->canAirPatrol(NULL) || pUnit->canAirSweep())
 	{
@@ -4040,9 +4041,22 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 			bNeedsToMove = true;
 		}
 	}
+#endif
 
 	if (!bNeedsToMove)
 	{
+#ifdef AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
+		// Is this a fighter that doesn't have any useful missions nearby
+		if (pUnit->canAirPatrol(NULL) || pUnit->canAirSweep())
+		{
+			int iNumNearbyEnemyAirUnits = GetNumEnemyAirUnitsInRange(pUnitPlot, pUnit->GetRange(), true /*bCountFighters*/, true /*bCountBombers*/);
+			if (iNumNearbyEnemyAirUnits != 0 || GetBestAirSweepTarget(pUnit))
+			{
+				return false;
+			}
+		}
+		else
+#endif
 		return false;
 	}
 
@@ -4258,10 +4272,102 @@ int CvMilitaryAI::DoUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert, int iM
 
 /// Assess nearby enemy air assets
 #ifdef AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
+void CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int iRange, int& iCountFighters, int& iCountBombers) const
+{
+	// Loop through all the players
+	for (int iI = 0; iI < MAX_PLAYERS; iI++)
+	{
+		CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iI);
+		if (kPlayer.isAlive() && kPlayer.GetID() != m_pPlayer->GetID())
+		{
+			if (atWar(kPlayer.getTeam(), m_pPlayer->getTeam()))
+			{
+				// Loop through their units looking for bombers (this will allow us to find bombers on carriers also
+				int iLoopUnit = 0;
+				for (CvUnit* pLoopUnit = kPlayer.firstUnit(&iLoopUnit); pLoopUnit != NULL; pLoopUnit = kPlayer.nextUnit(&iLoopUnit))
+				{
+					if (pLoopUnit->getDomainType() == DOMAIN_AIR)
+					{
+#ifdef AUI_DANGER_PLOTS_REMADE
+						bool bFoundMatch = false;
+						// Shortcut since this plot will always contain an attackable target, so if the unit can attack here, there's no need to go through the loop
+						if (m_pPlayer->CouldAttackHere(*pCenterPlot, pLoopUnit))
+						{
+							bFoundMatch = true;
+							goto EndLoop;
+						}
+						CvPlot* pEvalPlot;
+						for (int iDY = -iRange; iDY <= iRange; iDY++)
+						{
+#ifdef AUI_FAST_COMP
+							int iMaxDX = iRange - FASTMAX(0, iDY);
+							for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+							int iMaxDX = iRange - MAX(0, iDY);
+							for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+							{
+								pEvalPlot = plotXY(pCenterPlot->getX(), pCenterPlot->getY(), iDX, iDY);
+								if (pEvalPlot && pEvalPlot != pCenterPlot)
+								{
+									if (m_pPlayer->CouldAttackHere(*pEvalPlot, pLoopUnit))
+									{
+										bFoundMatch = true;
+										goto EndLoop;
+									}
+								}
+							}
+						}
+					EndLoop:
+						if (bFoundMatch)
+#else
+						// AMS: Just to keep fighters closer to high range bombers (stealth bombers)
+						int iMaxCheckRange = MIN(pLoopUnit->GetRange(), 12);
+						int iAcceptableDistance = iMaxCheckRange + (iRange / 2);
+
+						if (plotDistance(pCenterPlot->getX(), pCenterPlot->getY(), pLoopUnit->getX(), pLoopUnit->getY()) <= iAcceptableDistance)
+#endif
+						{
+							// Let's not factor in revealed or visible - As a human I can remember past attacks and intuit whether a bomber could be in range of the city, AIs don't have great intuition...
+							if (pLoopUnit->IsAirSweepCapable() || pLoopUnit->canAirDefend())
+							{
+								++iCountFighters;
+							}
+							else
+							{
+								++iCountBombers;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int iRange, bool bCountFighters, bool bCountBombers) const
+{
+	if (!bCountFighters && !bCountBombers)
+	{
+		return 0;
+	}
+
+	int iCountFighters = 0;
+	int iCountBombers = 0;
+	GetNumEnemyAirUnitsInRange(pCenterPlot, iRange, iCountFighters, iCountBombers);
+
+	if (bCountBombers)
+	{
+		if (bCountFighters)
+		{
+			return (iCountFighters + iCountBombers);
+		}
+		return iCountBombers;
+	}
+	return iCountFighters;
+}
 #else
 int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int /*iRange*/, bool bCountFighters, bool bCountBombers) const
-#endif // AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
 {
 	int iRtnValue = 0;
 
@@ -4279,15 +4385,7 @@ int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int /*iRange*/
 				{
 					if (pLoopUnit->getDomainType() == DOMAIN_AIR)
 					{
-#ifdef AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
-						// AMS: Just to keep fighters closer to high range bombers (stealth bombers)
-						int iMaxCheckRange = MIN(pLoopUnit->GetRange(), 12);
-						int iAcceptableDistance = iMaxCheckRange + (iRange / 2);
-
-						if (plotDistance(pCenterPlot->getX(), pCenterPlot->getY(), pLoopUnit->getX(), pLoopUnit->getY()) <= iAcceptableDistance)
-#else
 						if ( plotDistance(pCenterPlot->getX(), pCenterPlot->getY(), pLoopUnit->getX(), pLoopUnit->getY()) <= 10 )
-#endif // AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
 						{
 							// Let's not factor in revealed or visible - As a human I can remember past attacks and intuit whether a bomber could be in range of the city, AIs don't have great intuition...
 							if (pLoopUnit->IsAirSweepCapable() || pLoopUnit->canAirDefend())
@@ -4335,6 +4433,7 @@ int CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int /*iRange*/
 
 	return iRtnValue;
 }
+#endif // AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
 
 /// See if this fighter has an air sweep target we like
 CvPlot *CvMilitaryAI::GetBestAirSweepTarget(CvUnit* pFighter) const
@@ -4342,6 +4441,34 @@ CvPlot *CvMilitaryAI::GetBestAirSweepTarget(CvUnit* pFighter) const
 	CvPlot *pBestTarget = NULL;
 	int iBestCount = 0;
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+	int iRange = pFighter->GetRange();
+	CvPlot* pEvalPlot;
+	int iPlotDanger = 0;
+	for (int iDY = -iRange; iDY <= iRange; iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		int iMaxDX = iRange - FASTMAX(0, iDY);
+		for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		int iMaxDX = iRange - MAX(0, iDY);
+		for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif // AUI_FAST_COMP
+		{
+			pEvalPlot = plotXY(pFighter->getX(), pFighter->getY(), iDX, iDY);
+			if (pEvalPlot)
+			{
+				iPlotDanger = m_pPlayer->GetPlotDanger(*pEvalPlot, pFighter, AIR_ACTION_SWEEP);
+				// We want the highest amount of received damaged that will not kill us (since highest received = highest interceptor strength = best target to take down)
+				if (iPlotDanger > iBestCount && iPlotDanger < pFighter->GetCurrHitPoints)
+				{
+					pBestTarget = pEvalPlot;
+					iBestCount = iPlotDanger;
+				}
+			}
+		}
+	}
+#else
 	// Loop through all the players
 	for(int iI = 0; iI < MAX_PLAYERS; iI++)
 	{
@@ -4387,6 +4514,7 @@ CvPlot *CvMilitaryAI::GetBestAirSweepTarget(CvUnit* pFighter) const
 			}
 		}
 	}
+#endif
 
 	return pBestTarget;
 }

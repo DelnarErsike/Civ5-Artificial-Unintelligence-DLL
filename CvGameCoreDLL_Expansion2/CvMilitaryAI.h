@@ -257,6 +257,9 @@ public:
 	UnitTypes GetUnitForArmy(CvCity* pCity) const;
 	bool WillAirUnitRebase(CvUnit* pUnit) const;
 	int GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int iRange, bool bCountFighters, bool bCountBombers) const;
+#ifdef AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
+	void GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int iRange, int& iCountFighters, int& iCountBombers) const;
+#endif
 	CvPlot *GetBestAirSweepTarget(CvUnit* pFighter) const;
 
 	int GetNumberOfTimesOpsBuildSkippedOver() const
