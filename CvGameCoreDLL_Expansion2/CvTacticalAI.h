@@ -230,7 +230,17 @@ public:
 	{
 		return m_eOwner;
 	};
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
+#ifdef AUI_TACTICAL_HELPERS_AIR_SWEEP
+	void SetInterceptor(CvUnit* pInterceptor)
+	{
+		m_pInterceptor = pInterceptor;
+	}
+	CvUnit* GetInterceptor() const
+	{
+		return m_pInterceptor;
+	};
+#endif
 
 	// Derived
 	int GetAttackPriority() const
@@ -247,7 +257,10 @@ private:
 	int m_iExpectedSelfDamage;
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 	PlayerTypes m_eOwner;
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
+#ifdef AUI_TACTICAL_HELPERS_AIR_SWEEP
+	CvUnit* m_pInterceptor;
+#endif
 };
 
 // Object stored in the list of current move cities (m_CurrentMoveCities)
@@ -804,7 +817,11 @@ public:
 	int PlotAlreadyTargeted(CvPlot* pPlot);
 	bool IsInQueuedAttack(const CvUnit* pAttacker);
 	bool IsCityInQueuedAttack(const CvCity* pAttackCity);
+#ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_NO_OVERLAP
+	int NearXQueuedAttacks(const UnitHandle pUnit, const CvPlot* pPlot, const int iRange);
+#else
 	int NearXQueuedAttacks(const CvPlot* pPlot, const int iRange);
+#endif
 
 	// Public logging
 	void LogTacticalMessage(CvString& strMsg, bool bSkipLogDominanceZone = true);
@@ -994,12 +1011,17 @@ private:
 	void ScoreHedgehogPlots(CvPlot* pTarget);
 	int ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, CvArmyAI* pArmyAI);
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+	void ProcessAirUnitsInAttack(CvPlot *pTargetPlot);
+	std::vector<CvTacticalUnit> m_CurrentAirUnits;
+#else
 #ifdef AUI_TACTICAL_HELPERS_AIR_SWEEP
 	// AMS functions and helper vector (for air sweeps)
 	std::vector<CvTacticalUnit> m_CurrentAirUnits;
-	bool FindAirUnitsToAirSweep(CvPlot* pTarget);
+	void FindAirUnitsToAirSweep(CvPlot* pTarget);
 	CvUnit* GetProbableInterceptor(CvPlot* pTarget) const;
-#endif // AUI_TACTICAL_HELPERS_AIR_SWEEP
+#endif
+#endif
 #ifdef AUI_TACTICAL_HELPERS_POSITIONING_AND_ORDER
 	CvPlot* GetBestRepositionPlot(UnitHandle unitH, CvPlot* plotTarget, int iWithinTurns = 0);
 	void SortCurrentMoveUnits(bool bSortBySelfDamage = false);
