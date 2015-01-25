@@ -156,7 +156,9 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 			}
 
 			CvPlot* pUnitPlot = pLoopUnit->plot();
+#ifndef AUI_DANGER_PLOTS_REMADE
 			AssignUnitDangerValue(pLoopUnit, pUnitPlot);
+#endif
 			CvPlot* pLoopPlot = NULL;
 
 #ifdef AUI_HEXSPACE_DX_LOOPS
@@ -179,11 +181,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 				{
 					pLoopPlot = plotXYWithRangeCheck(pUnitPlot->getX(), pUnitPlot->getY(), iDX, iDY, iRange);
 #endif // AUI_HEXSPACE_DX_LOOPS
-#ifdef AUI_DANGER_PLOTS_REMADE
-					if (!pLoopPlot)
-#else
 					if(!pLoopPlot || pLoopPlot == pUnitPlot)
-#endif // AUI_DANGER_PLOTS_REMADE
 					{
 						continue;
 					}
@@ -387,6 +385,28 @@ bool CvDangerPlots::IsUnderImmediateThreat(const CvPlot& pPlot, CvUnit* pUnit)
 		return m_DangerPlots[idx].GetDanger(pUnit);
 	}
 	return m_DangerPlots[idx].GetDanger(NO_PLAYER);
+}
+
+/// Returns if the unit is in immediate danger
+bool CvDangerPlots::CouldAttackHere(const CvPlot& pPlot, CvUnit* pUnit)
+{
+	const int idx = pPlot.getX() + pPlot.getY() * GC.getMap().getGridWidth();
+	if (!pUnit)
+	{
+		return false;
+	}
+	return m_DangerPlots[idx].CouldAttackHere(pUnit);
+}
+
+/// Returns if the unit is in immediate danger
+bool CvDangerPlots::CouldAttackHere(const CvPlot& pPlot, CvCity* pCity)
+{
+	const int idx = pPlot.getX() + pPlot.getY() * GC.getMap().getGridWidth();
+	if (!pCity)
+	{
+		return false;
+	}
+	return m_DangerPlots[idx].CouldAttackHere(pCity);
 }
 #else
 /// Returns if the unit is in immediate danger
@@ -693,6 +713,13 @@ bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility)
 		return true;
 	}
 #endif // AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
+
+#ifdef AUI_DANGER_PLOTS_REMADE
+	if (pUnit->getDomainType() == DOMAIN_AIR)
+	{
+		return true;
+	}
+#endif // AUI_DANGER_PLOTS_REMADE
 
 #ifdef AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
 	if (!GET_PLAYER(m_ePlayer).isMinorCiv() && !GET_PLAYER(m_ePlayer).isBarbarian() && pUnit->isBarbarian() && pUnit->plot()->isRevealed(GET_PLAYER(m_ePlayer).getTeam()))
@@ -1107,11 +1134,102 @@ int CvDangerPlotContents::GetDanger(PlayerTypes ePlayer)
 	return iPlotDamage;
 }
 
-// Get the maximum damage unit could receive at this plot in the next turn
-int CvDangerPlotContents::GetDanger(CvUnit* pUnit)
+// Get the maximum damage unit could receive at this plot in the next turn (update this with CvUnitCombat changes!)
+int CvDangerPlotContents::GetDanger(CvUnit* pUnit, int iAirAction, int iAfterNIntercepts)
 {
+	// Air units only take damage from interceptions
+	if (pUnit->getDomainType() == DOMAIN_AIR)
+	{
+		if (iAirAction & AIR_ACTION_INTERCEPT) // Max damage from a potential air sweep against our intercept
+		{
+			int iBestAirSweepDamage = 0;
+			CvUnit* pBestAirSweeper = NULL;
+			int iCurrentAirSweepDamage = 0;
+			for (DangerUnitVector::iterator it = m_apUnits.begin(); it < m_apUnits.end(); ++it)
+			{
+				if (!(*it) || !(*it)->canAirSweep() || (*it)->isDelayedDeath() || (*it)->IsDead())
+				{
+					continue;
+				}
+				int iAttackerStrength = (*it)->GetMaxRangedCombatStrength(pUnit, /*pCity*/ NULL, true, false);
+				iAttackerStrength *= (100 + (*it)->GetAirSweepCombatModifier());
+				iAttackerStrength /= 100;
+				int iDefenderStrength = pUnit->GetMaxRangedCombatStrength(pUnit, /*pCity*/ NULL, false, false);
+				iCurrentAirSweepDamage = (*it)->getCombatDamage(iAttackerStrength, iDefenderStrength,
+					(*it)->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
+
+				// It's a slower to have this in the unit loop instead of after the best damage has been calculated, but it's also more accurate
+				if (iCurrentAirSweepDamage >= pUnit->GetCurrHitPoints())
+				{
+					int iReceiverDamage = pUnit->getCombatDamage(iDefenderStrength, iAttackerStrength,
+						pUnit->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
+					if (iReceiverDamage >= (*it)->GetCurrHitPoints())
+					{
+						if (iReceiverDamage + (*it)->getDamage() > iCurrentAirSweepDamage + pUnit->getDamage())
+						{
+							iCurrentAirSweepDamage = pUnit->GetCurrHitPoints() - 1;
+						}
+					}
+				}
+
+				if (iCurrentAirSweepDamage > iBestAirSweepDamage)
+				{
+					iBestAirSweepDamage = iCurrentAirSweepDamage;
+				}
+			}
+			return iBestAirSweepDamage;
+		}
+		else
+		{
+#ifdef AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
+			CvUnit* pInterceptor = pUnit->GetNthBestInterceptor(*m_pPlot, iAfterNIntercepts);
+#else
+			CvUnit* pInterceptor = pUnit->GetBestInterceptor(*m_pPlot);
+#endif
+			if (pInterceptor)
+			{
+				// Air sweeps take modified damage from interceptors
+				if (iAirAction & AIR_ACTION_SWEEP)
+				{
+					if (pInterceptor->getDomainType() != DOMAIN_AIR)
+					{
+						return (pInterceptor->GetInterceptionDamage(pUnit, false) * GC.getAIR_SWEEP_INTERCEPTION_DAMAGE_MOD() / 100);
+					}
+					else
+					{
+						int iAttackerStrength = pUnit->GetMaxRangedCombatStrength(pInterceptor, /*pCity*/ NULL, true, false);
+						iAttackerStrength *= (100 + pUnit->GetAirSweepCombatModifier());
+						iAttackerStrength /= 100;
+						int iDefenderStrength = pInterceptor->GetMaxRangedCombatStrength(pUnit, /*pCity*/ NULL, false, false);
+						int iReceiveDamage = pInterceptor->getCombatDamage(iDefenderStrength, iAttackerStrength,
+							pInterceptor->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
+						if (iReceiveDamage >= pUnit->GetCurrHitPoints())
+						{
+							int iDamageDealt = pUnit->getCombatDamage(iAttackerStrength, iDefenderStrength,
+								pUnit->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
+							if (iDamageDealt >= pInterceptor->GetCurrHitPoints())
+							{
+								if (iDamageDealt + pInterceptor->getDamage() > iReceiveDamage + pUnit->getDamage())
+								{
+									iReceiveDamage = pUnit->GetCurrHitPoints() - 1;
+								}
+							}
+						}
+						return iReceiveDamage;
+					}
+				}
+				else
+				{
+					// Always assume interception is successful
+					return pInterceptor->GetInterceptionDamage(pUnit, false);
+				}
+			}
+		}
+		return 0;
+	}
+
 	int iPlotDamage = 0;
-	if (pUnit->canMoveInto(*m_pPlot))
+	if (m_iFlatPlotDamage != 0 && (pUnit->atPlot(*m_pPlot) || pUnit->canMoveInto(*m_pPlot)))
 	{
 		// Damage from plot (no unit in tile)
 		iPlotDamage = m_iFlatPlotDamage;
@@ -1123,6 +1241,11 @@ int CvDangerPlotContents::GetDanger(CvUnit* pUnit)
 	// Civilians can be captured
 	if (!pUnit->IsCombatUnit() && (!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit)))
 	{
+		// If plot contains an enemy unit, mark it as max danger
+		if (m_pPlot->getBestDefender(NO_PLAYER, pUnit->getOwner()))
+		{
+			return MAX_INT;
+		}
 		for (DangerUnitVector::iterator it = m_apMoveOnlyUnits.begin(); it < m_apMoveOnlyUnits.end(); ++it)
 		{
 			if (*it && !(*it)->isDelayedDeath() && !(*it)->IsDead())
@@ -1177,30 +1300,29 @@ int CvDangerPlotContents::GetDanger(CvUnit* pUnit)
 					return MAX_INT;
 				}
 				// Proceed as normal
-				else
+				
+				// If this unit would survive all attacks, reduce the damage dealt by heal rate before applying citadel stuff (since citadel stuff is applied after DoHeal() anyway)
+				if (iPlotDamage + pUnit->getDamage() <= pUnit->GetMaxHitPoints())
 				{
-					// If this unit would survive all attacks, reduce the damage dealt by heal rate before applying citadel stuff (since citadel stuff is applied after DoHeal() anyway)
-					if (iPlotDamage + pUnit->getDamage() <= pUnit->GetMaxHitPoints())
+					if ((pUnit->plot() == m_pPlot && !pUnit->isEmbarked()) ||
+						(pUnit->isAlwaysHeal() && (!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit))))
 					{
-						if ((pUnit->plot() == m_pPlot && !pUnit->isEmbarked()) ||
-							(pUnit->isAlwaysHeal() && (!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit))))
-						{
-							iPlotDamage -= pUnit->healRate(m_pPlot);
-							if (iPlotDamage < 0)
-								iPlotDamage = 0;
-						}
+						iPlotDamage -= pUnit->healRate(m_pPlot);
+						if (iPlotDamage < 0)
+							iPlotDamage = 0;
 					}
-
-					// Damage from improvements
-					iPlotDamage += GetCitadelDamage(pUnit);
-
-					return iPlotDamage;
 				}
+
+				// Damage from improvements
+				iPlotDamage += GetCitadelDamage(pUnit);
+
+				return iPlotDamage;
 			}
 		}
 	}
+
 	// Garrisoning in a city will have the city's health stats replace the unit's health stats (capturing a city with a garrisoned unit destroys the garrisoned unit)
-	else if (pFriendlyCity)
+	if (pFriendlyCity)
 	{
 		// If the city survives all possible attacks this turn, so will the unit
 		if (GetDanger(pFriendlyCity, (pUnit->getDomainType() == DOMAIN_LAND ? pUnit : NULL)) + pFriendlyCity->getDamage() < pFriendlyCity->GetMaxHitPoints())
@@ -1242,33 +1364,28 @@ int CvDangerPlotContents::GetDanger(CvUnit* pUnit)
 		}
 
 		pAttackerPlot = NULL;
-		if ((*it)->plot() == m_pPlot && !m_pPlot->getPlotCity())
-		{
-			if (pUnit->getDomainType() == DOMAIN_AIR)
-			{
-				pInterceptor = pUnit->GetBestInterceptor(*m_pPlot, (*it));
-				if (pInterceptor)
-				{
-					iPlotDamage += pInterceptor->GetInterceptionDamage(pUnit, false) * (100 - pUnit->evasionProbability()) * pInterceptor->currInterceptionProbability() / 10000;
-				}
-			}
-		}
-		else if (pUnit->getDomainType() != DOMAIN_AIR)
+		if ((*it)->plot() != m_pPlot)
 		{				
 			if ((*it)->IsCanAttackRanged())
 			{
 				if ((*it)->getDomainType() == DOMAIN_AIR)
 				{
+#ifdef AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
+					pInterceptor = (*it)->GetNthBestInterceptor(*m_pPlot, iAfterNIntercepts, pUnit);
+#else
 					pInterceptor = (*it)->GetBestInterceptor(*m_pPlot, pUnit);
+#endif
 					int iInterceptDamage = 0;
 					if (pInterceptor)
 					{
-						iInterceptDamage = pInterceptor->GetInterceptionDamage((*it), false) * (100 - (*it)->evasionProbability()) * pInterceptor->currInterceptionProbability() / 10000;
+						// Always assume interception is successful
+						iInterceptDamage = pInterceptor->GetInterceptionDamage((*it), false);
+						++iAfterNIntercepts;
 					}
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 					iPlotDamage += (*it)->GetAirCombatDamage(pUnit, NULL, false, iInterceptDamage, m_pPlot);
 #else
-					iPlotDamage += (*itUnitList)->GetAirCombatDamage(pUnit, NULL, false, iInterceptDamage);
+					iPlotDamage += (*it)->GetAirCombatDamage(pUnit, NULL, false, iInterceptDamage);
 #endif
 				}
 				else
@@ -1276,7 +1393,7 @@ int CvDangerPlotContents::GetDanger(CvUnit* pUnit)
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 					iPlotDamage += (*it)->GetRangeCombatDamage(pUnit, NULL, false, 0, m_pPlot);
 #else
-					iPlotDamage += (*itUnitList)->GetRangeCombatDamage(pUnit, NULL, false);
+					iPlotDamage += (*it)->GetRangeCombatDamage(pUnit, NULL, false);
 #endif
 				}
 			}
@@ -1308,22 +1425,11 @@ int CvDangerPlotContents::GetDanger(CvUnit* pUnit)
 			continue;
 		}
 
-		if (pUnit->getDomainType() == DOMAIN_AIR)
-		{
-			CvUnit* pInterceptor = pUnit->GetBestInterceptor(*m_pPlot);
-			if (pInterceptor)
-			{
-				iPlotDamage += pInterceptor->GetInterceptionDamage(pUnit, false) * (100 - pUnit->evasionProbability()) * pInterceptor->currInterceptionProbability() / 10000;
-			}
-		}
-		else
-		{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-			iPlotDamage += (*it)->rangeCombatDamage(pUnit, NULL, false, m_pPlot);
+		iPlotDamage += (*it)->rangeCombatDamage(pUnit, NULL, false, m_pPlot);
 #else
-			iPlotDamage += (*it)->rangeCombatDamage(pUnit, NULL, false);
+		iPlotDamage += (*it)->rangeCombatDamage(pUnit, NULL, false);
 #endif
-		}
 	}
 
 	// If this unit would survive all attacks, reduce the damage dealt by heal rate before applying citadel stuff (since citadel stuff is applied after DoHeal() anyway)
@@ -1446,8 +1552,42 @@ bool CvDangerPlotContents::IsUnderImmediateThreat(CvUnit* pUnit)
 	return false;
 }
 
+bool CvDangerPlotContents::CouldAttackHere(CvUnit* pAttacker)
+{
+	for (DangerUnitVector::iterator it = m_apUnits.begin(); it < m_apUnits.end(); ++it)
+	{
+		if (*it == pAttacker)
+		{
+			if ((m_pPlot->getPlotCity() && GET_TEAM(pAttacker->getTeam()).isAtWar(m_pPlot->getPlotCity()->getTeam())) ||
+				m_pPlot->getBestDefender(NO_PLAYER, pAttacker->getOwner(), pAttacker, true))
+			{
+				return true;
+			}
+			return false;
+		}
+	}
+	return false;
+}
+
+bool CvDangerPlotContents::CouldAttackHere(CvCity* pAttacker)
+{
+	for (DangerCityVector::iterator it = m_apCities.begin(); it < m_apCities.end(); ++it)
+	{
+		if (*it == pAttacker)
+		{
+			if ((m_pPlot->getPlotCity() && GET_TEAM(pAttacker->getTeam()).isAtWar(m_pPlot->getPlotCity()->getTeam())) ||
+				m_pPlot->getBestDefender(NO_PLAYER, pAttacker->getOwner(), NULL, true))
+			{
+				return true;
+			}
+			return false;
+		}
+	}
+	return false;
+}
+
 // Get the maximum damage city could receive this turn if it were in this plot
-int CvDangerPlotContents::GetDanger(CvCity* pCity, CvUnit* pPretendGarrison)
+int CvDangerPlotContents::GetDanger(CvCity* pCity, CvUnit* pPretendGarrison, int iAfterNIntercepts)
 {
 	int iPlotDamage = 0;
 	CvPlot* pCityPlot = pCity->plot();
@@ -1478,11 +1618,17 @@ int CvDangerPlotContents::GetDanger(CvCity* pCity, CvUnit* pPretendGarrison)
 		{
 			if ((*it)->getDomainType() == DOMAIN_AIR)
 			{
+#ifdef AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
+				pInterceptor = (*it)->GetNthBestInterceptor(*m_pPlot, iAfterNIntercepts);
+#else
 				pInterceptor = (*it)->GetBestInterceptor(*m_pPlot);
+#endif
 				int iInterceptDamage = 0;
 				if (pInterceptor)
 				{
-					iInterceptDamage = pInterceptor->GetInterceptionDamage((*it), false) * (100 - (*it)->evasionProbability()) * pInterceptor->currInterceptionProbability() / 10000;
+					// Always assume interception is successful
+					iInterceptDamage = pInterceptor->GetInterceptionDamage((*it), false);
+					++iAfterNIntercepts;
 				}
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 				iPlotDamage += (*it)->GetAirCombatDamage(NULL, pCity, false, iInterceptDamage, m_pPlot);
