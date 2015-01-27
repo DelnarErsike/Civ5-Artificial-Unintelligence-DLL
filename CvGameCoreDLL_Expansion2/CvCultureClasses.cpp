@@ -974,7 +974,11 @@ void CvPlayerCulture::DoSwapGreatWorks()
 						CvGreatWorkBuildingInMyEmpire building;
 						building.m_eBuilding = eBuilding;
 						building.m_iCityID = pLoopCity->GetID();
+#ifdef AUI_DANGER_PLOTS_REMADE
+						building.m_bEndangered = pLoopCity->getDamage() + m_pPlayer->GetPlotDanger(*pLoopCity->plot(), pLoopCity) >= pLoopCity->GetMaxHitPoints();
+#else
 						building.m_bEndangered = (pLoopCity->getDamage() > 0);
+#endif
 
 						GreatWorkSlotType eSlotType = pkBuilding->GetGreatWorkSlotType();
 						if (eSlotType == CvTypes::getGREAT_WORK_SLOT_LITERATURE())
