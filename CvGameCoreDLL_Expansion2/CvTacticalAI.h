@@ -810,13 +810,21 @@ public:
 	bool IsTemporaryZoneCity(CvCity* pCity);
 
 	// Public routines to handle multiple unit attacks
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
 	void InitializeQueuedAttacks();
 	bool QueueAttack(void* pAttacker, CvTacticalTarget* pTarget, bool bRanged, bool bCityAttack);
+#endif
+#ifdef AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK
+	void LaunchAttack(void* pAttacker, CvPlot* pTarget, bool bFirstAttack, bool bRanged, bool bCityAttack);
+#else
 	void LaunchAttack(void* pAttacker, CvTacticalTarget* pTarget, bool bFirstAttack, bool bRanged, bool bCityAttack);
+#endif
 	void CombatResolved(void* pAttacker, bool bVictorious, bool bCityAttack=false);
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
 	int PlotAlreadyTargeted(CvPlot* pPlot);
 	bool IsInQueuedAttack(const CvUnit* pAttacker);
 	bool IsCityInQueuedAttack(const CvCity* pAttackCity);
+#endif
 #ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_NO_OVERLAP
 	int NearXQueuedAttacks(const UnitHandle pUnit, const CvPlot* pPlot, const int iRange);
 #else
@@ -912,7 +920,12 @@ private:
 	void ExecutePillage(CvPlot* pTargetPlot);
 	void ExecutePlunderTradeUnit(CvPlot* pTargetPlot);
 	void ExecuteParadropPillage(CvPlot* pTargetPlot);
+#ifdef AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK
+	void ExecuteAttack(CvCity* pTargetCity, bool bInflictWhatWeTake = false, bool bMustSurviveAttack = true);
+	void ExecuteAttack(CvUnit* pTargetUnit, bool bInflictWhatWeTake = false, bool bMustSurviveAttack = true);
+#else
 	void ExecuteAttack(CvTacticalTarget* target, CvPlot* pTargetPlot, bool bInflictWhatWeTake=false, bool bMustSurviveAttack=true);
+#endif
 	void ExecuteRepositionMoves();
 	void ExecuteMovesToSafestPlot();
 	void ExecuteHeals();
@@ -1047,9 +1060,11 @@ private:
 	FStaticVector<CvTacticalMove, 256, true, c_eCiv5GameplayDLL > m_MovePriorityList;
 	int m_MovePriorityTurn;
 
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
 	// Data for multi-unit attacks - not serialized, cleared out for each turn
 	std::list<CvQueuedAttack> m_QueuedAttacks;
 	int m_iCurrentSeriesID;
+#endif
 
 	// Lists of targets for the turn
 	TacticalList m_AllTargets;
