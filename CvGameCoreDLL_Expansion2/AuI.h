@@ -91,8 +91,6 @@
 #define AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 /// Pathfinders now have a built-in turn limiter that invalidates too long paths they are being built instead of after the best path has been calculated
 #define AUI_ASTAR_TURN_LIMITER
-/// Danger plots have been completely remade to return possible damage a unit can take at a tile instead of total strength value (value is Save version)
-#define AUI_DANGER_PLOTS_REMADE (2)
 /// Caches a player's unique improvements at startup
 #define AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
 /// Caches a player's unique great people at startup
@@ -123,6 +121,12 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 // OpenMP for multithreading AI loops
 #include <omp.h>
 #endif
+
+// Giant AI overhauls that influence multiple AI classes
+/// Danger plots have been completely remade to return possible damage a unit can take at a tile instead of total strength value (parameter value is Save version)
+#define AUI_DANGER_PLOTS_REMADE (2)
+/// Queued attacks are dumb because they are constructed based on statistical averages instead of having the AI send out an attack and plan for follow-up attacks based on actual output
+#define AUI_QUEUED_ATTACKS_REMOVED
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 #define AIR_ACTION_ATTACK		0
