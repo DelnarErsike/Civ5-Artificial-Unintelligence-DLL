@@ -117,8 +117,8 @@ public:
 
 	void UpdateDanger(bool bPretendWarWithAllCivs = false, bool bIgnoreVisibility = false);
 #ifdef AUI_DANGER_PLOTS_REMADE
-	int GetDanger(const CvPlot& pPlot, CvUnit* pUnit);
-	int GetDanger(const CvPlot& pPlot, CvCity* pCity, CvUnit* pPretendGarrison = NULL);
+	int GetDanger(const CvPlot& pPlot, CvUnit* pUnit, int iAirAction = AIR_ACTION_ATTACK, int iAfterNIntercepts = 0);
+	int GetDanger(const CvPlot& pPlot, CvCity* pCity, CvUnit* pPretendGarrison = NULL, int iAfterNIntercepts = 0);
 	int GetDanger(const CvPlot& pPlot, PlayerTypes ePlayer);
 	bool IsUnderImmediateThreat(const CvPlot& pPlot, CvUnit* pUnit);
 	bool IsUnderImmediateThreat(const CvPlot& pPlot, PlayerTypes ePlayer);

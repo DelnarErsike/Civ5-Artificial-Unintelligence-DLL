@@ -23874,11 +23874,11 @@ bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, CvUnit* pUnit) const
 	return m_pDangerPlots->IsUnderImmediateThreat(pPlot, pUnit);
 }
 
-bool CvPlayer::CouldAttackHere(CvPlot& Plot, CvUnit* pUnit) const
+bool CvPlayer::CouldAttackHere(CvPlot& pPlot, CvUnit* pUnit) const
 {
 	return m_pDangerPlots->CouldAttackHere(pPlot, pUnit);
 }
-bool CvPlayer::CouldAttackHere(CvPlot& Plot, CvCity* pCity) const
+bool CvPlayer::CouldAttackHere(CvPlot& pPlot, CvCity* pCity) const
 {
 	return m_pDangerPlots->CouldAttackHere(pPlot, pCity);
 }

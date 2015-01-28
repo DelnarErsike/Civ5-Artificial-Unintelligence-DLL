@@ -804,10 +804,15 @@ void CvTacticalAI::LaunchAttack(void* pAttacker, CvTacticalTarget* pTarget, bool
 }
 
 /// Handles notification that an attack has been resolved (so can queue another)
+#ifdef AUI_QUEUED_ATTACKS_REMOVED
+void CvTacticalAI::CombatResolved(void* pAttacker, bool /*bVictorious*/, bool bCityAttack)
+{
+#else
 void CvTacticalAI::CombatResolved(void* pAttacker, bool bVictorious, bool bCityAttack)
 {
 	int iSeriesID = 0;
 	bool bFoundIt = false;
+#endif
 
 	CvCity* pCity = NULL;
 	UnitHandle pUnit;
@@ -11864,7 +11869,7 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 	m_CurrentMoveUnits.clear();
 
 	bool bIsCityTarget = pTarget->getPlotCity() != NULL;
-#ifdef AUI_TACTICAL_FIND_UNITS_WITHIN_STRIKING_DISTANCE_AIR_SWEEPS
+#if !defined(AUI_DANGER_PLOTS_REMADE) && defined(AUI_TACTICAL_FIND_UNITS_WITHIN_STRIKING_DISTANCE_AIR_SWEEPS)
 	bool bAirUnitsAdded = false;
 #endif // AUI_TACTICAL_FIND_UNITS_WITHIN_STRIKING_DISTANCE_AIR_SWEEPS
 
@@ -12633,7 +12638,7 @@ void CvTacticalAI::ProcessAirUnitsInAttack(CvPlot* pTarget)
 		}
 	}
 
-	CvUnit* pInterceptor;
+	CvUnit* pInterceptor = NULL;
 
 	// Now let's go through all fighters to see if we can air sweep against the best interceptors
 	while (iNumInterceptionsOnPlot > iNumInterceptionsMade && iLastNumInterceptionsMade != iNumInterceptionsMade)

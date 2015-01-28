@@ -137,7 +137,9 @@ void CvPlayerAI::AI_doTurnPost()
 
 void CvPlayerAI::AI_doTurnUnitsPre()
 {
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
 	GetTacticalAI()->InitializeQueuedAttacks();
+#endif
 
 	if(isHuman())
 	{

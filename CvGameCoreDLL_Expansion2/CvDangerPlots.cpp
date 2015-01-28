@@ -339,18 +339,18 @@ int CvDangerPlots::GetDanger(const CvPlot& pPlot, PlayerTypes ePlayer)
 }
 
 /// Return the maximum amount of damage a city could take at this plot
-int CvDangerPlots::GetDanger(const CvPlot& pPlot, CvCity* pCity, CvUnit* pPretendGarrison)
+int CvDangerPlots::GetDanger(const CvPlot& pPlot, CvCity* pCity, CvUnit* pPretendGarrison, int iAfterNIntercepts)
 {
 	const int idx = pPlot.getX() + pPlot.getY() * GC.getMap().getGridWidth();
 	if (pCity != NULL)
 	{
-		return m_DangerPlots[idx].GetDanger(pCity, pPretendGarrison);
+		return m_DangerPlots[idx].GetDanger(pCity, pPretendGarrison, iAfterNIntercepts);
 	}
 	return m_DangerPlots[idx].GetDanger(NO_PLAYER);
 }
 
 /// Return the maximum amount of damage a unit could take at this plot
-int CvDangerPlots::GetDanger(const CvPlot& pPlot, CvUnit* pUnit)
+int CvDangerPlots::GetDanger(const CvPlot& pPlot, CvUnit* pUnit, int iAirAction, int iAfterNIntercepts)
 #else
 /// Return the danger value of a given plot
 int CvDangerPlots::GetDanger(const CvPlot& pPlot) const
@@ -360,7 +360,7 @@ int CvDangerPlots::GetDanger(const CvPlot& pPlot) const
 #ifdef AUI_DANGER_PLOTS_REMADE
 	if (pUnit)
 	{
-		return m_DangerPlots[idx].GetDanger(pUnit);
+		return m_DangerPlots[idx].GetDanger(pUnit, iAirAction, iAfterNIntercepts);
 	}
 	return m_DangerPlots[idx].GetDanger(NO_PLAYER);
 #else
@@ -1143,7 +1143,6 @@ int CvDangerPlotContents::GetDanger(CvUnit* pUnit, int iAirAction, int iAfterNIn
 		if (iAirAction & AIR_ACTION_INTERCEPT) // Max damage from a potential air sweep against our intercept
 		{
 			int iBestAirSweepDamage = 0;
-			CvUnit* pBestAirSweeper = NULL;
 			int iCurrentAirSweepDamage = 0;
 			for (DangerUnitVector::iterator it = m_apUnits.begin(); it < m_apUnits.end(); ++it)
 			{

@@ -8216,7 +8216,11 @@ void CvGame::updateMoves()
 						else
 						{
 							const CvUnit* pReadyUnit = player.GetFirstReadyUnit();
+#ifdef AUI_QUEUED_ATTACKS_REMOVED
+							if (pReadyUnit)
+#else
 							if(pReadyUnit && !player.GetTacticalAI()->IsInQueuedAttack(pReadyUnit))
+#endif
 							{
 								int iWaitTime = 100;
 								if(!isNetworkMultiPlayer())
