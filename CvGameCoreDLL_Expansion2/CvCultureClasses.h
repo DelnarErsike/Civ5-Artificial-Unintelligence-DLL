@@ -76,6 +76,10 @@ public:
 	PlayerTypes GetGreatWorkController(int iIndex) const;
 	int GetGreatWorkCurrentThemingBonus (int iIndex) const;
 
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	bool CanSwapGreatWorks(PlayerTypes ePlayer1, int iWork1, PlayerTypes ePlayer2, int iWork2, bool bIsFirst = true);
+	void SwapGreatWorksNoCheck(PlayerTypes ePlayer1, int iWork1, PlayerTypes ePlayer2, int iWork2);
+#endif
 	bool SwapGreatWorks (PlayerTypes ePlayer1, int iWork1, PlayerTypes ePlayer2, int iWork2);
 	void MoveGreatWorks(PlayerTypes ePlayer, int iCity1, int iBuildingClass1, int iWorkIndex1, 
 																					 int iCity2, int iBuildingClass2, int iWorkIndex2);
@@ -139,6 +143,13 @@ public:
 	int m_iSlot;
 	PlayerTypes m_ePlayer;
 	EraTypes m_eEra;
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	int m_iNumWorksOfSamePlayer;
+	int m_iNumWorksOfSameEra;
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+	bool m_bProcessed;
+#endif
+#endif
 };
 
 class CvGreatWorkBuildingInMyEmpire
@@ -152,7 +163,19 @@ public:
 	BuildingTypes m_eBuilding;
 	bool m_bThemed;
 	bool m_bEndangered;
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	bool m_bIsCoastal;
+	int m_iGreatWorkSlots;
+	bool m_bHasBonus;
+	CvBuildingEntry * m_pBuild;
+#endif
 };
+
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+typedef FFastVector<CvGreatWorkInMyEmpire, true, c_eCiv5GameplayDLL> GreatWorksVector;
+typedef FFastVector<CvGreatWorkInMyEmpire*, true, c_eCiv5GameplayDLL> GreatWorksPointerVector;
+typedef FFastVector<CvGreatWorkBuildingInMyEmpire, true, c_eCiv5GameplayDLL> GreatWorksBuildingVector;
+#endif
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //  CLASS:		CvPlayerCulture
@@ -182,10 +205,18 @@ public:
 	bool GetGreatWorkLocation(int iGreatWorkIndex, int &iCityID, BuildingTypes &eBuilding, int &iSlot);
 
 	void DoSwapGreatWorks();
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	void SortGreatWorkArray(GreatWorksVector& kWorks);
+	void MoveWorks(GreatWorkSlotType eType, GreatWorksBuildingVector &buildings, GreatWorksVector *works1, GreatWorksVector *works2 = NULL);
+	bool ThemeBuilding(GreatWorksBuildingVector::const_iterator it, GreatWorksVector *works1, GreatWorksVector *works2, bool bConsiderOtherPlayers);
+	bool ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg, const int iThemingBonusIndex, const uint iNumSlots, GreatWorksVector *works1, GreatWorksVector *works2, bool bConsiderOtherPlayers);
+	bool FillBuilding(GreatWorksBuildingVector::const_iterator it, GreatWorksVector *works1, GreatWorksVector *works2);
+#else
 	void MoveWorks (GreatWorkSlotType eType, vector<CvGreatWorkBuildingInMyEmpire> &buildings, vector<CvGreatWorkInMyEmpire> &works1, vector<CvGreatWorkInMyEmpire> &works2);
 	bool ThemeBuilding(vector<CvGreatWorkBuildingInMyEmpire>::const_iterator it, vector<CvGreatWorkInMyEmpire> &works1, vector<CvGreatWorkInMyEmpire> &works2, bool bConsiderOtherPlayers);
 	bool ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg, int iThemingBonusIndex, int iNumSlots, vector<CvGreatWorkInMyEmpire> &works1, vector<CvGreatWorkInMyEmpire> &works2, bool bConsiderOtherPlayers);
 	bool FillBuilding(vector<CvGreatWorkBuildingInMyEmpire>::const_iterator it, vector<CvGreatWorkInMyEmpire> &works1, vector<CvGreatWorkInMyEmpire> &works2);
+#endif
 	void MoveWorkIntoSlot (CvGreatWorkInMyEmpire kWork, int iCityID, BuildingTypes eBuilding, int iSlot);
 	int GetSwappableWritingIndex() const;
 	int GetSwappableArtIndex() const;
@@ -346,8 +377,13 @@ namespace CultureHelpers
 	GreatWorkSlotType GetGreatWorkSlot(GreatWorkType eType);
 	CvString GetGreatWorkAudio(GreatWorkType eGreatWorkType);
 	int GetThemingBonusIndex(PlayerTypes eOwner, CvBuildingEntry *pkEntry, vector<int> &aGreatWorkIndices);
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	bool IsValidForThemingBonus(CvThemingBonusInfo* pBonusInfo, GreatWorksPointerVector& apWorksChosen, PlayerTypes eOwner, CvGreatWork* pGreatWork);
+	int FindWorkNotChosen(GreatWorksVector* paWorks, GreatWorksPointerVector* papWorksChosen, FFastVector<int, true, c_eCiv5GameplayDLL>* pPlannedSwapList = NULL);
+#else
 	bool IsValidForThemingBonus(CvThemingBonusInfo *pBonusInfo, EraTypes eEra, vector<EraTypes> &aErasSeen, PlayerTypes ePlayer, vector<PlayerTypes> &aPlayersSeen, PlayerTypes eOwner);
 	int FindWorkNotChosen(vector<CvGreatWorkInMyEmpire> &aWorks, vector<int> &aWorksChosen);
+#endif
 	void SendArtSwapNotification(GreatWorkSlotType eType, bool bArt, PlayerTypes eOriginator, PlayerTypes eReceipient, int iWorkFromOriginator, int iWorkFromRecipient);
 }
 

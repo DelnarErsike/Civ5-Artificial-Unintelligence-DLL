@@ -127,6 +127,9 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_DANGER_PLOTS_REMADE (2)
 /// Queued attacks are dumb because they are constructed based on statistical averages instead of having the AI send out an attack and plan for follow-up attacks based on actual output
 #define AUI_QUEUED_ATTACKS_REMOVED
+/// All the functions related to swapping great works were written extremely poorly, so they have been or are being restructured or remade
+///		Fixes include: AI not prioritizing Great Works at all, AI not swapping Music, AI not able to swap great works owned by other players that were not created by that player, AI not prioritizing great work slots that give unit XP if filled, AI giving inefficient Museum fill the same priority as more efficient fills, AI not willing to swap with more than one player for a given building, AI not able to process equal Art-Artifact case for slots numbers that were multiples of 2 and an odd number
+#define AUI_DO_SWAP_GREAT_WORKS_REMADE
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 #define AIR_ACTION_ATTACK		0

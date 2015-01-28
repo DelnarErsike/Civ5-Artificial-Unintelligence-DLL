@@ -372,6 +372,321 @@ int CvGameCulture::GetGreatWorkCurrentThemingBonus (int iIndex) const
 	return 0;
 }
 
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+bool CvGameCulture::CanSwapGreatWorks(PlayerTypes ePlayer1, int iWork1, PlayerTypes ePlayer2, int iWork2, bool bIsFirst)
+{
+	if (ePlayer1 == NO_PLAYER || ePlayer2 == NO_PLAYER)
+	{
+		return false;
+	}
+
+	if (iWork1 == -1 || iWork2 == -1)
+	{
+		return false;
+	}
+
+	CvPlayer& kPlayer1 = GET_PLAYER(ePlayer1);
+	CvPlayer& kPlayer2 = GET_PLAYER(ePlayer2);
+
+	if (!kPlayer1.isAlive() || !kPlayer2.isAlive())
+	{
+		return false;
+	}
+
+	CvPlayerCulture* pCulture1 = kPlayer1.GetCulture();
+	CvPlayerCulture* pCulture2 = kPlayer2.GetCulture();
+
+	GreatWorkClass eWritingClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_LITERATURE");
+	GreatWorkClass eArtClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_ART");
+	GreatWorkClass eArtifactsClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_ARTIFACT");
+	GreatWorkClass eMusicClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_MUSIC");
+
+	GreatWorkClass eClass1 = GetGreatWorkClass(iWork1);
+	GreatWorkClass eClass2 = GetGreatWorkClass(iWork2);
+
+	if (eClass1 != eClass2)
+	{
+		return false;
+	}
+
+	bool bFoundSwappable = false;
+	// We can't trade things that aren't in our swappable slots
+	if (bIsFirst)
+	{
+		if (eClass1 == eWritingClass)
+		{
+			if (pCulture1->GetSwappableWritingIndex() == iWork1)
+			{
+				bFoundSwappable = true;
+			}
+		}
+		else if (eClass1 == eArtClass)
+		{
+			if (pCulture1->GetSwappableArtIndex() == iWork1)
+			{
+				bFoundSwappable = true;
+			}
+		}
+		else if (eClass1 == eArtifactsClass)
+		{
+			if (pCulture1->GetSwappableArtifactIndex() == iWork1)
+			{
+				bFoundSwappable = true;
+			}
+		}
+		else if (eClass1 == eMusicClass)
+		{
+			if (pCulture1->GetSwappableMusicIndex() == iWork1)
+			{
+				bFoundSwappable = true;
+			}
+		}
+
+		if (!bFoundSwappable)
+		{
+			return false;
+		}
+
+		bFoundSwappable = false;
+	}
+	if (eClass2 == eWritingClass)
+	{
+		if (pCulture2->GetSwappableWritingIndex() == iWork2)
+		{
+			bFoundSwappable = true;
+		}
+	}
+	else if (eClass2 == eArtClass)
+	{
+		if (pCulture2->GetSwappableArtIndex() == iWork2)
+		{
+			bFoundSwappable = true;
+		}
+	}
+	else if (eClass2 == eArtifactsClass)
+	{
+		if (pCulture2->GetSwappableArtifactIndex() == iWork2)
+		{
+			bFoundSwappable = true;
+		}
+	}
+	else if (eClass2 == eMusicClass)
+	{
+		if (pCulture2->GetSwappableMusicIndex() == iWork2)
+		{
+			bFoundSwappable = true;
+		}
+	}
+
+	if (!bFoundSwappable)
+	{
+		return false;
+	}
+
+	int iCityLoop;
+	CvCity* pCity = NULL;
+	for (pCity = kPlayer1.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer1.nextCity(&iCityLoop))
+	{
+		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		{
+			CvBuildingEntry *pkBuilding = GC.getBuildingInfo((BuildingTypes)iBuildingLoop);
+			if (pkBuilding)
+			{
+				if (pCity->GetCityBuildings()->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
+				{
+					BuildingClassTypes eBuildingClass = (BuildingClassTypes)pkBuilding->GetBuildingClassType();
+					int iNumSlots = pkBuilding->GetGreatWorkCount();
+					for (int iI = 0; iI < iNumSlots; iI++)
+					{
+						int iGreatWorkIndex = pCity->GetCityBuildings()->GetBuildingGreatWork(eBuildingClass, iI);
+						if (iGreatWorkIndex == iWork1)
+						{
+							goto NextPlayer;
+						}
+					}
+				}
+			}
+		}
+	}
+	return false;
+	
+NextPlayer:
+	for (pCity = kPlayer2.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer2.nextCity(&iCityLoop))
+	{
+		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		{
+			CvBuildingEntry *pkBuilding = GC.getBuildingInfo((BuildingTypes)iBuildingLoop);
+			if (pkBuilding)
+			{
+				if (pCity->GetCityBuildings()->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
+				{
+					BuildingClassTypes eBuildingClass = (BuildingClassTypes)pkBuilding->GetBuildingClassType();
+					int iNumSlots = pkBuilding->GetGreatWorkCount();
+					for (int iI = 0; iI < iNumSlots; iI++)
+					{
+						int iGreatWorkIndex = pCity->GetCityBuildings()->GetBuildingGreatWork(eBuildingClass, iI);
+						if (iGreatWorkIndex == iWork2)
+						{
+							return true;
+						}
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
+
+/// Swap the great works (without checking, since the checks already went through)
+void CvGameCulture::SwapGreatWorksNoCheck(PlayerTypes ePlayer1, int iWork1, PlayerTypes ePlayer2, int iWork2)
+{
+	CvPlayer& kPlayer1 = GET_PLAYER(ePlayer1);
+	CvPlayer& kPlayer2 = GET_PLAYER(ePlayer2);
+	CvPlayerCulture* pCulture1 = kPlayer1.GetCulture();
+	CvPlayerCulture* pCulture2 = kPlayer2.GetCulture();
+
+	GreatWorkClass eWritingClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_LITERATURE");
+	GreatWorkClass eArtClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_ART");
+	GreatWorkClass eArtifactsClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_ARTIFACT");
+	GreatWorkClass eMusicClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_MUSIC");
+
+	GreatWorkClass eClass1 = GetGreatWorkClass(iWork1);
+	GreatWorkClass eClass2 = GetGreatWorkClass(iWork2);
+
+	if (eClass1 == eWritingClass)
+	{
+		if (pCulture1->GetSwappableWritingIndex() == iWork1)
+		{
+			pCulture1->SetSwappableWritingIndex(-1);
+		}
+	}
+	else if (eClass1 == eArtClass)
+	{
+		if (pCulture1->GetSwappableArtIndex() == iWork1)
+		{
+			pCulture1->SetSwappableArtIndex(-1);
+		}
+	}
+	else if (eClass1 == eArtifactsClass)
+	{
+		if (pCulture1->GetSwappableArtifactIndex() == iWork1)
+		{
+			pCulture1->SetSwappableArtifactIndex(-1);
+		}
+	}
+	else if (eClass1 == eMusicClass)
+	{
+		if (pCulture1->GetSwappableMusicIndex() == iWork1)
+		{
+			pCulture1->SetSwappableMusicIndex(-1);
+		}
+	}
+	if (eClass2 == eWritingClass)
+	{
+		if (pCulture2->GetSwappableWritingIndex() == iWork2)
+		{
+			pCulture2->SetSwappableWritingIndex(-1);
+		}
+	}
+	else if (eClass2 == eArtClass)
+	{
+		if (pCulture2->GetSwappableArtIndex() == iWork2)
+		{
+			pCulture2->SetSwappableArtIndex(-1);
+		}
+	}
+	else if (eClass2 == eArtifactsClass)
+	{
+		if (pCulture2->GetSwappableArtifactIndex() == iWork2)
+		{
+			pCulture2->SetSwappableArtifactIndex(-1);
+		}
+	}
+	else if (eClass2 == eMusicClass)
+	{
+		if (pCulture2->GetSwappableMusicIndex() == iWork2)
+		{
+			pCulture2->SetSwappableMusicIndex(-1);
+		}
+	}
+
+	CvCity* pCity1 = NULL;
+	BuildingClassTypes eBuildingClass1 = NO_BUILDINGCLASS;
+	int iSwapIndex1 = -1;
+
+	CvCity* pCity2 = NULL;
+	BuildingClassTypes eBuildingClass2 = NO_BUILDINGCLASS;
+	int iSwapIndex2 = -1;
+
+	int iCityLoop;
+	CvCity* pCity = NULL;
+	for (pCity = kPlayer1.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer1.nextCity(&iCityLoop))
+	{
+		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		{
+			CvBuildingEntry *pkBuilding = GC.getBuildingInfo((BuildingTypes)iBuildingLoop);
+			if (pkBuilding)
+			{
+				if (pCity->GetCityBuildings()->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
+				{
+					BuildingClassTypes eBuildingClass = (BuildingClassTypes)pkBuilding->GetBuildingClassType();
+					int iNumSlots = pkBuilding->GetGreatWorkCount();
+					for (int iI = 0; iI < iNumSlots; iI++)
+					{
+						int iGreatWorkIndex = pCity->GetCityBuildings()->GetBuildingGreatWork(eBuildingClass, iI);
+						if (iGreatWorkIndex == iWork1)
+						{
+							pCity1 = pCity;
+							eBuildingClass1 = eBuildingClass;
+							iSwapIndex1 = iI;
+							goto NextPlayer;
+						}
+					}
+				}
+			}
+		}
+	}
+NextPlayer:
+	for (pCity = kPlayer2.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer2.nextCity(&iCityLoop))
+	{
+		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		{
+			CvBuildingEntry *pkBuilding = GC.getBuildingInfo((BuildingTypes)iBuildingLoop);
+			if (pkBuilding)
+			{
+				if (pCity->GetCityBuildings()->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
+				{
+					BuildingClassTypes eBuildingClass = (BuildingClassTypes)pkBuilding->GetBuildingClassType();
+					int iNumSlots = pkBuilding->GetGreatWorkCount();
+					for (int iI = 0; iI < iNumSlots; iI++)
+					{
+						int iGreatWorkIndex = pCity->GetCityBuildings()->GetBuildingGreatWork(eBuildingClass, iI);
+						if (iGreatWorkIndex == iWork2)
+						{
+							pCity2 = pCity;
+							eBuildingClass2 = eBuildingClass;
+							iSwapIndex2 = iI;
+							goto EndLoop;
+						}
+					}
+				}
+			}
+		}
+	}
+EndLoop:
+
+	// remove existing great works
+	pCity1->GetCityBuildings()->SetBuildingGreatWork(eBuildingClass1, iSwapIndex1, NO_GREAT_WORK);
+	pCity2->GetCityBuildings()->SetBuildingGreatWork(eBuildingClass2, iSwapIndex2, NO_GREAT_WORK);
+
+	// add in new works
+	pCity1->GetCityBuildings()->SetBuildingGreatWork(eBuildingClass1, iSwapIndex1, iWork2);
+	pCity2->GetCityBuildings()->SetBuildingGreatWork(eBuildingClass2, iSwapIndex2, iWork1);
+
+	GC.GetEngineUserInterface()->setDirty(GreatWorksScreen_DIRTY_BIT, true);
+}
+#endif
+
 /// Swap the great works!
 bool CvGameCulture::SwapGreatWorks (PlayerTypes ePlayer1, int iWork1, PlayerTypes ePlayer2, int iWork2)
 {
@@ -385,6 +700,17 @@ bool CvGameCulture::SwapGreatWorks (PlayerTypes ePlayer1, int iWork1, PlayerType
 		return false;
 	}
 	
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	CvPlayer& kPlayer1 = GET_PLAYER(ePlayer1);
+	CvPlayer& kPlayer2 = GET_PLAYER(ePlayer2);
+	if (!kPlayer1.isAlive() || !kPlayer2.isAlive())
+	{
+		return false;
+	}
+
+	CvPlayerCulture* pCulture1 = kPlayer1.GetCulture();
+	CvPlayerCulture* pCulture2 = kPlayer2.GetCulture();
+#else
 	if (!GET_PLAYER(ePlayer1).isAlive() || !GET_PLAYER(ePlayer2).isAlive())
 	{
 		return false;
@@ -392,6 +718,7 @@ bool CvGameCulture::SwapGreatWorks (PlayerTypes ePlayer1, int iWork1, PlayerType
 
 	CvPlayerCulture* pCulture1 = GET_PLAYER(ePlayer1).GetCulture();
 	CvPlayerCulture* pCulture2 = GET_PLAYER(ePlayer2).GetCulture();
+#endif
 
 	GreatWorkClass eWritingClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_LITERATURE");
 	GreatWorkClass eArtClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_ART");
@@ -495,6 +822,64 @@ bool CvGameCulture::SwapGreatWorks (PlayerTypes ePlayer1, int iWork1, PlayerType
 
 	int iCityLoop;
 	CvCity* pCity = NULL;
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	for (pCity = kPlayer1.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer1.nextCity(&iCityLoop))
+	{
+		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		{
+			CvBuildingEntry *pkBuilding = GC.getBuildingInfo((BuildingTypes)iBuildingLoop);
+			if (pkBuilding)
+			{
+				if (pCity->GetCityBuildings()->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
+				{
+					BuildingClassTypes eBuildingClass = (BuildingClassTypes)pkBuilding->GetBuildingClassType();
+					int iNumSlots = pkBuilding->GetGreatWorkCount();
+					for (int iI = 0; iI < iNumSlots; iI++)
+					{
+						int iGreatWorkIndex = pCity->GetCityBuildings()->GetBuildingGreatWork(eBuildingClass, iI);
+						if (iGreatWorkIndex == iWork1)
+						{
+							pCity1 = pCity;
+							eBuildingClass1 = eBuildingClass;
+							iSwapIndex1 = iI;
+							goto NextPlayer;
+						}
+					}
+				}
+			}
+		}
+	}
+	return false; // Couldn't find the Great Work for Player 1
+NextPlayer:
+	for (pCity = kPlayer2.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer2.nextCity(&iCityLoop))
+	{
+		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		{
+			CvBuildingEntry *pkBuilding = GC.getBuildingInfo((BuildingTypes)iBuildingLoop);
+			if (pkBuilding)
+			{
+				if (pCity->GetCityBuildings()->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
+				{
+					BuildingClassTypes eBuildingClass = (BuildingClassTypes)pkBuilding->GetBuildingClassType();
+					int iNumSlots = pkBuilding->GetGreatWorkCount();
+					for (int iI = 0; iI < iNumSlots; iI++)
+					{
+						int iGreatWorkIndex = pCity->GetCityBuildings()->GetBuildingGreatWork(eBuildingClass, iI);
+						if (iGreatWorkIndex == iWork2)
+						{
+							pCity2 = pCity;
+							eBuildingClass2 = eBuildingClass;
+							iSwapIndex2 = iI;
+							goto EndLoop;
+						}
+					}
+				}
+			}
+		}
+	}
+	return false; // Couldn't find the Great Work for Player 2
+EndLoop:
+#else
 	for (uint ui = 0; ui < 2; ui++)
 	{
 		PlayerTypes eTempPlayer = NO_PLAYER;
@@ -567,6 +952,7 @@ bool CvGameCulture::SwapGreatWorks (PlayerTypes ePlayer1, int iWork1, PlayerType
 	{
 		return false;
 	}
+#endif
 
 	// remove existing great works
 	pCity1->GetCityBuildings()->SetBuildingGreatWork(eBuildingClass1, iSwapIndex1, NO_GREAT_WORK);
@@ -945,6 +1331,16 @@ void CvPlayerCulture::DoSwapGreatWorks()
 	GreatWorkClass eArtifactsClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_ARTIFACT");
 	GreatWorkClass eMusicClass = (GreatWorkClass)GC.getInfoTypeForString("GREAT_WORK_MUSIC");
 
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	GreatWorksVector aGreatWorksWriting;
+	GreatWorksVector aGreatWorksArt;
+	GreatWorksVector aGreatWorksArtifacts;
+	GreatWorksVector aGreatWorksMusic;
+
+	GreatWorksBuildingVector aGreatWorkBuildingsWriting;
+	GreatWorksBuildingVector aGreatWorkBuildingsArt;
+	GreatWorksBuildingVector aGreatWorkBuildingsMusic;
+#else
 	vector<CvGreatWorkInMyEmpire> aGreatWorksWriting;
 	vector<CvGreatWorkInMyEmpire> aGreatWorksArt;
 	vector<CvGreatWorkInMyEmpire> aGreatWorksArtifacts;
@@ -954,12 +1350,22 @@ void CvPlayerCulture::DoSwapGreatWorks()
 	vector<CvGreatWorkBuildingInMyEmpire> aGreatWorkBuildingsWriting;
 	vector<CvGreatWorkBuildingInMyEmpire> aGreatWorkBuildingsArt;
 	vector<CvGreatWorkBuildingInMyEmpire> aGreatWorkBuildingsMusic;
-
+#endif
 	CvCity* pLoopCity = NULL;
 	int iLoop = 0;
 
 	for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 	{
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		{
+			BuildingTypes eBuilding = (BuildingTypes)iBuildingLoop;
+			if (pLoopCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0)
+			{	
+				CvBuildingEntry *pkBuilding = GC.getBuildingInfo(eBuilding);
+				if (pkBuilding && pkBuilding->GetGreatWorkCount() > 0)
+				{
+#else
 		for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
 		{
 			CvCivilizationInfo& playerCivilizationInfo = m_pPlayer->getCivilizationInfo();
@@ -970,12 +1376,27 @@ void CvPlayerCulture::DoSwapGreatWorks()
 				if (pkBuilding)
 				{
 					if (pLoopCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0)
+#endif
 					{
 						CvGreatWorkBuildingInMyEmpire building;
 						building.m_eBuilding = eBuilding;
 						building.m_iCityID = pLoopCity->GetID();
 #ifdef AUI_DANGER_PLOTS_REMADE
 						building.m_bEndangered = pLoopCity->getDamage() + m_pPlayer->GetPlotDanger(*pLoopCity->plot(), pLoopCity) >= pLoopCity->GetMaxHitPoints();
+						building.m_bThemed = false;
+						building.m_bIsCoastal = pLoopCity->isCoastal();
+						building.m_iGreatWorkSlots = pkBuilding->GetGreatWorkCount();
+						building.m_bHasBonus = false;
+						for (int iI = 0; iI < NUM_DOMAIN_TYPES; iI++)
+						{
+							if (pkBuilding->GetDomainFreeExperiencePerGreatWork(iI) > 0 && (iI != DOMAIN_SEA || building.m_bIsCoastal))
+							{
+								building.m_bHasBonus = true;
+								break;
+							}
+						}
+						building.m_pBuild = pkBuilding;
+						BuildingClassTypes eBuildingClassType = (BuildingClassTypes)pkBuilding->GetBuildingClassType();
 #else
 						building.m_bEndangered = (pLoopCity->getDamage() > 0);
 #endif
@@ -997,7 +1418,11 @@ void CvPlayerCulture::DoSwapGreatWorks()
 						int iNumSlots = pkBuilding->GetGreatWorkCount();
 						for (int iI = 0; iI < iNumSlots; iI++)
 						{
+#ifdef AUI_DANGER_PLOTS_REMADE
+							int iGreatWorkIndex = pLoopCity->GetCityBuildings()->GetBuildingGreatWork(eBuildingClassType, iI);
+#else
 							int iGreatWorkIndex = pLoopCity->GetCityBuildings()->GetBuildingGreatWork((BuildingClassTypes)iBuildingClassLoop, iI);
+#endif
 							if (iGreatWorkIndex != -1)
 							{
 								CvGreatWorkInMyEmpire work;
@@ -1007,6 +1432,13 @@ void CvPlayerCulture::DoSwapGreatWorks()
 								work.m_iSlot = iI;
 								work.m_ePlayer = GC.getGame().GetGameCulture()->GetGreatWorkCreator(iGreatWorkIndex);
 								work.m_eEra = GC.getGame().GetGameCulture()->m_CurrentGreatWorks[iGreatWorkIndex].m_eEra;
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+								work.m_iNumWorksOfSamePlayer = 0;
+								work.m_iNumWorksOfSameEra = 0;
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+								work.m_bProcessed = false;
+#endif
+#endif
 
 								GreatWorkType eGreatWorkType = GC.getGame().GetGameCulture()->GetGreatWorkType(iGreatWorkIndex);
 								GreatWorkClass eGWClass = CultureHelpers::GetGreatWorkClass(eGreatWorkType);
@@ -1034,21 +1466,66 @@ void CvPlayerCulture::DoSwapGreatWorks()
 		}
 	}
 
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	SortGreatWorkArray(aGreatWorksWriting);
+	SortGreatWorkArray(aGreatWorksArt);
+	SortGreatWorkArray(aGreatWorksArtifacts);
+	SortGreatWorkArray(aGreatWorksMusic);
+
+	MoveWorks(CvTypes::getGREAT_WORK_SLOT_LITERATURE(), aGreatWorkBuildingsWriting, &aGreatWorksWriting, NULL);
+	MoveWorks(CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT(), aGreatWorkBuildingsArt, &aGreatWorksArt, &aGreatWorksArtifacts);
+	MoveWorks(CvTypes::getGREAT_WORK_SLOT_MUSIC(), aGreatWorkBuildingsMusic, &aGreatWorksMusic, NULL);
+#else
 	MoveWorks (CvTypes::getGREAT_WORK_SLOT_LITERATURE(), aGreatWorkBuildingsWriting, aGreatWorksWriting, aNull);
 	MoveWorks (CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT(), aGreatWorkBuildingsArt, aGreatWorksArt, aGreatWorksArtifacts);
 	MoveWorks (CvTypes::getGREAT_WORK_SLOT_MUSIC(), aGreatWorkBuildingsMusic, aGreatWorksMusic, aNull);
+#endif
 }
 
 /// Sorts building by AI priority which determines the order they should be evaluated when applying theming bonuses
 static bool SortThemingBonus(const CvGreatWorkBuildingInMyEmpire& kEntry1, const CvGreatWorkBuildingInMyEmpire& kEntry2)
 {
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	CvBuildingEntry *pEntry1 = kEntry1.m_pBuild;
+	CvBuildingEntry *pEntry2 = kEntry2.m_pBuild;
+#else
 	CvBuildingEntry *pEntry1 = GC.GetGameBuildings()->GetEntry(kEntry1.m_eBuilding);
 	CvBuildingEntry *pEntry2 = GC.GetGameBuildings()->GetEntry(kEntry2.m_eBuilding);
+#endif
 
 	if (pEntry1 && pEntry2)
 	{
 		CvThemingBonusInfo *pBonus1 = pEntry1->GetThemingBonusInfo(0);
 		CvThemingBonusInfo *pBonus2 = pEntry2->GetThemingBonusInfo(0);
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+		int iFirstAIPriority = 0;
+		int iSecondAIPriority = 0;
+		if (pBonus1)
+		{
+			iFirstAIPriority = pBonus1->GetAIPriority();
+			if (pBonus1->GetBonus() > 1)
+			{
+				iFirstAIPriority += 1;
+			}
+		}
+		if (kEntry1.m_bHasBonus)
+		{
+			iFirstAIPriority += 1;
+		}
+		if (pBonus2)
+		{
+			iSecondAIPriority = pBonus2->GetAIPriority();
+			if (pBonus2->GetBonus() > 1)
+			{
+				iSecondAIPriority += 1;
+			}
+		}
+		if (kEntry1.m_bHasBonus)
+		{
+			iSecondAIPriority += 1;
+		}
+		return (iFirstAIPriority >= iSecondAIPriority);
+#else
 
 		if (pBonus1 && pBonus2)
 		{
@@ -1058,11 +1535,941 @@ static bool SortThemingBonus(const CvGreatWorkBuildingInMyEmpire& kEntry1, const
 		{
 			return true;
 		}
+#endif
 	}
 
 	return false;
 }
 
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+/// Sorts Great Works by commonality, sorting by player first and then by era
+static bool SortGreatWorksPlayerFirst(const CvGreatWorkInMyEmpire& kEntry1, const CvGreatWorkInMyEmpire& kEntry2)
+{
+	if (kEntry1.m_iNumWorksOfSamePlayer >= kEntry2.m_iNumWorksOfSamePlayer)
+	{
+		if ((kEntry1.m_iNumWorksOfSamePlayer > kEntry2.m_iNumWorksOfSamePlayer) ||
+			(kEntry1.m_iNumWorksOfSameEra >= kEntry2.m_iNumWorksOfSameEra))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+/// Sorts Great Works by commonality, sorting by era first and then by player
+static bool SortGreatWorksEraFirst(const CvGreatWorkInMyEmpire& kEntry1, const CvGreatWorkInMyEmpire& kEntry2)
+{
+	if (kEntry1.m_iNumWorksOfSameEra >= kEntry2.m_iNumWorksOfSameEra)
+	{
+		if ((kEntry1.m_iNumWorksOfSameEra > kEntry2.m_iNumWorksOfSameEra) ||
+			(kEntry1.m_iNumWorksOfSamePlayer >= kEntry2.m_iNumWorksOfSamePlayer))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+/// Sorts Great Works by how important/common they are to us (in order of increasing importance, i.e. first in the list should be least important or most common)
+void CvPlayerCulture::SortGreatWorkArray(GreatWorksVector& kWorks)
+{
+	if (kWorks.size() == 0)
+	{
+		return;
+	}
+	const int iNumEras = GC.getNumEraInfos();
+	if (iNumEras < 1)
+	{
+		return;
+	}
+	int aiNumSeenFromPlayers[MAX_PLAYERS] = {};
+	int* aiNumSeenFromEras = FNEW(int[iNumEras], c_eCiv5GameplayDLL, 0);
+	GreatWorksVector::iterator it;
+	for (it = kWorks.begin(); it != kWorks.end(); ++it)
+	{
+		++aiNumSeenFromPlayers[it->m_ePlayer];
+		++aiNumSeenFromEras[it->m_eEra];
+	}
+	int iDifferentEraCount = 0;
+	int iDifferentPlayerCount = 0;
+	for (int iI = 0; iI < MAX_PLAYERS; iI++)
+	{
+		if (aiNumSeenFromPlayers[MAX_PLAYERS] > 0)
+		{
+			iDifferentPlayerCount += 1;
+		}
+	}
+	for (int iI = 0; iI < iNumEras; iI++)
+	{
+		if (aiNumSeenFromEras[iNumEras] > 0)
+		{
+			iDifferentEraCount += 1;
+		}
+	}
+
+	// This bit's needed so std::sort can accept a static comparison function
+	for (it = kWorks.begin(); it != kWorks.end(); ++it)
+	{
+		it->m_iNumWorksOfSamePlayer = aiNumSeenFromPlayers[it->m_ePlayer];
+		it->m_iNumWorksOfSameEra = aiNumSeenFromEras[it->m_eEra];
+	}
+
+	// Sort by players first
+	if (iDifferentPlayerCount < iDifferentEraCount)
+	{
+		std::sort(kWorks.begin(), kWorks.end(), SortGreatWorksPlayerFirst);
+	}
+	// Sort by eras first
+	else
+	{
+		std::sort(kWorks.begin(), kWorks.end(), SortGreatWorksEraFirst);
+	}
+	SAFE_DELETE_ARRAY(aiNumSeenFromEras);
+}
+
+/// Overall routine that orchestrates all the maneuvering of Great Works between buildings and players for one AI turn
+void CvPlayerCulture::MoveWorks(GreatWorkSlotType eType, GreatWorksBuildingVector &buildings, GreatWorksVector* works1, GreatWorksVector* works2)
+{
+	std::sort(buildings.begin(), buildings.end(), SortThemingBonus);
+
+	// First building that are not endangered
+	GreatWorksBuildingVector::iterator itBuilding;
+	for (itBuilding = buildings.begin(); itBuilding != buildings.end(); ++itBuilding)
+	{
+		if (!itBuilding->m_bEndangered)
+		{
+			itBuilding->m_bThemed = ThemeBuilding(itBuilding, works1, works2, false /*bConsiderOtherPlayers*/);
+		}
+	}
+
+	// Second pass through those that are not endangered to see if swapping with another player would help
+	for (itBuilding = buildings.begin(); itBuilding != buildings.end(); ++itBuilding)
+	{
+		if (!itBuilding->m_bThemed && !itBuilding->m_bEndangered)
+		{
+			itBuilding->m_bThemed = ThemeBuilding(itBuilding, works1, works2, true /*bConsiderOtherPlayers*/);
+		}
+	}
+
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+	GreatWorksVector::iterator it;
+#endif
+	// Set the first work left that we haven't themed as something we'd be willing to trade
+	//    for Writing
+	if (eType == CvTypes::getGREAT_WORK_SLOT_LITERATURE())
+	{
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+		if (works1->size() > 0)
+		{
+			SetSwappableWritingIndex((*works1)[0].m_iGreatWorkIndex);
+		}
+		else
+		{
+			SetSwappableWritingIndex(-1);
+		}
+#else
+		SetSwappableWritingIndex(-1);
+		for (it = works1->begin(); it != works1->end(); ++it)
+		{
+			if (!it->m_bProcessed)
+			{
+				SetSwappableWritingIndex(it->m_iGreatWorkIndex);
+				break;
+			}
+		}
+#endif
+	}
+	//    for Music
+	else if (eType == CvTypes::getGREAT_WORK_SLOT_MUSIC())
+	{
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+		if (works1->size() > 0)
+		{
+			SetSwappableMusicIndex((*works1)[0].m_iGreatWorkIndex);
+		}
+		else
+		{
+			SetSwappableMusicIndex(-1);
+		}
+#else
+		SetSwappableMusicIndex(-1);
+		for (it = works1->begin(); it != works1->end(); ++it)
+		{
+			if (!it->m_bProcessed)
+			{
+				SetSwappableMusicIndex(it->m_iGreatWorkIndex);
+				break;
+			}
+		}
+#endif
+	}
+
+	//    for Art and Artifacts
+	else
+	{
+		if (eType == CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT())
+		{
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+			if (works1->size() > 0)
+			{
+				SetSwappableArtIndex((*works1)[0].m_iGreatWorkIndex);
+			}
+			else
+			{
+				SetSwappableArtIndex(-1);
+			}
+			if (works2->size() > 0)
+			{
+				SetSwappableArtifactIndex((*works2)[0].m_iGreatWorkIndex);
+			}
+			else
+			{
+				SetSwappableArtifactIndex(-1);
+			}
+#else
+			SetSwappableArtIndex(-1);
+			for (it = works1->begin(); it != works1->end(); ++it)
+			{
+				if (!it->m_bProcessed)
+				{
+					SetSwappableArtIndex(it->m_iGreatWorkIndex);
+					break;
+				}
+			}
+			SetSwappableArtifactIndex(-1);
+			for (it = works2->begin(); it != works2->end(); ++it)
+			{
+				if (!it->m_bProcessed)
+				{
+					SetSwappableArtifactIndex(it->m_iGreatWorkIndex);
+					break;
+				}
+			}
+#endif
+		}
+	}
+
+	// Fill non-endangered buildings with great works
+	for (itBuilding = buildings.begin(); itBuilding != buildings.end(); ++itBuilding)
+	{
+		if (!itBuilding->m_bEndangered && !itBuilding->m_bThemed)
+		{
+			itBuilding->m_bThemed = FillBuilding(itBuilding, works1, works2);
+		}
+	}
+
+	// Endangered buildings are filled as a final resort; themed ones first
+	for (itBuilding = buildings.begin(); itBuilding != buildings.end(); ++itBuilding)
+	{
+		if (itBuilding->m_bEndangered)
+		{
+			itBuilding->m_bThemed = ThemeBuilding(itBuilding, works1, works2, false /*bConsiderOtherPlayers*/);
+		}
+	}
+
+	// Endangered buildings are filled as a final resort; just dump the rest
+	for (itBuilding = buildings.begin(); itBuilding != buildings.end(); ++itBuilding)
+	{
+		if (!itBuilding->m_bThemed)
+		{
+			FillBuilding(itBuilding, works1, works2);
+		}
+	}
+}
+
+/// Uses the available Great Works to fill a building with those works that provide the best Theming Bonus
+bool CvPlayerCulture::ThemeBuilding(GreatWorksBuildingVector::const_iterator buildingIt, GreatWorksVector* works1, GreatWorksVector* works2, bool bConsiderOtherPlayers)
+{
+	uint uiCountSlots = buildingIt->m_iGreatWorkSlots;
+	if (uiCountSlots < 2 && !buildingIt->m_bHasBonus)
+	{
+		return false;
+	}
+	CvBuildingEntry *pkEntry = buildingIt->m_pBuild;
+	if (!pkEntry)
+	{
+		return false;
+	}
+	// Different logic required for ones with bonuses only (since we're "theming" a building that gives an added bonus for having a Great Work)
+	if (pkEntry->GetNumThemingBonuses() == 0 || uiCountSlots < 2)
+	{
+		return FillBuilding(buildingIt, works1, works2);
+	}
+	GreatWorkSlotType eType = pkEntry->GetGreatWorkSlotType();
+
+	CvGameCulture *pkGameCulture = GC.getGame().GetGameCulture();
+	GreatWorksVector* pWorksToConsider = NULL;
+	GreatWorksVector* pWorksToConsider2 = NULL;
+	PlayerTypes eOwner = m_pPlayer->GetID();
+	// Current vector of works chosen for this building
+	GreatWorksPointerVector apWorksChosen;
+	apWorksChosen.reserve(uiCountSlots);
+
+	GreatWorksVector::iterator it;
+	GreatWorksVector::iterator it2;
+	FFastVector<int, true, c_eCiv5GameplayDLL> vaiGreatWorkSwaps;
+	vaiGreatWorkSwaps.reserve(3 * uiCountSlots);
+
+	// Try each of the theming bonuses for this building
+	for (int iI = 0; iI < pkEntry->GetNumThemingBonuses(); iI++)
+	{
+		CvThemingBonusInfo *pkBonusInfo = pkEntry->GetThemingBonusInfo(iI);
+		
+		if (pkBonusInfo->IsMustBeArtifact())
+		{
+			pWorksToConsider = works2;
+		}
+		// Dedicated routine to handle the equal art/artifact case
+		else if (pkBonusInfo->IsMustBeEqualArtArtifact())
+		{
+			if (ThemeEqualArtArtifact(*buildingIt, iI, uiCountSlots, works1, works2, bConsiderOtherPlayers))
+			{
+				return true;
+			}
+			else
+			{
+				continue;
+			}
+		}
+		else
+		{
+			pWorksToConsider = works1;
+			if (works2 != NULL && !pkBonusInfo->IsMustBeArt())
+			{
+				pWorksToConsider2 = works2;
+			}
+		}
+
+		if (pWorksToConsider == NULL)
+		{
+			continue;
+		}
+
+		// If not enough works, try other theming bonuses
+		if (pWorksToConsider->size() < uiCountSlots)
+		{
+			continue;
+		}
+
+		// Try each of the works as the starter
+		bool bFirstPass = (pWorksToConsider2 != NULL);
+		for (it = pWorksToConsider->begin(); it != pWorksToConsider->end() || bFirstPass; ++it)
+		{
+			if (it == pWorksToConsider->end() && bFirstPass)
+			{
+				pWorksToConsider = works2;
+				bFirstPass = false;
+				it = pWorksToConsider->begin();
+			}
+
+			// Don't have enough works left to fill slots
+			if (!bConsiderOtherPlayers && it >= pWorksToConsider->end() - uiCountSlots)
+			{
+				break;
+			}
+
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+			if (it->m_bProcessed)
+			{
+				continue;
+			}
+#endif
+
+			// First, make sure this "starter" is valid
+			if (pkBonusInfo->IsRequiresOwner() && it->m_ePlayer != eOwner)
+			{
+				continue;
+			}
+			if (pkBonusInfo->IsRequiresAnyButOwner() && it->m_ePlayer == eOwner)
+			{
+				continue;
+			}
+			apWorksChosen.clear();
+			apWorksChosen.push_back(it);
+
+			bool bThemedProperly = false;
+			// Loop through the rest looking for works that will match up
+			for (it2 = it + 1; it2 != pWorksToConsider->end(); ++it2)
+			{
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+				if (!it2->m_bProcessed)
+#endif
+				{
+					if (CultureHelpers::IsValidForThemingBonus(pkBonusInfo, apWorksChosen, eOwner, &pkGameCulture->m_CurrentGreatWorks[it2->m_iGreatWorkIndex]))
+					{
+						apWorksChosen.push_back(it2);
+						if (apWorksChosen.size() == uiCountSlots)
+						{
+							bThemedProperly = true;
+							break;
+						}
+					}
+				}
+			}
+			if (!bThemedProperly && bFirstPass)
+			{
+				for (it2 = pWorksToConsider2->begin(); it2 != pWorksToConsider2->end(); ++it2)
+				{
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+					if (!it2->m_bProcessed)
+#endif
+					{
+						if (CultureHelpers::IsValidForThemingBonus(pkBonusInfo, apWorksChosen, eOwner, &pkGameCulture->m_CurrentGreatWorks[it2->m_iGreatWorkIndex]))
+						{
+							apWorksChosen.push_back(it2);
+							if (apWorksChosen.size() == uiCountSlots)
+							{
+								bThemedProperly = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			// If we are short, let's look to other players
+			if (bConsiderOtherPlayers && !bThemedProperly)
+			{
+				vaiGreatWorkSwaps.clear();
+				for (int iLoopPlayer = 0; iLoopPlayer < MAX_MAJOR_CIVS && vaiGreatWorkSwaps.size() < 3 * (uiCountSlots - apWorksChosen.size()); iLoopPlayer++)
+				{
+					CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iLoopPlayer);
+					if (kPlayer.isAlive() && m_pPlayer->GetDiplomacyAI()->IsPlayerValid((PlayerTypes)iLoopPlayer))
+					{
+						int iToBeAcquiredWorkIndex = NO_GREAT_WORK;
+						bool bCheckForArtifact = false;
+						bool bCheckForArt = false;
+						if (eType == CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT())
+						{
+							if (pkBonusInfo->IsMustBeArtifact())
+							{
+								iToBeAcquiredWorkIndex = kPlayer.GetCulture()->GetSwappableArtifactIndex();
+							}
+							else if (pkBonusInfo->IsMustBeArt())
+							{
+								iToBeAcquiredWorkIndex = kPlayer.GetCulture()->GetSwappableArtIndex();
+							}
+							else if (pWorksToConsider == works1)
+							{
+								iToBeAcquiredWorkIndex = kPlayer.GetCulture()->GetSwappableArtIndex();
+								bCheckForArtifact = true;
+							}
+							else
+							{
+								iToBeAcquiredWorkIndex = kPlayer.GetCulture()->GetSwappableArtifactIndex();
+								bCheckForArt = true;
+							}
+						}
+						else if (eType == CvTypes::getGREAT_WORK_SLOT_MUSIC())
+						{
+							iToBeAcquiredWorkIndex = kPlayer.GetCulture()->GetSwappableMusicIndex();
+						}
+						else
+						{
+							iToBeAcquiredWorkIndex = kPlayer.GetCulture()->GetSwappableWritingIndex();
+						}
+						int iToBeDiscardedWorkIndex = CultureHelpers::FindWorkNotChosen(pWorksToConsider, &apWorksChosen, &vaiGreatWorkSwaps);
+
+						// Does this work fit?
+						if (iToBeAcquiredWorkIndex != NO_GREAT_WORK && iToBeDiscardedWorkIndex != NO_GREAT_WORK)
+						{
+							if (CultureHelpers::IsValidForThemingBonus(pkBonusInfo, apWorksChosen, eOwner, &pkGameCulture->m_CurrentGreatWorks[iToBeAcquiredWorkIndex]))
+							{
+								if (pkGameCulture->CanSwapGreatWorks(eOwner, iToBeDiscardedWorkIndex, (PlayerTypes)iLoopPlayer, iToBeAcquiredWorkIndex, vaiGreatWorkSwaps.size() == 0))
+								{
+									vaiGreatWorkSwaps.push_back(iToBeDiscardedWorkIndex);
+									vaiGreatWorkSwaps.push_back(iLoopPlayer);
+									vaiGreatWorkSwaps.push_back(iToBeAcquiredWorkIndex);
+								}
+							}
+						}
+						else if (bCheckForArtifact || bCheckForArt)
+						{
+							if (bCheckForArtifact)
+							{
+								iToBeAcquiredWorkIndex = kPlayer.GetCulture()->GetSwappableArtifactIndex();
+								iToBeDiscardedWorkIndex = CultureHelpers::FindWorkNotChosen(works2, &apWorksChosen, &vaiGreatWorkSwaps);
+							}
+							else
+							{
+								iToBeAcquiredWorkIndex = kPlayer.GetCulture()->GetSwappableArtIndex();
+								iToBeDiscardedWorkIndex = CultureHelpers::FindWorkNotChosen(works1, &apWorksChosen, &vaiGreatWorkSwaps);
+							}
+							if (iToBeAcquiredWorkIndex != NO_GREAT_WORK && iToBeDiscardedWorkIndex != NO_GREAT_WORK)
+							{
+								if (CultureHelpers::IsValidForThemingBonus(pkBonusInfo, apWorksChosen, eOwner, &pkGameCulture->m_CurrentGreatWorks[iToBeAcquiredWorkIndex]))
+								{
+									if (pkGameCulture->CanSwapGreatWorks(eOwner, iToBeDiscardedWorkIndex, (PlayerTypes)iLoopPlayer, iToBeAcquiredWorkIndex, vaiGreatWorkSwaps.size() == 0))
+									{
+										vaiGreatWorkSwaps.push_back(iToBeDiscardedWorkIndex);
+										vaiGreatWorkSwaps.push_back(iLoopPlayer);
+										vaiGreatWorkSwaps.push_back(iToBeAcquiredWorkIndex);
+									}
+								}
+							}
+						}
+					}
+				}
+
+				// If we can fill the bonus after executing all planned swaps, go ahead and do that
+				if (vaiGreatWorkSwaps.size() == 3 * (uiCountSlots - apWorksChosen.size()))
+				{
+					bThemedProperly = true;
+					int iToBeDiscardedWorkIndex;
+					int iToBeAcquiredWorkIndex;
+					PlayerTypes eOtherPlayer;
+					for (FFastVector<int, true, c_eCiv5GameplayDLL>::iterator it3 = vaiGreatWorkSwaps.begin(); it3 != vaiGreatWorkSwaps.end(); it3 += 3)
+					{
+						iToBeDiscardedWorkIndex = *it3;
+						iToBeAcquiredWorkIndex = *(it3 + 1);
+						eOtherPlayer = (PlayerTypes)(*(it3 + 2));
+						pkGameCulture->SwapGreatWorksNoCheck(eOwner, iToBeDiscardedWorkIndex, eOtherPlayer, iToBeAcquiredWorkIndex);
+						LogSwapWorks(eOtherPlayer, iToBeDiscardedWorkIndex, iToBeAcquiredWorkIndex);
+
+						CvGreatWorkInMyEmpire work;
+						work.m_iGreatWorkIndex = iToBeAcquiredWorkIndex;
+						work.m_ePlayer = pkGameCulture->m_CurrentGreatWorks[iToBeAcquiredWorkIndex].m_ePlayer;
+						work.m_eEra = pkGameCulture->m_CurrentGreatWorks[iToBeAcquiredWorkIndex].m_eEra;
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+						work.m_bProcessed = false;
+#endif
+						// Populates the newly acquired Great Work's info
+						GetGreatWorkLocation(iToBeAcquiredWorkIndex, work.m_iCityID, work.m_eBuilding, work.m_iSlot);
+
+						// Doesn't matter that we might be pushing back to the wrong vector, since we're going to remove it later anyway
+						pWorksToConsider->push_back(work);
+						apWorksChosen.push_back(&(pWorksToConsider->back()));
+
+						// Set the work we traded away as processed so we don't try to fit it in somewhere
+						bool bRemoved = false;
+						for (it2 = works1->begin(); it2 != works1->end(); ++it2)
+						{
+							if (it2->m_iGreatWorkIndex == iToBeDiscardedWorkIndex)
+							{
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+								works1->erase(it2);
+#else
+								it2->m_bProcessed = true;
+#endif
+								bRemoved = true;
+								break;
+							}
+						}
+						if (!bRemoved && works2 != NULL)
+						{
+							for (it2 = works2->begin(); it2 != works2->end(); ++it2)
+							{
+								if (it2->m_iGreatWorkIndex == iToBeDiscardedWorkIndex)
+								{
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+									works1->erase(it2);
+#else
+									it2->m_bProcessed = true;
+#endif
+									break;
+								}
+							}
+						}
+
+						CultureHelpers::SendArtSwapNotification(pkEntry->GetGreatWorkSlotType(), pkBonusInfo->IsMustBeArt(), m_pPlayer->GetID(), eOtherPlayer, iToBeDiscardedWorkIndex, iToBeAcquiredWorkIndex);
+					}
+				}
+			}
+
+			if (bThemedProperly)
+			{
+				int iCurrentSlot = 0; 
+				for (GreatWorksPointerVector::iterator it4 = apWorksChosen.begin(); it4 != apWorksChosen.end(); ++it4)
+				{
+					MoveWorkIntoSlot(**it4, buildingIt->m_iCityID, buildingIt->m_eBuilding, iCurrentSlot);
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+					if (*it4 >= works1->end() && *it4 < works2->end())
+					{
+						works2->erase(*it4);
+					}
+					else
+					{
+						works1->erase(*it4);
+					}
+#else
+					(*it4)->m_bProcessed = true;
+#endif
+					++iCurrentSlot;
+				}
+
+				// All done
+				LogThemedBuilding(buildingIt->m_iCityID, buildingIt->m_eBuilding, pkBonusInfo->GetBonus());
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+/// Specialized version of ThemeBuilding() that handles those buildings that are split between Art and Artifact
+bool CvPlayerCulture::ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg, const int iThemingBonusIndex, const uint uiNumSlots, GreatWorksVector *works1, GreatWorksVector *works2, bool bConsiderOtherPlayers)
+{
+	if ((uiNumSlots & 1) != 0 || (works1->size() + works2->size()) < uiNumSlots)
+	{
+		return false;
+	}
+	CvBuildingEntry *pkEntry = kBldg.m_pBuild;
+	if (!pkEntry)
+	{
+		return false;
+	}
+	CvGameCulture *pkGameCulture = GC.getGame().GetGameCulture();
+	PlayerTypes eOwner = m_pPlayer->GetID();
+	// Current vector of works chosen for this building
+	GreatWorksPointerVector apWorksChosen;
+	apWorksChosen.reserve(uiNumSlots);
+
+	GreatWorksVector::iterator it;
+	GreatWorksVector::iterator it2;
+	GreatWorksVector::iterator it3;
+	FFastVector<int, true, c_eCiv5GameplayDLL> vaiGreatWorkSwaps;
+
+	const uint uiWorksInHalf = uiNumSlots >> 1;
+	vaiGreatWorkSwaps.reserve(3 * uiNumSlots);
+
+	CvThemingBonusInfo *pkBonusInfo = pkEntry->GetThemingBonusInfo(iThemingBonusIndex);
+
+	// Try each of the Artifacts as the starter
+	for (it = works2->begin(); it != works2->end(); ++it)
+	{
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+		if (it->m_bProcessed)
+		{
+			continue;
+		}
+#endif
+		// Don't have enough works left to fill slots
+		if (!bConsiderOtherPlayers && it >= works2->end() - uiWorksInHalf)
+		{
+			break;
+		}
+		// First, make sure this "starter" is valid
+		if (pkBonusInfo->IsRequiresOwner() && it->m_ePlayer != eOwner)
+		{
+			continue;
+		}
+		if (pkBonusInfo->IsRequiresAnyButOwner() && it->m_ePlayer == eOwner)
+		{
+			continue;
+		}
+		apWorksChosen.clear();
+		apWorksChosen.push_back(it);
+
+		bool bHaveEnoughArtifacts = false;
+		if (apWorksChosen.size() == uiWorksInHalf)
+		{
+			bHaveEnoughArtifacts = true;
+		}
+		else
+		{
+			// Loop through the rest looking for works that will match up
+			for (it2 = it + 1; it2 != works2->end(); ++it2)
+			{
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+				if (!it2->m_bProcessed)
+#endif
+				{
+					if (CultureHelpers::IsValidForThemingBonus(pkBonusInfo, apWorksChosen, eOwner, &pkGameCulture->m_CurrentGreatWorks[it2->m_iGreatWorkIndex]))
+					{
+						apWorksChosen.push_back(it2);
+						if (apWorksChosen.size() == uiWorksInHalf)
+						{
+							bHaveEnoughArtifacts = true;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		vaiGreatWorkSwaps.clear();
+		if (bConsiderOtherPlayers && !bHaveEnoughArtifacts)
+		{
+			bool bFirstSwap = true;
+			for (int iLoopPlayer = 0; iLoopPlayer < MAX_MAJOR_CIVS; iLoopPlayer++)
+			{
+				CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iLoopPlayer);
+				if (kPlayer.isAlive() && m_pPlayer->GetDiplomacyAI()->IsPlayerValid((PlayerTypes)iLoopPlayer))
+				{
+					int iToBeAcquiredWorkIndex = kPlayer.GetCulture()->GetSwappableArtifactIndex();
+					int iToBeDiscardedWorkIndex = CultureHelpers::FindWorkNotChosen(works2, &apWorksChosen, &vaiGreatWorkSwaps);
+
+					// Does this work fit?
+					if (iToBeAcquiredWorkIndex != NO_GREAT_WORK && iToBeDiscardedWorkIndex != NO_GREAT_WORK)
+					{
+						if (CultureHelpers::IsValidForThemingBonus(pkBonusInfo, apWorksChosen, eOwner, &pkGameCulture->m_CurrentGreatWorks[iToBeAcquiredWorkIndex]))
+						{
+							if (pkGameCulture->CanSwapGreatWorks(eOwner, iToBeDiscardedWorkIndex, (PlayerTypes)iLoopPlayer, iToBeAcquiredWorkIndex, bFirstSwap))
+							{
+								vaiGreatWorkSwaps.push_back(iToBeDiscardedWorkIndex);
+								vaiGreatWorkSwaps.push_back(iLoopPlayer);
+								vaiGreatWorkSwaps.push_back(iToBeAcquiredWorkIndex);
+								bFirstSwap = false;
+								if (vaiGreatWorkSwaps.size() == 3 * (uiWorksInHalf - apWorksChosen.size()))
+								{
+									bHaveEnoughArtifacts = true;
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Do we have the right amount of art?
+		if (bHaveEnoughArtifacts)
+		{
+			// Now see if we can get the right number of art works to work as well
+			for (it2 = works1->begin(); it2 != works1->end() && vaiGreatWorkSwaps.size() < 3 * (uiNumSlots - apWorksChosen.size()); ++it2)
+			{
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+				if (it->m_bProcessed)
+				{
+					continue;
+				}
+#endif
+				// Don't have enough works left to fill slots
+				if (!bConsiderOtherPlayers && it2 >= works1->end() - uiWorksInHalf)
+				{
+					break;
+				}
+				// First, make sure this "starter" is valid
+				if (!CultureHelpers::IsValidForThemingBonus(pkBonusInfo, apWorksChosen, eOwner, &pkGameCulture->m_CurrentGreatWorks[it2->m_iGreatWorkIndex]))
+				{
+					continue;
+				}				
+
+				bool bHaveEnoughArt = false;
+				if (vaiGreatWorkSwaps.size() == 3 * (uiNumSlots - apWorksChosen.size()))
+				{
+					bHaveEnoughArt = true;
+				}
+				else
+				{
+					// Loop through the rest looking for works that will match up
+					for (it3 = it2 + 1; it3 != works1->end(); ++it3)
+					{
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+						if (!it3->m_bProcessed)
+#endif
+						{
+							if (CultureHelpers::IsValidForThemingBonus(pkBonusInfo, apWorksChosen, eOwner, &pkGameCulture->m_CurrentGreatWorks[it3->m_iGreatWorkIndex]))
+							{
+								apWorksChosen.push_back(it3);
+								if (vaiGreatWorkSwaps.size() == 3 * (uiNumSlots - apWorksChosen.size()))
+								{
+									bHaveEnoughArt = true;
+									break;
+								}
+							}
+						}
+					}
+				}
+
+				if (bConsiderOtherPlayers && !bHaveEnoughArtifacts)
+				{
+					bool bFirstSwap = true;
+					for (int iLoopPlayer = 0; iLoopPlayer < MAX_MAJOR_CIVS; iLoopPlayer++)
+					{
+						CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iLoopPlayer);
+						if (kPlayer.isAlive() && m_pPlayer->GetDiplomacyAI()->IsPlayerValid((PlayerTypes)iLoopPlayer))
+						{
+							int iToBeAcquiredWorkIndex = kPlayer.GetCulture()->GetSwappableArtIndex();
+							int iToBeDiscardedWorkIndex = CultureHelpers::FindWorkNotChosen(works1, &apWorksChosen, &vaiGreatWorkSwaps);
+
+							// Does this work fit?
+							if (iToBeAcquiredWorkIndex != NO_GREAT_WORK && iToBeDiscardedWorkIndex != NO_GREAT_WORK)
+							{
+								if (CultureHelpers::IsValidForThemingBonus(pkBonusInfo, apWorksChosen, eOwner, &pkGameCulture->m_CurrentGreatWorks[iToBeAcquiredWorkIndex]))
+								{
+									if (pkGameCulture->CanSwapGreatWorks(eOwner, iToBeDiscardedWorkIndex, (PlayerTypes)iLoopPlayer, iToBeAcquiredWorkIndex, bFirstSwap))
+									{
+										vaiGreatWorkSwaps.push_back(iToBeDiscardedWorkIndex);
+										vaiGreatWorkSwaps.push_back(iLoopPlayer);
+										vaiGreatWorkSwaps.push_back(iToBeAcquiredWorkIndex);
+										bFirstSwap = false;
+										if (vaiGreatWorkSwaps.size() == 3 * (uiNumSlots - apWorksChosen.size()))
+										{
+											bHaveEnoughArt = true;
+											break;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				bool bThemedProperly = (apWorksChosen.size() == uiNumSlots);
+
+				// If we can fill the bonus after executing all planned swaps, go ahead and do that
+				if (!bThemedProperly && vaiGreatWorkSwaps.size() == 3 * (uiNumSlots - apWorksChosen.size()))
+				{
+					bThemedProperly = true;
+					int iToBeDiscardedWorkIndex;
+					int iToBeAcquiredWorkIndex;
+					PlayerTypes eOtherPlayer;
+					for (FFastVector<int, true, c_eCiv5GameplayDLL>::iterator it5 = vaiGreatWorkSwaps.begin(); it5 != vaiGreatWorkSwaps.end(); it5 += 3)
+					{
+						iToBeDiscardedWorkIndex = *it5;
+						iToBeAcquiredWorkIndex = *(it5 + 1);
+						eOtherPlayer = (PlayerTypes)(*(it5 + 2));
+						pkGameCulture->SwapGreatWorksNoCheck(eOwner, iToBeDiscardedWorkIndex, eOtherPlayer, iToBeAcquiredWorkIndex);
+						LogSwapWorks(eOtherPlayer, iToBeDiscardedWorkIndex, iToBeAcquiredWorkIndex);
+
+						CvGreatWorkInMyEmpire work;
+						work.m_iGreatWorkIndex = iToBeAcquiredWorkIndex;
+						work.m_ePlayer = pkGameCulture->m_CurrentGreatWorks[iToBeAcquiredWorkIndex].m_ePlayer;
+						work.m_eEra = pkGameCulture->m_CurrentGreatWorks[iToBeAcquiredWorkIndex].m_eEra;
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+						work.m_bProcessed = false;
+#endif
+						// Populates the newly acquired Great Work's info
+						GetGreatWorkLocation(iToBeAcquiredWorkIndex, work.m_iCityID, work.m_eBuilding, work.m_iSlot);
+
+						// Doesn't matter that we might be pushing back to the wrong vector, since we're going to remove it later anyway
+						works1->push_back(work);
+						apWorksChosen.push_back(&(works1->back()));
+
+						// Set the work we traded away as processed so we don't try to fit it in somewhere
+						bool bRemoved = false;
+						for (it3 = works1->begin(); it3 != works1->end(); ++it3)
+						{
+							if (it3->m_iGreatWorkIndex == iToBeDiscardedWorkIndex)
+							{
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+								works1->erase(it3);
+#else
+								it3->m_bProcessed = true;
+#endif
+								bRemoved = true;
+								break;	
+							}
+						}
+						if (!bRemoved)
+						{
+							for (it3 = works2->begin(); it3 != works2->end(); ++it3)
+							{
+								if (it3->m_iGreatWorkIndex == iToBeDiscardedWorkIndex)
+								{
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+									works2->erase(it3);
+#else
+									it3->m_bProcessed = true;
+#endif
+									break;
+								}
+							}
+						}
+
+						CultureHelpers::SendArtSwapNotification(pkEntry->GetGreatWorkSlotType(), pkBonusInfo->IsMustBeArt(), m_pPlayer->GetID(), eOtherPlayer, iToBeDiscardedWorkIndex, iToBeAcquiredWorkIndex);
+					}
+				}
+
+				if (bThemedProperly)
+				{
+					int iCurrentSlot = 0;
+					for (GreatWorksPointerVector::iterator it4 = apWorksChosen.begin(); it4 != apWorksChosen.end(); ++it4)
+					{
+						MoveWorkIntoSlot(**it4, kBldg.m_iCityID, kBldg.m_eBuilding, iCurrentSlot);
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+						if (*it4 >= works1->end() && *it4 < works2->end())
+						{
+							works2->erase(*it4);
+						}
+						else
+						{
+							works1->erase(*it4);
+						}
+#else
+						(*it4)->m_bProcessed = true;
+#endif
+						++iCurrentSlot;
+					}
+
+					// All done
+					LogThemedBuilding(kBldg.m_iCityID, kBldg.m_eBuilding, pkBonusInfo->GetBonus());
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+/// Simple version of ThemeBuilding() which just fills in a building with ANY Great Works, not ones that provide a theming bonus
+bool CvPlayerCulture::FillBuilding(GreatWorksBuildingVector::const_iterator buildingIt, GreatWorksVector* works1, GreatWorksVector* works2)
+{
+	CvBuildingEntry *pkEntry = buildingIt->m_pBuild;
+	if (!pkEntry)
+	{
+		return false;
+	}
+
+	const int iCountSlots = pkEntry->GetGreatWorkCount();
+	if (iCountSlots < 1)
+	{
+		return false;
+	}
+
+	GreatWorksVector::iterator it;
+	int iI = 0;
+
+	if (works1 != NULL)
+	{
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+		for (it = works1->begin(); iI < iCountSlots && it != works1->end(); iI++)
+		{
+			MoveWorkIntoSlot(*it, buildingIt->m_iCityID, buildingIt->m_eBuilding, iI);
+			works1->erase(it);
+#else
+		for (it = works1->begin(); iI < iCountSlots && it != works1->end(); ++it)
+		{
+			if (!it->m_bProcessed)
+			{
+				it->m_bProcessed = true;
+				MoveWorkIntoSlot(*it, buildingIt->m_iCityID, buildingIt->m_eBuilding, iI);
+				iI++;
+			}
+#endif
+		}
+	}
+	if (works2 != NULL)
+	{
+#ifdef AUI_FIX_FFASTVECTOR_ERASE
+		for (it = works2->begin(); iI < iCountSlots && it != works2->end(); iI++)
+		{
+			MoveWorkIntoSlot(*it, buildingIt->m_iCityID, buildingIt->m_eBuilding, iI);
+			works2->erase(it);
+#else
+		for (it = works2->begin(); iI < iCountSlots && it != works2->end(); ++it)
+		{
+			if (!it->m_bProcessed)
+			{
+				it->m_bProcessed = true;
+				MoveWorkIntoSlot(*it, buildingIt->m_iCityID, buildingIt->m_eBuilding, iI);
+				iI++;
+			}
+#endif
+		}
+	}
+
+	if (iI != 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+#else
 /// Overall routine that orchestrates all the maneuvering of Great Works between buildings and players for one AI turn
 void CvPlayerCulture::MoveWorks (GreatWorkSlotType eType, vector<CvGreatWorkBuildingInMyEmpire> &buildings, vector<CvGreatWorkInMyEmpire> &works1, vector<CvGreatWorkInMyEmpire> &works2)
 {
@@ -1686,6 +3093,7 @@ bool CvPlayerCulture::FillBuilding(vector<CvGreatWorkBuildingInMyEmpire>::const_
 	}
 	return true;
 }
+#endif
 
 /// Lower-level routine to perform the swap between two Great Works within your own empire
 void CvPlayerCulture::MoveWorkIntoSlot (CvGreatWorkInMyEmpire kWork, int iCityID, BuildingTypes eBuilding, int iSlot)
@@ -3844,12 +5252,20 @@ void CvPlayerCulture::LogThemedBuilding(int iCityID, BuildingTypes eBuilding, in
 		return;
 	}
 
+#ifndef AUI_DO_SWAP_GREAT_WORKS_REMADE
 	CvString strLog;
 	FILogFile* pLog;
+#endif
 	CvString strPlayerName = m_pPlayer->getCivilizationShortDescription();
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	FILogFile* pLog = LOGFILEMGR.GetLog(GetLogFileName(strPlayerName), FILogFile::kDontTimeStamp);
+#else
 	pLog = LOGFILEMGR.GetLog(GetLogFileName(strPlayerName), FILogFile::kDontTimeStamp);
+#endif
 
+#ifndef AUI_DO_SWAP_GREAT_WORKS_REMADE
 	CvString strLine;
+#endif
 	CvString strTurn;
 	CvString strBonus;
 	CvBuildingEntry *pkBldg = GC.getBuildingInfo(eBuilding);
@@ -3857,7 +5273,11 @@ void CvPlayerCulture::LogThemedBuilding(int iCityID, BuildingTypes eBuilding, in
 	{
 		strTurn.Format (", %d,", GC.getGame().getGameTurn());
 		strBonus.Format (", Bonus: %d", iBonus);
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+		CvString strLine = strPlayerName + strTurn + "Themed Building in, " + m_pPlayer->getCity(iCityID)->getName() + ", " + pkBldg->GetDescription() + strBonus;
+#else
 		strLine = strPlayerName + strTurn + "Themed Building in, " + m_pPlayer->getCity(iCityID)->getName() + ", " + pkBldg->GetDescription() + strBonus;
+#endif
 
 		pLog->Msg(strLine);
 	}
@@ -3870,10 +5290,14 @@ void CvPlayerCulture::LogSwapWorks(PlayerTypes eOtherPlayer, int iWorkDiscarded,
 		return;
 	}
 
+#ifndef AUI_DO_SWAP_GREAT_WORKS_REMADE
 	CvString strLog;
 	FILogFile* pLog;
+#endif
 	CvString strPlayerName = m_pPlayer->getCivilizationShortDescription();
-	pLog = LOGFILEMGR.GetLog(GetLogFileName(strPlayerName), FILogFile::kDontTimeStamp);
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	FILogFile* pLog = LOGFILEMGR.GetLog(GetLogFileName(strPlayerName), FILogFile::kDontTimeStamp);
+#endif
 
 	CvString strLine;
 	strLine.Format ("Acquired Work from Player: %d, Discarded: %d, Acquired: %d", (int)eOtherPlayer, iWorkDiscarded, iWorkAcquired);
@@ -3887,6 +5311,17 @@ void CvPlayerCulture::LogSwapWorks(PlayerTypes eOtherPlayer, int iWorkDiscarded,
 /// Build log filename
 CvString CvPlayerCulture::GetLogFileName(CvString& playerName) const
 {
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+	// Open the log file
+	if(GC.getPlayerAndCityAILogSplit())
+	{
+		return ("CultureAILog_" + playerName + ".csv");
+	}
+	else
+	{
+		return ("CultureAILog.csv");
+	}
+#else
 	CvString strLogName;
 
 	// Open the log file
@@ -3900,6 +5335,7 @@ CvString CvPlayerCulture::GetLogFileName(CvString& playerName) const
 	}
 
 	return strLogName;
+#endif
 }
 
 // SERIALIZATION
@@ -5385,6 +6821,102 @@ int CultureHelpers::GetThemingBonusIndex(PlayerTypes eOwner, CvBuildingEntry *pk
 	return -1;
 }
 
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
+bool CultureHelpers::IsValidForThemingBonus(CvThemingBonusInfo *pBonusInfo, GreatWorksPointerVector& apWorksChosen, PlayerTypes eOwner, CvGreatWork* pGreatWork)
+{
+	if (apWorksChosen.size() <= 0)
+	{
+		return false;
+	}
+	// Can we rule this out based on player?
+	if (pBonusInfo->IsRequiresOwner())
+	{
+		if (pGreatWork->m_ePlayer != eOwner)
+		{
+			return false;
+		}
+	}
+	if (pBonusInfo->IsRequiresAnyButOwner())
+	{
+		if (pGreatWork->m_ePlayer == eOwner)
+		{
+			return false;
+		}
+	}
+	if (pBonusInfo->IsRequiresSamePlayer())
+	{
+		if (pGreatWork->m_ePlayer != (*apWorksChosen.begin())->m_ePlayer)
+		{
+			return false;
+		}
+	}
+	// Can we rule this out based on era?
+	if (pBonusInfo->IsSameEra())
+	{
+		if (pGreatWork->m_eEra != (*apWorksChosen.begin())->m_eEra)
+		{
+			return false;
+		}
+	}
+	for (GreatWorksPointerVector::iterator it = apWorksChosen.begin(); it != apWorksChosen.end(); ++it)
+	{
+		if (pBonusInfo->IsUniqueEras())
+		{
+			if (pGreatWork->m_eEra == (*it)->m_eEra)
+			{
+				return false;
+			}
+		}
+		if (pBonusInfo->IsRequiresUniquePlayers())
+		{
+			if (pGreatWork->m_ePlayer == (*it)->m_ePlayer)
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+int CultureHelpers::FindWorkNotChosen(GreatWorksVector* paWorks, GreatWorksPointerVector* papWorksChosen, FFastVector<int, true, c_eCiv5GameplayDLL>* pPlannedSwapList)
+{
+	for (GreatWorksVector::iterator it = paWorks->begin(); it != paWorks->end(); ++it)
+	{
+#ifndef AUI_FIX_FFASTVECTOR_ERASE
+		if (!it->m_bProcessed)
+#endif
+		{
+			bool bIsChosen = false;
+			// Ignore works that we have chosen for the building
+			for (GreatWorksPointerVector::iterator it2 = papWorksChosen->begin(); it2 != papWorksChosen->end(); ++it2)
+			{
+				if (it == (*it2))
+				{
+					bIsChosen = true;
+					break;
+				}
+			}
+			// Ignore works that we are already planning to swap
+			if (!bIsChosen && pPlannedSwapList != NULL)
+			{
+				for (FFastVector<int, true, c_eCiv5GameplayDLL>::iterator it2 = pPlannedSwapList->begin(); it2 != pPlannedSwapList->end(); it2 += 3)
+				{
+					if (it->m_iGreatWorkIndex == (*it2)) // [0] is where the index of the Great Work to be discarded in the swap is stored
+					{
+						bIsChosen = true;
+						break;
+					}
+				}
+			}
+			if (!bIsChosen)
+			{
+				return it->m_iGreatWorkIndex;
+			}
+		}
+	}
+	return NO_GREAT_WORK;
+}
+#else
 bool CultureHelpers::IsValidForThemingBonus(CvThemingBonusInfo *pBonusInfo, EraTypes eEra, vector<EraTypes> &aErasSeen, PlayerTypes ePlayer, vector<PlayerTypes> &aPlayersSeen, PlayerTypes eOwner)
 {
 	bool bValid = true;
@@ -5450,6 +6982,7 @@ int CultureHelpers::FindWorkNotChosen(vector<CvGreatWorkInMyEmpire> &aWorks, vec
 	}
 	return NO_GREAT_WORK;
 }
+#endif
 
 void CultureHelpers::SendArtSwapNotification(GreatWorkSlotType eType, bool bArt, PlayerTypes eOriginator, PlayerTypes eReceipient, int iWorkFromOriginator, int iWorkFromRecipient)
 {
