@@ -9168,8 +9168,10 @@ void CvPlot::changeInvisibleVisibilityCount(TeamTypes eTeam, InvisibleTypes eInv
 {
 	bool bOldInvisibleVisible;
 	bool bNewInvisibleVisible;
+#ifdef CVASSERT_ENABLE
 	const int iNumInvisibleInfos = NUM_INVISIBLE_TYPES;
 	DEBUG_VARIABLE(iNumInvisibleInfos);
+#endif
 
 	CvAssertMsg(eTeam >= 0, "eTeam is expected to be non-negative (invalid Index)");
 	CvAssertMsg(eTeam < MAX_TEAMS, "eTeam is expected to be within maximum bounds (invalid Index)");

@@ -268,7 +268,9 @@ class CvUnit;
 class CvPlot;
 class CvCity;
 
+#ifdef CVASSERT_ENABLE
 void checkBattleUnitType(BattleUnitTypes unitType);
+#endif
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //  CLASS:      CvCombatInfo

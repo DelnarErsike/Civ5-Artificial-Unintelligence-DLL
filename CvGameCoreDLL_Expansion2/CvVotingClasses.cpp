@@ -7845,9 +7845,14 @@ void CvLeagueAI::DoVoteCommitments(CvLeague* pLeague)
 }
 
 // How much do we like this vote commitment (either from us to someone else, or from someone else to us)?
+#ifdef CVASSERT_ENABLE
 CvLeagueAI::DesireLevels CvLeagueAI::EvaluateVoteForTrade(int iResolutionID, int iVoteChoice, int iNumVotes, bool bRepeal)
 {
 	DEBUG_VARIABLE(iNumVotes);
+#else
+CvLeagueAI::DesireLevels CvLeagueAI::EvaluateVoteForTrade(int iResolutionID, int iVoteChoice, int /*iNumVotes*/, bool bRepeal)
+{
+#endif
 	DesireLevels eValue = DESIRE_NEVER;
 	
 	if (GC.getGame().GetGameLeagues()->GetNumActiveLeagues() > 0)

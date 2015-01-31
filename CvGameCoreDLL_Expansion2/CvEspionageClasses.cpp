@@ -1384,9 +1384,14 @@ int CvPlayerEspionage::CalcPerTurn(int iSpyState, CvCity* pCity, int iSpyIndex)
 }
 
 /// CalcRequired - How much the spy is needed to do to accomplish this task
+#ifdef CVASSERT_ENABLE
 int CvPlayerEspionage::CalcRequired(int iSpyState, CvCity* pCity, int iSpyIndex)
 {
 	DEBUG_VARIABLE(iSpyIndex);
+#else
+int CvPlayerEspionage::CalcRequired(int iSpyState, CvCity* pCity, int /*iSpyIndex*/)
+{
+#endif
 	CvAssertMsg(pCity, "pCity is null");
 	CvAssertMsg(iSpyIndex >= 0, "iSpyIndex is out of bounds");
 

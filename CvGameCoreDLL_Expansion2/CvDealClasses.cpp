@@ -773,10 +773,14 @@ bool CvDeal::IsPossibleToTradeItem(PlayerTypes ePlayer, PlayerTypes eToPlayer, T
 		int iID = iData1;
 		//antonjs: todo: verify iChoice is valid as well:
 		//int iChoice = iData2;
+#ifdef CVASSERT_ENABLE
 		int iNumVotes = iData3;
+#endif
 		bool bRepeal = bFlag1;
 
+#ifdef CVASSERT_ENABLE
 		DEBUG_VARIABLE(iNumVotes);
+#endif
 
 		if(GC.getGame().GetGameLeagues()->GetNumActiveLeagues() == 0)
 			return false;

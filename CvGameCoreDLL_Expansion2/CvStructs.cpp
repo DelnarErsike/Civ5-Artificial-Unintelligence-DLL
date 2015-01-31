@@ -164,11 +164,13 @@ FDataStream& operator<<(FDataStream& kStream, const BuildingGreatWork& readFrom)
 	return kStream;
 }
 
+#ifdef CVASSERT_ENABLE
 void checkBattleUnitType(BattleUnitTypes unitType)
 {
 	DEBUG_VARIABLE(unitType);
 	CvAssertMsg((unitType >= 0) && (unitType < BATTLE_UNIT_COUNT), "Invalid battle unit type.");
 }
+#endif
 
 //------------------------------------------------------------------------------------------------
 // FUNCTION:    CvCombatInfo::CvCombatInfo
@@ -239,18 +241,24 @@ CvCombatInfo& CvCombatInfo::operator=(const CvCombatInfo& rhs)
 
 CvUnit* CvCombatInfo::getUnit(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	return m_pUnits[unitType];
 }
 void CvCombatInfo::setUnit(BattleUnitTypes unitType, CvUnit* unit)
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	m_pUnits[unitType] = unit;
 }
 
 CvCity* CvCombatInfo::getCity(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	if(m_pCities[unitType])
 		return m_pCities[unitType];
 	else if(unitType == BATTLE_UNIT_DEFENDER && m_pTargetPlot)
@@ -263,7 +271,9 @@ CvCity* CvCombatInfo::getCity(BattleUnitTypes unitType) const
 
 void CvCombatInfo::setCity(BattleUnitTypes unitType, CvCity* pkCity)
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	m_pCities[unitType] = pkCity;
 }
 
@@ -338,79 +348,107 @@ bool CvCombatInfo::getDefenderCaptured() const
 
 int CvCombatInfo::getDamageInflicted(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	return m_iDamageInflicted[unitType];
 }
 void CvCombatInfo::setDamageInflicted(BattleUnitTypes unitType, int iDamage)
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	m_iDamageInflicted[unitType] = iDamage;
 }
 
 int CvCombatInfo::getFinalDamage(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	return m_iFinalDamage[unitType];
 }
 void CvCombatInfo::setFinalDamage(BattleUnitTypes unitType, int iFinalDamage)
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	m_iFinalDamage[unitType] = iFinalDamage;
 }
 
 
 int CvCombatInfo::getFearDamageInflicted(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	return m_iFearDamageInflicted[unitType];
 }
 void CvCombatInfo::setFearDamageInflicted(BattleUnitTypes unitType, int iDamage)
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	m_iFearDamageInflicted[unitType] = iDamage;
 }
 
 int CvCombatInfo::getExperience(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	return m_iExperienceChange[unitType];
 }
 void CvCombatInfo::setExperience(BattleUnitTypes unitType, int iExperience)
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	m_iExperienceChange[unitType] = iExperience;
 }
 
 int CvCombatInfo::getMaxExperienceAllowed(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	return m_iMaxExperienceAllowed[unitType];
 }
 void CvCombatInfo::setMaxExperienceAllowed(BattleUnitTypes unitType, int iMaxExperience)
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	m_iMaxExperienceAllowed[unitType] = iMaxExperience;
 }
 
 bool CvCombatInfo::getInBorders(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	return m_bInBorders[unitType];
 }
 void CvCombatInfo::setInBorders(BattleUnitTypes unitType, bool bInBorders)
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	m_bInBorders[unitType] = bInBorders;
 }
 
 bool CvCombatInfo::getUpdateGlobal(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	return m_bUpdateGlobal[unitType];
 }
 void CvCombatInfo::setUpdateGlobal(BattleUnitTypes unitType, bool bUpdateGlobal)
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	m_bUpdateGlobal[unitType] = bUpdateGlobal;
 }
 
@@ -518,13 +556,17 @@ void CvMissionDefinition::setMissionTime(float time)
 
 CvUnit* CvMissionDefinition::getUnit(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	return m_aUnits[unitType];
 }
 
 void CvMissionDefinition::setUnit(BattleUnitTypes unitType, CvUnit* unit)
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	m_aUnits[unitType] = unit;
 }
 
@@ -579,19 +621,25 @@ CvAirMissionDefinition::CvAirMissionDefinition(const CvAirMissionDefinition& kCo
 
 int CvAirMissionDefinition::getDamage(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	return m_aDamage[unitType];
 }
 
 void CvAirMissionDefinition::setDamage(BattleUnitTypes unitType, int damage)
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	m_aDamage[unitType] = damage;
 }
 
 bool CvAirMissionDefinition::isDead(BattleUnitTypes unitType) const
 {
+#ifdef CVASSERT_ENABLE
 	checkBattleUnitType(unitType);
+#endif
 	CvAssertMsg(getUnit(unitType) != NULL, "[Jason] Invalid battle unit type.");
 	if(getDamage(unitType) >= getUnit(unitType)->GetMaxHitPoints())
 		return true;

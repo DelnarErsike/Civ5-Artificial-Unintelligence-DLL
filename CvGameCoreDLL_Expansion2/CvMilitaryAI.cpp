@@ -955,9 +955,13 @@ bool CvMilitaryAI::BuyEmergencyBuilding(CvCity* pCity)
 					{
 						m_pPlayer->GetTreasury()->LogExpenditure((CvString)pkBuildingInfo->GetText(), iGoldCost, 8);
 						m_pPlayer->GetTreasury()->ChangeGold(-iGoldCost);
+#ifdef CVASSERT_ENABLE
 						int iResult = pCity->CreateBuilding(eBldg);
 
 						DEBUG_VARIABLE(iResult);
+#else
+						pCity->CreateBuilding(eBldg);
+#endif
 						CvAssertMsg(iResult != FFreeList::INVALID_INDEX, "Unable to create building");
 
 						CvString szMsg;

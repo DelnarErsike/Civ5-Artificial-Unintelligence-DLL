@@ -70,7 +70,11 @@ void CvFractal::fracInitHinted(int iNewXs, int iNewYs, int iGrain, CvRandom& ran
 	fracInitInternal(iNewXs, iNewYs, iGrain, random, pbyHints, iHintsLength, iFlagsNonPolar, pRifts, iFracXExp, iFracYExp);
 }
 
+#ifdef CVASSERT_ENABLE
 void CvFractal::fracInitInternal(int iNewXs, int iNewYs, int iGrain, CvRandom& random, byte* pbyHints, int iHintsLength, int iFlags, CvFractal* pRifts, int iFracXExp, int iFracYExp)
+#else
+void CvFractal::fracInitInternal(int iNewXs, int iNewYs, int iGrain, CvRandom& random, byte* pbyHints, int /*iHintsLength*/, int iFlags, CvFractal* pRifts, int iFracXExp, int iFracYExp)
+#endif
 {
 	FAssert(iNewXs < FRACTAL_MAX_DIMS);
 	FAssert(iNewYs < FRACTAL_MAX_DIMS);
@@ -207,7 +211,9 @@ void CvFractal::fracInitInternal(int iNewXs, int iNewYs, int iGrain, CvRandom& r
 						int iYY = iY % iHintsHeight; // wrap
 						int iHintsI = iYY*iHintsWidth + iXX;
 
+#ifdef CVASSERT_ENABLE
 						DEBUG_VARIABLE(iHintsLength);
+#endif
 						CvAssertMsg(iHintsI < iHintsLength, "iHintsI out of range");
 						m_aaiFrac[iX << iPass][iY << iPass] = pbyHints[iHintsI];
 					}

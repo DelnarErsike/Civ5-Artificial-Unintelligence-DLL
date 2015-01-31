@@ -33,8 +33,12 @@ CvMapGenerator::CvMapGenerator(const char* szMapScriptName)
 {
 	ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
 	m_pkLuaState = pkScriptSystem->CreateLuaThread("Map Script");
+#ifdef CVASSERT_ENABLE
 	const bool bLoaded = pkScriptSystem->LoadFile(m_pkLuaState, szMapScriptName);
 	DEBUG_VARIABLE(bLoaded);
+#else
+	pkScriptSystem->LoadFile(m_pkLuaState, szMapScriptName);
+#endif
 	CvAssertMsg(bLoaded, "Cannot load mapscript.");
 }
 //------------------------------------------------------------------------------

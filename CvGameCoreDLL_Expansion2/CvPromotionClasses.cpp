@@ -351,8 +351,10 @@ bool CvPromotionEntry::CacheResults(Database::Results& kResults, CvDatabaseUtili
 	const int iNumUnitClasses = kUtility.MaxRows("UnitClasses");
 	const int iNumTerrains = GC.getNumTerrainInfos();
 	const int iNumFeatures = GC.getNumFeatureInfos();
+#ifdef CVASSERT_ENABLE
 	const int iNumDomains = kUtility.MaxRows("Domains");
 	DEBUG_VARIABLE(iNumDomains);
+#endif
 	const int iNumUnitCombatClasses = kUtility.MaxRows("UnitCombatInfos");
 	const int iNumUnitTypes = kUtility.MaxRows("Units");
 

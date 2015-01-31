@@ -5959,8 +5959,12 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 
 	Database::SingleResult kResult;
 	CvGoodyInfo kGoodyInfo;
+#ifdef CVASSERT_ENABLE
 	const bool bResult = DB.SelectAt(kResult, "GoodyHuts", eGoody);
 	DEBUG_VARIABLE(bResult);
+#else
+	DB.SelectAt(kResult, "GoodyHuts", eGoody);
+#endif
 	CvAssertMsg(bResult, "Cannot find goody info.");
 	kGoodyInfo.CacheResult(kResult);
 
@@ -19588,8 +19592,12 @@ CvArmyAI* CvPlayer::addArmyAI()
 //	--------------------------------------------------------------------------------
 void CvPlayer::deleteArmyAI(int iID)
 {
+#ifdef CVASSERT_ENABLE
 	bool bRemoved = m_armyAIs.RemoveAt(iID);
 	DEBUG_VARIABLE(bRemoved);
+#else
+	m_armyAIs.RemoveAt(iID);
+#endif
 	CvAssertMsg(bRemoved, "could not find army, delete failed");
 }
 

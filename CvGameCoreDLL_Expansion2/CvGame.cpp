@@ -1749,8 +1749,12 @@ void CvGame::DoCacheMapScoreMod()
 	{
 		Database::SingleResult kResult;
 		CvWorldInfo kWorldInfo;
+#ifdef CVASSERT_ENABLE
 		const bool bResult = DB.SelectAt(kResult, "Worlds", eStandardWorld);
 		DEBUG_VARIABLE(bResult);
+#else
+		DB.SelectAt(kResult, "Worlds", eStandardWorld);
+#endif
 		CvAssertMsg(bResult, "Cannot find world info.");
 		kWorldInfo.CacheResult(kResult);
 

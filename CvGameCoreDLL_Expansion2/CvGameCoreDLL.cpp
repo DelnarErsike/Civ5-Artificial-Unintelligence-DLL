@@ -32,8 +32,12 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 		OutputDebugString("DLL_PROCESS_ATTACH\n");
 		FDebugHelper::GetInstance().LoadSymbols((HMODULE)hModule);
 		// set timer precision
+#ifdef CVASSERT_ENABLE
 		MMRESULT iTimeSet = timeBeginPeriod(1);		// set timeGetTime and sleep resolution to 1 ms, otherwise it's 10-16ms
 		DEBUG_VARIABLE(iTimeSet);
+#else
+		timeBeginPeriod(1);		// set timeGetTime and sleep resolution to 1 ms, otherwise it's 10-16ms
+#endif
 		CvAssertMsg(iTimeSet==TIMERR_NOERROR, "failed setting timer resolution to 1 ms");
 		CvDllGameContext::InitializeSingleton();
 	}

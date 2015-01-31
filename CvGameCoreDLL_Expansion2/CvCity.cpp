@@ -11748,8 +11748,12 @@ void CvCity::popOrder(int iNum, bool bFinish, bool bChoose)
 
 			if(bFinish)
 			{
+#ifdef CVASSERT_ENABLE
 				bool bResult = CreateBuilding(eConstructBuilding);
 				DEBUG_VARIABLE(bResult);
+#else
+				CreateBuilding(eConstructBuilding);
+#endif
 				CvAssertMsg(bResult, "CreateBuilding failed");
 
 				ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
@@ -11819,8 +11823,12 @@ void CvCity::popOrder(int iNum, bool bFinish, bool bChoose)
 
 		if(bFinish)
 		{
+#ifdef CVASSERT_ENABLE
 			bool bResult = CreateProject(eCreateProject);
 			DEBUG_VARIABLE(bResult);
+#else
+			CreateProject(eCreateProject);
+#endif
 			CvAssertMsg(bResult, "Failed to create project");
 
 			ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
