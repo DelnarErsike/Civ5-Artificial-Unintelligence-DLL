@@ -150,6 +150,9 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 			}
 
 			int iRange = pLoopUnit->baseMoves();
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+			IncreaseMoveRangeForRoads(pLoopUnit, iRange);
+#endif
 			if(pLoopUnit->canRangeStrike())
 			{
 				iRange += pLoopUnit->GetRange() - 1;
@@ -820,10 +823,30 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot, bool bRe
 	const int iPlotY = pPlot->getY();
 	const int idx = GC.getMap().plotNum(iPlotX, iPlotY);
 	
-	if (pUnit->getX() == iPlotX && pUnit->getY() == iPlotY)
+	// Check to see if we're already in this plot
+	if (pUnit->plot() == pPlot)
 	{
 		m_DangerPlots[idx].m_apUnits.push_back(pUnit);
 		m_DangerPlots[idx].m_apMoveOnlyUnits.push_back(pUnit);
+		return;
+	}
+	// Check to see if another player has already done the pathfinding for us
+	FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL> vpUnitDangerPlotList = pUnit->GetDangerPlotList();
+	FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL> vpUnitDangerPlotMoveOnlyList = pUnit->GetDangerPlotList(true);
+	bool* pbInList = NULL;
+	bool* pbInMoveOnlyList = NULL;
+	pPlot->getNumTimesInList(vpUnitDangerPlotList, true, pbInList);
+	pPlot->getNumTimesInList(vpUnitDangerPlotMoveOnlyList, true, pbInMoveOnlyList);
+	if (pbInList || pbInMoveOnlyList)
+	{
+		if (pbInList && *pbInList)
+		{
+			m_DangerPlots[idx].m_apUnits.push_back(pUnit);
+		}
+		if (pbInMoveOnlyList && *pbInMoveOnlyList)
+		{
+			m_DangerPlots[idx].m_apMoveOnlyUnits.push_back(pUnit);
+		}
 		return;
 	}
 
@@ -850,10 +873,20 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot, bool bRe
 		if (iTurnsAway <= 1)
 		{
 			m_DangerPlots[idx].m_apMoveOnlyUnits.push_back(pUnit);
+			vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, true));
+		}
+		else
+		{
+			vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, false));
 		}
 		if (pUnit->canMoveAndRangedStrike(pPlot))
 		{
 			m_DangerPlots[idx].m_apUnits.push_back(pUnit);
+			vpUnitDangerPlotList.push_back(std::make_pair(pPlot, true));
+		}
+		else
+		{
+			vpUnitDangerPlotList.push_back(std::make_pair(pPlot, false));
 		}
 	}
 	else
@@ -870,6 +903,13 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot, bool bRe
 		{
 			m_DangerPlots[idx].m_apUnits.push_back(pUnit);
 			m_DangerPlots[idx].m_apMoveOnlyUnits.push_back(pUnit);
+			vpUnitDangerPlotList.push_back(std::make_pair(pPlot, true));
+			vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, true));
+		}
+		else
+		{
+			vpUnitDangerPlotList.push_back(std::make_pair(pPlot, false));
+			vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, false));
 		}
 	}
 #else
