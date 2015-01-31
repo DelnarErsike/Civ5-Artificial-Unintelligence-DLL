@@ -4185,11 +4185,53 @@ void CvTeam::DoUpdateBestRoute()
 		}
 	}
 
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	CvRouteInfo* pRouteInfo = NULL;
+	if(eBestRoute > NO_ROUTE)
+#else
 	if(iBestRouteValue > -1)
+#endif
 	{
 		SetBestPossibleRoute(eBestRoute);
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+		pRouteInfo = GC.getRouteInfo(eBestRoute);
+#endif
 	}
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	if (pRouteInfo)
+	{
+		m_iBestRouteNormalCostMultiplier = GC.getMOVE_DENOMINATOR() / (pRouteInfo->getMovementCost() + getRouteChange(eBestRoute));
+		m_iBestRouteFlatCostMultiplier = GC.getMOVE_DENOMINATOR() / pRouteInfo->getFlatMovementCost();
+		// Extra pRouteInfo->getFlatMovementCost() - 1 is to make sure value is always rounded up
+		m_iUseFlatCostIfBelowThis = (pRouteInfo->getMovementCost() + getRouteChange(eBestRoute) + pRouteInfo->getFlatMovementCost() - 1) / pRouteInfo->getFlatMovementCost();
+	}
+	else
+	{
+		m_iBestRouteFlatCostMultiplier = 0;
+		m_iBestRouteNormalCostMultiplier = 1;
+		m_iUseFlatCostIfBelowThis = -1;
+	}
+#endif
 }
+
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+int CvTeam::GetBestRoadMovementMultiplier(const CvUnit* pUnit) const
+{
+	int iRtnValue = m_iBestRouteNormalCostMultiplier;
+	if (pUnit)
+	{
+		if (pUnit->baseMoves(DOMAIN_LAND) < m_iUseFlatCostIfBelowThis)
+		{
+			iRtnValue = m_iBestRouteFlatCostMultiplier / pUnit->baseMoves(DOMAIN_LAND);
+		}
+	}
+	
+	if (iRtnValue < 1)
+		iRtnValue = 1;
+
+	return iRtnValue;
+}
+#endif
 
 //	--------------------------------------------------------------------------------
 int CvTeam::getProjectCount(ProjectTypes eIndex) const

@@ -301,6 +301,9 @@ public:
 	RouteTypes GetBestPossibleRoute();
 	void SetBestPossibleRoute(RouteTypes eRoute);
 	void DoUpdateBestRoute();
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	int GetBestRoadMovementMultiplier(const CvUnit* pUnit) const;
+#endif
 
 	int getProjectCount(ProjectTypes eIndex) const;
 	int getProjectDefaultArtType(ProjectTypes eIndex) const;
@@ -438,6 +441,11 @@ protected:
 	int m_iNumNaturalWondersDiscovered;
 	int m_iBestPossibleRoute;
 	int m_iNumMinorCivsAttacked;
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	int m_iBestRouteNormalCostMultiplier;
+	int m_iBestRouteFlatCostMultiplier;
+	int m_iUseFlatCostIfBelowThis;
+#endif
 
 	bool m_bMapCentering;
 	bool m_bHasBrokenPeaceTreaty;

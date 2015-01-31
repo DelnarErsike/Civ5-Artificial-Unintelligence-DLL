@@ -342,32 +342,28 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 							// TEMPORARY OPTIMIZATION: Assumes can't use roads or RR
 #ifdef AUI_TACTICAL_ANALYSIS_MAP_MARKING_ADJUST_RANGED
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
-#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-							else if (GetAdjustedDistanceWithRoadFilter(pUnit, iDistance) <= pUnit->GetRangePlusMoveToshot())
-#else
-							else if (iDistance <= pUnit->GetRangePlusMoveToshot())
-#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+							else if (iDistance <= pUnit->GetRangePlusMoveToshot(true /*bWithRoads*/))
 #else
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-							else if (GetAdjustedDistanceWithRoadFilter(pUnit, iDistance) <= pUnit->baseMoves() + pUnit->GetRange())
+							else if (iDistance <= GetIncreasedMoveRangeForRoads(pUnit, pUnit->baseMoves() + pUnit->GetRange()))
 #else
 							else if (iDistance <= pUnit->baseMoves() + pUnit->GetRange())
-#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-#endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+#endif
+#endif
 #else
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-							else if (GetAdjustedDistanceWithRoadFilter(pUnit, iDistance) <= pUnit->baseMoves())
+							else if (iDistance <= GetIncreasedMoveRangeForRoads(pUnit, pUnit->baseMoves()))
 #else
 							else if(iDistance <= pUnit->baseMoves())
-#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-#endif // AUI_TACTICAL_ANALYSIS_MAP_MARKING_ADJUST_RANGED
+#endif
+#endif
 							{
 								int iTurnsToReach;
 #ifdef AUI_ASTAR_TURN_LIMITER
 								iTurnsToReach = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, true /*bIgnoreUnits*/, false, (pUnit->isRanged() ? 3 : 1));	// Its ok to reuse paths because when ignoring units, we don't use the tactical analysis map (which we are building)
 #else
 								iTurnsToReach = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, true /*bIgnoreUnits*/);	// Its ok to reuse paths because when ignoring units, we don't use the tactical analysis map (which we are building)
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 #ifdef AUI_TACTICAL_ANALYSIS_MAP_MARKING_ADJUST_RANGED
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 								// Pathfinder gets called twice for ranged units unfortunately: once for moving, second time for move and shoot calculation
@@ -375,10 +371,10 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 #else
 								// rough adjustment to account for ranged units
 								if (iTurnsToReach <= 1 || (pUnit->isRanged() && iTurnsToReach <= 2))
-#endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+#endif
 #else
 								if(iTurnsToReach <= 1)
-#endif // AUI_TACTICAL_ANALYSIS_MAP_MARKING_ADJUST_RANGED
+#endif
 								{
 									m_pPlots[iI].SetSubjectToAttack(true);
 								}

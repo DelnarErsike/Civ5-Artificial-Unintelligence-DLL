@@ -8904,7 +8904,14 @@ void CvTacticalAI::ExecuteMovesToSafestPlot()
 #endif
 			CvPlot* pBestPlot = NULL;
 
+#ifdef AUI_TACTICAL_FIX_EXECUTE_MOVES_TO_SAFEST_PLOT_USE_GAME_MOVEMENT_RANGE
+			int iRange = pUnit->baseMoves();
+#else
 			int iRange = pUnit->getUnitInfo().GetMoves();
+#endif
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+			IncreaseMoveRangeForRoads(pUnit.pointer(), iRange);
+#endif
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 #ifdef AUI_FAST_COMP
 			iRange = FASTMAX(iRange, pUnit->getDropRange());
@@ -11774,12 +11781,12 @@ bool CvTacticalAI::FindUnitsForThisMove(TacticalAIMoveTypes eMove, CvPlot* pTarg
 			{
 				// Is it even possible for the unit to reach in the number of requested turns (ignoring roads and RR)
 				int iDistance = plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pTarget->getX(), pTarget->getY());
-#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-				AdjustDistanceFilterForRoads(pLoopUnit, iDistance);
-#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 				if(pLoopUnit->maxMoves() > 0)
 				{
 					int iMovesPerTurn = pLoopUnit->maxMoves() / GC.getMOVE_DENOMINATOR();
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+					IncreaseMoveRangeForRoads(pLoopUnit.pointer(), iMovesPerTurn);
+#endif
 					int iLeastTurns = (iDistance + iMovesPerTurn - 1) / iMovesPerTurn;
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 					if (pLoopUnit->getDropRange() > 0)
@@ -11927,7 +11934,7 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 #endif // AUI_TACTICAL_FIX_NO_CAPTURE
 
 #ifdef AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_MELEE_STRENGTH
-				int iAttackStrength = pLoopUnit->GetMaxAttackStrength(NULL, pTarget, (bIsCityTarget ? NULL : pTarget->getBestDefender(NO_PLAYER, m_pPlayer->GetID())).pointer());
+				int iAttackStrength = pLoopUnit->GetMaxAttackStrength(NULL, pTarget, (bIsCityTarget ? NULL : pTarget->getBestDefender(NO_PLAYER, m_pPlayer->GetID()).pointer()));
 #else
 				int iAttackStrength = pLoopUnit->GetMaxAttackStrength(NULL, NULL, NULL);
 #endif // AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_MELEE_STRENGTH
@@ -11976,7 +11983,7 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 					{
 #ifdef AUI_UNIT_RANGE_PLUS_MOVE
 						// AMS: Are we in range or could be in range with movement?
-						if (plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pTarget->getX(), pTarget->getY()) <= pLoopUnit->GetRangePlusMoveToshot())
+						if (plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pTarget->getX(), pTarget->getY()) <= pLoopUnit->GetRangePlusMoveToshot(true))
 						{
 #else
 						// Are we in range?
@@ -14664,7 +14671,7 @@ void CvTacticalAI::MoveGreatGeneral(CvArmyAI* pArmyAI)
 		if(pGeneral)
 		{
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-			iRange = GetAdjustedDistanceWithRoadFilter(pGeneral, pGeneral->maxMoves() / GC.getMOVE_DENOMINATOR());
+			iRange = GetIncreasedMoveRangeForRoads(pGeneral.pointer(), pGeneral->baseMoves());
 #else
 			iRange = (pGeneral->maxMoves() * 3) / GC.getMOVE_DENOMINATOR();  // Enough to make a decent road move
 #endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS

@@ -3166,7 +3166,14 @@ void CvHomelandAI::ExecuteMovesToSafestPlot()
 		{
 			CvPlot* pBestPlot = NULL;
 
+#ifdef AUI_HOMELAND_FIX_EXECUTE_MOVES_TO_SAFEST_PLOT_USE_GAME_MOVEMENT_RANGE
+			int iRange = pUnit->baseMoves();
+#else
 			int iRange = pUnit->getUnitInfo().GetMoves();
+#endif
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+			IncreaseMoveRangeForRoads(pUnit.pointer(), iRange);
+#endif
 #ifdef AUI_HOMELAND_PARATROOPERS_PARADROP
 #ifdef AUI_FAST_COMP
 			iRange = FASTMAX(iRange, pUnit->getDropRange());

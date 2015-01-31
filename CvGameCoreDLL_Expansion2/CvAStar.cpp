@@ -4098,26 +4098,19 @@ int FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int da
 }
 
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-// Each valid road or railroad within single maximum move distance of the unit lowers the cutoff by 1 and 2 respectively.
+// If there is a valid road within the unit's base movement range, multiply range by movement modifier of best road type
 // Check is fairly fast and is good enough for most cases.
-void AdjustDistanceFilterForRoads(const UnitHandle pUnit, int& iCutoffDistance)
+void IncreaseMoveRangeForRoads(const CvUnit* pUnit, int& iRange)
 {
-	// Initial Range to check for roads around the unit 
-#ifdef AUI_FAST_COMP
-	const int iRange = FASTMIN(pUnit->baseMoves(), iCutoffDistance);
-#else
-	const int iRange = MIN(pUnit->baseMoves(), iCutoffDistance);
-#endif // AUI_FAST_COMP
 	// Filtering out units that don't need road optimization
-	if (iRange <= 0 || pUnit->getDomainType() != DOMAIN_LAND || pUnit->flatMovementCost())
+	if (pUnit->getDomainType() != DOMAIN_LAND || pUnit->flatMovementCost())
 	{
 		return;
 	}
 
 #ifdef AUI_ASTAR_TURN_LIMITER
 	// With the turn limiter, we no longer need to worry as much about A* loops getting out of hand when calculating paths to a tile 20 turns away
-	iCutoffDistance = iRange / 3; // Divide by 3 because that's how much railroads save by default
-	// TODO: Have the divider taken from game files for roads and cached for maximum mod compatibility
+	iRange *= GET_TEAM(pUnit->getTeam()).GetBestRoadMovementMultiplier(pUnit);
 #else
 	// Don't want to call this on each loop, so we'll call it once out of loop and be done with it
 	const bool bIsIroquois = GET_PLAYER(pUnit->getOwner()).GetPlayerTraits()->IsMoveFriendlyWoodsAsRoad();
@@ -4133,34 +4126,28 @@ void AdjustDistanceFilterForRoads(const UnitHandle pUnit, int& iCutoffDistance)
 		for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #endif // AUI_FAST_COMP
 		{
-			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
 			if (pLoopPlot)
 			{
 				eFeature = pLoopPlot->getFeatureType();
-				if (pLoopPlot->isValidRoute(pUnit.pointer()))
+				if (bIsIroquois && pUnit->getOwner() == pLoopPlot->getOwner() && (eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE))
 				{
-					// Don't check for an adjacent road for performance reasons
-					switch (pLoopPlot->getRouteType())
-					{
-					case (ROUTE_ROAD) :
-						iCutoffDistance -= 1;
-						break;
-					case (ROUTE_RAILROAD) :
-						iCutoffDistance -= 2;
-						break;
-					}
-				}
-				else if (bIsIroquois && pUnit->getOwner() == pLoopPlot->getOwner() && (eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE))
-				{
-					// Iroquois don't need adjacent forests to use the road bonus (according to CvUnitMovement)
-					iCutoffDistance -= 1;
-				}
-
-				if (iCutoffDistance <= 0)
-				{
-					iCutoffDistance = 0;
+					iRange *= GET_TEAM(pUnit->getTeam()).GetBestRoadMovementMultiplier(pUnit);
 					return;
+				}
+				else if (pLoopPlot->isValidRoute(pUnit.pointer()))
+				{
+					CvPlot* pEvalPlot;
+					// Check for neighboring roads that would make this road usable
+					for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+					{
+						pEvalPlot = plotDirection(pLoopPlot->getX(), pLoopPlot->getY(), (DirectionTypes)iI);
+						if (pEvalPlot && pEvalPlot->isValidRoute(pUnit.pointer()))
+						{
+							iRange *= GET_TEAM(pUnit->getTeam()).GetBestRoadMovementMultiplier(pUnit);
+							return;
+						}
+					}
 				}
 			}
 		}
@@ -4169,10 +4156,10 @@ void AdjustDistanceFilterForRoads(const UnitHandle pUnit, int& iCutoffDistance)
 }
 
 // AdjustDistanceFilterForRoads() call for when the distance isn't being stored
-int GetAdjustedDistanceWithRoadFilter(const UnitHandle pUnit, int iDistance)
+int GetIncreasedMoveRangeForRoads(const CvUnit* pUnit, int iRange)
 {
-	AdjustDistanceFilterForRoads(pUnit, iDistance);
-	return iDistance;
+	IncreaseMoveRangeForRoads(pUnit, iRange);
+	return iRange;
 }
 #endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 
@@ -4226,17 +4213,24 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 
 	// Compare distance to movement rate
 	iDistance = plotDistance(pUnit->getX(), pUnit->getY(), pTarget->getX(), pTarget->getY());
-#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
-	AdjustDistanceFilterForRoads(pUnit, iDistance);
-#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 	// KWG: If the unit is a land unit that can embark, baseMoves() is only going to give correct value if the starting and ending locations
 	//		are in the same domain (LAND vs. SEA) and no transition occurs.
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	int iBaseMoves = GetIncreasedMoveRangeForRoads(pUnit.pointer(), pUnit->baseMoves());
+	if (iTurns == 0 && iDistance >= iBaseMoves)
+	{
+		return false;
+	}
+
+	else if(iTurns > 0 && iDistance > (iBaseMoves * iTurns))
+#else
 	if(iTurns == 0 && iDistance >= pUnit->baseMoves())
 	{
 		return false;
 	}
 
 	else if(iTurns > 0 && iDistance > (pUnit->baseMoves() * iTurns))
+#endif
 	{
 #ifdef AUI_ASTAR_PARADROP
 		if (bCanParadropAdjacent)
