@@ -107,6 +107,8 @@
 #define AUI_WEIGHTED_VECTOR_OPTIMIZATIONS
 /// Fixes the fact that the function to get a great general stacked with the unit does not detect great admirals
 #define AUI_UNIT_FIX_GET_STACKED_GREAT_GENERAL_WORKS_WITH_ADMIRAL
+/// Fixes some misc. warnings/errors generated when code is attempted to be compiled using VC120 (it won't work because link target are all VC90-compiled, but all other errors/warnings are legitimate)
+#define AUI_WEIRD_SHIT
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code
