@@ -690,6 +690,11 @@ void CvUnit::initWithNameOffset(int iID, UnitTypes eUnit, int iNameOffset, UnitA
 		}
 	}
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+	vpDangerPlotList.reserve(NUM_DIRECTION_TYPES * baseMoves());
+	vpDangerPlotMoveOnlyList.reserve(NUM_DIRECTION_TYPES * baseMoves());
+#endif
+
 	if(bSetupGraphical)
 		setupGraphical();
 
@@ -1709,6 +1714,10 @@ void CvUnit::doTurn()
 		}
 	}
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+	vpDangerPlotList.clear();
+	vpDangerPlotMoveOnlyList.clear();
+#endif
 	doDelayedDeath();
 }
 
@@ -10324,12 +10333,23 @@ int CvUnit::GetRange() const
 
 #ifdef AUI_UNIT_RANGE_PLUS_MOVE
 //AMS: Special property to get unit range+ move possibility.
-int CvUnit::GetRangePlusMoveToshot() const
+int CvUnit::GetRangePlusMoveToshot(bool bWithRoads) const
 {
 #ifdef AUI_FAST_COMP
-	return FASTMAX(GetRange(), 1) + FASTMAX(baseMoves() - 1 - getMustSetUpToRangedAttackCount(), 0);
+	int iMoveRange = FASTMAX(baseMoves() - 1 - getMustSetUpToRangedAttackCount(), 0);
 #else
-	return MAX(GetRange(), 1) + MAX(baseMoves() - 1 - getMustSetUpToRangedAttackCount(), 0);
+	int iMoveRange = MAX(baseMoves() - 1 - getMustSetUpToRangedAttackCount(), 0);
+#endif
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	if (bWithRoads)
+	{
+		IncreaseMoveRangeForRoads(this, iMoveRange);
+	}
+#endif
+#ifdef AUI_FAST_COMP
+	return FASTMAX(GetRange(), 1) + iMoveRange;
+#else
+	return MAX(GetRange(), 1) + iMoveRange;
 #endif // AUI_FAST_COMP
 }
 #endif // AUI_UNIT_RANGE_PLUS_MOVE
@@ -19851,14 +19871,8 @@ bool CvUnit::canMoveAndRangedStrike(const CvPlot* pTargetPlot) const
 		return true;
 	}
 
-	// Barbarians won't move off camps just to move and shoot
-	if (isBarbarian() && plot()->getImprovementType() == GC.getBARBARIAN_CAMP_IMPROVEMENT())
-	{
-		return false;
-	}
-
-	// We only compute if distance is reasonable (ignore roads).
-	if (GetRangePlusMoveToshot() < plotDistance(getX(), getY(), pTargetPlot->getX(), pTargetPlot->getY()))
+	// We only compute if distance is reasonable
+	if (GetRangePlusMoveToshot(true) < plotDistance(getX(), getY(), pTargetPlot->getX(), pTargetPlot->getY()))
 	{
 		return false;
 	}
@@ -19872,46 +19886,63 @@ bool CvUnit::canMoveAndRangedStrike(const CvPlot* pTargetPlot) const
 bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bExitOnFound, int iWithinTurns, const CvPlot* pFromPlot) const
 {
 	AI_PERF_FORMAT("AI-perf-MoveAndShoot.csv", ("%s Tile Search for %s (%d), %s, Turn %03d, %s", (iWithinTurns > 0 ? "Parthian" : "Regular"), getUnitInfo().GetDescription(), GetID(), (bExitOnFound ? "Heuristic" : "Full"), GC.getGame().getElapsedGameTurns(), GET_PLAYER(m_eOwner).getCivilizationShortDescription()));
-	CvAStarNode* pNode;
-	CvPlot* pLoopPlot;
-	int iDX, iDY;
 	bool bIsParthian = false;
-	bool bRet = false;
 	CvAStar& kPathfinder = GC.GetTacticalAnalysisMapFinder();
 	if (pFromPlot == NULL)
 	{
 		pFromPlot = plot();
+		if (bExitOnFound)
+			kPathfinder = GC.getIgnoreUnitsPathFinder();
 	}
 	else
 	{
 		kPathfinder = GC.getIgnoreUnitsPathFinder();
 		bIsParthian = true;
 	}
+	// Barbarians won't move off camps just to move and shoot
+	if (isBarbarian() && pFromPlot->getImprovementType() == GC.getBARBARIAN_CAMP_IMPROVEMENT())
+	{
+		return false;
+	}
+	CvAStarNode* pNode;
+	CvPlot* pLoopPlot;
+	int iDX, iDY;
 #ifdef AUI_ASTAR_TURN_LIMITER
 	kPathfinder.SetData(this, 1);
 #else
 	kPathfinder.SetData(this);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 	if (iWithinTurns == 0)
 	{
 		int xMin, xMax, yMin, yMax;
 		if (isRanged())
 		{
 #ifdef AUI_FAST_COMP
-			const int xVariance = FASTMAX(abs((pFromPlot->getX() - pTargetPlot->getX()) / 2), baseMoves() - 1);
-			const int yVariance = FASTMAX(abs((pFromPlot->getY() - pTargetPlot->getY()) / 2), baseMoves() - 1);
+			int xVariance = FASTMAX(abs(pFromPlot->getX() - pTargetPlot->getX()) >> 1, baseMoves() - 1);
+			int yVariance = FASTMAX(abs(pFromPlot->getY() - pTargetPlot->getY()) >> 1, baseMoves() - 1);
+#else
+			int xVariance = MAX(abs(getX() - pTarget->getX()) >> 1, 1);
+			int yVariance = MAX(abs(getY() - pTarget->getY()) >> 1, 1);
+#endif
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+			IncreaseMoveRangeForRoads(this, xVariance);
+			IncreaseMoveRangeForRoads(this, yVariance);
+#endif
+			if (!bExitOnFound)
+			{
+				plotData.reserve(xVariance * yVariance);
+			}
+#ifdef AUI_FAST_COMP
 			xMin = FASTMIN(pFromPlot->getX(), pTargetPlot->getX()) - yVariance;
 			xMax = FASTMAX(pFromPlot->getX(), pTargetPlot->getX()) + yVariance;
 			yMin = FASTMIN(pFromPlot->getY(), pTargetPlot->getY()) - xVariance;
 			yMax = FASTMAX(pFromPlot->getY(), pTargetPlot->getY()) + xVariance;
 #else
-			const int xVariance = MAX(abs((getX() - pTarget->getX()) / 2), 1);
-			const int yVariance = MAX(abs((getY() - pTarget->getY()) / 2), 1);
 			xMin = MIN(getX(), pTarget->getX()) - yVariance;
 			xMax = MAX(getX(), pTarget->getX()) + yVariance + 1;
 			yMin = MIN(getY(), pTarget->getY()) - xVariance;
 			yMax = MAX(getY(), pTarget->getY()) + xVariance + 1;
-#endif // AUI_FAST_COMP
+#endif
 		}
 		else
 		{
@@ -19928,7 +19959,6 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 				// Check is empty plot not in current data set
 				if (pLoopPlot && !(bIsParthian && pLoopPlot->getNumTimesInList(plotData, true) == 0))
 				{
-					pNode = NULL;
 					// Melee units get different rules
 					if (!isRanged())
 					{
@@ -19936,17 +19966,15 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 						if (kPathfinder.GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY | MOVE_IGNORE_STACKING, bExitOnFound /*bReuse*/))
 						{
 							pNode = kPathfinder.GetLastNode();
-						}
-						if (pNode)
-						{
-							if (pNode->m_iData2 == 1)
+							if (pNode)
 							{
-								plotData.push_back(pLoopPlot);
-
-								bRet = true;
-								if (bExitOnFound)
+								if (pNode->m_iData2 == 1)
 								{
-									return true;
+									if (bExitOnFound)
+									{
+										return true;
+									}
+									plotData.push_back(pLoopPlot);
 								}
 							}
 						}
@@ -19958,17 +19986,15 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 						if (kPathfinder.GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
 						{
 							pNode = kPathfinder.GetLastNode();
-						}
-						if (pNode)
-						{
-							if (pNode->m_iData2 == 1 && pNode->m_iData1 > getMustSetUpToRangedAttackCount())
+							if (pNode)
 							{
-								plotData.push_back(pLoopPlot);
-
-								bRet = true;
-								if (bExitOnFound)
+								if (pNode->m_iData2 == 1 && pNode->m_iData1 > getMustSetUpToRangedAttackCount())
 								{
-									return true;
+									if (bExitOnFound)
+									{
+										return true;
+									}
+									plotData.push_back(pLoopPlot);
 								}
 							}
 						}
@@ -19999,21 +20025,19 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 				if (pLoopPlot && pLoopPlot != pTargetPlot)
 				{
 					// Run pathfinder to see if we can get to plot with movement left
-					pNode = NULL;
 					if (kPathfinder.GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
 					{
 						pNode = kPathfinder.GetLastNode();
-					}
-					if (pNode)
-					{
-						if (pNode->m_iData2 == 1)
+						if (pNode)
 						{
-							if (GetMovablePlotListOpt(plotData, pTargetPlot, bExitOnFound, 0, pLoopPlot))
+							if (pNode->m_iData2 == 1)
 							{
-								bRet = true;
-								if (bExitOnFound)
+								if (GetMovablePlotListOpt(plotData, pTargetPlot, bExitOnFound, 0, pLoopPlot))
 								{
-									return true;
+									if (bExitOnFound)
+									{
+										return true;
+									}
 								}
 							}
 						}
@@ -20023,7 +20047,7 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 		}
 	}
 
-	return bRet;
+	return plotData.size() > 0;
 }
 #endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 
@@ -20082,6 +20106,16 @@ bool CvUnit::DoSingleUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert, bool 
 	return false;
 }
 #endif // AUI_UNIT_DO_AITYPE_FLIP
+
+#ifdef AUI_DANGER_PLOTS_REMADE
+FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL>& CvUnit::GetDangerPlotList(bool bMoveOnly)
+{
+	if (bMoveOnly)
+		return vpDangerPlotMoveOnlyList;
+	else
+		return vpDangerPlotList;
+}
+#endif
 
 //	--------------------------------------------------------------------------------
 /// Can this Unit air sweep to eliminate interceptors?

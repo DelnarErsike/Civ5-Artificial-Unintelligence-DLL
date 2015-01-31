@@ -1307,7 +1307,7 @@ public:
 	void ChangeNumGoodyHutsPopped(int iValue);
 	
 #ifdef AUI_UNIT_RANGE_PLUS_MOVE
-	int GetRangePlusMoveToshot() const;
+	int GetRangePlusMoveToshot(bool bWithRoads = false) const;
 #endif // AUI_UNIT_RANGE_PLUS_MOVE
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 	bool canMoveAndRangedStrike(int iX, int iY) const;
@@ -1317,6 +1317,9 @@ public:
 #ifdef AUI_UNIT_DO_AITYPE_FLIP
 	bool DoSingleUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert = false, bool bForceOff = false);
 #endif // AUI_UNIT_DO_AITYPE_FLIP
+#ifdef AUI_DANGER_PLOTS_REMADE
+	FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL>& GetDangerPlotList(bool bMoveOnly = false);
+#endif
 
 	// Ported in from old CvUnitAI class
 	int SearchRange(int iRange) const;
@@ -1492,6 +1495,10 @@ protected:
 	int m_iSapperCount;
 	int m_iCanHeavyCharge;
 	int m_iNumExoticGoods;
+#ifdef AUI_DANGER_PLOTS_REMADE
+	FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL> vpDangerPlotList;
+	FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL> vpDangerPlotMoveOnlyList;
+#endif
 
 	FAutoVariable<bool, CvUnit> m_bPromotionReady;
 	FAutoVariable<bool, CvUnit> m_bDeathDelay;
