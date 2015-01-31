@@ -3362,8 +3362,8 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 	{
 		return false;
 	}
-	if (pPlayer->getCapitalCity() == NULL || pPlayer->GetPlayerTraits()->IsNoAnnexing() || pPlayer->IsEmpireUnhappy() || 
-		pPlayer->GetNumUnitsWithDomain(DOMAIN_LAND, true) - pPlayer->GetNumUnitsWithUnitAI(UNITAI_EXPLORE, true) <= pPlayer->GetNumUnitsWithUnitAI(UNITAI_SETTLE, true))
+	if (pPlayer->getCapitalCity() == NULL || pPlayer->GetPlayerTraits()->IsNoAnnexing() || pPlayer->IsEmpireUnhappy() ||
+		pPlayer->GetNumUnitsWithDomain(DOMAIN_LAND, true) - pPlayer->GetNumUnitsWithUnitAI(UNITAI_EXPLORE, true, false) <= pPlayer->GetNumUnitsWithUnitAI(UNITAI_SETTLE, true))
 	{
 		return false; // Venice can't build settlers and we don't want to keep building settlers without escorts
 	}
