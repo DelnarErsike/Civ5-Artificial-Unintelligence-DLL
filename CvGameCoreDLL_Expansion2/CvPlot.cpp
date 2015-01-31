@@ -9510,15 +9510,18 @@ void CvPlot::setScriptData(const char* szNewValue)
 // How many times does a vector contain this plot?
 int CvPlot::getNumTimesInList(std::vector<CvPlot*>& aPlotList, bool bTerminateAfterFirst) const
 {
+	if (aPlotList.size() == 0)
+		return 0;
+
 	int rtnValue = 0;
 
-	for (std::vector<CvPlot*>::iterator it = aPlotList.begin(); it != aPlotList.end(); it++)
+	for (std::vector<CvPlot*>::iterator it = aPlotList.begin(); it != aPlotList.end(); ++it)
 	{
 		if ((*it) == this)
 		{
-			rtnValue++;
 			if (bTerminateAfterFirst)
 				return 1;
+			++rtnValue;
 		}
 	}
 
@@ -9527,15 +9530,39 @@ int CvPlot::getNumTimesInList(std::vector<CvPlot*>& aPlotList, bool bTerminateAf
 // How many times does a vector contain this plot?
 int CvPlot::getNumTimesInList(BaseVector<CvPlot*, true>& aPlotList, bool bTerminateAfterFirst) const
 {
+	if (aPlotList.size() == 0)
+		return 0;
+
 	int rtnValue = 0;
 
-	for (BaseVector<CvPlot*, true>::iterator it = aPlotList.begin(); it != aPlotList.end(); it++)
+	for (BaseVector<CvPlot*, true>::iterator it = aPlotList.begin(); it != aPlotList.end(); ++it)
 	{
 		if ((*it) == this)
 		{
-			rtnValue++;
 			if (bTerminateAfterFirst)
 				return 1;
+			++rtnValue;
+		}
+	}
+
+	return rtnValue;
+}
+
+int CvPlot::getNumTimesInList(BaseVector<std::pair<CvPlot*, bool>, true>& aPlotList, bool bTerminateAfterFirst, bool* pValue) const
+{
+	if (aPlotList.size() == 0)
+		return 0;
+
+	int rtnValue = 0;
+
+	for (BaseVector<std::pair<CvPlot*, bool>, true>::iterator it = aPlotList.begin(); it != aPlotList.end(); ++it)
+	{
+		if (it->first == this)
+		{
+			pValue = &(it->second);
+			if (bTerminateAfterFirst)
+				return 1;
+			++rtnValue;
 		}
 	}
 

@@ -99,6 +99,7 @@ public:
 #ifdef AUI_PLOT_COUNT_OCCURANCES_IN_LIST
 	int getNumTimesInList(std::vector<CvPlot*>& aPlotList, bool bTerminateAfterFirst = false) const;
 	int getNumTimesInList(BaseVector<CvPlot*, true>& aPlotList, bool bTerminateAfterFirst = false) const;
+	int getNumTimesInList(BaseVector<std::pair<CvPlot*, bool>, true>& aPlotList, bool bTerminateAfterFirst = false, bool* pValue = NULL) const;
 #endif // AUI_PLOT_COUNT_OCCURANCES_IN_LIST
 
 	void doTurn();
