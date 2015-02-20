@@ -2234,7 +2234,11 @@ int CvCityBuildings::GetNumBuilding(BuildingTypes eIndex) const
 
 	if(GC.getCITY_MAX_NUM_BUILDINGS() <= 1)
 	{
+#ifdef AUI_FAST_COMP
+		return FASTMAX(GetNumRealBuilding(eIndex), GetNumFreeBuilding(eIndex));
+#else
 		return std::max(GetNumRealBuilding(eIndex), GetNumFreeBuilding(eIndex));
+#endif
 	}
 	else
 	{
