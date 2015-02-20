@@ -1224,17 +1224,28 @@ void CvDllGameContext::TEMPOnHexUnitChanged(ICvUnit1* pUnit)
 
 	// change the unit pathfinder to use these funcs instead
 	thePathfinder.SetDestValidFunc(NULL);
+#ifdef AUI_ASTAR_USE_DELEGATES
+	thePathfinder.SetValidFunc(MakeDelegate(&thePathfinder, &CvAStar::UIPathValid));
+	thePathfinder.SetNotifyChildFunc(MakeDelegate(&thePathfinder, &CvAStar::UIPathAdd));
+#else
 	thePathfinder.SetValidFunc(UIPathValid);
 	thePathfinder.SetNotifyChildFunc(UIPathAdd);
+#endif
 
 	// call the pathfinder
 	thePathfinder.SetData(pkUnit);
 	bool bCanFindPath = thePathfinder.GeneratePath(pkUnit->getX(), pkUnit->getY(), -1, -1, MOVE_DECLARE_WAR, false);
 
 	// change the unit pathfinder back
+#ifdef AUI_ASTAR_USE_DELEGATES
+	thePathfinder.SetDestValidFunc(MakeDelegate(&thePathfinder, &CvAStar::PathDestValid));
+	thePathfinder.SetValidFunc(MakeDelegate(&thePathfinder, &CvAStar::PathValid));
+	thePathfinder.SetNotifyChildFunc(MakeDelegate(&thePathfinder, &CvAStar::PathAdd));
+#else
 	thePathfinder.SetDestValidFunc(PathDestValid);
 	thePathfinder.SetValidFunc(PathValid);
 	thePathfinder.SetNotifyChildFunc(PathAdd);
+#endif
 	thePathfinder.ForceReset();
 
 }
@@ -1246,17 +1257,28 @@ void CvDllGameContext::TEMPOnHexUnitChangedAttack(ICvUnit1* pUnit)
 
 	// change the unit pathfinder to use these funcs instead
 	thePathfinder.SetDestValidFunc(NULL);
+#ifdef AUI_ASTAR_USE_DELEGATES
+	thePathfinder.SetValidFunc(MakeDelegate(&thePathfinder, &CvAStar::UIPathValid));
+	thePathfinder.SetNotifyChildFunc(MakeDelegate(&thePathfinder, &CvAStar::UIPathAdd));
+#else
 	thePathfinder.SetValidFunc(UIPathValid);
 	thePathfinder.SetNotifyChildFunc(AttackPathAdd);
+#endif
 
 	// call the pathfinder
 	thePathfinder.SetData(pkUnit);
 	bool bCanFindPath = thePathfinder.GeneratePath(pkUnit->getX(), pkUnit->getY(), -1, -1, MOVE_DECLARE_WAR, false);
 
 	// change the unit pathfinder back
+#ifdef AUI_ASTAR_USE_DELEGATES
+	thePathfinder.SetDestValidFunc(MakeDelegate(&thePathfinder, &CvAStar::PathDestValid));
+	thePathfinder.SetValidFunc(MakeDelegate(&thePathfinder, &CvAStar::PathValid));
+	thePathfinder.SetNotifyChildFunc(MakeDelegate(&thePathfinder, &CvAStar::PathAdd));
+#else
 	thePathfinder.SetDestValidFunc(PathDestValid);
 	thePathfinder.SetValidFunc(PathValid);
 	thePathfinder.SetNotifyChildFunc(PathAdd);
+#endif
 	thePathfinder.ForceReset();
 }
 //------------------------------------------------------------------------------

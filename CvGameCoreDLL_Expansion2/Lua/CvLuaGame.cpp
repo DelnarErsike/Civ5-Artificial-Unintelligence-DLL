@@ -2725,8 +2725,14 @@ int CvLuaGame::lGetLongestCityConnectionPlots(lua_State* L)
 	}
 
 	// reconnect the land route pathfinder water methods
+#ifdef AUI_ASTAR_USE_DELEGATES
+	CvAStar& kPathfinder = GC.getRouteFinder();
+	kPathfinder.SetNumExtraChildrenFunc(MakeDelegate(&kPathfinder, &CvAStar::RouteGetNumExtraChildren));
+	kPathfinder.SetExtraChildGetterFunc(MakeDelegate(&kPathfinder, &CvAStar::RouteGetExtraChild));
+#else
 	GC.getRouteFinder().SetNumExtraChildrenFunc(RouteGetNumExtraChildren);
 	GC.getRouteFinder().SetExtraChildGetterFunc(RouteGetExtraChild);
+#endif
 
 	CvLuaPlot::Push(L, pPlot1);
 	CvLuaPlot::Push(L, pPlot2);

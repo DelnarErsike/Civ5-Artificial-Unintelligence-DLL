@@ -1097,12 +1097,22 @@ CvPlot* CvAIOperation::ComputeCenterOfMassForTurn(CvArmyAI* pArmy, CvPlot **ppCl
 			if (pLastTurnArmyPlot && pCenterOfMass && pGoalPlot)
 			{
 				// Push center of mass forward a number of hexes equal to average movement
+#ifdef AUI_ASTAR_USE_DELEGATES
+				CvStepPathFinder& kPathfinder = GC.getStepFinder();
+				kPathfinder.SetData(m_eEnemy);
+				kPathfinder.SetDestValidFunc(NULL); // remove the area check
+				kPathfinder.SetValidFunc(MakeDelegate(&kPathfinder, &CvAStar::StepValidAnyArea)); // remove the area check
+				bool bFound = kPathfinder.GeneratePath(pCenterOfMass->getX(), pCenterOfMass->getY(), pGoalPlot->getX(), pGoalPlot->getY(), m_eOwner, false);
+				kPathfinder.SetValidFunc(MakeDelegate(&kPathfinder, &CvAStar::StepValid)); // remove the area check
+				kPathfinder.SetDestValidFunc(MakeDelegate(&kPathfinder, &CvAStar::StepDestValid)); // restore the area check
+#else
 				GC.getStepFinder().SetData(&m_eEnemy);
 				GC.getStepFinder().SetDestValidFunc(NULL); // remove the area check
 				GC.getStepFinder().SetValidFunc(StepValidAnyArea); // remove the area check
 				bool bFound = GC.getStepFinder().GeneratePath(pCenterOfMass->getX(), pCenterOfMass->getY(), pGoalPlot->getX(), pGoalPlot->getY(), m_eOwner, false);
 				GC.getStepFinder().SetValidFunc(StepValid); // remove the area check
 				GC.getStepFinder().SetDestValidFunc(StepDestValid); // restore the area check
+#endif
 				if (bFound)
 				{
 					pNode1 = GC.getStepFinder().GetLastNode();
@@ -1657,7 +1667,11 @@ static CvUnit* GetClosestUnit(CvOperationSearchUnitList& kSearchList, CvPlot* pk
 			// Now loop through the units, using the pathfinder to do the final evaluation
 			if (pkMusterPlot != NULL)
 			{
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+				if (!kPathFinder.DoesPathExist(pkLoopUnit, pkLoopUnit->plot(), pkMusterPlot))
+#else
 				if (!kPathFinder.DoesPathExist(*pkLoopUnit, pkLoopUnit->plot(), pkMusterPlot))
+#endif
 					continue;
 
 				iPathDistance = kPathFinder.GetPathLength();
@@ -1665,7 +1679,11 @@ static CvUnit* GetClosestUnit(CvOperationSearchUnitList& kSearchList, CvPlot* pk
 
 			if(pkTarget != NULL && bNeedToCheckTarget)
 			{
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+				if (!kPathFinder.DoesPathExist(pkLoopUnit, pkLoopUnit->plot(), pkTarget))
+#else
 				if (!kPathFinder.DoesPathExist(*pkLoopUnit, pkLoopUnit->plot(), pkTarget))
+#endif
 					continue;
 
 				if (pkMusterPlot == NULL)
@@ -2312,7 +2330,11 @@ CvPlot* CvAIEnemyTerritoryOperation::SelectInitialMusterPoint(CvArmyAI* pThisArm
 			CvAStarNode* pNode;
 
 			// Generate path
+#ifdef AUI_ASTAR_USE_DELEGATES
+			GC.getStepFinder().SetData(m_eEnemy);
+#else
 			GC.getStepFinder().SetData(&m_eEnemy);
+#endif
 			if(GC.getStepFinder().GeneratePath(pStartCityPlot->getX(), pStartCityPlot->getY(), pThisArmy->GetGoalPlot()->getX(), pThisArmy->GetGoalPlot()->getY(), m_eOwner, false))
 			{
 				pNode = GC.getStepFinder().GetLastNode();
@@ -4209,7 +4231,11 @@ CvPlot* CvAINavalOperation::SelectInitialMusterPoint(CvArmyAI* pThisArmy)
 				if(pAdjacentPlot != NULL && pAdjacentPlot->isWater())
 				{
 					// Generate path
+#ifdef AUI_ASTAR_USE_DELEGATES
+					GC.getStepFinder().SetData(m_eEnemy);
+#else
 					GC.getStepFinder().SetData(&m_eEnemy);
+#endif
 					if(GC.getStepFinder().GeneratePath(pAdjacentPlot->getX(), pAdjacentPlot->getY(), pThisArmy->GetGoalPlot()->getX(), pThisArmy->GetGoalPlot()->getY(), m_eOwner, false))
 					{
 						pNode = GC.getStepFinder().GetLastNode();

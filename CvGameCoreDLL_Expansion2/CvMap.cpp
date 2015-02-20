@@ -343,18 +343,28 @@ void CvMap::init(CvMapInitData* pInitInfo/*=NULL*/)
 	m_areas.Init();
 	m_landmasses.Init();
 
+#ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
+	//--------------------------------
+	// Init plot data
+	InitPlots();
+#endif
+
 	//--------------------------------
 	// Init non-saved data
 	setup();
 
+#ifndef AUI_ASTAR_CACHE_PLOTS_AT_NODES
 	//--------------------------------
 	// Init other game data
 	InitPlots();
+#endif
 
 	int iW = getGridWidth();
 	int iH = getGridHeight();
 
-
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for private(iX, iY)
+#endif
 	for(iX = 0; iX < iW; iX++)
 	{
 		for(iY = 0; iY < iH; iY++)
@@ -486,6 +496,174 @@ void CvMap::reset(CvMapInitData* pInitInfo)
 // Initializes all data that is not serialized but needs to be initialized after loading.
 void CvMap::setup()
 {
+#ifdef AUI_ASTAR_USE_DELEGATES
+	// Regular Pathfinder
+	CvTwoLayerPathFinder* pPathfinder1 = &GC.getPathFinder();
+	pPathfinder1->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(), 
+							MakeDelegate(pPathfinder1, &CvAStar::PathDest),
+							MakeDelegate(pPathfinder1, &CvAStar::PathDestValid),
+							MakeDelegate(pPathfinder1, &CvAStar::PathHeuristic),
+							MakeDelegate(pPathfinder1, &CvAStar::PathCost),
+							MakeDelegate(pPathfinder1, &CvAStar::PathValid),
+							MakeDelegate(pPathfinder1, &CvAStar::PathAdd),
+							MakeDelegate(pPathfinder1, &CvTwoLayerPathFinder::PathNodeAdd),
+							MakeDelegate(pPathfinder1, &CvAStar::UnitPathInitialize), 
+							NULL);
+	pPathfinder1->SetDataChangeInvalidatesCache(true);
+	// Interface Pathfinder
+	pPathfinder1 = &GC.getInterfacePathFinder();
+	pPathfinder1->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(), 
+							MakeDelegate(pPathfinder1, &CvAStar::PathDest),
+							MakeDelegate(pPathfinder1, &CvAStar::PathDestValid),
+							MakeDelegate(pPathfinder1, &CvAStar::PathHeuristic),
+							MakeDelegate(pPathfinder1, &CvAStar::PathCost),
+							MakeDelegate(pPathfinder1, &CvAStar::PathValid),
+							MakeDelegate(pPathfinder1, &CvAStar::PathAdd),
+							MakeDelegate(pPathfinder1, &CvTwoLayerPathFinder::PathNodeAdd),
+							MakeDelegate(pPathfinder1, &CvAStar::UnitPathInitialize),
+							NULL);
+	pPathfinder1->SetDataChangeInvalidatesCache(true);
+	// Tactical Analysis Map Pathfinder
+	pPathfinder1 = &GC.GetTacticalAnalysisMapFinder();
+	pPathfinder1->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
+							MakeDelegate(pPathfinder1, &CvAStar::PathDest),
+							MakeDelegate(pPathfinder1, &CvAStar::PathDestValid),
+							MakeDelegate(pPathfinder1, &CvAStar::PathHeuristic),
+							MakeDelegate(pPathfinder1, &CvAStar::PathCost),
+							MakeDelegate(pPathfinder1, &CvAStar::TacticalAnalysisMapPathValid),
+							MakeDelegate(pPathfinder1, &CvAStar::PathAdd),
+							MakeDelegate(pPathfinder1, &CvTwoLayerPathFinder::PathNodeAdd),
+							MakeDelegate(pPathfinder1, &CvAStar::UnitPathInitialize),
+							NULL);
+	pPathfinder1->SetDataChangeInvalidatesCache(true);
+	// Ignore Units Pathfinder
+	CvIgnoreUnitsPathFinder* pPathfinder3 = &GC.getIgnoreUnitsPathFinder();
+	pPathfinder3->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
+							MakeDelegate(pPathfinder3, &CvAStar::PathDest),
+							MakeDelegate(pPathfinder3, &CvAStar::IgnoreUnitsDestValid),
+							MakeDelegate(pPathfinder3, &CvAStar::PathHeuristic),
+							MakeDelegate(pPathfinder3, &CvAStar::IgnoreUnitsCost),
+							MakeDelegate(pPathfinder3, &CvAStar::IgnoreUnitsValid),
+							MakeDelegate(pPathfinder3, &CvAStar::IgnoreUnitsPathAdd),
+							NULL,
+							NULL,
+							NULL,
+							MakeDelegate(pPathfinder3, &CvAStar::UnitPathInitialize),
+							NULL);
+	pPathfinder3->SetDataChangeInvalidatesCache(true);
+	// Stepwise Pathfinder
+	CvStepPathFinder* pPathfinder4 = &GC.getStepFinder();
+	pPathfinder4->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
+							MakeDelegate(pPathfinder4, &CvAStar::PathDest),
+							MakeDelegate(pPathfinder4, &CvAStar::StepDestValid),
+							MakeDelegate(pPathfinder4, &CvAStar::StepHeuristic),
+							NULL,													// StepCost always returns 1, which is the same return value if the delegate were NULL
+							MakeDelegate(pPathfinder4, &CvAStar::StepValid),
+							MakeDelegate(pPathfinder4, &CvAStar::StepAdd),
+							NULL,
+							NULL,
+							NULL,
+							NULL,
+							NULL);
+	// Land route Pathfinder
+	CvAStar* pPathfinder2 = &GC.getRouteFinder();
+	pPathfinder2->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
+							MakeDelegate(pPathfinder2, &CvAStar::PathDest),
+							NULL,
+							NULL,
+							NULL,
+							MakeDelegate(pPathfinder2, &CvAStar::RouteValid),
+							NULL,
+							NULL,
+							MakeDelegate(pPathfinder2, &CvAStar::RouteGetNumExtraChildren),
+							MakeDelegate(pPathfinder2, &CvAStar::RouteGetExtraChild),
+							NULL,
+							NULL);
+	// Water route Pathfinder
+	pPathfinder2 = &GC.GetWaterRouteFinder();
+	pPathfinder2->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
+							MakeDelegate(pPathfinder2, &CvAStar::PathDest),
+							NULL,
+							NULL,
+							NULL,
+							MakeDelegate(pPathfinder2, &CvAStar::WaterRouteValid),
+							NULL,
+							NULL,
+							NULL,
+							NULL,
+							NULL,
+							NULL);
+	// Area Pathfinder
+	pPathfinder2 = &GC.getAreaFinder();
+	pPathfinder2->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
+							MakeDelegate(pPathfinder2, &CvAStar::PathDest),
+							NULL,
+							NULL,
+							NULL,
+							MakeDelegate(pPathfinder2, &CvAStar::AreaValid),
+							NULL,
+							MakeDelegate(pPathfinder2, &CvAStar::JoinArea),
+							NULL,
+							NULL,
+							NULL,
+							NULL);
+	// Influence Pathfinder
+	pPathfinder2 = &GC.getInfluenceFinder();
+	pPathfinder2->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
+							MakeDelegate(pPathfinder2, &CvAStar::PathDest),
+							MakeDelegate(pPathfinder2, &CvAStar::InfluenceDestValid),
+							MakeDelegate(pPathfinder2, &CvAStar::InfluenceHeuristic),
+							MakeDelegate(pPathfinder2, &CvAStar::InfluenceCost),
+							MakeDelegate(pPathfinder2, &CvAStar::InfluenceValid),
+							MakeDelegate(pPathfinder2, &CvAStar::InfluenceAdd),
+							NULL,
+							NULL,
+							NULL,
+							NULL,
+							NULL);
+	// Build route Pathfinder
+	pPathfinder2 = &GC.GetBuildRouteFinder();
+	pPathfinder2->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
+							MakeDelegate(pPathfinder2, &CvAStar::PathDest),
+							NULL,
+							NULL,
+							MakeDelegate(pPathfinder2, &CvAStar::BuildRouteCost),
+							MakeDelegate(pPathfinder2, &CvAStar::BuildRouteValid),
+							NULL,
+							NULL,
+							NULL,
+							NULL,
+							NULL,
+							NULL);
+	// Land Trade Route Pathfinder
+	pPathfinder2 = &GC.GetInternationalTradeRouteLandFinder();
+	pPathfinder2->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
+							MakeDelegate(pPathfinder2, &CvAStar::PathDest),
+							NULL,
+							MakeDelegate(pPathfinder2, &CvAStar::TradeRouteHeuristic),
+							MakeDelegate(pPathfinder2, &CvAStar::TradeRouteLandPathCost),
+							MakeDelegate(pPathfinder2, &CvAStar::TradeRouteLandValid),
+							NULL,
+							NULL,
+							NULL,
+							NULL,
+							MakeDelegate(pPathfinder2, &CvAStar::TradePathInitialize),
+							NULL);
+	// Water Trade Route Pathfinder
+	pPathfinder2 = &GC.GetInternationalTradeRouteWaterFinder();
+	pPathfinder2->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
+							MakeDelegate(pPathfinder2, &CvAStar::PathDest),
+							NULL,
+							MakeDelegate(pPathfinder2, &CvAStar::TradeRouteHeuristic),
+							MakeDelegate(pPathfinder2, &CvAStar::TradeRouteWaterPathCost),
+							MakeDelegate(pPathfinder2, &CvAStar::TradeRouteWaterValid),
+							NULL,
+							NULL,
+							NULL,
+							NULL,
+							MakeDelegate(pPathfinder2, &CvAStar::TradePathInitialize),
+							NULL);
+#else
 	GC.getPathFinder().Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(), PathDest, PathDestValid, PathHeuristic, PathCost, PathValid, PathAdd, PathNodeAdd, UnitPathInitialize, UnitPathUninitialize, NULL);
 	GC.getPathFinder().SetDataChangeInvalidatesCache(true);
 	GC.getInterfacePathFinder().Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(), PathDest, PathDestValid, PathHeuristic, PathCost, PathValid, PathAdd, PathNodeAdd, UnitPathInitialize, UnitPathUninitialize, NULL);
@@ -502,6 +680,7 @@ void CvMap::setup()
 	GC.GetInternationalTradeRouteWaterFinder().Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(), PathDest, NULL, TradeRouteHeuristic, TradeRouteWaterPathCost, TradeRouteWaterValid, NULL, NULL, NULL, NULL, TradePathInitialize, TradePathUninitialize, NULL);
 	GC.GetTacticalAnalysisMapFinder().Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(), PathDest, PathDestValid, PathHeuristic, PathCost, TacticalAnalysisMapPathValid, PathAdd, PathNodeAdd, UnitPathInitialize, UnitPathUninitialize, NULL);
 	GC.GetTacticalAnalysisMapFinder().SetDataChangeInvalidatesCache(true);
+#endif
 }
 
 
@@ -516,6 +695,9 @@ void CvMap::setupGraphical()
 	if(m_pMapPlots != NULL)
 	{
 		int iI;
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for private(iI)
+#endif
 		for(iI = 0; iI < numPlots(); iI++)
 		{
 			plotByIndexUnchecked(iI)->setupGraphical();
@@ -529,6 +711,9 @@ void CvMap::erasePlots()
 {
 	int iI;
 
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for private(iI)
+#endif
 	for(iI = 0; iI < numPlots(); iI++)
 	{
 		plotByIndexUnchecked(iI)->erase(true/*bEraseUnitsIfWater*/);
@@ -541,6 +726,9 @@ void CvMap::setRevealedPlots(TeamTypes eTeam, bool bNewValue, bool bTerrainOnly)
 {
 	int iI;
 
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for private(iI)
+#endif
 	for(iI = 0; iI < numPlots(); iI++)
 	{
 		plotByIndexUnchecked(iI)->setRevealed(eTeam, bNewValue, bTerrainOnly);
@@ -552,6 +740,9 @@ void CvMap::setRevealedPlots(TeamTypes eTeam, bool bNewValue, bool bTerrainOnly)
 void CvMap::setAllPlotTypes(PlotTypes ePlotType)
 {
 
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for
+#endif
 	for(int i=0; i<numPlots(); i++)
 	{
 		plotByIndexUnchecked(i)->setPlotType(ePlotType, false, false);
@@ -566,6 +757,9 @@ void CvMap::doTurn()
 {
 	int iI;
 
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for private(iI)
+#endif
 	for(iI = 0; iI < numPlots(); iI++)
 	{
 		plotByIndexUnchecked(iI)->doTurn();
@@ -601,6 +795,9 @@ void CvMap::updateVisibility()
 {
 	int iI;
 
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for private(iI)
+#endif
 	for(iI = 0; iI < numPlots(); iI++)
 	{
 		plotByIndexUnchecked(iI)->updateVisibility();
@@ -627,6 +824,9 @@ void CvMap::updateSight(bool bIncrement)
 {
 	int iI;
 
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for private(iI)
+#endif
 	for(iI = 0; iI < numPlots(); iI++)
 	{
 		plotByIndexUnchecked(iI)->updateSight(bIncrement);
@@ -639,6 +839,9 @@ void CvMap::updateCenterUnit()
 {
 	int iI;
 
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for private(iI)
+#endif
 	for(iI = 0; iI < numPlots(); iI++)
 	{
 		plotByIndexUnchecked(iI)->updateCenterUnit();
@@ -682,6 +885,9 @@ void CvMap::updateWorkingCity(CvPlot* pPlot, int iRange)
 	}
 	else
 	{
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for
+#endif
 		for(int iI = 0; iI < numPlots(); iI++)
 		{
 			plotByIndexUnchecked(iI)->updateWorkingCity();
@@ -1384,7 +1590,7 @@ void CvMap::recalculateAreas()
 
 #ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 	calculateStrategicValues(bForInitialize);
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 }
 
 #ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
@@ -1398,7 +1604,7 @@ void CvMap::calculateStrategicValues(bool bForInitialize)
 		plotByIndexUnchecked(iI)->calculateStrategicValue(true, bForInitialize);
 	}
 }
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 
 
 //	--------------------------------------------------------------------------------
@@ -1411,7 +1617,11 @@ int CvMap::calculateInfluenceDistance(CvPlot* pSource, CvPlot* pDest, int iMaxRa
 		return -1;
 	}
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+	GC.getInfluenceFinder().SetData(iMaxRange);
+#else
 	GC.getInfluenceFinder().SetData(&iMaxRange);
+#endif
 	if(GC.getInfluenceFinder().GeneratePath(pSource->getX(), pSource->getY(), pDest->getX(), pDest->getY(), 0, !bCorrectButSlower))
 	{
 		pNode = GC.getInfluenceFinder().GetLastNode();
@@ -1716,7 +1926,7 @@ void CvMap::DoPlaceNaturalWonders()
 	int iPlotLoopY;
 #ifdef AUI_HEXSPACE_DX_LOOPS
 	int iMaxDX;
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 	CvPlot* pLoopPlot;
 
 	int iNumMapPlots = numPlots();
@@ -1820,7 +2030,7 @@ void CvMap::DoPlaceNaturalWonders()
 #else
 				iMaxDX = iCoastDistance - MAX(0, iPlotLoopY);
 				for (iPlotLoopX = -iCoastDistance - MIN(0, iPlotLoopY); iPlotLoopX <= iMaxDX; iPlotLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(pRandPlot->getX(), pRandPlot->getY(), iPlotLoopX, iPlotLoopY);
@@ -1830,7 +2040,7 @@ void CvMap::DoPlaceNaturalWonders()
 				for(iPlotLoopY = -iCoastDistance; iPlotLoopY <= iCoastDistance; iPlotLoopY++)
 				{
 					pLoopPlot = plotXYWithRangeCheck(pRandPlot->getX(), pRandPlot->getY(), iPlotLoopX, iPlotLoopY, iCoastDistance);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 
 					if(pLoopPlot != NULL)
 					{
@@ -1871,7 +2081,7 @@ void CvMap::DoPlaceNaturalWonders()
 #else
 			iMaxDX = iAnotherNWDistance - MAX(0, iPlotLoopY);
 			for (iPlotLoopX = -iAnotherNWDistance - MIN(0, iPlotLoopY); iPlotLoopX <= iMaxDX; iPlotLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 			{
 				// No need for range check because loops are set up properly
 				pLoopPlot = plotXY(pRandPlot->getX(), pRandPlot->getY(), iPlotLoopX, iPlotLoopY);
@@ -1881,7 +2091,7 @@ void CvMap::DoPlaceNaturalWonders()
 			for(iPlotLoopY = -iAnotherNWDistance; iPlotLoopY <= iAnotherNWDistance; iPlotLoopY++)
 			{
 				pLoopPlot = plotXYWithRangeCheck(pRandPlot->getX(), pRandPlot->getY(), iPlotLoopX, iPlotLoopY, iAnotherNWDistance);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 
 				if(pLoopPlot != NULL)
 				{
@@ -2254,8 +2464,13 @@ void CvMap::calculateLandmasses()
 	CvAStar& thePathfinder = GC.getAreaFinder();
 
 	// change the area pathfinder to use these funcs instead
+#ifdef AUI_ASTAR_USE_DELEGATES
+	thePathfinder.SetValidFunc(MakeDelegate(&thePathfinder, &CvAStar::LandmassValid));
+	thePathfinder.SetNotifyListFunc(MakeDelegate(&thePathfinder, &CvAStar::JoinLandmass));
+#else
 	thePathfinder.SetValidFunc(LandmassValid);
 	thePathfinder.SetNotifyListFunc(JoinLandmass);
+#endif
 
 	for(int iI = 0; iI < numPlots(); iI++)
 	{
@@ -2272,8 +2487,13 @@ void CvMap::calculateLandmasses()
 			thePathfinder.GeneratePath(pLoopPlot->getX(), pLoopPlot->getY(), -1, -1, iLandmassID);
 		}
 	}
+#ifdef AUI_ASTAR_USE_DELEGATES
+	thePathfinder.SetValidFunc(MakeDelegate(&thePathfinder, &CvAStar::AreaValid));
+	thePathfinder.SetNotifyListFunc(MakeDelegate(&thePathfinder, &CvAStar::JoinArea));
+#else
 	thePathfinder.SetValidFunc(AreaValid);
 	thePathfinder.SetNotifyListFunc(JoinArea);
+#endif
 
 	// KWG: Rebuild the yields here.  Yes, this is called during the landmass rebuild process if the landmass' 'lake' field changes, but
 	//      there is a problem with that. The yield bonus for a lake is dependent on the proximity to a plot that is a lake, and not the general landmass
@@ -2324,6 +2544,9 @@ int CvMap::Validate()
 
 
 	int iErrors = 0;
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for
+#endif
 	for(int iI = 0; iI < numPlots(); iI++)
 	{
 		CvPlot* pLoopPlot = plotByIndexUnchecked(iI);

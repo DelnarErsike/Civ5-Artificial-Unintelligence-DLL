@@ -53,6 +53,9 @@ enum CvAStarListType
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 struct CvPathNodeCacheData
 {
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	bool bIsCalculated:1;
+#endif
 	bool bPlotVisibleToTeam:1;
 	bool bIsMountain:1;
 	bool bIsWater:1;
@@ -65,7 +68,7 @@ struct CvPathNodeCacheData
 	int	iNumFriendlyUnitsOfType;
 #ifdef AUI_DANGER_PLOTS_REMADE
 	int iPlotDanger;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 };
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -82,6 +85,12 @@ public:
 	{
 		m_iX = -1;
 		m_iY = -1;
+#ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
+		m_pPlot = NULL;
+#endif
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+		clear();
+#else
 		m_iTotalCost = 0;
 		m_iKnownCost = 0;
 		m_iHeuristicCost = 0;
@@ -97,6 +106,13 @@ public:
 		m_pNext = NULL;
 		m_pPrev = NULL;
 		m_pStack = NULL;
+#endif
+#ifdef AUI_ASTAR_PRECALCULATE_NEIGHBORS_ON_INITIALIZE
+		for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+		{
+			m_apNeighbors[iI] = NULL;
+		}
+#endif
 	}
 
 	void clear()
@@ -117,6 +133,10 @@ public:
 		m_pPrev = NULL;
 		m_pStack = NULL;
 
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+		m_kCostCacheData.bIsCalculated = false;
+#endif
+
 		m_apChildren.clear();
 	}
 
@@ -133,14 +153,21 @@ public:
 	CvAStarNode* m_pPrev;					// For Open and Closed lists
 	CvAStarNode* m_pStack;					// For Push/Pop Stack
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	FStaticVector<CvAStarNode*, NUM_DIRECTION_TYPES + 1, true, c_eCiv5GameplayDLL, 0> m_apChildren;
+#else
 	FStaticVector<CvAStarNode*, 6, true, c_eCiv5GameplayDLL, 0> m_apChildren;
+#endif
 
 	short m_iX, m_iY;         // Coordinate position
+#ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
+	CvPlot* m_pPlot;
+#endif
 	short m_iNumChildren;
 	bool m_bOnStack;
 
 #ifdef AUI_ASTAR_PRECALCULATE_NEIGHBORS_ON_INITIALIZE
-	//for faster neighbor lookup (potential children)
+	// for faster neighbor lookup (potential children)
 	CvAStarNode* m_apNeighbors[NUM_DIRECTION_TYPES];
 #endif
 

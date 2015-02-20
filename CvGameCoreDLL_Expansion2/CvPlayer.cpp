@@ -5222,8 +5222,14 @@ bool CvPlayer::IsCityConnectedToCity(CvCity* pCity1, CvCity* pCity2, RouteTypes 
 	if (bIgnoreHarbors)
 	{
 		// reconnect the land route pathfinder water methods
+#ifdef AUI_ASTAR_USE_DELEGATES
+		CvAStar& kPathfinder = GC.getRouteFinder();
+		kPathfinder.SetNumExtraChildrenFunc(MakeDelegate(&kPathfinder, &CvAStar::RouteGetNumExtraChildren));
+		kPathfinder.SetExtraChildGetterFunc(MakeDelegate(&kPathfinder, &CvAStar::RouteGetExtraChild));
+#else
 		GC.getRouteFinder().SetNumExtraChildrenFunc(RouteGetNumExtraChildren);
 		GC.getRouteFinder().SetExtraChildGetterFunc(RouteGetExtraChild);
+#endif
 	}
 
 	return bReturnValue;
@@ -23853,40 +23859,40 @@ void CvPlayer::ChangeUnitPurchaseCostModifier(int iChange)
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 //	--------------------------------------------------------------------------------
-int CvPlayer::GetPlotDanger(CvPlot& pPlot, CvUnit* pUnit, int iAirAction, int iAfterNIntercepts) const
+int CvPlayer::GetPlotDanger(CvPlot& pPlot, const CvUnit* pUnit, const int iAirAction, int iAfterNIntercepts) const
 {
 	return m_pDangerPlots->GetDanger(pPlot, pUnit, iAirAction, iAfterNIntercepts);
 }
 
 //	--------------------------------------------------------------------------------
-int CvPlayer::GetPlotDanger(CvPlot& pPlot, CvCity* pCity, CvUnit* pPretendGarrison, int iAfterNIntercepts) const
+int CvPlayer::GetPlotDanger(CvPlot& pPlot, CvCity* pCity, const CvUnit* pPretendGarrison, int iAfterNIntercepts) const
 {
 	return m_pDangerPlots->GetDanger(pPlot, pCity, pPretendGarrison, iAfterNIntercepts);
 }
 
 //	--------------------------------------------------------------------------------
-int CvPlayer::GetPlotDanger(CvPlot& pPlot, PlayerTypes ePlayer) const
+int CvPlayer::GetPlotDanger(CvPlot& pPlot, const PlayerTypes ePlayer) const
 {
 	return m_pDangerPlots->GetDanger(pPlot, ePlayer);
 }
 
 //	--------------------------------------------------------------------------------
-bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, PlayerTypes ePlayer) const
+bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, const PlayerTypes ePlayer) const
 {
 	return m_pDangerPlots->IsUnderImmediateThreat(pPlot, ePlayer);
 }
 
 //	--------------------------------------------------------------------------------
-bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, CvUnit* pUnit) const
+bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, const CvUnit* pUnit) const
 {
 	return m_pDangerPlots->IsUnderImmediateThreat(pPlot, pUnit);
 }
 
-bool CvPlayer::CouldAttackHere(CvPlot& pPlot, CvUnit* pUnit) const
+bool CvPlayer::CouldAttackHere(CvPlot& pPlot, const CvUnit* pUnit) const
 {
 	return m_pDangerPlots->CouldAttackHere(pPlot, pUnit);
 }
-bool CvPlayer::CouldAttackHere(CvPlot& pPlot, CvCity* pCity) const
+bool CvPlayer::CouldAttackHere(CvPlot& pPlot, const CvCity* pCity) const
 {
 	return m_pDangerPlots->CouldAttackHere(pPlot, pCity);
 }

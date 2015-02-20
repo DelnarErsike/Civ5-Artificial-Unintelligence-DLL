@@ -3180,14 +3180,14 @@ bool CvUnit::canMoveOrAttackIntoAttackOnly(const CvPlot& plot, byte bMoveFlags) 
 
 	return true;
 }
-#endif // AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
+#endif
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 bool CvUnit::canMoveOrAttackInto(const CvPlot& plot, byte bMoveFlags, bool bCanEnterTerrain, bool bIsPrecalcCanEnterTerrain) const
 #else
 bool CvUnit::canMoveOrAttackInto(const CvPlot& plot, byte bMoveFlags) const
-#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+#endif
 {
 	VALIDATE_OBJECT
 #ifdef AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
@@ -3196,10 +3196,10 @@ bool CvUnit::canMoveOrAttackInto(const CvPlot& plot, byte bMoveFlags) const
 		canMoveOrAttackIntoCommon(plot, bMoveFlags, bCanEnterTerrain, bIsPrecalcCanEnterTerrain));
 #else
 		canMoveOrAttackIntoCommon(plot, bMoveFlags));
-#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+#endif
 #else
 	return (canMoveInto(plot, bMoveFlags & ~(MOVEFLAG_ATTACK)) || canMoveInto(plot, bMoveFlags | MOVEFLAG_ATTACK));
-#endif // AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
+#endif
 }
 
 
@@ -12402,7 +12402,11 @@ int CvUnit::GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
+CvUnit* CvUnit::GetBestInterceptor(const CvPlot& interceptPlot, const CvUnit* pkDefender /* = NULL */, const bool bLandInterceptorsOnly /*false*/, const bool bVisibleInterceptorsOnly /*false*/) const
+#else
 CvUnit* CvUnit::GetBestInterceptor(const CvPlot& interceptPlot, CvUnit* pkDefender /* = NULL */, bool bLandInterceptorsOnly /*false*/, bool bVisibleInterceptorsOnly /*false*/) const
+#endif
 {
 	VALIDATE_OBJECT
 		CvUnit* pLoopUnit;
@@ -12470,7 +12474,7 @@ CvUnit* CvUnit::GetBestInterceptor(const CvPlot& interceptPlot, CvUnit* pkDefend
 
 #ifdef AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
 //	--------------------------------------------------------------------------------
-void CvUnit::BuildInterceptorVector(CvWeightedVector<CvUnit*, 8, true>& kVector, const CvPlot& interceptPlot, CvUnit* pkDefender /* = NULL */, bool bLandInterceptorsOnly /*false*/, bool bVisibleInterceptorsOnly /*false*/) const
+void CvUnit::BuildInterceptorVector(CvWeightedVector<CvUnit*, 8, true>& kVector, const CvPlot& interceptPlot, const CvUnit* pkDefender /* = NULL */, const bool bLandInterceptorsOnly /*false*/, const bool bVisibleInterceptorsOnly /*false*/) const
 {
 	VALIDATE_OBJECT
 
@@ -12523,7 +12527,7 @@ void CvUnit::BuildInterceptorVector(CvWeightedVector<CvUnit*, 8, true>& kVector,
 }
 
 //	--------------------------------------------------------------------------------
-CvUnit* CvUnit::GetNthBestInterceptor(const CvPlot& interceptPlot, int iIndex, CvUnit* pkDefender /* = NULL */, bool bLandInterceptorsOnly /*false*/, bool bVisibleInterceptorsOnly /*false*/) const
+CvUnit* CvUnit::GetNthBestInterceptor(const CvPlot& interceptPlot, const int iIndex, const CvUnit* pkDefender /* = NULL */, const bool bLandInterceptorsOnly /*false*/, const bool bVisibleInterceptorsOnly /*false*/) const
 {
 	VALIDATE_OBJECT
 	if (iIndex <= 0)
@@ -14204,16 +14208,27 @@ bool CvUnit::IsHasNoValidMove() const
 
 	// change the unit pathfinder to use these funcs instead
 	thePathfinder.SetDestValidFunc(NULL);
+#ifdef AUI_ASTAR_USE_DELEGATES
+	thePathfinder.SetIsPathDestFunc(MakeDelegate(&thePathfinder, &CvAStar::FindValidDestinationDest));
+	thePathfinder.SetValidFunc(MakeDelegate(&thePathfinder, &CvAStar::FindValidDestinationPathValid));
+#else
 	thePathfinder.SetIsPathDestFunc(FindValidDestinationDest);
 	thePathfinder.SetValidFunc(FindValidDestinationPathValid);
+#endif
 
 	// call the pathfinder
 	bool bCanFindPath = thePathfinder.GenerateUnitPath(this, getX(), getY(), -1, -1, 0, false);
 
 	// change the unit pathfinder back
+#ifdef AUI_ASTAR_USE_DELEGATES
+	thePathfinder.SetDestValidFunc(MakeDelegate(&thePathfinder, &CvAStar::PathDestValid));
+	thePathfinder.SetIsPathDestFunc(MakeDelegate(&thePathfinder, &CvAStar::PathDest));
+	thePathfinder.SetValidFunc(MakeDelegate(&thePathfinder, &CvAStar::PathValid));
+#else
 	thePathfinder.SetDestValidFunc(PathDestValid);
 	thePathfinder.SetIsPathDestFunc(PathDest);
 	thePathfinder.SetValidFunc(PathValid);
+#endif
 	thePathfinder.ForceReset();
 
 	return !bCanFindPath;
@@ -19258,27 +19273,54 @@ bool CvUnit::AreUnitsOfSameType(const CvUnit& pUnit2, const bool bPretendEmbarke
 }
 
 //	--------------------------------------------------------------------------------
+#if defined(AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_USES_SWAP) && defined(AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY)
+bool CvUnit::CanSwapWithUnitHere(CvPlot& swapPlot, int* piMovesLeft) const
+#else
 bool CvUnit::CanSwapWithUnitHere(CvPlot& swapPlot) const
+#endif
 {
 	VALIDATE_OBJECT
 	bool bSwapPossible = false;
 
 	if(getDomainType() == DOMAIN_LAND || getDomainType() == DOMAIN_SEA)
 	{
+#ifndef AUI_ASTAR_MINOR_OPTIMIZATION
 		if(canEnterTerrain(swapPlot))
+#endif
 		{
 			// Can I get there this turn?
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+			CvIgnoreUnitsPathFinder& kPathfinder = GC.getIgnoreUnitsPathFinder();
+#ifdef AUI_ASTAR_TURN_LIMITER
+			if (kPathfinder.DoesPathExist(this, plot(), &swapPlot, 1))
+#else
+			if (kPathfinder.DoesPathExist(this, plot(), &swapPlot))
+#endif
+			{
+				CvPlot* pEndTurnPlot = kPathfinder.GetPathEndTurnPlot();
+#else
 			CvUnit* pUnit = (CvUnit*)this;
 			if(GC.getIgnoreUnitsPathFinder().DoesPathExist(*(pUnit), plot(), &swapPlot))
 			{
 				CvPlot* pEndTurnPlot = GC.getIgnoreUnitsPathFinder().GetPathEndTurnPlot();
+#endif
 				if(pEndTurnPlot == &swapPlot)
 				{
 					if(swapPlot.getNumFriendlyUnitsOfType(this) >= GC.getPLOT_UNIT_LIMIT())
 					{
+#if defined(AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_USES_SWAP) && defined(AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY)
+						if (piMovesLeft)
+							*piMovesLeft = kPathfinder.GetLastNode()->m_iData2;
+#endif
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+						const IDInfo* pUnitNode = swapPlot.headUnitNode();
+#else
 						const IDInfo* pUnitNode;
+#endif
 						CvUnit* pLoopUnit;
+#ifndef AUI_ASTAR_MINOR_OPTIMIZATION
 						pUnitNode = swapPlot.headUnitNode();
+#endif
 						while(pUnitNode != NULL)
 						{
 							pLoopUnit = (CvUnit*)::getUnit(*pUnitNode);
@@ -19295,13 +19337,25 @@ bool CvUnit::CanSwapWithUnitHere(CvPlot& swapPlot) const
 							{
 								if(AreUnitsOfSameType(*pLoopUnit))
 								{
+#ifndef AUI_ASTAR_MINOR_OPTIMIZATION
 									CvPlot* here = plot();
 									if(here && pLoopUnit->canEnterTerrain(*here))
+#endif
 									{
 										// Can the unit I am swapping with get to me this turn?
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_ASTAR_TURN_LIMITER
+										if (pLoopUnit->ReadyToMove() && kPathfinder.DoesPathExist(pLoopUnit, &swapPlot, plot(), 1))
+#else
+										if(pLoopUnit->ReadyToMove() && kPathfinder.DoesPathExist(pLoopUnit, &swapPlot, plot()))
+#endif
+										{
+											CvPlot* pPathEndTurnPlot = kPathfinder.GetPathEndTurnPlot();
+#else
 										if(pLoopUnit->ReadyToMove() && GC.getIgnoreUnitsPathFinder().DoesPathExist(*(pLoopUnit), &swapPlot, plot()))
 										{
 											CvPlot* pPathEndTurnPlot = GC.getIgnoreUnitsPathFinder().GetPathEndTurnPlot();
+#endif
 											if(pPathEndTurnPlot == plot())
 											{
 												bSwapPossible = true;
@@ -19887,16 +19941,15 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 {
 	AI_PERF_FORMAT("AI-perf-MoveAndShoot.csv", ("%s Tile Search for %s (%d), %s, Turn %03d, %s", (iWithinTurns > 0 ? "Parthian" : "Regular"), getUnitInfo().GetDescription(), GetID(), (bExitOnFound ? "Heuristic" : "Full"), GC.getGame().getElapsedGameTurns(), GET_PLAYER(m_eOwner).getCivilizationShortDescription()));
 	bool bIsParthian = false;
-	CvAStar& kPathfinder = GC.GetTacticalAnalysisMapFinder();
+	CvAStar* pPathfinder = &GC.getIgnoreUnitsPathFinder();
 	if (pFromPlot == NULL)
 	{
 		pFromPlot = plot();
-		if (bExitOnFound)
-			kPathfinder = GC.getIgnoreUnitsPathFinder();
+		if (!bExitOnFound)
+			pPathfinder = &GC.GetTacticalAnalysisMapFinder();
 	}
 	else
 	{
-		kPathfinder = GC.getIgnoreUnitsPathFinder();
 		bIsParthian = true;
 	}
 	// Barbarians won't move off camps just to move and shoot
@@ -19908,9 +19961,9 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 	CvPlot* pLoopPlot;
 	int iDX, iDY;
 #ifdef AUI_ASTAR_TURN_LIMITER
-	kPathfinder.SetData(this, 1);
+	pPathfinder->SetData(this, 1);
 #else
-	kPathfinder.SetData(this);
+	pPathfinder.SetData(this);
 #endif
 	if (iWithinTurns == 0)
 	{
@@ -19963,9 +20016,9 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 					if (!isRanged())
 					{
 						// Run pathfinder to see if we can get to plot with movement left
-						if (kPathfinder.GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY | MOVE_IGNORE_STACKING, bExitOnFound /*bReuse*/))
+						if (pPathfinder->GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY | MOVE_IGNORE_STACKING, bExitOnFound /*bReuse*/))
 						{
-							pNode = kPathfinder.GetLastNode();
+							pNode = pPathfinder->GetLastNode();
 							if (pNode)
 							{
 								if (pNode->m_iData2 == 1)
@@ -19983,9 +20036,9 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 					else if (canEverRangeStrikeAt(pTargetPlot, pLoopPlot))
 					{
 						// Run pathfinder to see if we can get to plot with movement left
-						if (kPathfinder.GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
+						if (pPathfinder->GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
 						{
-							pNode = kPathfinder.GetLastNode();
+							pNode = pPathfinder->GetLastNode();
 							if (pNode)
 							{
 								if (pNode->m_iData2 == 1 && pNode->m_iData1 > getMustSetUpToRangedAttackCount())
@@ -20025,9 +20078,9 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 				if (pLoopPlot && pLoopPlot != pTargetPlot)
 				{
 					// Run pathfinder to see if we can get to plot with movement left
-					if (kPathfinder.GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
+					if (pPathfinder->GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, bExitOnFound /*bReuse*/))
 					{
-						pNode = kPathfinder.GetLastNode();
+						pNode = pPathfinder->GetLastNode();
 						if (pNode)
 						{
 							if (pNode->m_iData2 == 1)
@@ -21946,6 +21999,21 @@ bool CvUnit::IsEnemyInMovementRange(bool bOnlyFortified, bool bOnlyCities)
 
 	// change the unit pathfinder to use these funcs instead
 	thePathfinder.SetDestValidFunc(NULL);
+#ifdef AUI_ASTAR_USE_DELEGATES
+	thePathfinder.SetValidFunc(MakeDelegate(&thePathfinder, &CvAStar::UIPathValid));
+	if(bOnlyFortified)
+	{
+		thePathfinder.SetIsPathDestFunc(MakeDelegate(&thePathfinder, &CvAStar::AttackFortifiedPathDest));
+	}
+	else if(bOnlyCities)
+	{
+		thePathfinder.SetIsPathDestFunc(MakeDelegate(&thePathfinder, &CvAStar::AttackCityPathDest));
+	}
+	else
+	{
+		thePathfinder.SetIsPathDestFunc(MakeDelegate(&thePathfinder, &CvAStar::AttackPathDest));
+	}
+#else
 	thePathfinder.SetValidFunc(UIPathValid);
 	if(bOnlyFortified)
 	{
@@ -21959,6 +22027,7 @@ bool CvUnit::IsEnemyInMovementRange(bool bOnlyFortified, bool bOnlyCities)
 	{
 		thePathfinder.SetIsPathDestFunc(AttackPathDest);
 	}
+#endif
 
 	// call the pathfinder
 #ifdef AUI_ASTAR_TURN_LIMITER
@@ -21969,9 +22038,15 @@ bool CvUnit::IsEnemyInMovementRange(bool bOnlyFortified, bool bOnlyCities)
 	bool bCanFindPath = thePathfinder.GeneratePath(getX(), getY(), -1, -1, MOVE_DECLARE_WAR, false);
 
 	// change the unit pathfinder back
+#ifdef AUI_ASTAR_USE_DELEGATES
+	thePathfinder.SetValidFunc(MakeDelegate(&thePathfinder, &CvAStar::PathValid));
+	thePathfinder.SetDestValidFunc(MakeDelegate(&thePathfinder, &CvAStar::PathDestValid));
+	thePathfinder.SetIsPathDestFunc(MakeDelegate(&thePathfinder, &CvAStar::PathDest));
+#else
 	thePathfinder.SetValidFunc(PathValid);
 	thePathfinder.SetDestValidFunc(PathDestValid);
 	thePathfinder.SetIsPathDestFunc(PathDest);
+#endif
 	thePathfinder.ForceReset();
 
 	return bCanFindPath;

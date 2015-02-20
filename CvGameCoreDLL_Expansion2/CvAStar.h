@@ -18,9 +18,13 @@
 #pragma		once
 
 #include	"CvAStarNode.h"
+#ifdef AUI_ASTAR_USE_DELEGATES
+using namespace fastdelegate;
+#endif
 
 class CvAStar;
 
+#ifndef AUI_ASTAR_USE_DELEGATES
 typedef int(*CvAPointFunc)(int, int, const void*, CvAStar*);
 typedef int(*CvAHeuristic)(int, int, int, int);
 typedef int(*CvAStarFunc)(CvAStarNode*, CvAStarNode*, int, const void*, CvAStar*);
@@ -28,6 +32,7 @@ typedef int(*CvANumExtraChildren)(CvAStarNode*, CvAStar*);
 typedef int(*CvAGetExtraChild)(CvAStarNode*, int, int&, int&, CvAStar*);
 typedef void(*CvABegin)(const void*, CvAStar*);
 typedef void(*CvAEnd)(const void*, CvAStar*);
+#endif
 
 // PATHFINDER FLAGS
 // WARNING: Some of these flags are passed into the unit mission and stored in the missions iFlags member.
@@ -64,6 +69,83 @@ typedef void(*CvAEnd)(const void*, CvAStar*);
 class CvAStar
 {
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+public:
+	//--------------------------------------- FUNCTION POINTERS -------------------------------------------
+	typedef FastDelegate2<int, int, int> CvAPointFunc;
+	typedef FastDelegate4<int, int, int, int, int> CvAHeuristic;
+	typedef FastDelegate3<CvAStarNode*, CvAStarNode*, int, int> CvAStarFunc;
+	typedef FastDelegate1<CvAStarNode*, int> CvANumExtraChildren;
+	typedef FastDelegate2<CvAStarNode*, int, CvAStarNode*> CvAGetExtraChild;
+	typedef FastDelegate0<void> CvABeginOrEnd;
+
+	//--------------------------------------- A* FUNCTIONS -------------------------------------------
+	int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data);
+	int PathValid(CvAStarNode* parent, CvAStarNode* node, int data);
+	int PathDestValid(int iToX, int iToY);
+	int PathDest(int iToX, int iToyY) const;
+	int PathHeuristic(int iFromX, int iFromY, int iToX, int iToY) const;
+	int PathCost(CvAStarNode* parent, CvAStarNode* node, int data);
+
+	int IgnoreUnitsDestValid(int iToX, int iToY);
+	int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data);
+	int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data);
+	int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data);
+
+	int StepDestValid(int iToX, int iToY) const;
+	int StepHeuristic(int iFromX, int iFromY, int iToX, int iToY) const;
+	int StepValid(CvAStarNode* parent, CvAStarNode* node, int data);
+	int StepValidAnyArea(CvAStarNode* parent, CvAStarNode* node, int data);
+	int StepCost(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int StepAdd(CvAStarNode* parent, CvAStarNode* node, int data) const;
+
+	int RouteValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int RouteGetNumExtraChildren(CvAStarNode* node) const;
+	CvAStarNode* RouteGetExtraChild(CvAStarNode* node, int iIndex) const;
+
+	int WaterRouteValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+
+	int AreaValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int JoinArea(CvAStarNode* parent, CvAStarNode* node, int data) const;
+
+	int LandmassValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int JoinLandmass(CvAStarNode* parent, CvAStarNode* node, int data) const;
+
+	int InfluenceDestValid(int iToX, int iToY);
+	int InfluenceHeuristic(int iFromX, int iFromY, int iToX, int iToY) const;
+	int InfluenceValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int InfluenceCost(CvAStarNode* parent, CvAStarNode* node, int data);
+	int InfluenceAdd(CvAStarNode* parent, CvAStarNode* node, int data) const;
+
+	int BuildRouteCost(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int BuildRouteValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+
+	int UIPathAdd(CvAStarNode* parent, CvAStarNode* node, int data);
+	int UIPathValid(CvAStarNode* parent, CvAStarNode* node, int data);
+
+	int AttackPathAdd(CvAStarNode* parent, CvAStarNode* node, int data);
+	int AttackPathDest(int iToX, int iToY);
+	int AttackFortifiedPathDest(int iToX, int iToY);
+	int AttackCityPathDest(int iToX, int iToY);
+	int AttackPathDestEval(int iToX, int iToY, bool bOnlyFortified, bool bOnlyCity);
+
+	int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int data);
+	int FindValidDestinationDest(int iToX, int iToY);
+	int FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int data);
+
+	int TradeRouteHeuristic(int iFromX, int iFromY, int iToX, int iToY) const;
+	int TradeRouteLandPathCost(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int TradeRouteLandValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int TradeRouteWaterPathCost(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int TradeRouteWaterValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+
+	void UnitPathInitialize();
+	void UnitPathUninitialize();
+
+	void TradePathInitialize();
+	void TradePathUninitialize();
+#endif
+
 	//--------------------------------------- PUBLIC METHODS -------------------------------------------
 public:
 	enum RANGES
@@ -77,7 +159,11 @@ public:
 	~CvAStar();
 
 	// Initializes the CvAStar class. iSize = Dimensions of Pathing Grid(ie. [iSize][iSize]
+#ifdef AUI_ASTAR_USE_DELEGATES
+	void Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvANumExtraChildren NumExtraChildrenFunc, CvAGetExtraChild GetExtraChildFunc, CvABeginOrEnd InitializeFunc, CvABeginOrEnd UninitializeFunc);
+#else
 	void Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvANumExtraChildren NumExtraChildrenFunc, CvAGetExtraChild GetExtraChildFunc, CvABegin InitializeFunc, CvAEnd UninitializeFunc, const void* pData);
+#endif
 
 	void DeInit();		// free memory
 
@@ -85,54 +171,88 @@ public:
 	bool GeneratePath(int iXstart, int iYstart, int iXdest, int iYdest, int iInfo = 0, bool bReuse = false);
 
 	// Gets the last node in the path (from the origin) - Traverse the parents to get full path (linked list starts at destination)
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	inline CvAStarNode* GetLastNode() const
+#else
 	inline CvAStarNode* GetLastNode()
+#endif
 	{
 		return m_pBest;
 	}
 
 #ifdef AUI_ASTAR_GET_PENULTIMATE_NODE
 	// Gets the node before the last node in the path (from the origin)
-	inline CvAStarNode* GetPenultimateNode()
+	inline CvAStarNode* GetPenultimateNode() const
 	{
-		return m_pBest->m_pParent;
+		return (m_pBest ? m_pBest->m_pParent : NULL);
 	}
 #endif
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	inline bool IsPathStart(int iX, int iY) const
+#else
 	inline bool IsPathStart(int iX, int iY)
+#endif
 	{
 		return ((m_iXstart == iX) && (m_iYstart == iY));
 	}
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+	inline bool IsPathDest(int iX, int iY) const
+	{
+		if (udIsPathDest && udIsPathDest(iX, iY))
+#else
 	inline bool IsPathDest(int iX, int iY)
 	{
 		if(udIsPathDest && udIsPathDest(iX, iY, m_pData, this))
+#endif
 		{
 			return TRUE;
 		}
 		return FALSE;
 	}
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	inline int GetStartX() const
+#else
 	inline int GetStartX()
+#endif
 	{
 		return m_iXstart;
 	}
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	inline int GetStartY() const
+#else
 	inline int GetStartY()
+#endif
 	{
 		return m_iYstart;
 	}
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	inline int GetDestX() const
+#else
 	inline int GetDestX()
+#endif
 	{
 		return m_iXdest;
 	}
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	inline int GetDestY() const
+#else
 	inline int GetDestY()
+#endif
 	{
 		return m_iYdest;
 	}
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	inline int GetInfo() const
+#else
 	inline int GetInfo()
+#endif
 	{
 		return m_iInfo;
 	}
@@ -154,7 +274,33 @@ public:
 			m_bForceReset = true;
 		m_iMaxTurns = iMaxTurns;
 	}
+#endif
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+#ifdef AUI_ASTAR_TURN_LIMITER
+	inline void SetData(const CvUnit* pData, int iMaxTurns = MAX_INT)
+	{
+		if(m_bDataChangeInvalidatesCache && (m_pData != pData || m_iMaxTurns != iMaxTurns))
+#else
+	inline void SetData(CvUnit* pData)
+	{
+		if(m_bDataChangeInvalidatesCache && m_pData != pData)
+#endif
+			m_bForceReset = true;
+		m_pData = pData;
+#ifdef AUI_ASTAR_TURN_LIMITER
+		m_iMaxTurns = iMaxTurns;
+#endif
+	}
+
+	inline void SetData(int iData)
+	{
+		if(m_bDataChangeInvalidatesCache && m_iData != iData)
+			m_bForceReset = true;
+		m_iData = iData;
+	}
+#else
+#ifdef AUI_ASTAR_TURN_LIMITER
 	inline void SetData(const void* pData, int iMaxTurns = MAX_INT)
 	{
 		if(m_bDataChangeInvalidatesCache && (m_pData != pData || m_iMaxTurns != iMaxTurns))
@@ -162,13 +308,14 @@ public:
 	inline void SetData(const void* pData)
 	{
 		if(m_bDataChangeInvalidatesCache && m_pData != pData)
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 			m_bForceReset = true;
 		m_pData = pData;
 #ifdef AUI_ASTAR_TURN_LIMITER
 		m_iMaxTurns = iMaxTurns;
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 	}
+#endif
 
 	inline bool IsMPCacheSafe() const
 	{
@@ -296,13 +443,15 @@ public:
 	// It is ok to pass in NULL, the resulting array will contain zero elements
 	static void CopyPath(const CvAStarNode* pkEndNode, CvPathNodeArray& kPathArray);
 
+#ifndef AUI_ASTAR_MINOR_OPTIMIZATION
 	void* GetScratchPointer1() { return m_pScratchPtr1; }
 	void  SetScratchPointer1(void* pPtr) { m_pScratchPtr1 = pPtr; }
 	void* GetScratchPointer2() { return m_pScratchPtr2; }
 	void  SetScratchPointer2(void* pPtr) { m_pScratchPtr1 = pPtr; }
+#endif
 
 #ifdef AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
-	void* GetScratchBuffer() { return m_ScratchBuffer; }
+	inline void* GetScratchBuffer() const { return m_ScratchBuffer; }
 #else
 	void* GetScratchBuffer() { return &m_ScratchBuffer[0]; }
 #endif
@@ -318,8 +467,8 @@ protected:
 	CvAStarNode*	GetBest();
 
 #ifdef AUI_ASTAR_PRECALCULATE_NEIGHBORS_ON_INITIALIZE
-	void PrecalcNeighbors(CvAStarNode* node);
-#endif // AUI_ASTAR_PRECALCULATE_NEIGHBORS_ON_INITIALIZE
+	void PrecalcNeighbors(CvAStarNode* node) const;
+#endif
 	void CreateChildren(CvAStarNode* node);
 	void LinkChild(CvAStarNode* node, CvAStarNode* check);
 	void UpdateOpenNode(CvAStarNode* node);
@@ -328,11 +477,22 @@ protected:
 	void Push(CvAStarNode* node);
 	CvAStarNode* Pop();
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	inline int xRange(int iX) const;
+	inline int yRange(int iY) const;
+	inline bool isValid(int iX, int iY) const;
+#else
 	inline int xRange(int iX);
 	inline int yRange(int iY);
 	inline bool isValid(int iX, int iY);
+#endif
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+#define UDFUNC(func, param1, param2, data) (func ? func(param1, param2, data) : 1)
+#define UDHEUR(func, param1, param2, param3, param4) (func ? func(param1, param2, param3, param4) : 0)
+#else
 	inline int udFunc(CvAStarFunc func, CvAStarNode* param1, CvAStarNode* param2, int data, const void* cb);
+#endif
 
 	//--------------------------------------- PROTECTED DATA -------------------------------------------
 protected:
@@ -345,14 +505,26 @@ protected:
 	CvAStarFunc udNotifyList;				    // Called when node is added to Open/Closed list
 	CvANumExtraChildren udNumExtraChildrenFunc; // Determines if CreateChildren should consider any additional nodes
 	CvAGetExtraChild udGetExtraChildFunc;	    // Get the extra children nodes
+#ifdef AUI_ASTAR_USE_DELEGATES
+	CvABeginOrEnd udInitializeFunc;					// Called at the start, to initialize any run specific data
+	CvABeginOrEnd udUninitializeFunc;				// Called at the end to uninitialize any run specific data
+#else
 	CvABegin udInitializeFunc;					// Called at the start, to initialize any run specific data
 	CvAEnd udUninitializeFunc;					// Called at the end to uninitialize any run specific data
+#endif
 
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+	// Data passed back to functions
+	int m_iData;
+	const CvUnit* m_pData;
+#else
 	const void* m_pData;			// Data passed back to functions
+#endif
+
 #ifdef AUI_ASTAR_TURN_LIMITER
 	int m_iMaxTurns;				// Pathfinder never lets a path's turn cost become higher than this number
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 
 	int m_iColumns;					// Used to calculate node->number
 	int m_iRows;					// Used to calculate node->number
@@ -367,6 +539,9 @@ protected:
 	bool m_bForceReset;
 	bool m_bIsMPCacheSafe;
 	bool m_bDataChangeInvalidatesCache;
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	bool m_bIsMultiplayer;
+#endif
 
 	CvAStarNode* m_pOpen;            // The open list
 	CvAStarNode* m_pOpenTail;        // The open list tail pointer (to speed up inserts)
@@ -376,9 +551,11 @@ protected:
 
 	CvAStarNode** m_ppaaNodes;
 
+#ifndef AUI_ASTAR_MINOR_OPTIMIZATION
 	// Scratch buffers
 	void* m_pScratchPtr1;						// Will be cleared to NULL before each GeneratePath call
 	void* m_pScratchPtr2;						// Will be cleared to NULL before each GeneratePath call
+#endif
 
 #ifdef AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
 	char*  m_ScratchBuffer;
@@ -388,7 +565,11 @@ protected:
 };
 
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+inline int CvAStar::xRange(int iX) const
+#else
 inline int CvAStar::xRange(int iX)
+#endif
 {
 	if(m_bWrapX)
 	{
@@ -412,7 +593,11 @@ inline int CvAStar::xRange(int iX)
 }
 
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+inline int CvAStar::yRange(int iY) const
+#else
 inline int CvAStar::yRange(int iY)
+#endif
 {
 	if(m_bWrapY)
 	{
@@ -435,8 +620,11 @@ inline int CvAStar::yRange(int iY)
 	}
 }
 
-
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+inline bool CvAStar::isValid(int iX, int iY) const
+#else
 inline bool CvAStar::isValid(int iX, int iY)
+#endif
 {
 	if((iX < 0) || (iX >= m_iColumns))
 	{
@@ -451,7 +639,7 @@ inline bool CvAStar::isValid(int iX, int iY)
 	return true;
 }
 
-
+#ifndef AUI_ASTAR_USE_DELEGATES
 inline int CvAStar::udFunc(CvAStarFunc func, CvAStarNode* param1, CvAStarNode* param2, int data, const void* cb)
 {
 	return (func) ? func(param1, param2, data, cb, this) : 1;
@@ -500,16 +688,18 @@ int AttackCityPathDest(int iToX, int iToY, const void* pointer, CvAStar* finder)
 int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int FindValidDestinationDest(int iToX, int iToY, const void* pointer, CvAStar* finder);
 int FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
+#endif
 #ifdef AUI_ASTAR_TURN_LIMITER
 int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, int iTargetTurns = MAX_INT);
 #else
 int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths=false, bool bIgnoreUnits=false, bool bIgnoreStacking=false);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 #ifdef AUI_ASTAR_PARADROP
 bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnoreUnits = false, bool bIgnoreParadrop = false, int* piTurns = NULL);
 #else
 bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnoreUnits=false, int* piTurns = NULL);
-#endif // AUI_ASTAR_PARADROP
+#endif
+#ifndef AUI_ASTAR_USE_DELEGATES
 int TradeRouteHeuristic(int iFromX, int iFromY, int iToX, int iToY);
 int TradeRouteLandPathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int TradeRouteLandValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
@@ -519,11 +709,12 @@ void UnitPathInitialize(const void* pointer, CvAStar* finder);
 void UnitPathUninitialize(const void* pointer, CvAStar* finder);
 void TradePathInitialize(const void* pointer, CvAStar* finder);
 void TradePathUninitialize(const void* pointer, CvAStar* finder);
+#endif
 
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 void IncreaseMoveRangeForRoads(const CvUnit* pUnit, int& iRange);
 int GetIncreasedMoveRangeForRoads(const CvUnit* pUnit, int iRange);
-#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+#endif
 
 // Derived classes (for more convenient access to pathfinding)
 class CvTwoLayerPathFinder: public CvAStar
@@ -531,16 +722,28 @@ class CvTwoLayerPathFinder: public CvAStar
 public:
 	CvTwoLayerPathFinder();
 	~CvTwoLayerPathFinder();
+#ifdef AUI_ASTAR_USE_DELEGATES
+	void Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvABeginOrEnd InitializeFunc, CvABeginOrEnd UninitializeFunc);
+#else
 	void Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvABegin InitializeFunc, CvAEnd UninitializeFunc, const void* pData);
+#endif
 	void DeInit();
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	inline CvAStarNode* GetPartialMoveNode(int iCol, int iRow) const;
+#else
 	CvAStarNode* GetPartialMoveNode(int iCol, int iRow);
+#endif
 	CvPlot* GetPathEndTurnPlot() const;
+
+#ifdef AUI_ASTAR_USE_DELEGATES
+	int PathNodeAdd(CvAStarNode* parent, CvAStarNode* node, int data);
+#endif
 
 #ifdef AUI_ASTAR_TURN_LIMITER
 	bool GenerateUnitPath(const CvUnit* pkUnit, int iXstart, int iYstart, int iXdest, int iYdest, int iInfo = 0, bool bReuse = false, int iTargetTurns = MAX_INT);
 #else
 	bool GenerateUnitPath(const CvUnit* pkUnit, int iXstart, int iYstart, int iXdest, int iYdest, int iInfo = 0, bool bReuse = false);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 
 private:
 	CvAStarNode** m_ppaaPartialMoveNodes;
@@ -558,9 +761,25 @@ public:
 class CvIgnoreUnitsPathFinder: public CvAStar
 {
 public:
+#ifdef AUI_ASTAR_TURN_LIMITER
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	bool DoesPathExist(const CvUnit* pUnit, const CvPlot* pStartPlot, const CvPlot* pEndPlot, const int iMaxTurns = MAX_INT);
+#else
+	bool DoesPathExist(CvUnit& unit, CvPlot* pStartPlot, CvPlot* pEndPlot, const int iMaxTurns = MAX_INT);
+#endif
+#else
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	bool DoesPathExist(const CvUnit* pUnit, const CvPlot* pStartPlot, const CvPlot* pEndPlot);
+#else
 	bool DoesPathExist(CvUnit& unit, CvPlot* pStartPlot, CvPlot* pEndPlot);
+#endif
+#endif
 	CvPlot* GetLastOwnedPlot(CvPlot* pStartPlot, CvPlot* pEndPlot, PlayerTypes iOwner) const;
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	int GetPathLength() const;
+#else
 	int GetPathLength();
+#endif
 	CvPlot* GetPathFirstPlot() const;
 	CvPlot* GetPathEndTurnPlot() const;
 	CvPlot* GetLastPlot();
