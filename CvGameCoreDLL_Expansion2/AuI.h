@@ -101,14 +101,22 @@
 #define AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
 /// Gets the last node before the parent (used for planning melee attacks to know where they'd attack from)
 #define AUI_ASTAR_GET_PENULTIMATE_NODE
+/// Fixes possible null pointers in A*
+#define AUI_ASTAR_FIX_POSSIBLE_NULL_POINTERS
 /// Gets the nth best interceptor on a tile (used for planning danger, when we know the previous n-1 interceptors will be unable to intercept due to air sweeps, other air attacks)
 #define AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
 /// Optimizes CvWeightedVector calls by assigning PODType flag properly
 #define AUI_WEIGHTED_VECTOR_OPTIMIZATIONS
 /// Fixes the fact that the function to get a great general stacked with the unit does not detect great admirals
 #define AUI_UNIT_FIX_GET_STACKED_GREAT_GENERAL_WORKS_WITH_ADMIRAL
-/// Fixes some misc. warnings/errors generated when code is attempted to be compiled using VC120 (it won't work because link target are all VC90-compiled, but all other errors/warnings are legitimate)
+/// Fixes some misc. warnings/errors generated when code is attempted to be compiled using VC120 (it won't work because link targets are all VC90-compiled, but all other errors/warnings are legitimate)
 #define AUI_WEIRD_SHIT
+/// Pathfinder has been rewritten to use delegates
+#define AUI_ASTAR_USE_DELEGATES
+/// Human-controlled missionaries and units will still want to avoid undesirable tiles a bit when planning paths, though not to the full extent that an AI-controlled unit would (parameter value is the extra "cost" weight added)
+#define AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT (1)
+/// Pointers to the plot representing each A* node are stored in the A* node in question
+#define AUI_ASTAR_CACHE_PLOTS_AT_NODES
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code
@@ -160,6 +168,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 /// Mountain tiles are no longer automatically marked as invalid steps
 #define AUI_ASTAR_FIX_STEP_VALID_CONSIDERS_MOUNTAINS
+/// When a unit will attack onto a plot, river crossings are avoided whenever possible
+#define AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING
+/// Units without a defense bonus still consider a tile's defense penalties when pathfinding
+#define AUI_ASTAR_FIX_DEFENSE_PENALTIES_CONSIDERED_FOR_UNITS_WITHOUT_DEFENSE_BONUS
 
 // AI Operations Stuff
 /// If a settler tries and fails the no escort check, keep rerolling each turn
