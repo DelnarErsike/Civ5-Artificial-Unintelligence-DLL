@@ -936,20 +936,20 @@ private:
 	void ExecuteMoveToPlot(UnitHandle pUnit, CvPlot* pTarget, bool bSaveMoves = false, int iTurnsToTarget = MAX_INT);
 #else
 	void ExecuteMoveToPlot(UnitHandle pUnit, CvPlot* pTarget, bool bSaveMoves = false);
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 #ifdef AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_USES_SWAP
 #ifdef AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY
 	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit, UnitHandle pRequestingUnit, bool bPrioritizeZeroMove = false);
 #else
 	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit, UnitHandle pRequestingUnit);
-#endif // AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY
+#endif
 #else
 #ifdef AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY
 	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit, bool bPrioritizeZeroMove = false);
 #else
 	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit);
-#endif // AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY
-#endif // AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_USES_SWAP
+#endif
+#endif
 	void ExecuteNavalBlockadeMove(CvPlot* pTarget);
 	void ExecuteMoveToTarget(CvPlot* pTarget);
 	void ExecuteAirInterceptMoves();
@@ -965,7 +965,7 @@ private:
 	void ExecuteEscortEmbarkedMoves();
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 	void CheckAndExecuteFreePillageMoves(UnitHandle pUnit, int iMovesNeededStill = 0);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 
 	// Internal low-level utility routines
 	void TurnOffMove(TacticalAIMoveTypes eType);
@@ -974,7 +974,7 @@ private:
 	bool FindUnitsWithinStrikingDistance(CvPlot *pTargetPlot, int iNumTurnsAway, int iPreferredDamageLevel, bool bNoRangedUnits=false, bool bNavalOnly=false, bool bMustMoveThrough=false, bool bIncludeBlockedUnits=false, bool bWillPillage=false, bool bTargetUndefended=false, bool bIgnoreParadrop=false);
 #else
 	bool FindUnitsWithinStrikingDistance(CvPlot *pTargetPlot, int iNumTurnsAway, int iPreferredDamageLevel, bool bNoRangedUnits=false, bool bNavalOnly=false, bool bMustMoveThrough=false, bool bIncludeBlockedUnits=false, bool bWillPillage=false, bool bTargetUndefended=false);
-#endif // AUI_ASTAR_PARADROP
+#endif
 	bool FindParatroopersWithinStrikingDistance(CvPlot *pTargetPlot);
 	bool FindCitiesWithinStrikingDistance(CvPlot* pTargetPlot);
 	bool FindClosestUnit(CvPlot* pTargetPlot, int iNumTurnsAway, bool bMustHaveHalfHP, bool bMustBeRangedUnit=false, int iRangeRequired=2, bool bNeedsIgnoreLOS=false, bool bMustBeMeleeUnit=false, bool bIgnoreUnits=false, CvPlot* pRangedAttackTarget=NULL);
@@ -989,12 +989,12 @@ private:
 	bool MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, bool &bMoveWasSafe, int iPathTurns = MAX_INT, bool bPathGenerated = false);
 #else
 	bool MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, bool &bMoveWasSafe);
-#endif // AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
+#endif
 #ifdef AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
 	CvPlot* FindBestBarbarianLandMove(UnitHandle pUnit, bool &bIsCombatMove);
 #else
 	CvPlot* FindBestBarbarianLandMove(UnitHandle pUnit);
-#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+#endif
 	CvPlot* FindPassiveBarbarianLandMove(UnitHandle pUnit);
 	CvPlot* FindBestBarbarianSeaMove(UnitHandle pUnit);
 	CvPlot* FindBarbarianExploreTarget(UnitHandle pUnit);
@@ -1038,13 +1038,13 @@ private:
 #ifdef AUI_TACTICAL_HELPERS_POSITIONING_AND_ORDER
 	CvPlot* GetBestRepositionPlot(UnitHandle unitH, CvPlot* plotTarget, int iWithinTurns = 0);
 	void SortCurrentMoveUnits(bool bSortBySelfDamage = false);
-#endif // AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK
+#endif
 #ifdef AUI_TACTICAL_EXECUTE_SWAP_TO_PLOT
-	bool ExecuteSwapToPlot(UnitHandle pUnit, UnitHandle pTargetUnit, bool bSaveMoves);
-#endif // AUI_TACTICAL_EXECUTE_SWAP_TO_PLOT
+	bool ExecuteSwapToPlot(UnitHandle pUnit, UnitHandle pTargetUnit, bool bSaveMoves, bool bWantMovesLeft);
+#endif
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 	bool CheckAndExecuteParadrop(UnitHandle pUnit, CvPlot* pTarget, int iPathfindingTurns = MAX_INT);
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 
 	// Logging functions
 	CvString GetLogFileName(CvString& playerName) const;
