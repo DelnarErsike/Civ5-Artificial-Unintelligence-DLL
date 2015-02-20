@@ -299,7 +299,7 @@ public:
 
 	CvUnit* GetGarrisonedUnit() const;
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-	void OverrideGarrison(CvUnit* pUnit);
+	void OverrideGarrison(const CvUnit* pUnit);
 	void UnsetGarrisonOverride();
 #endif // AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 

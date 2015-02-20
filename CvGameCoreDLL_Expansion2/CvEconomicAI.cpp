@@ -2009,8 +2009,9 @@ void CvEconomicAI::DoReconState()
 	bool bNeedToLookAtDeepWaterAlso = GET_TEAM(m_pPlayer->getTeam()).canEmbarkAllWaterPassage();
 
 #ifdef AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
-	FFastVector<int, true, 8> viAreasToCheck;
-	FFastVector<int, true, 8>::iterator it;
+	FFastVector<int, true, c_eCiv5GameplayDLL> viAreasToCheck;
+	FFastVector<int, true, c_eCiv5GameplayDLL>::iterator it;
+	viAreasToCheck.reserve(NUM_DIRECTION_TYPES * 2);
 	bool bAddThisArea;
 	int iCurrentArea;
 	CvCity* pLoopCity;
@@ -2049,7 +2050,7 @@ void CvEconomicAI::DoReconState()
 			}
 		}
 	}
-#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
+#endif
 
 	// Look at map size and gauge how much of it we know about
 	for(iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
@@ -2064,7 +2065,7 @@ void CvEconomicAI::DoReconState()
 			{
 				if (iCurrentArea == *it)
 				{
-#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
+#endif
 			bIsLand = false;
 			bIsCoastalWater = false;
 
@@ -2112,7 +2113,7 @@ void CvEconomicAI::DoReconState()
 				}
 				break;
 			}
-#endif // AUI_ECONOMIC_FIX_DO_RECON_STATE_ONLY_STARTING_LANDMASS_FOG_TILES_COUNT
+#endif
 		}
 	}
 

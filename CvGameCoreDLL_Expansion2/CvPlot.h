@@ -564,7 +564,7 @@ public:
 		return m_iStrategicValueAsCity;
 	}
 	void calculateStrategicValue(bool bForCity, bool bForInitialize = false, bool bDoNeighbors = true);
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 
 	int getFoundValue(PlayerTypes eIndex);
 	bool isBestAdjacentFound(PlayerTypes eIndex);

@@ -165,23 +165,20 @@ public:
 #ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 	bool canMoveInto(const CvPlot& pPlot, byte bMoveFlags = 0, bool bCanEnterTerrain = false, bool bIsPrecalcCanEnterTerrain = false) const;
 	bool canMoveOrAttackInto(const CvPlot& pPlot, byte bMoveFlags = 0, bool bCanEnterTerrain = false, bool bIsPrecalcCanEnterTerrain = false) const;
+	bool canMoveThrough(const CvPlot& pPlot, byte bMoveFlags = 0, bool bCanEnterTerrain = false, bool bIsPrecalcCanEnterTerrain = false) const;
 #else
 	bool canMoveInto(const CvPlot& pPlot, byte bMoveFlags = 0) const;
 	bool canMoveOrAttackInto(const CvPlot& pPlot, byte bMoveFlags = 0) const;
-#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	bool canMoveThrough(const CvPlot& pPlot, byte bMoveFlags = 0) const;
+#endif
 #ifdef AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
 #ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 	bool canMoveOrAttackIntoCommon(const CvPlot& plot, byte bMoveFlags = 0, bool bCanEnterTerrain = false, bool bIsPrecalcCanEnterTerrain = false) const;
 #else
 	bool canMoveOrAttackIntoCommon(const CvPlot& plot, byte bMoveFlags = 0) const;
-#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+#endif
 	bool canMoveOrAttackIntoAttackOnly(const CvPlot& plot, byte bMoveFlags = 0) const;
-#endif // AUI_UNIT_FIX_CAN_MOVE_OR_ATTACK_INTO_NO_DUPLICATE_CALLS
-#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
-	bool canMoveThrough(const CvPlot& pPlot, byte bMoveFlags = 0, bool bCanEnterTerrain = false, bool bIsPrecalcCanEnterTerrain = false) const;
-#else
-	bool canMoveThrough(const CvPlot& pPlot, byte bMoveFlags = 0) const;
-#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+#endif
 
 	bool IsAngerFreeUnit() const;
 
@@ -518,10 +515,12 @@ public:
 	int GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand = true) const;
 #endif
 
-	CvUnit* GetBestInterceptor(const CvPlot& pPlot, CvUnit* pkDefender = NULL, bool bLandInterceptorsOnly=false, bool bVisibleInterceptorsOnly=false) const;
 #ifdef AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
-	void BuildInterceptorVector(CvWeightedVector<CvUnit*, 8, true>& kVector, const CvPlot& pPlot, CvUnit* pkDefender = NULL, bool bLandInterceptorsOnly = false, bool bVisibleInterceptorsOnly = false) const;
-	CvUnit* GetNthBestInterceptor(const CvPlot& pPlot, int iIndex = 0, CvUnit* pkDefender = NULL, bool bLandInterceptorsOnly = false, bool bVisibleInterceptorsOnly = false) const;
+	void BuildInterceptorVector(CvWeightedVector<CvUnit*, 8, true>& kVector, const CvPlot& pPlot, const CvUnit* pkDefender = NULL, const bool bLandInterceptorsOnly = false, const bool bVisibleInterceptorsOnly = false) const;
+	CvUnit* GetNthBestInterceptor(const CvPlot& pPlot, const int iIndex = 0, const CvUnit* pkDefender = NULL, const bool bLandInterceptorsOnly = false, const bool bVisibleInterceptorsOnly = false) const;
+	CvUnit* GetBestInterceptor(const CvPlot& pPlot, const CvUnit* pkDefender = NULL, const bool bLandInterceptorsOnly = false, const bool bVisibleInterceptorsOnly = false) const;
+#else
+	CvUnit* GetBestInterceptor(const CvPlot& pPlot, CvUnit* pkDefender = NULL, bool bLandInterceptorsOnly=false, bool bVisibleInterceptorsOnly=false) const;
 #endif
 	int GetInterceptorCount(const CvPlot& pPlot, CvUnit* pkDefender = NULL, bool bLandInterceptorsOnly=false, bool bVisibleInterceptorsOnly=false) const;
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
@@ -1194,7 +1193,11 @@ public:
 	int GetPower() const;
 
 	bool AreUnitsOfSameType(const CvUnit& pUnit2, const bool bPretendEmbarked = false) const;
+#if defined(AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_USES_SWAP) && defined(AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY)
+	bool CanSwapWithUnitHere(CvPlot& pPlot, int* piMovesLeft = NULL) const;
+#else
 	bool CanSwapWithUnitHere(CvPlot& pPlot) const;
+#endif
 
 	void read(FDataStream& kStream);
 	void write(FDataStream& kStream) const;

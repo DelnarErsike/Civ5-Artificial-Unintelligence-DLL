@@ -1244,7 +1244,7 @@ void CvHomelandAI::PlotSentryMoves()
 		{
 #ifndef AUI_PERF_LOGGING_FORMATTING_TWEAKS // Not needed because it's already covered by the general move performance log
 			AI_PERF_FORMAT("Homeland-perf.csv", ("PlotSentryMoves, Turn %03d, %s", GC.getGame().getElapsedGameTurns(), m_pPlayer->getCivilizationShortDescription()) );
-#endif // AUI_PERF_LOGGING_FORMATTING_TWEAKS
+#endif
 
 			CvPlot* pTarget = GC.getMap().plot(m_TargetedSentryPoints[iI].GetTargetX(), m_TargetedSentryPoints[iI].GetTargetY());
 
@@ -2877,14 +2877,18 @@ void CvHomelandAI::ExecuteExplorerMoves()
 					{
 						continue;
 					}
-#endif // AUI_HOMELAND_EXECUTE_EXPLORER_MOVES_FLIP_AITYPE_ON_NOTARGET
+#endif
 
 					CvCity* pLoopCity;
 					int iLoop;
 					bool bFoundPath = false;
 					for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 					{
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+						if (GC.getIgnoreUnitsPathFinder().DoesPathExist(pUnit.pointer(), pUnit->plot(), pLoopCity->plot()))
+#else
 						if(GC.getIgnoreUnitsPathFinder().DoesPathExist(*(pUnit), pUnit->plot(), pLoopCity->plot()))
+#endif
 						{
 							bFoundPath = true;
 							break;
@@ -2921,7 +2925,11 @@ void CvHomelandAI::ExecuteExplorerMoves()
 						bool bFoundPath = false;
 						for (pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 						{
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+							if (GC.getIgnoreUnitsPathFinder().DoesPathExist(pUnit.pointer(), pUnit->plot(), pLoopCity->plot()))
+#else
 							if (GC.getIgnoreUnitsPathFinder().DoesPathExist(*(pUnit), pUnit->plot(), pLoopCity->plot()))
+#endif
 							{
 								bFoundPath = true;
 								break;
@@ -2937,7 +2945,7 @@ void CvHomelandAI::ExecuteExplorerMoves()
 							pUnit->scrap();
 						}
 					}
-#endif // AUI_HOMELAND_EXECUTE_EXPLORER_MOVES_FLIP_AITYPE_ON_NOTARGET
+#endif
 				}
 			}
 		}
@@ -6383,7 +6391,7 @@ bool CvHomelandAI::GetClosestUnitByTurnsToTarget(CvHomelandAI::MoveUnitsArray &k
 			int iMoves = TurnsToReachTarget(pLoopUnit.pointer(), pTarget, false, false, false, iMaxRange);
 #else
 			int iMoves = TurnsToReachTarget(pLoopUnit.pointer(), pTarget);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 			it->SetMovesToTarget(iMoves);
 			// Did we make it at all?
 			if (iMoves != MAX_INT)

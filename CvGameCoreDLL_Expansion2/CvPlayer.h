@@ -1339,17 +1339,17 @@ public:
 	void ChangeUnitPurchaseCostModifier(int iChange);
 
 #ifdef AUI_DANGER_PLOTS_REMADE
-	int GetPlotDanger(CvPlot& Plot, CvUnit* pUnit, int iAirAction = AIR_ACTION_ATTACK, int iAfterNIntercepts = 0) const;
-	int GetPlotDanger(CvPlot& Plot, CvCity* pCity, CvUnit* pPretendGarrison = NULL, int iAfterNIntercepts = 0) const;
-	int GetPlotDanger(CvPlot& Plot, PlayerTypes ePlayer) const;
-	bool IsPlotUnderImmediateThreat(CvPlot& Plot, CvUnit* pUnit) const;
-	bool IsPlotUnderImmediateThreat(CvPlot& Plot, PlayerTypes ePlayer) const;
-	bool CouldAttackHere(CvPlot& Plot, CvUnit* pUnit) const;
-	bool CouldAttackHere(CvPlot& Plot, CvCity* pCity) const;
+	int GetPlotDanger(CvPlot& Plot, const CvUnit* pUnit, const int iAirAction = AIR_ACTION_ATTACK, int iAfterNIntercepts = 0) const;
+	int GetPlotDanger(CvPlot& Plot, CvCity* pCity, const CvUnit* pPretendGarrison = NULL, int iAfterNIntercepts = 0) const;
+	int GetPlotDanger(CvPlot& Plot, const PlayerTypes ePlayer) const;
+	bool IsPlotUnderImmediateThreat(CvPlot& Plot, const CvUnit* pUnit) const;
+	bool IsPlotUnderImmediateThreat(CvPlot& Plot, const PlayerTypes ePlayer) const;
+	bool CouldAttackHere(CvPlot& Plot, const CvUnit* pUnit) const;
+	bool CouldAttackHere(CvPlot& Plot, const CvCity* pCity) const;
 #else
 	int GetPlotDanger(CvPlot& Plot) const;
 	bool IsPlotUnderImmediateThreat(CvPlot& Plot) const;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 	CvCity* GetClosestFriendlyCity(CvPlot& plot, int iSearchRadius);
 
 	int GetNumPuppetCities() const;

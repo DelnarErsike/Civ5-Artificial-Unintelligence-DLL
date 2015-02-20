@@ -7036,7 +7036,7 @@ CvUnit* CvCity::GetGarrisonedUnit() const
 		return pGarrison;
 #else
 	CvUnit* pGarrison = NULL;
-#endif // AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#endif
 
 	CvPlot* pPlot = plot();
 	if(pPlot)
@@ -7052,7 +7052,7 @@ CvUnit* CvCity::GetGarrisonedUnit() const
 }
 
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-void CvCity::OverrideGarrison(CvUnit* pUnit)
+void CvCity::OverrideGarrison(const CvUnit* pUnit)
 {
 	m_hGarrisonOverride = pUnit;
 }
@@ -7061,7 +7061,7 @@ void CvCity::UnsetGarrisonOverride()
 {
 	m_hGarrisonOverride.removeTarget();
 }
-#endif // AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#endif
 
 //	--------------------------------------------------------------------------------
 CvPlot* CvCity::getRallyPlot() const
