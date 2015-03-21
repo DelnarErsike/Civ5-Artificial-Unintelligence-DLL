@@ -1436,14 +1436,28 @@ void CvPlayerCulture::DoSwapGreatWorks()
 	}
 
 #ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
-	SortGreatWorkArray(aGreatWorksWriting);
-	SortGreatWorkArray(aGreatWorksArt);
-	SortGreatWorkArray(aGreatWorksArtifacts);
-	SortGreatWorkArray(aGreatWorksMusic);
-
-	MoveWorks(CvTypes::getGREAT_WORK_SLOT_LITERATURE(), aGreatWorkBuildingsWriting, &aGreatWorksWriting, NULL);
-	MoveWorks(CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT(), aGreatWorkBuildingsArt, &aGreatWorksArt, &aGreatWorksArtifacts);
-	MoveWorks(CvTypes::getGREAT_WORK_SLOT_MUSIC(), aGreatWorkBuildingsMusic, &aGreatWorksMusic, NULL);
+	if (aGreatWorkBuildingsWriting.size() > 0)
+	{
+		SortGreatWorkArray(aGreatWorksWriting);
+		MoveWorks(CvTypes::getGREAT_WORK_SLOT_LITERATURE(), aGreatWorkBuildingsWriting, &aGreatWorksWriting, NULL);
+	}
+	if (aGreatWorkBuildingsMusic.size() > 0)
+	{
+		SortGreatWorkArray(aGreatWorksMusic);
+		MoveWorks(CvTypes::getGREAT_WORK_SLOT_MUSIC(), aGreatWorkBuildingsMusic, &aGreatWorksMusic, NULL);
+	}
+	if (aGreatWorksArt.size() > 0 || aGreatWorksArtifacts.size() > 0)
+	{
+		SortGreatWorkArray(aGreatWorksArt);
+		SortGreatWorkArray(aGreatWorksArtifacts);
+		GreatWorksVector* works1 = &aGreatWorksArt;
+		GreatWorksVector* works2 = &aGreatWorksArtifacts;
+		if (aGreatWorksArt.size() == 0)
+			works1 = NULL;
+		if (aGreatWorksArtifacts.size() == 0)
+			works2 = NULL;
+		MoveWorks(CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT(), aGreatWorkBuildingsArt, works1, works2);
+	}
 #else
 	MoveWorks (CvTypes::getGREAT_WORK_SLOT_LITERATURE(), aGreatWorkBuildingsWriting, aGreatWorksWriting, aNull);
 	MoveWorks (CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT(), aGreatWorkBuildingsArt, aGreatWorksArt, aGreatWorksArtifacts);
@@ -1528,7 +1542,7 @@ static bool SortGreatWorksEraFirst(const CvGreatWorkInMyEmpire& kEntry1, const C
 /// Sorts Great Works by how important/common they are to us (in order of increasing importance, i.e. first in the list should be least important or most common)
 void CvPlayerCulture::SortGreatWorkArray(GreatWorksVector& kWorks)
 {
-	if (kWorks.size() == 0)
+	if (kWorks.size() <= 1)
 		return;
 	const int iNumEras = GC.getNumEraInfos();
 	if (iNumEras < 1)
@@ -1639,11 +1653,11 @@ void CvPlayerCulture::MoveWorks(GreatWorkSlotType eType, GreatWorksBuildingVecto
 		if (eType == CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT())
 		{
 #ifdef AUI_FIX_FFASTVECTOR_ERASE
-			if (works1->size() > 0)
+			if (works1 && works1->size() > 0)
 				SetSwappableArtIndex((*works1)[0].m_iGreatWorkIndex);
 			else
 				SetSwappableArtIndex(-1);
-			if (works2->size() > 0)
+			if (works2 && works2->size() > 0)
 				SetSwappableArtifactIndex((*works2)[0].m_iGreatWorkIndex);
 			else
 				SetSwappableArtifactIndex(-1);
@@ -1864,8 +1878,8 @@ bool CvPlayerCulture::ThemeBuilding(GreatWorksBuildingVector::const_iterator bui
 								if (pkGameCulture->CanSwapGreatWorks(eOwner, iToBeDiscardedWorkIndex, (PlayerTypes)iLoopPlayer, iToBeAcquiredWorkIndex, vaiGreatWorkSwaps.size() == 0))
 								{
 									vaiGreatWorkSwaps.push_back(iToBeDiscardedWorkIndex);
-									vaiGreatWorkSwaps.push_back(iLoopPlayer);
 									vaiGreatWorkSwaps.push_back(iToBeAcquiredWorkIndex);
+									vaiGreatWorkSwaps.push_back(iLoopPlayer);
 								}
 							}
 						}
@@ -1888,8 +1902,8 @@ bool CvPlayerCulture::ThemeBuilding(GreatWorksBuildingVector::const_iterator bui
 									if (pkGameCulture->CanSwapGreatWorks(eOwner, iToBeDiscardedWorkIndex, (PlayerTypes)iLoopPlayer, iToBeAcquiredWorkIndex, vaiGreatWorkSwaps.size() == 0))
 									{
 										vaiGreatWorkSwaps.push_back(iToBeDiscardedWorkIndex);
-										vaiGreatWorkSwaps.push_back(iLoopPlayer);
 										vaiGreatWorkSwaps.push_back(iToBeAcquiredWorkIndex);
+										vaiGreatWorkSwaps.push_back(iLoopPlayer);
 									}
 								}
 							}
@@ -1996,7 +2010,7 @@ bool CvPlayerCulture::ThemeBuilding(GreatWorksBuildingVector::const_iterator bui
 /// Specialized version of ThemeBuilding() that handles those buildings that are split between Art and Artifact
 bool CvPlayerCulture::ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg, const int iThemingBonusIndex, const uint uiNumSlots, GreatWorksVector *works1, GreatWorksVector *works2, bool bConsiderOtherPlayers)
 {
-	if ((uiNumSlots & 1) != 0 || (works1->size() + works2->size()) < uiNumSlots)
+	if ((uiNumSlots & 1) != 0 || !works1 || !works2 || (works1->size() + works2->size()) < uiNumSlots)
 		return false;
 	CvBuildingEntry *pkEntry = kBldg.m_pBuild;
 	if (!pkEntry)
@@ -2092,8 +2106,8 @@ bool CvPlayerCulture::ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg,
 							if (pkGameCulture->CanSwapGreatWorks(eOwner, iToBeDiscardedWorkIndex, (PlayerTypes)iLoopPlayer, iToBeAcquiredWorkIndex, bFirstSwap))
 							{
 								vaiGreatWorkSwaps.push_back(iToBeDiscardedWorkIndex);
-								vaiGreatWorkSwaps.push_back(iLoopPlayer);
 								vaiGreatWorkSwaps.push_back(iToBeAcquiredWorkIndex);
+								vaiGreatWorkSwaps.push_back(iLoopPlayer);
 								bFirstSwap = false;
 								if (vaiGreatWorkSwaps.size() == 3 * (uiWorksInHalf - apWorksChosen.size()))
 								{
@@ -2172,8 +2186,8 @@ bool CvPlayerCulture::ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg,
 									if (pkGameCulture->CanSwapGreatWorks(eOwner, iToBeDiscardedWorkIndex, (PlayerTypes)iLoopPlayer, iToBeAcquiredWorkIndex, bFirstSwap))
 									{
 										vaiGreatWorkSwaps.push_back(iToBeDiscardedWorkIndex);
-										vaiGreatWorkSwaps.push_back(iLoopPlayer);
 										vaiGreatWorkSwaps.push_back(iToBeAcquiredWorkIndex);
+										vaiGreatWorkSwaps.push_back(iLoopPlayer);
 										bFirstSwap = false;
 										if (vaiGreatWorkSwaps.size() == 3 * (uiNumSlots - apWorksChosen.size()))
 										{
