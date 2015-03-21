@@ -179,7 +179,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Tweaks the boldness check for whether a settler should proceed without escort
 #define AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS (8)
 /// Adds a random value to the boldness check so it doesn't always succeed or fail
-#define AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE (7)
+#define AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS
 #ifdef AUI_BINOM_RNG
 /// If it's available, opts for the binomial RNG for the boldness check's random factor instead of the flat RNG
 #define AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_BINOMIAL
@@ -771,6 +771,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 /// Fixes missing code responsible for granting starting forest flavor to Iroquois
 #define AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
+/// Unhardcodes gigantic forest flavor for Celts and haves it check for resources that would require improvements (in addition to improvements themselves)
+#define AUI_SITE_EVALUATION_FIX_CELTIC_FOREST_COUNT
 
 // Tactical AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
@@ -981,6 +983,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_NO_OVERLAP
 /// Uses the unit's in-game movement range for plot search heuristic instead of relying on the unit's info's pre-determined movement range
 #define AUI_TACTICAL_FIX_EXECUTE_MOVES_TO_SAFEST_PLOT_USE_GAME_MOVEMENT_RANGE
+/// When scoring tiles based on distance to a Great General's operation's Center of Mass, pathfinding is used instead of raw distance
+#define AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_USE_PATHFINDER_FOR_COM_DISTANCE
 
 // Tactical Analysis Map Stuff
 /// Enables a minor adjustment for ranged units to account for possibly being able to move and shoot at a tile
@@ -1111,6 +1115,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
 /// Divides base weight by this number for all non-world wonders
 #define AUI_WONDER_PRODUCITON_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WANT_WORLD_WONDER (10)
+/// National wonders are handled as simple buildings, since wonder production AI is made to offset the high production costs of world wonders
+#define AUI_WONDER_PRODUCTION_CHOOSE_WONDER_NO_NATIONAL_WONDERS
 
 // GlobalDefines (GD) wrappers
 // INT
