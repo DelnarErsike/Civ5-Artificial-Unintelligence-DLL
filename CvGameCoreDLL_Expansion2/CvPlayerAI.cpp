@@ -1455,13 +1455,13 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveEngineer(CvUnit* pGreatEnginee
 	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && 4 * GC.getGame().getGameTurn() <= 3 * GC.getGame().getEstimateEndTurn())
 #else
 	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && GC.getGame().getGameTurn() <= ((GC.getGame().getEstimateEndTurn() * 3) / 4))
-#endif // AUI_PLAYERAI_TWEAKED_GREAT_ENGINEER_DIRECTIVE
+#endif
 	{
 #ifdef AUI_GS_PRIORITY_RATIO
 		if (GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST")))
 #else
 		if (GetDiplomacyAI()->IsGoingForWorldConquest())
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 		{
 			eDirective = GREAT_PEOPLE_DIRECTIVE_CONSTRUCT_IMPROVEMENT;
 		}

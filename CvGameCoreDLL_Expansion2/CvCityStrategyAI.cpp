@@ -831,7 +831,7 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 #else
 		int iBonusMultiplier = max(1,GC.getGame().getHandicapInfo().GetID() - 5); // more at the higher difficulties
 		iTempWeight += (GC.getAI_CITYSTRATEGY_OPERATION_UNIT_FLAVOR_MULTIPLIER() * iOffenseFlavor * iBonusMultiplier);
-#endif // AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NO_HIGH_DIFFICULTY_SKEW
+#endif
 		// add in the weight of this unit as if I were deciding to build it without having a reason
 		iTempWeight += m_pUnitProductionAI->GetWeight(eUnitForArmy);
 
@@ -866,7 +866,7 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 			{
 				iTempWeight *= AUI_CITYSTRATEGY_EMPHASIZE_FACTORIES_IF_NO_IDEOLOGY;
 			}
-#endif // AUI_CITYSTRATEGY_EMPHASIZE_FACTORIES_IF_NO_IDEOLOGY
+#endif
 
 			// Don't build the UN if you aren't going for the diplo victory
 			if(pkBuildingInfo->IsDiplomaticVoting())
@@ -928,7 +928,7 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 				{
 					iTempWeight = 0;
 				}
-#endif // AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_PUPPETS_NULLIFY_BARRACKS
+#endif
 				// they also like stuff that won't burden the empire with maintenance costs
 				if(pkBuildingInfo->GetGoldMaintenance() == 0)
 				{
@@ -955,7 +955,7 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 #ifdef AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_ACCURATE_SEA_SANITY_CHECK
 		int iI, iLoop;
 		CvCity* pLoopCity = NULL;
-#endif // AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_ACCURATE_SEA_SANITY_CHECK
+#endif
 		// Loop through adding the available units
 		for(iUnitLoop = 0; iUnitLoop < GC.GetGameUnits()->GetNumUnits(); iUnitLoop++)
 		{
@@ -1028,7 +1028,7 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 							{
 								iTempWeight = 0;
 							}
-#endif // AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_ACCURATE_SEA_SANITY_CHECK
+#endif
 						}
 						else // this should never happen, but...
 						{
@@ -1093,7 +1093,7 @@ void CvCityStrategyAI::ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgn
 	NormalizeList();
 #else
 	m_Buildables.SortItems();
-#endif // AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
+#endif
 
 	LogPossibleBuilds();
 
@@ -2411,7 +2411,7 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_EnoughTileImprovers(AICityStrateg
 	if (iLastTurnWorkerDisbanded >= 0 && GC.getGame().getGameTurn() - iLastTurnWorkerDisbanded <= 10 * GC.getGame().getEstimateEndTurn() / 500)
 #else
 	if(iLastTurnWorkerDisbanded >= 0 && GC.getGame().getGameTurn() - iLastTurnWorkerDisbanded <= 10)
-#endif // AUI_CITYSTRATEGY_FIX_TILE_IMPROVERS_LAST_DISBAND_WORKER_TURN_SCALE
+#endif
 	{
 		return true;
 	}
@@ -2729,7 +2729,7 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_FirstFaithBuilding(CvCity* pCity)
 	{
 		return false;
 	}
-#endif // AUI_CITYSTRATEGY_FIX_FIRST_FAITH_BUILDING_NO_MINIMUM_POP
+#endif
 
 	// Turn on if high religion flavor (doesn't need to be as high if already has a pantheon)
 	if((iReligionFlavor > 4 && kPlayer.GetReligions()->HasCreatedPantheon()) || iReligionFlavor > 6)
@@ -2815,7 +2815,7 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_HillCity(CvCity* pCity)
 #else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -2825,7 +2825,7 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_HillCity(CvCity* pCity)
 		for(int iDY = -iRange; iDY <= iRange; iDY++)
 		{
 			CvPlot* pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			if(pLoopPlot)
 			{
 				if(pLoopPlot->isHills() && pLoopPlot->getOwner() == pPlot->getOwner())
@@ -2883,7 +2883,7 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_ForestCity(CvCity* pCity)
 #else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -2893,7 +2893,7 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_ForestCity(CvCity* pCity)
 		for(int iDY = -iRange; iDY <= iRange; iDY++)
 		{
 			CvPlot* pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			if(pLoopPlot)
 			{
 				// FEATURE_FOREST seems dubious to me...
@@ -2931,7 +2931,7 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_JungleCity(CvCity* pCity)
 #else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -2941,7 +2941,7 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_JungleCity(CvCity* pCity)
 		for(int iDY = -iRange; iDY <= iRange; iDY++)
 		{
 			CvPlot* pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			if(pLoopPlot)
 			{
 				// FEATURE_JUNGLE seems dubious to me...

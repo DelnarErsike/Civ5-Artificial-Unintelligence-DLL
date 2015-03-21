@@ -6218,7 +6218,7 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 	int iMyDanger = m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit);
 #else
 	int iMyDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()));
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 	for(iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
 	{
@@ -6238,7 +6238,7 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 					{
 #ifdef AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
 						iValueBonus = 0;
-#endif // AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
+#endif
 						iValue = (1 + GC.getGame().getJonRandNum(10000, "AI Patrol"));
 
 						// Prefer wandering in our own territory
@@ -6247,13 +6247,13 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 #ifdef AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
 							iValueBonus = 5000;
 							if (pAdjacentPlot->isAdjacentPlayer(NO_PLAYER) || pAdjacentPlot->IsAdjacentOwnedByOtherTeam(m_pPlayer->getTeam()) ||
-								pAdjacentPlot->isValidRoute(pUnit))
+								(pAdjacentPlot->isValidRoute(pUnit) && !pAdjacentPlot->isCity()))
 							{
 								iValueBonus += 5000;
 							}
 #else
 							iValue += 10000;
-#endif // AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
+#endif
 						}
 
 #ifdef AUI_HOMELAND_TWEAKED_FIND_PATROL_TARGET_CIVILIAN_NO_DANGER
@@ -6263,7 +6263,7 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 							int iDanger = m_pPlayer->GetPlotDanger(*pAdjacentPlot, pUnit);
 #else
 							int iDanger = m_pPlayer->GetPlotDanger(*pAdjacentPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 							if (iDanger > 0)
 							{			
 								if (iMyDanger > 0)
@@ -6277,7 +6277,7 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 									{
 										iValue -= 9999;
 									}
-#endif // AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
+#endif
 								}
 								else
 								{
@@ -6288,7 +6288,7 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 #endif
 #ifdef AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
 						iValue += iValueBonus;
-#endif // AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
+#endif
 
 						if(GC.getLogging() && GC.getAILogging()){
 							CvString strLogString;

@@ -820,8 +820,11 @@ void CvEconomicAI::DoTurn()
 		DoHurry();
 		DoPlotPurchases();
 		DisbandExtraWorkers();
-		DisbandExtraArchaeologists();
-		m_pPlayer->GetCulture()->DoSwapGreatWorks();
+		if (!m_pPlayer->isMinorCiv() && !m_pPlayer->isBarbarian())
+		{
+			DisbandExtraArchaeologists();
+			m_pPlayer->GetCulture()->DoSwapGreatWorks();
+		}
 	}
 }
 
@@ -981,7 +984,7 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 #else
 		iMaxDX = iRange - MAX(0, iY);
 		for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			// No need for range check because loops are set up properly
 			pEvalPlot = plotXY(iPlotX, iPlotY, iX, iY);
@@ -991,7 +994,7 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 		for(int iY = -iRange; iY <= iRange; iY++)
 		{
 			pEvalPlot = plotXYWithRangeCheck(iPlotX, iPlotY, iX, iY, iRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			if(!pEvalPlot)
 			{
 				continue;
@@ -1009,14 +1012,14 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 
 #ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 			int iMainDistance = hexDistance(iX, iY);
-#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#endif
 			if(pEvalPlot->isAdjacentRevealed(eTeam))
 			{
 #ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 				if (iMainDistance > 1)
 #else
 				if(plotDistance(iPlotX, iPlotY, pEvalPlot->getX(), pEvalPlot->getY()) > 1)
-#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#endif
 				{
 					CvPlot* pAdjacentPlot;
 					bool bViewBlocked = true;
@@ -1100,7 +1103,7 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 #else
 			int iDistance = plotDistance(iPlotX, iPlotY, pEvalPlot->getX(), pEvalPlot->getY());
 			iResultValue += (iRange - iDistance) * iAdjacencyBonus;
-#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#endif
 		}
 	}
 

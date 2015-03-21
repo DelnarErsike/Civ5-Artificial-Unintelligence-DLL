@@ -707,7 +707,7 @@ void CvPlayerTechs::Reset()
 							m_piCivTechPriority[iTech] *= GC.getTECH_PRIORITY_UNIQUE_ITEM();
 						}
 					}
-#endif // AUI_PLAYERTECHS_RESET_IDEOLOGY_UNLOCKERS_COUNT_AS_UNIQUE
+#endif
 				}
 			}
 

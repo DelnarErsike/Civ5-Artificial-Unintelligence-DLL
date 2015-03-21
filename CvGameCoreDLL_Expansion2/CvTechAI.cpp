@@ -177,7 +177,7 @@ TechTypes CvTechAI::ChooseNextTech(CvPlayer *pPlayer, bool bFreeTech)
 #else
 	if(!bFreeTech)
 		ReweightByCost(pPlayer);
-#endif // AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
+#endif
 
 	m_ResearchableTechs.SortItems();
 	LogPossibleResearch();
@@ -298,10 +298,11 @@ bool CvTechAI::HaveAllUNTechs()
 	// Loop through all techs
 	int iTechLoop;
 	CvTechEntry* pkTechInfo;
+	CvTeamTechs* pTeamTechs = GET_TEAM(m_pCurrentTechs->GetPlayer()->getTeam()).GetTeamTechs();
 	for (iTechLoop = 0; iTechLoop < m_pCurrentTechs->GetTechs()->GetNumTechs(); iTechLoop++)
 	{
 		// Do we not have a tech?
-		if (!GET_TEAM(m_pCurrentTechs->GetPlayer()->getTeam()).GetTeamTechs()->HasTech((TechTypes)iTechLoop) && m_pCurrentTechs->CanEverResearch((TechTypes)iTechLoop))
+		if (!pTeamTechs->HasTech((TechTypes)iTechLoop) && m_pCurrentTechs->CanEverResearch((TechTypes)iTechLoop))
 		{
 			pkTechInfo = m_pCurrentTechs->GetTechs()->GetEntry(iTechLoop);
 			if (pkTechInfo)
@@ -322,10 +323,11 @@ bool CvTechAI::HaveAllInternetTechs()
 	// Loop through all techs
 	int iTechLoop;
 	CvTechEntry* pkTechInfo;
+	CvTeamTechs* pTeamTechs = GET_TEAM(m_pCurrentTechs->GetPlayer()->getTeam()).GetTeamTechs();
 	for (iTechLoop = 0; iTechLoop < m_pCurrentTechs->GetTechs()->GetNumTechs(); iTechLoop++)
 	{
 		// Do we not have a tech?
-		if (!GET_TEAM(m_pCurrentTechs->GetPlayer()->getTeam()).GetTeamTechs()->HasTech((TechTypes)iTechLoop) && m_pCurrentTechs->CanEverResearch((TechTypes)iTechLoop))
+		if (!pTeamTechs->HasTech((TechTypes)iTechLoop) && m_pCurrentTechs->CanEverResearch((TechTypes)iTechLoop))
 		{
 			pkTechInfo = m_pCurrentTechs->GetTechs()->GetEntry(iTechLoop);
 			if (pkTechInfo)
@@ -340,7 +342,7 @@ bool CvTechAI::HaveAllInternetTechs()
 	}
 	return true;
 }
-#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+#endif
 
 //=====================================
 // PRIVATE METHODS

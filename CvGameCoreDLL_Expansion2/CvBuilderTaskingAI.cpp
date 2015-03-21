@@ -978,7 +978,7 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
 	FeatureTypes eFeatureType = pPlot->getFeatureType();
-#endif // AUI_WORKER_SCORE_PLOT_CHOP
+#endif
 
 	// loop through the build types to find one that we can use
 	BuildTypes eBuild;
@@ -1073,7 +1073,7 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 		int iScore = ScorePlot(eFeatureType != NO_FEATURE && pkBuild->isFeatureRemove(eFeatureType) && pkBuild->getFeatureProduction(eFeatureType) > 0);
 #else
 		int iScore = ScorePlot();
-#endif // AUI_WORKER_SCORE_PLOT_CHOP
+#endif
 		if(iScore > 0)
 		{
 			iWeight *= iScore;
@@ -1155,7 +1155,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 #else
 	// celtic rule: if this is a forest tile next to a city, do not improve this tile with a normal improvement
 	if (m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest() && eExistingImprovement == NO_IMPROVEMENT)
-#endif // AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL
+#endif
 	{
 		CvCity* pNextCity = pPlot->GetAdjacentCity();
 		if (pNextCity && pNextCity->getOwner() == m_pPlayer->GetID())
@@ -1207,7 +1207,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 			}
 		}
 	}
-#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+#endif
 
 	CvCity* pCity = GetWorkingCity(pPlot);
 #ifndef AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
@@ -1215,7 +1215,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 	{
 		return;
 	}
-#endif // AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
+#endif
 
 	// loop through the build types to find one that we can use
 	BuildTypes eBuild;
@@ -1251,7 +1251,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 		//{
 		//	continue;
 		//}
-#endif // AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
+#endif
 
 		// for bonus resources, check to see if this is the improvement that connects it
 		if(eResource != NO_RESOURCE)
@@ -1384,7 +1384,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 			iScore = ScorePlot(bWillRemoveForestOrJungle && pkBuild->getFeatureProduction(eFeature) > 0);
 #else
 			iScore = ScorePlot();
-#endif // AUI_WORKER_SCORE_PLOT_CHOP
+#endif
 		}
 		if (!pCity || iScore > 0)
 		{
@@ -1399,8 +1399,8 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 		int iScore = ScorePlot(bWillRemoveForestOrJungle && pkBuild->getFeatureProduction(eFeature) > 0);
 #else
 		int iScore = ScorePlot();
-#endif // AUI_WORKER_SCORE_PLOT_CHOP
-#endif // AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
+#endif
+#endif
 
 		// if we're going backward, bail out!
 		if(iScore <= 0)
@@ -1524,7 +1524,7 @@ void CvBuilderTaskingAI::AddImprovingMinorPlotsDirectives(CvUnit* pUnit, CvPlot*
 			}
 		}
 	}
-#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+#endif
 
 	// loop through the build types to find one that we can use
 	BuildTypes eBuild;
@@ -1671,7 +1671,7 @@ void CvBuilderTaskingAI::AddImprovingMinorPlotsDirectives(CvUnit* pUnit, CvPlot*
 		m_aDirectives.push_back(directive, iWeight);
 	}
 }
-#endif // AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
+#endif
 
 /// Adds a directive if the unit can construct a road in the plot
 void CvBuilderTaskingAI::AddRouteDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMoveTurnsAway)
@@ -1744,7 +1744,7 @@ void CvBuilderTaskingAI::AddRouteDirectives(CvUnit* pUnit, CvPlot* pPlot, int iM
 			}
 		}
 	}
-#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+#endif
 
 	// find the route build
 	BuildTypes eRouteBuild = NO_BUILD;
@@ -1804,8 +1804,8 @@ void CvBuilderTaskingAI::AddRouteDirectives(CvUnit* pUnit, CvPlot* pPlot, int iM
 	iWeight *= int(GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_PRODUCTION() * log((double)MAX(1, GC.getDEFAULT_FLAVOR_VALUE())) + 0.5);
 #else
 	iWeight *= GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_PRODUCTION() * MAX(1, GC.getDEFAULT_FLAVOR_VALUE());
-#endif // AUI_WORKER_LOGARITHMIC_FLAVOR
-#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
+#endif
+#endif
 	// int iTurnsAway = FindTurnsAway(pUnit, pPlot);
 	iWeight = iWeight / (iMoveTurnsAway/*iTurnsAway*/ + 1);
 	iWeight = GetBuildCostWeight(iWeight, pPlot, eRouteBuild);
