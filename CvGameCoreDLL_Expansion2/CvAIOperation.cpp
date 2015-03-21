@@ -1844,31 +1844,32 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 				const UnitAITypes eLoopUnitAIType = pLoopUnit->AI_getUnitAIType();
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 				const UnitAITypes eLoopUnitDefaultAIType = (UnitAITypes)pLoopUnit->getUnitInfo().GetDefaultUnitAIType();
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#endif
 
 				// Make sure he's not needed by the tactical AI or already in an army or scouting
 #ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
 				if (pLoopUnit->canRecruitFromTacticalAI() && (pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX || 
 					(ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetArmyAIState() == ARMYAISTATE_WAITING_FOR_UNITS_TO_REINFORCE &&
-					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() > pThisArmy->GetNumSlotsFilled())) &&
+					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() >= pThisArmy->GetNumSlotsFilled() &&
+					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumFormationEntries() - ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() > pThisArmy->GetNumFormationEntries() - pThisArmy->GetNumSlotsFilled())) &&
 #else
 				if (pLoopUnit->canRecruitFromTacticalAI() && pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX &&
-#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
+#endif
 #ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) && 
 					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA))
 #else
 					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA)
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#endif
 #else
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) &&
 					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA) && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
 #else
 					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
-#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
+#endif
+#endif
 				{
 					// Is this unit one of the requested types?
 					CvUnitEntry* unitInfo = GC.getUnitInfo(pLoopUnit->getUnitType());
@@ -1902,7 +1903,7 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 #else
 											// Double the distance if this is a land unit on a different landmass (it's dangerous to go over water!)
 											if (pMusterPlot != NULL && pLoopUnit->getDomainType() == DOMAIN_LAND && pkLoopUnitPlot->getArea() != pMusterPlot->getArea())
-#endif // AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+#endif
 											{
 												iDistance *= 2;
 											}
@@ -1935,7 +1936,7 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 				if (pBestUnit->AI_getUnitAIType() != thisSlotEntry.m_primaryUnitType)
 					pBestUnit->AI_setUnitAIType((UnitAITypes)thisSlotEntry.m_primaryUnitType);
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#endif
 				pThisArmy->AddUnit(pBestUnit->GetID(), thisOperationSlot.m_iSlotID);
 				if (GC.getLogging() && GC.getAILogging())
 				{
@@ -1948,37 +1949,38 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 			kSearchList.clear();
 #else
 			int iLoop = 0;
-#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CALCULATE_PERFECT_MATCH_FIRST
+#endif
 			for(CvUnit* pLoopUnit = ownerPlayer.firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = ownerPlayer.nextUnit(&iLoop))
 			{
 				const UnitAITypes eLoopUnitAIType = pLoopUnit->AI_getUnitAIType();
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 				const UnitAITypes eLoopUnitDefaultAIType = (UnitAITypes)pLoopUnit->getUnitInfo().GetDefaultUnitAIType();
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#endif
 
 				// Make sure he's not needed by the tactical AI or already in an army or scouting
 #ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
 				if (pLoopUnit->canRecruitFromTacticalAI() && (pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX ||
-					(ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetArmyAIState() == ARMYAISTATE_WAITING_FOR_UNITS_TO_REINFORCE && 
-					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() > pThisArmy->GetNumSlotsFilled())) &&
+					(ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetArmyAIState() == ARMYAISTATE_WAITING_FOR_UNITS_TO_REINFORCE &&
+					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() >= pThisArmy->GetNumSlotsFilled() &&
+					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumFormationEntries() - ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() > pThisArmy->GetNumFormationEntries() - pThisArmy->GetNumSlotsFilled())) &&
 #else
 				if(pLoopUnit->canRecruitFromTacticalAI() && pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX &&
-#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
+#endif
 #ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) && 
 					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA))
 #else
 					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA)
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#endif
 #else
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) &&
 					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA) && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
 #else
 				        eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
-#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
+#endif
+#endif
 				{
 					// Is this unit one of the requested types?
 					CvUnitEntry* unitInfo = GC.getUnitInfo(pLoopUnit->getUnitType());
@@ -2012,7 +2014,7 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 #else
 											// Double the distance if this is a land unit on a different landmass (it's dangerous to go over water!)
 											if(pMusterPlot != NULL && pLoopUnit->getDomainType() == DOMAIN_LAND && pkLoopUnitPlot->getArea() != pMusterPlot->getArea())
-#endif // AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+#endif
 											{
 												iDistance *= 2;
 											}
@@ -2045,7 +2047,7 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 				if (pBestUnit->AI_getUnitAIType() != thisSlotEntry.m_primaryUnitType)
 					pBestUnit->AI_setUnitAIType((UnitAITypes)thisSlotEntry.m_primaryUnitType);
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#endif
 				pThisArmy->AddUnit(pBestUnit->GetID(), thisOperationSlot.m_iSlotID);
 				return true;
 			}
@@ -2065,31 +2067,32 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 				const UnitAITypes eLoopUnitAIType = pLoopUnit->AI_getUnitAIType();
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 				const UnitAITypes eLoopUnitDefaultAIType = (UnitAITypes)pLoopUnit->getUnitInfo().GetDefaultUnitAIType();
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#endif
 
 				// Make sure he's not needed by the tactical AI or already in an army or scouting
 #ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
 				if (pLoopUnit->canRecruitFromTacticalAI() && (pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX ||
 					(ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetArmyAIState() == ARMYAISTATE_WAITING_FOR_UNITS_TO_REINFORCE &&
-					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() > pThisArmy->GetNumSlotsFilled())) &&
+					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() >= pThisArmy->GetNumSlotsFilled() &&
+					ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumFormationEntries() - ownerPlayer.getArmyAI(pLoopUnit->getArmyID())->GetNumSlotsFilled() > pThisArmy->GetNumFormationEntries() - pThisArmy->GetNumSlotsFilled())) &&
 #else
 				if(pLoopUnit->canRecruitFromTacticalAI() && pLoopUnit->getArmyID() == FFreeList::INVALID_INDEX &&
-#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_UNITS_IN_WAITING_ARMIES
+#endif
 #ifdef AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) && 
 					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA))
 #else
 					eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA)
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#endif
 #else
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 					(eLoopUnitAIType != UNITAI_EXPLORE || eLoopUnitDefaultAIType != UNITAI_EXPLORE) &&
 					(eLoopUnitAIType != UNITAI_EXPLORE_SEA || eLoopUnitDefaultAIType != UNITAI_EXPLORE_SEA) && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
 #else
 				        eLoopUnitAIType != UNITAI_EXPLORE && eLoopUnitAIType != UNITAI_EXPLORE_SEA && pLoopUnit->getDropRange() == 0 /* no paratroopers */)
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
-#endif // AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
+#endif
+#endif
 				{
 					// Is this unit one of the requested types?
 					CvUnitEntry* unitInfo = GC.getUnitInfo(pLoopUnit->getUnitType());
@@ -2123,7 +2126,7 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 #else
 											// Double the distance if this is a land unit on a different landmass (it's dangerous to go over water!)
 											if(pMusterPlot != NULL && pLoopUnit->getDomainType() == DOMAIN_LAND && pkLoopUnitPlot->getArea() != pMusterPlot->getArea())
-#endif // AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+#endif
 											{
 												iDistance *= 2;
 											}
@@ -2156,7 +2159,7 @@ bool CvAIOperation::FindBestFitReserveUnit(OperationSlot thisOperationSlot, CvPl
 #ifdef AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
 				if (pBestUnit->AI_getUnitAIType() != thisSlotEntry.m_secondaryUnitType)
 					pBestUnit->AI_setUnitAIType((UnitAITypes)thisSlotEntry.m_secondaryUnitType);
-#endif // AUI_OPERATION_FIX_FIND_BEST_FIT_RESERVE_CONSIDER_SCOUTING_NONSCOUTS
+#endif
 				pThisArmy->AddUnit(pBestUnit->GetID(), thisOperationSlot.m_iSlotID);
 				return true;
 			}
@@ -3417,12 +3420,12 @@ void CvAIOperationFoundCity::Init(int iID, PlayerTypes eOwner, PlayerTypes /*eEn
 						+ GC.getGame().getJonRandNumBinom(AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE, "Brave Settler Roll")
 #else
 						+ GC.getGame().getJonRandNum(AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE, "Brave Settler Roll")
-#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_BINOMIAL
-#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE
+#endif
+#endif
 						> AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS)) // unless we'd rather play it safe
 #else
 					if (eOwner == -1 || GET_PLAYER(eOwner).getNumCities() > 1 || GET_PLAYER(eOwner).GetDiplomacyAI()->GetBoldness() > 5) // unless we'd rather play it safe
-#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS
+#endif
 					{
 						pNewTarget = FindBestTarget(pOurCivilian, true);
 					}
