@@ -376,7 +376,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 	int iScienceValue = 0;
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 	int iCultureValue = 0;
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#endif
 	int iFaithValue = 0;
 	int iResourceValue = 0;
 	int iStrategicValue = 0;
@@ -388,7 +388,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 	int iNaturalWonderCount = 0;
 	int iDesertCount = 0;
 	int iWetlandsCount = 0;
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
+#endif
 
 	int iTotalFoodValue = 0;
 	int iTotalHappinessValue = 0;
@@ -407,7 +407,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 #ifndef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 	bool bIsInca = false;
 	int iAdjacentMountains = 0;
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
+#endif
 
 	if ( pPlayer->getCapitalCity() )
 		iCapitalArea = pPlayer->getCapitalCity()->getArea();
@@ -439,12 +439,12 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 #else
 		iMaxDX = 7 - MAX(0, iDY);
 		for (iDX = -7 - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 #else
 	for (int iDX = -7; iDX <= 7; iDX++)
 	{
 		for (int iDY = -7; iDY <= 7; iDY++)
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 		{
 			CvPlot* pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 
@@ -454,10 +454,10 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 				int iDistance = hexDistance(iDX, iDY);
 #else
 				int iDistance = plotDistance(pPlot->getX(), pPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY());
-#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#endif
 #ifndef AUI_HEXSPACE_DX_LOOPS
 				if (iDistance <= 7)
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 				{
 					if ((pLoopPlot->getOwner() == NO_PLAYER) || (pLoopPlot->getOwner() == pPlayer->GetID()))
 					{
@@ -481,10 +481,10 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							iScienceValue = 0;
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 							iCultureValue = 0;
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#endif
 #ifdef AUI_SITE_EVALUATION_FIX_PLOT_FOUND_VALUE_RESET_FAITH_VALUE_EACH_LOOP
 							iFaithValue = 0;
-#endif // AUI_SITE_EVALUATION_FIX_PLOT_FOUND_VALUE_RESET_FAITH_VALUE_EACH_LOOP
+#endif
 							iHappinessValue = 0;
 							iResourceValue = 0;
 							iStrategicValue = 0;
@@ -513,7 +513,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 								{
 									iCultureValue = iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
 								}
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#endif
 								if (eYield == NO_YIELD || eYield == YIELD_FAITH)
 								{
 									iFaithValue = iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
@@ -540,12 +540,12 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 								{
 									iCultureValue = iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
 								}
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#endif
 								if (eYield == NO_YIELD || eYield == YIELD_FAITH)
 								{
 									iFaithValue = iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
 								}
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 							}
 
 							// whether or not we are working these we get the benefit as long as culture can grow to take them
@@ -570,7 +570,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							int iPlotValue = iFoodValue + iHappinessValue + iProductionValue + iGoldValue + iScienceValue + iCultureValue + iFaithValue + iResourceValue;
 #else
 							int iPlotValue = iFoodValue + iHappinessValue + iProductionValue + iGoldValue + iScienceValue + iFaithValue + iResourceValue;
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#endif
 							
 							if (iPlotValue == 0)
 							{
@@ -593,7 +593,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 								iPlotValue /= AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_ALREADY_OWNED_DIVIDER;
 #else
 								iPlotValue /= 4;
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_ALREADY_OWNED_DIVIDER
+#endif
 							}
 
 							// add this plot into the total
@@ -603,7 +603,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							ImprovementTypes ePlotImprovement = pLoopPlot->getImprovementType();
 #ifndef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 							ResourceTypes ePlotResource = pLoopPlot->getResourceType();
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
+#endif
 
 							if (ePlotFeature == FEATURE_FOREST)
 							{
@@ -611,12 +611,18 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 								if (iDistance <= 5 && iDistance != 0)
 #else
 								if (iDistance <= 5)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 								{
 									++iIroquoisForestCount;
 									if (iDistance == 1)
 									{
+#ifdef AUI_SITE_EVALUATION_FIX_CELTIC_FOREST_COUNT
+										ResourceTypes ePlotResource = pLoopPlot->getResourceType(pPlayer->getTeam());
+										if (ePlotImprovement == NO_IMPROVEMENT && 
+											(ePlotResource == NO_RESOURCE || GC.getResourceInfo(ePlotResource)->getResourceUsage() != RESOURCEUSAGE_BONUS || !GC.GetGameImprovements()->GetImprovementForResource(ePlotResource)))
+#else
 										if (ePlotImprovement == NO_IMPROVEMENT)
+#endif
 										{
 											++iCelticForestCount;
 										}
@@ -697,11 +703,19 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 	{
 		if (iCelticForestCount >= 3)
 		{
+#ifdef AUI_SITE_EVALUATION_FIX_CELTIC_FOREST_COUNT
+			rtnValue += 2 * m_iRingModifier[0] * m_iFlavorMultiplier[YIELD_FAITH] * GC.getSETTLER_FAITH_MULTIPLIER();
+#else
 			rtnValue += 2 * 1000 * m_iFlavorMultiplier[YIELD_FAITH];
+#endif
 		}
 		else if (iCelticForestCount >= 1)
 		{
+#ifdef AUI_SITE_EVALUATION_FIX_CELTIC_FOREST_COUNT
+			rtnValue += 1 * m_iRingModifier[0] * m_iFlavorMultiplier[YIELD_FAITH] * GC.getSETTLER_FAITH_MULTIPLIER();
+#else
 			rtnValue += 1 * 1000 * m_iFlavorMultiplier[YIELD_FAITH];
+#endif
 		}
 	}
 	else if (pPlayer->GetPlayerTraits()->IsMoveFriendlyWoodsAsRoad())
@@ -807,7 +821,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		{
 			rtnValue *= AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FIRST_COASTAL_CITY_MULTIPLIER;
 		}
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FIRST_COASTAL_CITY_MULTIPLIER
+#endif
 	}
 
 	// Nearby Cities?
@@ -836,16 +850,16 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		iSweetSpot = FASTMAX(AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT, iSweetSpot);
 #else
 		iSweetSpot = FASTMAX(4,iSweetSpot);
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT
+#endif
 		iSweetSpot = FASTMIN(6,iSweetSpot);
 #else
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT
 		iSweetSpot = max(AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT, iSweetSpot);
 #else
 		iSweetSpot = max(4,iSweetSpot);
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT
+#endif
 		iSweetSpot = min(6,iSweetSpot);
-#endif // AUI_FAST_COMP
+#endif
 
 		if (iClosestCityOfMine == iSweetSpot) 
 		{
@@ -859,7 +873,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 			rtnValue = (rtnValue * AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_CLOSER_THAN_SWEET_SPOT_MULTIPLIER);
 #else
 			rtnValue /= 2;
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_CLOSER_THAN_SWEET_SPOT_MULTIPLIER
+#endif
 		}
 		else if (iClosestCityOfMine > 7)
 		{
@@ -928,7 +942,7 @@ int CvCitySiteEvaluator::PlotFertilityValue(CvPlot* pPlot)
 		rtnValue += ComputeCultureValue(pPlot, NULL);
 		rtnValue += ComputeFaithValue(pPlot, NULL);
 		rtnValue += ComputeHappinessValue(pPlot, NULL);
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#endif
 		rtnValue += ComputeTradeableResourceValue(pPlot, NULL);
 	}
 
@@ -952,7 +966,7 @@ int CvCitySiteEvaluator::BestFoundValueForSpecificYield(CvPlayer* pPlayer, Yield
 int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
 #else
 int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 {
 	int rtnValue = 0;
 
@@ -968,10 +982,10 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam());
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 	}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 	if (bCityPlot)
@@ -984,7 +998,7 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif // AUI_FAST_COMP
+#endif
 		}
 		if (pPlayer)
 		{
@@ -995,10 +1009,10 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_FOOD);
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 
 	// From resource
 	TeamTypes eTeam = NO_TEAM;
@@ -1018,7 +1032,7 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (pImprovement && !bCityPlot)
 #else
 		if(pImprovement)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_FOOD);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
@@ -1035,7 +1049,7 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_FOOD))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
 
@@ -1065,7 +1079,7 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #ifdef AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_PLAYER_SOURCES
 			if (pPlayer)
 				rtnValue += pPlayer->GetExtraHappinessPerLuxury();
-#endif // AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_PLAYER_SOURCES
+#endif
 		}
 
 		// If we don't have this resource yet, increase it's value
@@ -1077,7 +1091,7 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #ifdef AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_PLAYER_SOURCES
 				if (pPlayer->GetHappinessFromResources() > 0)
 					rtnValue += GC.getHAPPINESS_PER_EXTRA_LUXURY();
-#endif // AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_PLAYER_SOURCES
+#endif
 				rtnValue *= AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER;
 				if (pPlayer->getNumResourceTotal(eResource) == 0)
 				{
@@ -1094,8 +1108,8 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			}
 #else
 				rtnValue *= 5;
-#endif AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_PLAYER_SOURCES
-#endif // AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER
+#endif
+#endif
 		}
 	}
 
@@ -1112,12 +1126,12 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			rtnValue *= AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER;
 #else
 			rtnValue *= 5;
-#endif // AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER
+#endif
 			if (pPlayer && pPlayer->GetPlayerTraits()->GetNaturalWonderHappinessModifier() != 0)
 				rtnValue = rtnValue * (100 + pPlayer->GetPlayerTraits()->GetNaturalWonderHappinessModifier()) / 100;
 		}
 	}
-#endif // AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_NATURAL_WONDERS
+#endif
 
 	return rtnValue * m_iFlavorMultiplier[SITE_EVALUATION_HAPPINESS];
 }
@@ -1127,7 +1141,7 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
 #else
 int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 {
 	int rtnValue = 0;
 
@@ -1143,10 +1157,10 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 		rtnValue += pPlot->calculateNatureYield(YIELD_PRODUCTION, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_PRODUCTION, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_PRODUCTION, pPlayer->getTeam());
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 	}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 	if (bCityPlot)
@@ -1159,7 +1173,7 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif // AUI_FAST_COMP
+#endif
 		}
 		if (pPlayer)
 		{
@@ -1170,10 +1184,10 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 			}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_PRODUCTION);
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 
 	// From resource
 	TeamTypes eTeam = NO_TEAM;
@@ -1193,7 +1207,7 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 		if (pImprovement && !bCityPlot)
 #else
 		if(pImprovement)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_PRODUCTION);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
@@ -1210,7 +1224,7 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_PRODUCTION))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
 
@@ -1222,7 +1236,7 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
 #else
 int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 {
 	int rtnValue = 0;
 
@@ -1238,10 +1252,10 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		rtnValue += pPlot->calculateNatureYield(YIELD_GOLD, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_GOLD, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_GOLD, pPlayer->getTeam());
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 	}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 	if (bCityPlot)
@@ -1254,7 +1268,7 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif // AUI_FAST_COMP
+#endif
 		}
 		if (pPlayer)
 		{
@@ -1265,10 +1279,10 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_GOLD);
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 
 	// From resource
 	TeamTypes eTeam = NO_TEAM;
@@ -1288,7 +1302,7 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (pImprovement && !bCityPlot)
 #else
 		if(pImprovement)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_GOLD);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
@@ -1305,7 +1319,7 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_GOLD))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
 
@@ -1317,7 +1331,7 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
 #else
 int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 {
 	int rtnValue = 0;
 
@@ -1336,10 +1350,10 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		rtnValue += pPlot->calculateNatureYield(YIELD_SCIENCE, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_SCIENCE, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_SCIENCE, pPlayer->getTeam());
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 	}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 	if (bCityPlot)
@@ -1352,7 +1366,7 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif // AUI_FAST_COMP
+#endif
 		}
 		if (pPlayer)
 		{
@@ -1363,10 +1377,10 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_SCIENCE);
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 
 	// From resource
 	TeamTypes eTeam = NO_TEAM;
@@ -1386,7 +1400,7 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (pImprovement && !bCityPlot)
 #else
 		if(pImprovement)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_SCIENCE);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
@@ -1403,7 +1417,7 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_SCIENCE))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
 
@@ -1416,7 +1430,7 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
 #else
 int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 {
 	int rtnValue = 0;
 
@@ -1435,10 +1449,10 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, pPlayer->getTeam());
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 	}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 	if (bCityPlot)
@@ -1451,7 +1465,7 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif // AUI_FAST_COMP
+#endif
 		}
 		if (pPlayer)
 		{
@@ -1462,10 +1476,10 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_CULTURE);
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 
 	// From resource
 	TeamTypes eTeam = NO_TEAM;
@@ -1485,7 +1499,7 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (pImprovement && !bCityPlot)
 #else
 		if (pImprovement)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_CULTURE);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
@@ -1502,20 +1516,20 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_CULTURE))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_CULTURE];
 }
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#endif
 
 /// Vale of plot for providing faith
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
 #else
 int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 {
 	int rtnValue = 0;
 
@@ -1534,10 +1548,10 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		rtnValue += pPlot->calculateNatureYield(YIELD_FAITH, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FAITH, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FAITH, pPlayer->getTeam());
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 	}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 	if (bCityPlot)
@@ -1550,7 +1564,7 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
 #else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif // AUI_FAST_COMP
+#endif
 		}
 		if (pPlayer)
 		{
@@ -1561,10 +1575,10 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 			}
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
 			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_FAITH);
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 
 	// From resource
 	TeamTypes eTeam = NO_TEAM;
@@ -1584,7 +1598,7 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (pImprovement && !bCityPlot)
 #else
 		if(pImprovement)
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 		{
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_FAITH);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
@@ -1601,7 +1615,7 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_FAITH))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#endif
 		}
 	}
 
@@ -1858,7 +1872,7 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 	int iCelticForestCount = 0;
 #ifdef AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
 	int iIroquoisForestCount = 0;
-#endif // AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
+#endif
 
 	CvAssert(pPlot);
 	if (!pPlot) return rtnValue;
@@ -1901,7 +1915,7 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 			rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER();
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 			rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#endif
 			rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
 			rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER();
 			rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER();
@@ -1916,12 +1930,12 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 				rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER();
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 				rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#endif
 				rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
 				rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER();
 				rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER();
 			}
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 
 			if (pPlayer)
 			{
@@ -1931,7 +1945,13 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 					if (iDistance != 0)
 					{
 						iIroquoisForestCount++;
+#ifdef AUI_SITE_EVALUATION_FIX_CELTIC_FOREST_COUNT
+						ResourceTypes ePlotResource = pLoopPlot->getResourceType(pPlayer->getTeam());
+						if (iDistance == 1 && pLoopPlot->getImprovementType() == NO_IMPROVEMENT &&
+							(ePlotResource == NO_RESOURCE || GC.getResourceInfo(ePlotResource)->getResourceUsage() != RESOURCEUSAGE_BONUS || !GC.GetGameImprovements()->GetImprovementForResource(ePlotResource)))
+#else
 						if (iDistance == 1 && pLoopPlot->getImprovementType() == NO_IMPROVEMENT)
+#endif
 						{
 							iCelticForestCount++;
 						}
@@ -1945,7 +1965,7 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 						iCelticForestCount += 1;
 					}
 				}
-#endif // AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
+#endif
 			}
 		}
 	}
@@ -1957,11 +1977,19 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 		{
 			if (iCelticForestCount >= 3)
 			{
+#ifdef AUI_SITE_EVALUATION_FIX_CELTIC_FOREST_COUNT
+				rtnValue += 2 * m_iRingModifier[0] * m_iFlavorMultiplier[YIELD_FAITH] * GC.getSTART_AREA_FAITH_MULTIPLIER();
+#else
 				rtnValue += 2 * 1000 * m_iFlavorMultiplier[YIELD_FAITH];
+#endif
 			}
 			else if (iCelticForestCount >= 1)
 			{
+#ifdef AUI_SITE_EVALUATION_FIX_CELTIC_FOREST_COUNT
+				rtnValue += 1 * m_iRingModifier[0] * m_iFlavorMultiplier[YIELD_FAITH] * GC.getSTART_AREA_FAITH_MULTIPLIER();
+#else
 				rtnValue += 1 * 1000 * m_iFlavorMultiplier[YIELD_FAITH];
+#endif
 			}
 		}
 		else if (pPlayer->GetPlayerTraits()->IsMoveFriendlyWoodsAsRoad())
@@ -1978,7 +2006,7 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 	{
 		rtnValue += 1 * 1000 * m_iFlavorMultiplier[YIELD_FAITH];
 	}
-#endif // AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
+#endif
 
 	if(rtnValue < 0) rtnValue = 0;
 
