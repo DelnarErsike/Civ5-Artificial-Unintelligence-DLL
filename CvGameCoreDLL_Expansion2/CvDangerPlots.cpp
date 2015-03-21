@@ -74,7 +74,7 @@ void CvDangerPlots::Init(PlayerTypes ePlayer, bool bAllocate)
 			m_DangerPlots[i].init(GC.getMap().plotByIndexUnchecked(i));
 #else
 			m_DangerPlots[i] = 0;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 		}
 	}
 }
@@ -110,7 +110,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 		m_DangerPlots[i].clear();
 #else
 		m_DangerPlots[i] = 0;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 	}
 
 
@@ -173,7 +173,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 #else
 				iMaxDX = iRange - MAX(0, iDY);
 				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(pUnitPlot->getX(), pUnitPlot->getY(), iDX, iDY);
@@ -183,7 +183,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 				for(int iDY = -(iRange); iDY <= iRange; iDY++)
 				{
 					pLoopPlot = plotXYWithRangeCheck(pUnitPlot->getX(), pUnitPlot->getY(), iDX, iDY, iRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 					if(!pLoopPlot || pLoopPlot == pUnitPlot)
 					{
 						continue;
@@ -198,7 +198,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 					{
 						continue;
 					}
-#endif //  AUI_DANGER_PLOTS_REMADE
+#endif
 
 					AssignUnitDangerValue(pLoopUnit, pLoopPlot);
 				}
@@ -218,7 +218,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 			CvPlot* pCityPlot = pLoopCity->plot();
 #ifndef AUI_DANGER_PLOTS_REMADE
 			AssignCityDangerValue(pLoopCity, pCityPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 			CvPlot* pLoopPlot = NULL;
 
 #ifdef AUI_HEXSPACE_DX_LOOPS
@@ -231,7 +231,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 #else
 				iMaxDX = iRange - MAX(0, iDY);
 				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(pCityPlot->getX(), pCityPlot->getY(), iDX, iDY);
@@ -241,7 +241,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 				for(int iDY = -(iRange); iDY <= iRange; iDY++)
 				{
 					pLoopPlot = plotXYWithRangeCheck(pCityPlot->getX(), pCityPlot->getY(), iDX, iDY, iRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 					if(!pLoopPlot)
 					{
 						continue;
@@ -251,7 +251,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 					{
 						continue;
 					}
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 					AssignCityDangerValue(pLoopCity, pLoopPlot);
 				}
@@ -262,7 +262,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 	// Citadels
 #ifndef AUI_DANGER_PLOTS_REMADE
 	int iCitadelValue = GetDangerValueOfCitadel();
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 	int iPlotLoop;
 	CvPlot* pPlot, *pAdjacentPlot;
 	for(iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
@@ -276,7 +276,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 			{
 				m_DangerPlots[iPlotLoop].m_iFlatPlotDamage = (GC.getFeatureInfo(pPlot->getFeatureType())->getTurnDamage());
 			}
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 			ImprovementTypes eImprovement = pPlot->getRevealedImprovementType(thisTeam);
 			if(eImprovement != NO_IMPROVEMENT && GC.getImprovementInfo(eImprovement)->GetNearbyEnemyDamage() > 0)
 			{
@@ -292,7 +292,7 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 							m_DangerPlots[iPlotLoop].m_pCitadel = pPlot;
 #else
 							AddDanger(pAdjacentPlot->getX(), pAdjacentPlot->getY(), iCitadelValue, true);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 						}
 					}
 				}
@@ -349,7 +349,7 @@ int CvDangerPlots::GetDanger(const CvPlot& pPlot, CvCity* pCity, const CvUnit* p
 	{
 		return m_DangerPlots[idx].GetDanger(pCity, pPretendGarrison, iAfterNIntercepts);
 	}
-	return m_DangerPlots[idx].GetDanger(NO_PLAYER);
+	return 0;
 }
 
 /// Return the maximum amount of damage a unit could take at this plot
@@ -365,7 +365,7 @@ int CvDangerPlots::GetDanger(const CvPlot& pPlot) const
 	{
 		return m_DangerPlots[idx].GetDanger(pUnit, iAirAction, iAfterNIntercepts);
 	}
-	return m_DangerPlots[idx].GetDanger(NO_PLAYER);
+	return 0;
 #else
 	return m_DangerPlots[idx];
 #endif // AUI_DANGER_PLOTS_REMADE
@@ -387,7 +387,7 @@ bool CvDangerPlots::IsUnderImmediateThreat(const CvPlot& pPlot, const CvUnit* pU
 	{
 		return m_DangerPlots[idx].GetDanger(pUnit);
 	}
-	return m_DangerPlots[idx].GetDanger(NO_PLAYER);
+	return false;
 }
 
 /// Returns if the unit is in immediate danger
@@ -417,7 +417,7 @@ bool CvDangerPlots::IsUnderImmediateThreat(const CvPlot& pPlot) const
 {
 	return GetDanger(pPlot) & 0x1;
 }
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 /// Sums the danger values of the plots around the city to determine the danger value of the city
 int CvDangerPlots::GetCityDanger(CvCity* pCity)
@@ -442,7 +442,7 @@ int CvDangerPlots::GetCityDanger(CvCity* pCity)
 #else
 		int iMaxDX = iEvalRange - MAX(0, iDY);
 		for (int iDX = -iEvalRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			// No need for range check because loops are set up properly
 			pEvalPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -452,7 +452,7 @@ int CvDangerPlots::GetCityDanger(CvCity* pCity)
 		for(int iY = -iEvalRange; iY <= iEvalRange; iY++)
 		{
 			CvPlot* pEvalPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iX, iY, iEvalRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			if(!pEvalPlot)
 			{
 				continue;
@@ -463,10 +463,10 @@ int CvDangerPlots::GetCityDanger(CvCity* pCity)
 			iDangerValue += (GetDanger(*pEvalPlot, pCity) / (FASTMAX(hexDistance(iDX, iDY) * NUM_DIRECTION_TYPES, 1)));
 #else
 			iDangerValue += (GetDanger(*pEvalPlot, pCity) / (MAX(hexDistance(iDX, iDY) * NUM_DIRECTION_TYPES, 1)));
-#endif // AUI_FAST_COMP
+#endif
 #else
 			iDangerValue += GetDanger(*pEvalPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 		}
 	}
 
@@ -563,7 +563,7 @@ int CvDangerPlots::ModifyDangerByRelationship(PlayerTypes ePlayer, CvPlot* pPlot
 
 	return iResult;
 }
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 //	------------------------------------------------------------------------------------------------
 //	Returns true if the relationship of the danger plots owner and the input player and plot owner
@@ -594,7 +594,7 @@ bool CvDangerPlots::IsDangerByRelationshipZero(PlayerTypes ePlayer, CvPlot* pPlo
 			return true;
 #else
 			bIgnoreInFriendlyTerritory = true; // ignore friendly territory
-#endif // AUI_DANGER_PLOTS_FIX_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_IGNORE_ALL_NONWARRED
+#endif
 		}
 	}
 	else if(!GET_PLAYER(ePlayer).isMinorCiv())
@@ -715,33 +715,33 @@ bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility)
 	{
 		return true;
 	}
-#endif // AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
+#endif
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 	if (pUnit->getDomainType() == DOMAIN_AIR)
 	{
 		return true;
 	}
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 #ifdef AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
 	if (!GET_PLAYER(m_ePlayer).isMinorCiv() && !GET_PLAYER(m_ePlayer).isBarbarian() && pUnit->isBarbarian() && pUnit->plot()->isRevealed(GET_PLAYER(m_ePlayer).getTeam()))
 #ifdef AUI_DANGER_PLOTS_REMADE
 		if (pUnit->plot()->isAdjacentVisible(GET_PLAYER(m_ePlayer).getTeam()))
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 		bIgnoreVisibility = true;
-#endif // AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
+#endif
 #ifdef AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS
 	if (GET_PLAYER(m_ePlayer).isMinorCiv() && !GET_PLAYER(pUnit->getOwner()).isMinorCiv() && !pUnit->isBarbarian() && 
 		GET_PLAYER(m_ePlayer).GetClosestFriendlyCity(*pUnit->plot(), AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS))
 		bIgnoreVisibility = true;
-#endif // AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS
+#endif
 
 #ifdef AUI_DANGER_PLOTS_FIX_SHOULD_IGNORE_UNIT_IGNORE_VISIBILITY_PLOT
 	if(!pUnit->plot()->isVisible(GET_PLAYER(m_ePlayer).getTeam()) && !bIgnoreVisibility)
 #else
 	if(!pUnit->plot()->isVisible(GET_PLAYER(m_ePlayer).getTeam()))
-#endif // AUI_DANGER_PLOTS_FIX_SHOULD_IGNORE_UNIT_IGNORE_VISIBILITY_PLOT
+#endif
 	{
 		return true;
 	}
@@ -751,7 +751,7 @@ bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility)
 	{
 		return true;
 	}
-#endif // AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG
+#endif
 
 	CvPlot* pPlot = pUnit->plot();
 	CvAssertMsg(pPlot, "Plot is null?")
@@ -767,7 +767,7 @@ bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility)
 	{
 		return true;
 	}
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 	return false;
 }
@@ -855,7 +855,7 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot, bool bRe
 	kPathFinder.SetData(pUnit, 1);
 #else
 	kPathFinder.SetData(pUnit);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 
 	CvAStarNode* pNode = NULL;
 	int iTurnsAway = MAX_INT;
@@ -944,7 +944,7 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 					iBaseUnitCombatValue = pUnit->GetMaxDefenseStrength(pUnit->plot(), NULL) * iCombatValueCalc;
 				else
 					iBaseUnitCombatValue = pUnit->GetMaxRangedCombatStrength(NULL, NULL, true, true) * iCombatValueCalc;
-#endif // AUI_DANGER_PLOTS_ADD_DANGER_CONSIDER_TERRAIN_STRENGTH_MODIFICATION
+#endif
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 				if (pUnit->canMoveAndRangedStrike(pPlot))
 				{
@@ -955,7 +955,7 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 				{
 					iTurnsAway = 1;
 				}
-#endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+#endif
 			}
 #ifdef AUI_DANGER_PLOTS_ADD_DANGER_CONSIDER_TERRAIN_STRENGTH_MODIFICATION
 			else
@@ -967,7 +967,7 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 				else
 					iBaseUnitCombatValue = pUnit->GetMaxAttackStrength(NULL, pPlot, NULL) * iCombatValueCalc;
 			}
-#endif // AUI_DANGER_PLOTS_ADD_DANGER_CONSIDER_TERRAIN_STRENGTH_MODIFICATION
+#endif
 
 			// iTurnsAway is only greater than 1 if unit cannot ranged strike onto the tile
 			if (iTurnsAway > 1)
@@ -990,7 +990,7 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 				iTurnsAway = FASTMAX(iTurnsAway, 1);
 #else
 				iTurnsAway = MAX(iTurnsAway, 1);
-#endif // AUI_FAST_COMP
+#endif
 			}
 #else
 			// can the unit actually walk there
@@ -1005,15 +1005,15 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 			iTurnsAway = FASTMAX(iTurnsAway, 1);
 #else
 			iTurnsAway = max(iTurnsAway, 1);
-#endif // AUI_FAST_COMP
-#endif // AUI_DANGER_PLOTS_TWEAKED_RANGED
+#endif
+#endif
 
 			int iUnitCombatValue = iBaseUnitCombatValue / iTurnsAway;
 			iUnitCombatValue = ModifyDangerByRelationship(pUnit->getOwner(), pPlot, iUnitCombatValue);
 			AddDanger(iPlotX, iPlotY, iUnitCombatValue, iTurnsAway <= 1);
 		}
 	}
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 }
 
 //	-----------------------------------------------------------------------------------------------
@@ -1027,7 +1027,7 @@ void CvDangerPlots::AssignCityDangerValue(CvCity* pCity, CvPlot* pPlot)
 	int iCombatValue = pCity->getStrengthValue();
 	iCombatValue = ModifyDangerByRelationship(pCity->getOwner(), pPlot, iCombatValue);
 	AddDanger(pPlot->getX(), pPlot->getY(), iCombatValue, false);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 }
 
 #ifndef AUI_DANGER_PLOTS_REMADE
@@ -1124,7 +1124,7 @@ int CvDangerPlotContents::GetDanger(PlayerTypes ePlayer)
 	for (DangerUnitVector::iterator it = m_apUnits.begin(); it < m_apUnits.end(); ++it)
 	{
 		pCurAttacker = (*it);
-		if (!pCurAttacker || pCurAttacker->isDelayedDeath() || pCurAttacker->IsDead())
+		if (!pCurAttacker || pCurAttacker->isDelayedDeath() || pCurAttacker->IsDead() || !pCurAttacker->plot())
 		{
 			continue;
 		}
@@ -1160,17 +1160,20 @@ int CvDangerPlotContents::GetDanger(PlayerTypes ePlayer)
 		}
 	}
 	
-#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-	// Damage from cities
-	for (DangerCityVector::iterator it = m_apCities.begin(); it < m_apCities.end(); ++it)
+	if (ePlayer != NO_PLAYER)
 	{
-		if (*it && (*it)->getTeam() != GET_PLAYER(ePlayer).getTeam())
-			iPlotDamage += (*it)->rangeCombatDamage(NULL, NULL, false, m_pPlot);
-	}
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+		// Damage from cities
+		for (DangerCityVector::iterator it = m_apCities.begin(); it < m_apCities.end(); ++it)
+		{
+			if (*it && (*it)->getTeam() != GET_PLAYER(ePlayer).getTeam())
+				iPlotDamage += (*it)->rangeCombatDamage(NULL, NULL, false, m_pPlot);
+		}
 #endif
 
-	// Damage from improvements
-	iPlotDamage += GetCitadelDamage(ePlayer);
+		// Damage from improvements
+		iPlotDamage += GetCitadelDamage(ePlayer);
+	}
 
 	return iPlotDamage;
 }
@@ -1189,7 +1192,7 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const int iAirAction, i
 			for (DangerUnitVector::iterator it = m_apUnits.begin(); it < m_apUnits.end(); ++it)
 			{
 				pCurAttacker = (*it);
-				if (!pCurAttacker || !pCurAttacker->canAirSweep() || pCurAttacker->isDelayedDeath() || pCurAttacker->IsDead())
+				if (!pCurAttacker || !pCurAttacker->canAirSweep() || pCurAttacker->isDelayedDeath() || pCurAttacker->IsDead() || !pCurAttacker->plot())
 				{
 					continue;
 				}
@@ -1283,33 +1286,29 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const int iAirAction, i
 	// Civilians can be captured
 	if (!pUnit->IsCombatUnit() && (!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit)))
 	{
-		// If plot contains an enemy unit, mark it as max danger
-		if (m_pPlot->getBestDefender(NO_PLAYER, pUnit->getOwner()))
-		{
-			return MAX_INT;
-		}
+		CvUnit* pBestDefender = NULL;
 		for (DangerUnitVector::iterator it = m_apMoveOnlyUnits.begin(); it < m_apMoveOnlyUnits.end(); ++it)
 		{
 			pCurAttacker = (*it);
-			if (pCurAttacker && !pCurAttacker->isDelayedDeath() && !pCurAttacker->IsDead())
+			if (pCurAttacker && !pCurAttacker->isDelayedDeath() && !pCurAttacker->IsDead() && pCurAttacker->plot())
 			{
+				bool bWillBeCapped = true;
 				// If in a city and the city will survive all attack, return a danger value of 1
 				if (pFriendlyCity)
 				{
 					if (GetDanger(pFriendlyCity) + pFriendlyCity->getDamage() < pFriendlyCity->GetMaxHitPoints())
 					{
 						// Trivial amount to indicate that the plot can still be attacked
-						++iPlotDamage;
+						bWillBeCapped = false;
 					}
 				}
 				// Look for a possible plot defender
 				else 
 				{
 					IDInfo* pUnitNode = m_pPlot->headUnitNode();
-					CvUnit* pBestDefender = NULL;
 					while (pUnitNode != NULL)
 					{
-						pBestDefender = ::getUnit(*pUnitNode);
+						pBestDefender = getUnit(*pUnitNode);
 						pUnitNode = m_pPlot->nextUnitNode(pUnitNode);
 
 						if (pBestDefender && pBestDefender->getOwner() == pUnit->getOwner())
@@ -1320,47 +1319,43 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const int iAirAction, i
 								{
 									if (pBestDefender->isWaiting() || !(pBestDefender->canMove()))
 									{
-										break;
+										if (GetDanger(pBestDefender) < pBestDefender->GetCurrHitPoints())
+										{
+											bWillBeCapped = false;
+											break;
+										}
 									}
 								}
 							}
 						}
 						pBestDefender = NULL;
 					}
-					// If have a defender and it will survive all attack, return a danger value of 1
-					if (pBestDefender && (pBestDefender->isWaiting() || !pBestDefender->canMove()))
-					{
-						if (GetDanger(pBestDefender) < pBestDefender->GetCurrHitPoints())
-						{
-							// Trivial amount to indicate that the plot can still be attacked
-							++iPlotDamage;
-						}
-					}
 				}
 				// If Civilian would be captured on this tile (only happens if iPlotDamage isn't modified), return MAX_INT
-				if (iPlotDamage == m_iFlatPlotDamage)
-				{
+				if (bWillBeCapped)
 					return MAX_INT;
-				}
-				// Proceed as normal
-				
-				// If this unit would survive all attacks, reduce the damage dealt by heal rate before applying citadel stuff (since citadel stuff is applied after DoHeal() anyway)
-				if (iPlotDamage + pUnit->getDamage() <= pUnit->GetMaxHitPoints())
-				{
-					if ((pUnit->plot() == m_pPlot && !pUnit->isEmbarked()) ||
-						(pUnit->isAlwaysHeal() && (!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit))))
-					{
-						iPlotDamage -= pUnit->healRate(m_pPlot);
-						if (iPlotDamage < 0)
-							iPlotDamage = 0;
-					}
-				}
-
-				// Damage from improvements
-				iPlotDamage += GetCitadelDamage(pUnit);
-
-				return iPlotDamage;
+				else
+					break;
 			}
+		}
+		// Proceed as normal, skip other damage sources if there's a defender
+		if (pFriendlyCity || pBestDefender)
+		{
+			// If this unit would survive all attacks, reduce the damage dealt by heal rate before applying citadel stuff (since citadel stuff is applied after DoHeal() anyway)
+			if (iPlotDamage + pUnit->getDamage() < pUnit->GetMaxHitPoints())
+			{
+				if ((pUnit->plot() == m_pPlot && !pUnit->isEmbarked()) ||
+					(pUnit->isAlwaysHeal() && (!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit))))
+				{
+					iPlotDamage -= pUnit->healRate(m_pPlot);
+					if (iPlotDamage < 0)
+						iPlotDamage = 0;
+				}
+			}
+
+			// Damage from improvements
+			iPlotDamage += GetCitadelDamage(pUnit);
+			return iPlotDamage;
 		}
 	}
 
@@ -1402,7 +1397,7 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const int iAirAction, i
 	for (DangerUnitVector::iterator it = m_apUnits.begin(); it < m_apUnits.end(); ++it)
 	{
 		pCurAttacker = (*it);
-		if (!pCurAttacker || pCurAttacker->isDelayedDeath() || pCurAttacker->IsDead())
+		if (!pCurAttacker || pCurAttacker->isDelayedDeath() || pCurAttacker->IsDead() || !pCurAttacker->plot())
 		{
 			continue;
 		}
@@ -1503,28 +1498,31 @@ bool CvDangerPlotContents::IsUnderImmediateThreat(PlayerTypes ePlayer)
 		return true;
 	}
 
-	// Cities in range
-	for (DangerCityVector::iterator it = m_apCities.begin(); it < m_apCities.end(); ++it)
-	{
-		if (*it && (*it)->getTeam() != GET_PLAYER(ePlayer).getTeam())
-		{
-			return true;
-		}
-	}
-
 	// Units in range
 	for (DangerUnitVector::iterator it = m_apUnits.begin(); it < m_apUnits.end(); ++it)
 	{
-		if (*it && !(*it)->isDelayedDeath() && !(*it)->IsDead())
+		if (*it && !(*it)->isDelayedDeath() && !(*it)->IsDead() && (*it)->plot())
 		{
 			return true;
 		}
 	}
 
-	// Citadel in range
-	if (GetCitadelDamage(ePlayer) > 0)
+	if (ePlayer != NO_PLAYER)
 	{
-		return true;
+		// Cities in range
+		for (DangerCityVector::iterator it = m_apCities.begin(); it < m_apCities.end(); ++it)
+		{
+			if (*it && (*it)->getTeam() != GET_PLAYER(ePlayer).getTeam())
+			{
+				return true;
+			}
+		}
+
+		// Citadel in range
+		if (GetCitadelDamage(ePlayer) > 0)
+		{
+			return true;
+		}
 	}
 
 	return false;
@@ -1557,7 +1555,7 @@ bool CvDangerPlotContents::IsUnderImmediateThreat(const CvUnit* pUnit)
 		{
 			for (DangerUnitVector::iterator it = m_apUnits.begin(); it < m_apUnits.end(); ++it)
 			{
-				if (*it && !(*it)->isDelayedDeath() && !(*it)->IsDead())
+				if (*it && !(*it)->isDelayedDeath() && !(*it)->IsDead() && (*it)->plot())
 				{
 					return true;
 				}
@@ -1567,7 +1565,7 @@ bool CvDangerPlotContents::IsUnderImmediateThreat(const CvUnit* pUnit)
 		{
 			for (DangerUnitVector::iterator it = m_apMoveOnlyUnits.begin(); it < m_apMoveOnlyUnits.end(); ++it)
 			{
-				if (*it && !(*it)->isDelayedDeath() && !(*it)->IsDead())
+				if (*it && !(*it)->isDelayedDeath() && !(*it)->IsDead() && (*it)->plot())
 				{
 					return true;
 				}
@@ -1652,7 +1650,7 @@ int CvDangerPlotContents::GetDanger(CvCity* pCity, const CvUnit* pPretendGarriso
 	for (DangerUnitVector::iterator it = m_apUnits.begin(); it < m_apUnits.end() && iPlotDamage < iMaxNoCaptureDamage; ++it)
 	{
 		pCurAttacker = (*it);
-		if (!pCurAttacker || pCurAttacker->isDelayedDeath() || pCurAttacker->IsDead())
+		if (!pCurAttacker || pCurAttacker->isDelayedDeath() || pCurAttacker->IsDead() || !pCurAttacker->plot())
 		{
 			continue;
 		}
@@ -1732,7 +1730,7 @@ int CvDangerPlotContents::GetDanger(CvCity* pCity, const CvUnit* pPretendGarriso
 	for (DangerUnitVector::iterator it = m_apMoveOnlyUnits.begin(); it < m_apMoveOnlyUnits.end(); ++it)
 	{
 		pCurAttacker = (*it);
-		if (!pCurAttacker || pCurAttacker->isDelayedDeath() || pCurAttacker->IsDead())
+		if (!pCurAttacker || pCurAttacker->isDelayedDeath() || pCurAttacker->IsDead() || !pCurAttacker->plot())
 		{
 			continue;
 		}
@@ -1796,7 +1794,7 @@ int CvDangerPlotContents::GetCitadelDamage(PlayerTypes ePlayer) const
 #else
 				iMaxDX = iCitadelRange - MAX(0, iDY);
 				for (iDX = -iCitadelRange - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(m_pCitadel->getX(), m_pCitadel->getY(), iDX, iDY);
@@ -1823,4 +1821,4 @@ int CvDangerPlotContents::GetCitadelDamage(PlayerTypes ePlayer) const
 	}
 	return 0;
 };
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif

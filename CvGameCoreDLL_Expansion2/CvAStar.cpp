@@ -1155,6 +1155,10 @@ struct UnitPathCacheData
 	bool m_bCanEverEmbark;
 	bool m_bIsEmbarked;
 	bool m_bCanAttack;
+#ifdef AUI_DANGER_PLOTS_REMADE
+	bool m_bDoDanger;
+	inline bool DoDanger() const { return m_bDoDanger; }
+#endif
 
 	inline int baseMoves(DomainTypes eType) const { return m_aBaseMoves[eType]; }
 	inline int maxMoves() const { return m_iMaxMoves; }
@@ -1202,6 +1206,13 @@ void UnitPathInitialize(const void* pointer, CvAStar* finder)
 	pCacheData->m_bCanEverEmbark = pUnit->CanEverEmbark();
 	pCacheData->m_bIsEmbarked = pUnit->isEmbarked();
 	pCacheData->m_bCanAttack = pUnit->IsCanAttack();
+#ifdef AUI_DANGER_PLOTS_REMADE
+#ifdef AUI_ASTAR_USE_DELEGATES
+	pCacheData->m_bDoDanger = (pCacheData->m_bIsAutomated || !pCacheData->isHuman()) && (!(GetInfo() & MOVE_UNITS_IGNORE_DANGER)) && (!pUnit->IsCombatUnit() || pUnit->getArmyID() == FFreeList::INVALID_INDEX);
+#else
+	pCacheData->m_bDoDanger = (pCacheData->m_bIsAutomated || !pCacheData->isHuman()) && (!(finder->GetInfo() & MOVE_UNITS_IGNORE_DANGER)) && (!pUnit->IsCombatUnit() || pUnit->getArmyID() == FFreeList::INVALID_INDEX);
+#endif
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -1809,7 +1820,8 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 			kToNodeCacheData.bContainsVisibleEnemy = pToPlot->isVisibleEnemyUnit(pUnit);
 			kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
 #ifdef AUI_DANGER_PLOTS_REMADE
-			kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
+			if (pCacheData->DoDanger())
+				kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
 #endif
 		}
 #endif
@@ -1900,7 +1912,7 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 	if (!kToNodeCacheData.bIsCalculated)
 	{
 #ifdef AUI_DANGER_PLOTS_REMADE
-		if (bAIControl || !bIsHuman)
+		if (pCacheData->DoDanger())
 			kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
 #endif
 		if (bAIControl || kToNodeCacheData.bIsRevealedToTeam || !bIsHuman)
@@ -2156,13 +2168,16 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 	}
 
 #ifdef AUI_DANGER_PLOTS_REMADE
-	if (bAIControl || !bIsHuman)
+	if (pCacheData->DoDanger())
 #else
 	if(bAIControl)
 #endif
 	{
 		if((parent->m_iData2 > 1) || (parent->m_iData1 == 0))
 		{
+#ifdef AUI_DANGER_PLOTS_REMADE
+			{
+#else
 #ifdef AUI_ASTAR_USE_DELEGATES
 			if (!(GetInfo() & MOVE_UNITS_IGNORE_DANGER))
 #else
@@ -2170,6 +2185,7 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 #endif
 			{
 				if(!bUnitIsCombat || pUnit->getArmyID() == FFreeList::INVALID_INDEX)
+#endif
 				{
 #ifdef AUI_DANGER_PLOTS_REMADE
 					if (kToNodeCacheData.iPlotDanger == MAX_INT || (kToNodeCacheData.iPlotDanger >= pUnit->GetCurrHitPoints() && kFromNodeCacheData.iPlotDanger < pUnit->GetCurrHitPoints()))
@@ -5028,7 +5044,8 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 			kToNodeCacheData.bContainsVisibleEnemy = pToPlotCell->GetEnemyMilitaryUnit() != NULL;
 			kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
 #ifdef AUI_DANGER_PLOTS_REMADE
-			kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
+			if (pCacheData->DoDanger())
+				kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
 #endif
 		}
 #endif
@@ -5131,7 +5148,7 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 		else
 			kToNodeCacheData.bCanEnterTerrain = true;
 #ifdef AUI_DANGER_PLOTS_REMADE
-		if (bAIControl || !bIsHuman)
+		if (pCacheData->DoDanger())
 			kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
 #endif
 		kToNodeCacheData.bIsCalculated = true;
@@ -5384,13 +5401,16 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 	}
 
 #ifdef AUI_DANGER_PLOTS_REMADE
-	if (bAIControl || !bIsHuman)
+	if (pCacheData->DoDanger())
 #else
 	if(bAIControl)
 #endif
 	{
 		if((parent->m_iData2 > 1) || (parent->m_iData1 == 0))
 		{
+#ifdef AUI_DANGER_PLOTS_REMADE
+			{
+#else
 #ifdef AUI_ASTAR_USE_DELEGATES
 			if(!(GetInfo() & MOVE_UNITS_IGNORE_DANGER))
 #else
@@ -5398,6 +5418,7 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 #endif
 			{
 				if(!bUnitIsCombat || pUnit->getArmyID() == FFreeList::INVALID_INDEX)
+#endif
 				{
 #ifdef AUI_DANGER_PLOTS_REMADE
 					if (kToNodeCacheData.iPlotDanger == MAX_INT || (kToNodeCacheData.iPlotDanger >= pUnit->GetCurrHitPoints() && kFromNodeCacheData.iPlotDanger < pUnit->GetCurrHitPoints()))

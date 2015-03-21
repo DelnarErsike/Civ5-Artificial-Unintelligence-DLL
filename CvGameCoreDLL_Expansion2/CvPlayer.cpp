@@ -23861,13 +23861,19 @@ void CvPlayer::ChangeUnitPurchaseCostModifier(int iChange)
 //	--------------------------------------------------------------------------------
 int CvPlayer::GetPlotDanger(CvPlot& pPlot, const CvUnit* pUnit, const int iAirAction, int iAfterNIntercepts) const
 {
-	return m_pDangerPlots->GetDanger(pPlot, pUnit, iAirAction, iAfterNIntercepts);
+	if (pUnit)
+		return m_pDangerPlots->GetDanger(pPlot, pUnit, iAirAction, iAfterNIntercepts);
+	else
+		return m_pDangerPlots->GetDanger(pPlot, GetID());
 }
 
 //	--------------------------------------------------------------------------------
 int CvPlayer::GetPlotDanger(CvPlot& pPlot, CvCity* pCity, const CvUnit* pPretendGarrison, int iAfterNIntercepts) const
 {
-	return m_pDangerPlots->GetDanger(pPlot, pCity, pPretendGarrison, iAfterNIntercepts);
+	if (pCity)
+		return m_pDangerPlots->GetDanger(pPlot, pCity, pPretendGarrison, iAfterNIntercepts);
+	else
+		return m_pDangerPlots->GetDanger(pPlot, GetID());
 }
 
 //	--------------------------------------------------------------------------------
@@ -23885,7 +23891,10 @@ bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, const PlayerTypes ePlay
 //	--------------------------------------------------------------------------------
 bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, const CvUnit* pUnit) const
 {
-	return m_pDangerPlots->IsUnderImmediateThreat(pPlot, pUnit);
+	if (pUnit)
+		return m_pDangerPlots->IsUnderImmediateThreat(pPlot, pUnit);
+	else
+		return m_pDangerPlots->IsUnderImmediateThreat(pPlot, GetID());
 }
 
 bool CvPlayer::CouldAttackHere(CvPlot& pPlot, const CvUnit* pUnit) const
@@ -23908,7 +23917,7 @@ bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot) const
 {
 	return m_pDangerPlots->IsUnderImmediateThreat(pPlot);
 }
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 //	--------------------------------------------------------------------------------
 /// Find closest city to a plot (within specified search radius)
