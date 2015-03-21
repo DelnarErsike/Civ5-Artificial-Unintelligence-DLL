@@ -8988,7 +8988,7 @@ void CvTacticalAI::ExecuteMovesToSafestPlot()
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 					iDanger = m_pPlayer->GetPlotDanger(*pPlot, pUnit.pointer());
-					if (iDanger == MAX_INT)
+					if (iDanger >= pUnit->GetCurrHitPoints())
 						continue;
 #else
 					iDanger = m_pPlayer->GetPlotDanger(*pPlot);
@@ -13560,7 +13560,7 @@ bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, 
 CvPlot* CvTacticalAI::FindBestBarbarianLandMove(UnitHandle pUnit, bool &bIsCombatMove)
 #else
 CvPlot* CvTacticalAI::FindBestBarbarianLandMove(UnitHandle pUnit)
-#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+#endif
 {
 	CvPlot* pBestMovePlot = FindNearbyTarget(pUnit, m_iLandBarbarianRange);
 	
@@ -13574,7 +13574,7 @@ CvPlot* CvTacticalAI::FindBestBarbarianLandMove(UnitHandle pUnit)
 	else
 	{
 		bIsCombatMove = true;
-#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_LAND_MOVE_NO_ADJACENT_IF_NOT_COMBAT
+#endif
 	}
 
 	// explore wander
@@ -13864,11 +13864,11 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 
 #ifdef AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_CIVILIANS_MOVE_PASSIVELY
 #ifdef AUI_DANGER_PLOTS_REMADE
-	bool bConsiderDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()), pUnit.pointer()) <= pUnit->GetCurrHitPoints();
+	bool bConsiderDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()), pUnit.pointer()) < pUnit->GetCurrHitPoints();
 #else
 	bool bConsiderDanger = !pUnit->IsCanDefend() && m_pPlayer->GetPlotDanger(*(pUnit->plot())) <= 0;
-#endif // AUI_DANGER_PLOTS_REMADE
-#endif // AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_CIVILIANS_MOVE_PASSIVELY
+#endif
+#endif
 
 	// Now looking for BEST score
 	iBestValue = 0;
@@ -13884,7 +13884,7 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 #else
 		iMaxDX = iMovementRange - MAX(0, iY);
 		for (iX = -iMovementRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			pPlot = plotXY(pUnit->getX(), pUnit->getY(), iX, iY);
 #else
@@ -13893,7 +13893,7 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 		for(int iY = -iMovementRange; iY <= iMovementRange; iY++)
 		{
 			CvPlot* pPlot = plotXYWithRangeCheck(pUnit->getX(), pUnit->getY(), iX, iY, iMovementRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			if(!pPlot)
 			{
 				continue;
@@ -13919,18 +13919,18 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 			if (bConsiderDanger && m_pPlayer->GetPlotDanger(*pPlot, pUnit.pointer()) >= pUnit->GetCurrHitPoints())
 #else
 			if (bConsiderDanger && m_pPlayer->GetPlotDanger(*pPlot) > 0)
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 			{
 				continue;
 			}
-#endif // AUI_TACTICAL_EXECUTE_BARBARIAN_MOVES_CIVILIANS_MOVE_PASSIVELY
+#endif
 
 #ifdef AUI_ASTAR_PARADROP
 			if (!CanReachInXTurns(pUnit, pPlot, 1, false, true))
 #else
 			if(!CanReachInXTurns(pUnit, pPlot, 1))
-#endif // AUI_ASTAR_PARADROP
+#endif
 			{
 				continue;
 			}
@@ -13950,7 +13950,7 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 			else if(pPlot->isAdjacentOwned())
 #else
 			if(pPlot->isAdjacentOwned())
-#endif // AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
+#endif
 			{
 				iValue += 100;
 			}
@@ -13961,7 +13961,7 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 			{
 				iValue += 200;
 			}
-#endif // AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
+#endif
 
 			// If still have no value, score equal to distance from my current plot
 			if(iValue == 0)
@@ -13970,14 +13970,8 @@ CvPlot* CvTacticalAI::FindBarbarianExploreTarget(UnitHandle pUnit)
 				iValue = hexDistance(iX, iY);
 #else
 				iValue = plotDistance(pUnit->getX(), pUnit->getY(), pPlot->getX(), pPlot->getY());
-#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#endif
 			}
-
-#ifdef AUI_DANGER_PLOTS_REMADE
-			int iOverkill = m_pPlayer->GetPlotDanger(*pPlot, pUnit.pointer()) - pUnit->GetCurrHitPoints();
-			if (iOverkill > 0)
-				iValue -= iOverkill;
-#endif // AUI_DANGER_PLOTS_REMADE
 
 			if(iValue > iBestValue)
 			{
@@ -15190,9 +15184,13 @@ void CvTacticalAI::ScoreHedgehogPlots(CvPlot* pTarget)
 int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, CvArmyAI* pArmyAI)
 {
 	// Returned value
+#ifdef AUI_DANGER_PLOTS_REMADE
+	int iScore = 1;
+#else
 	int iScore = 0;
 
 	UnitHandle pBestDefender;
+#endif
 	PlayerTypes ePlayer = m_pPlayer->GetID();
 
 	// Variables going into score
@@ -15201,11 +15199,13 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 	int iDangerValue = 0;
 #ifndef AUI_DANGER_PLOTS_REMADE
 	int iDangerDivisor = 1;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 	int iDistToOperationCenter = MAX_INT;
+#ifndef AUI_DANGER_PLOTS_REMADE
 	int iFriendlyUnitBasePower = 0;
 	int iFriendlyUnitFinalPower = 0;
 	int iFriendlyCityStrength = 0;
+#endif
 
 	// GATHER DATA
 
@@ -15231,11 +15231,10 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 	// Danger value
 #ifdef AUI_DANGER_PLOTS_REMADE
 	iDangerValue = m_pPlayer->GetPlotDanger(*pTarget, pUnit);
-	if (iDangerValue == MAX_INT)
+	if (iDangerValue >= pGeneral->GetCurrHitPoints())
 		return 0;
 #else
 	iDangerValue = m_pPlayer->GetPlotDanger(*pTarget);
-#endif // AUI_DANGER_PLOTS_REMADE
 	pBestDefender = pTarget->getBestDefender(m_pPlayer->GetID());
 
 	// Friendly city here?
@@ -15248,7 +15247,6 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 		iFriendlyCityStrength *= (pCity->GetMaxHitPoints() - pCity->getDamage());
 		iFriendlyCityStrength /= pCity->GetMaxHitPoints();
 
-#ifndef AUI_DANGER_PLOTS_REMADE
 		if(iDangerValue > (iFriendlyCityStrength * 2))
 		{
 			iDangerDivisor = 5;
@@ -15261,7 +15259,6 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 		{
 			iDangerDivisor = 2;
 		}
-#endif // AUI_DANGER_PLOTS_REMADE
 	}
 
 	// Friendly unit here?
@@ -15270,9 +15267,8 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 		iFriendlyUnitBasePower = pBestDefender->GetBaseCombatStrengthConsideringDamage() * 250;
 #ifdef AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_SCALE_SCORE_BY_COMBAT_MODIFIER
 		iFriendlyUnitBasePower = iFriendlyUnitBasePower * (100 + pBestDefender->GetGreatGeneralCombatModifier()) / 100;
-#endif // AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_SCALE_SCORE_BY_COMBAT_MODIFIER
+#endif
 
-#ifndef AUI_DANGER_PLOTS_REMADE
 		if(iDangerValue > (iFriendlyUnitBasePower * 2))
 		{
 			iDangerDivisor = 5;
@@ -15285,7 +15281,6 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 		{
 			iDangerDivisor = 2;
 		}
-#endif // AUI_DANGER_PLOTS_REMADE
 
 		iFriendlyUnitFinalPower = iFriendlyUnitBasePower;
 
@@ -15315,11 +15310,10 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 
 	// No friendly city or unit
 	else
-	{	
-#ifndef AUI_DANGER_PLOTS_REMADE
+	{
 		iDangerDivisor = 1000;
-#endif // AUI_DANGER_PLOTS_REMADE
 	}
+#endif
 
 	// Distance to center of army (if still under operational AI)
 	if(pArmyAI)
@@ -15327,7 +15321,21 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 		CvPlot* pCOM = pArmyAI->GetCenterOfMass(NO_DOMAIN);
 		if(pCOM)
 		{
+#ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_USE_PATHFINDER_FOR_COM_DISTANCE
+			GC.getIgnoreUnitsPathFinder().SetData(pGeneral.pointer());
+			if (GC.getIgnoreUnitsPathFinder().GeneratePath(pTarget->getX(), pTarget->getY(), pCOM->getX(), pCOM->getY(), MOVE_UNITS_IGNORE_DANGER | MOVE_IGNORE_STACKING, true))
+			{
+				CvAStarNode* pNode = GC.getIgnoreUnitsPathFinder().GetLastNode();
+				if (pNode)
+				{
+					iDistToOperationCenter = pNode->m_iData2 - 1;
+					if (iDistToOperationCenter < 1)
+						iDistToOperationCenter = 1;
+				}
+			}
+#else
 			iDistToOperationCenter = plotDistance(pTarget->getX(), pTarget->getY(), pCOM->getX(), pCOM->getY());
+#endif
 		}
 	}
 
@@ -15337,17 +15345,22 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 	iNearbyQueuedAttacks = NearXQueuedAttacks(pGeneral, pTarget, GC.getGREAT_GENERAL_RANGE());
 #else
 	iNearbyQueuedAttacks = NearXQueuedAttacks(pGeneral, pTarget, 2);
-#endif // AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_USE_XML_RANGE
+#endif
 #else
 #ifdef AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_USE_XML_RANGE
 	iNearbyQueuedAttacks = NearXQueuedAttacks(pTarget, GC.getGREAT_GENERAL_RANGE());
 #else
 	iNearbyQueuedAttacks = NearXQueuedAttacks(pTarget, 2);
-#endif // AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_USE_XML_RANGE
+#endif
 #endif
 
 	// COMPUTE SCORE
 	//  Entering a city
+#ifdef AUI_DANGER_PLOTS_REMADE
+	if (bFriendlyCity || pTarget->getBestDefender(m_pPlayer->GetID()))
+	{
+		iScore += 1;
+#else
 	if(bFriendlyCity)
 	{
 		iScore = iFriendlyCityStrength;
@@ -15367,6 +15380,16 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 	else
 	{
 		iScore = 10;
+#endif
+	}
+
+	if(iNearbyQueuedAttacks > 0)
+	{
+#ifdef AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_SCALE_SCORE_BY_COMBAT_MODIFIER
+		iScore *= (iNearbyQueuedAttacks * (GC.getGREAT_GENERAL_STRENGTH_MOD() + m_pPlayer->GetPlayerTraits()->GetGreatGeneralExtraBonus()) / 5);
+#else
+		iScore *= (5 * iNearbyQueuedAttacks);
+#endif
 	}
 
 #ifdef AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_CONSIDER_MEDIC
@@ -15391,31 +15414,38 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 #else
 						iScore += MIN(pLoopDefender->healRate(pLoopPlot, true, pGeneral->getAdjacentTileHeal()) - pLoopDefender->healRate(pLoopPlot),
 							pLoopDefender->GetMaxHitPoints() - pLoopDefender->GetCurrHitPoints()) / 2;
-#endif // AUI_FAST_COMP
+#endif
 					}
 				}
 			}
 		}
 	}
-#endif // AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_CONSIDER_MEDIC
+#endif
 
-	if(iNearbyQueuedAttacks > 0)
-	{
-#ifdef AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_SCALE_SCORE_BY_COMBAT_MODIFIER
-		iScore *= (iNearbyQueuedAttacks * (GC.getGREAT_GENERAL_STRENGTH_MOD() + m_pPlayer->GetPlayerTraits()->GetGreatGeneralExtraBonus()) / 5);
+#ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_USE_PATHFINDER_FOR_COM_DISTANCE
+#ifdef AUI_DANGER_PLOTS_REMADE
+	if (iDistToOperationCenter < 7)
 #else
-		iScore *= (5 * iNearbyQueuedAttacks);
-#endif // AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_SCALE_SCORE_BY_COMBAT_MODIFIER
-	}
-
+	if(iDistToOperationCenter < 7 && (iFriendlyUnitFinalPower > 0 || bFriendlyCity || iDangerValue == 0))
+#endif
+#else
+#ifdef AUI_DANGER_PLOTS_REMADE
+	if (iDistToOperationCenter < 20)
+#else
 	if(iDistToOperationCenter < 20 && (iFriendlyUnitFinalPower > 0 || bFriendlyCity || iDangerValue == 0))
+#endif
+#endif
 	{
+#ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_USE_PATHFINDER_FOR_COM_DISTANCE
+		// 5000000 is too high of a baseline; dropoff is now exponential instead of linear to realy accentutate closer tiles (two extremes are still the same)
+		iScore += int(5000 * pow(1.820564203, 1 - iDistToOperationCenter) + 0.5);
+#else
 		// Anywhere near center is really good
 #ifdef AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_USE_XML_RANGE
 		if (iDistToOperationCenter <= pGeneral->baseMoves())
 #else
 		if(iDistToOperationCenter <= 3)
-#endif // AUI_TACTICAL_SCORE_GREAT_GENERAL_PLOT_USE_XML_RANGE
+#endif
 		{
 			iScore += 5000000;
 		}
@@ -15425,6 +15455,7 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 		{
 			iScore += (250000 * (20 - iDistToOperationCenter));
 		}
+#endif
 	}
 
 #ifndef AUI_DANGER_PLOTS_REMADE
@@ -15432,7 +15463,7 @@ int CvTacticalAI::ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, Cv
 	{
 		iScore /= iDangerDivisor;
 	}
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 	return iScore;
 }
@@ -15454,7 +15485,7 @@ void CvTacticalAI::UnitProcessed(int iID, bool bMarkTacticalMap)
 	m_CurrentTurnUnits.remove(iID);
 #ifndef AUI_TACTICAL_FIX_UNIT_PROCESSED_BLITZ
 	pUnit = m_pPlayer->getUnit(iID);
-#endif // AUI_TACTICAL_FIX_UNIT_PROCESSED_BLITZ
+#endif
 
 	CvAssert(pUnit);
 	pUnit->SetTurnProcessed(true);
