@@ -207,7 +207,7 @@ BuildingTypes CvWonderProductionAI::ChooseWonder(bool bUseAsyncRandom, bool bAdj
 
 #ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FLAVOR_UPDATE
 	FlavorUpdate();
-#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FLAVOR_UPDATE
+#endif
 
 	// Use the asynchronous random number generate if "no random" is set
 	if(bUseAsyncRandom)
@@ -250,13 +250,17 @@ BuildingTypes CvWonderProductionAI::ChooseWonder(bool bUseAsyncRandom, bool bAdj
 			const CvBuildingClassInfo& kBuildingClassInfo = kBuilding.GetBuildingClassInfo();
 
 			// Make sure this wonder can be built now
+#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_NO_NATIONAL_WONDERS
+			if (::isWorldWonderClass(kBuildingClassInfo) && HaveCityToBuild((BuildingTypes)iBldgLoop))
+#else
 			if(IsWonder(kBuilding) && HaveCityToBuild((BuildingTypes)iBldgLoop))
+#endif
 			{
 #ifdef AUI_WONDER_PRODUCTION_FIX_CHOOSE_WONDER_TURNS_REQUIRED_USES_PLAYER_MOD
 				iTurnsRequired = std::max(1, m_pPlayer->getProductionNeeded((BuildingTypes)iBldgLoop) / iEstimatedProductionPerTurn);
 #else
 				iTurnsRequired = std::max(1, kBuilding.GetProductionCost() / iEstimatedProductionPerTurn);
-#endif // AUI_WONDER_PRODUCTION_FIX_CHOOSE_WONDER_TURNS_REQUIRED_USES_PLAYER_MOD
+#endif
 
 				// if we are forced to restart a wonder, give one that has been started already a huge bump
 				bool bAlreadyStarted = pWonderCity->GetCityBuildings()->GetBuildingProduction(eBuilding) > 0;
@@ -363,7 +367,7 @@ BuildingTypes CvWonderProductionAI::ChooseWonder(bool bUseAsyncRandom, bool bAdj
 BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(CvUnit* pUnit, bool bUseAsyncRandom, int& iWonderWeight, CvCity*& pCityToBuildAt)
 #else
 BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncRandom, int& iWonderWeight, CvCity*& pCityToBuildAt)
-#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+#endif
 {
 	int iBldgLoop;
 	int iWeight;
@@ -376,7 +380,7 @@ BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncR
 
 #ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FLAVOR_UPDATE
 	FlavorUpdate();
-#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FLAVOR_UPDATE
+#endif
 
 	// Use the asynchronous random number generate if "no random" is set
 	if (bUseAsyncRandom)
@@ -411,7 +415,7 @@ BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncR
 	int iMaxProductionGenerated = 0;
 	if (pUnit)
 		iMaxProductionGenerated = pUnit->getMaxHurryProduction(pWonderCity);
-#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+#endif
 
 	// Loop through adding the available wonders
 	for (iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
@@ -422,7 +426,12 @@ BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncR
 		{
 			CvBuildingEntry& kBuilding = *pkBuildingInfo;
 			// Make sure this wonder can be built now
+#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_NO_NATIONAL_WONDERS
+			const CvBuildingClassInfo& kBuildingClassInfo = kBuilding.GetBuildingClassInfo();
+			if (::isWorldWonderClass(kBuildingClassInfo) && HaveCityToBuild((BuildingTypes)iBldgLoop))
+#else
 			if (IsWonder(kBuilding) && HaveCityToBuild((BuildingTypes)iBldgLoop))
+#endif
 			{
 				iWeight = m_WonderAIWeights.GetWeight((UnitTypes)iBldgLoop); // use raw weight since this wonder is essentially free
 				// Don't build the UN if you aren't going for the diplo victory and have a chance of winning it
@@ -473,13 +482,13 @@ BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncR
 #ifdef AUI_WONDER_PRODUCITON_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WANT_WORLD_WONDER
 				if (!(::isWorldWonderClass(kBuilding.GetBuildingClassInfo())))
 					iWeight /= AUI_WONDER_PRODUCITON_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WANT_WORLD_WONDER;
-#endif // AUI_WONDER_PRODUCITON_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WANT_WORLD_WONDER
+#endif
 
 #ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
 				int iTurnsRequired = MAX(1, m_pPlayer->getProductionNeeded((BuildingTypes)iBldgLoop) / iEstimatedProductionPerTurn);
 				int iTurnsSaved = std::max(iTurnsRequired - 1, (m_pPlayer->getProductionNeeded((BuildingTypes)iBldgLoop) - iMaxProductionGenerated) / iEstimatedProductionPerTurn);
 				iWeight = CityStrategyAIHelpers::ReweightByTurnsLeft(iWeight, iTurnsRequired - iTurnsSaved);
-#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+#endif
 
 				// ??? do we want to weight it more for more expensive wonders?
 				m_Buildables.push_back(iBldgLoop, iWeight);
