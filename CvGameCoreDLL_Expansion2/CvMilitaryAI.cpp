@@ -323,7 +323,7 @@ void CvMilitaryAI::Reset()
 	m_eArmyTypeBeingBuilt = NO_ARMY_TYPE;
 #ifdef AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
 	m_iTurnsWithUpgradeRequest = 0;
-#endif // AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
+#endif
 
 	m_iNumLandUnits = 0;
 	m_iNumRangedLandUnits = 0;
@@ -371,7 +371,7 @@ void CvMilitaryAI::Read(FDataStream& kStream)
 
 #ifdef AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
 	kStream >> m_iTurnsWithUpgradeRequest;
-#endif // AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
+#endif
 
 	int iNumStrategies;
 	kStream >> iNumStrategies;
@@ -414,7 +414,7 @@ void CvMilitaryAI::Write(FDataStream& kStream)
 	kStream << m_iNumberOfTimesOpsBuildSkippedOver;
 #ifdef AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
 	kStream << m_iTurnsWithUpgradeRequest;
-#endif // AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
+#endif
 	kStream << GC.getNumMilitaryAIStrategyInfos();
 	kStream << ArrayWrapper<bool>(m_pAIStrategies->GetNumMilitaryAIStrategies(), m_pabUsingStrategy);
 	kStream << ArrayWrapper<int>(m_pAIStrategies->GetNumMilitaryAIStrategies(), m_paiTurnStrategyAdopted);
@@ -3614,6 +3614,16 @@ void CvMilitaryAI::DisbandObsoleteUnits()
 		}
 	}
 
+	// Are we running at a deficit?
+	EconomicAIStrategyTypes eStrategyLosingMoney = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_LOSING_MONEY");
+	bInDeficit = m_pPlayer->GetEconomicAI()->IsUsingStrategy(eStrategyLosingMoney);
+
+	// Don't do this if at war unless we're in a deficit primarily due to unit maintenance
+	if (GetNumberCivsAtWarWith() > 0 && !bInDeficit && m_eLandDefenseState > DEFENSE_STATE_ENOUGH)
+	{
+		return;
+	}
+
 	// Have there been upgrade requests for a long time?
 	if (m_pPlayer->GetEconomicAI()->IsSavingForThisPurchase(PURCHASE_TYPE_UNIT_UPGRADE) || bHasOutdatedUnit)
 	{
@@ -3625,23 +3635,13 @@ void CvMilitaryAI::DisbandObsoleteUnits()
 		m_iTurnsWithUpgradeRequest = MAX(0, MIN(m_iTurnsWithUpgradeRequest, GC.getGame().getEstimateEndTurn() / 20));
 	}
 
-	// Are we running at a deficit?
-	EconomicAIStrategyTypes eStrategyLosingMoney = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_LOSING_MONEY");
-	bInDeficit = m_pPlayer->GetEconomicAI()->IsUsingStrategy(eStrategyLosingMoney);
-
 #ifdef AUI_MILITARY_USE_DOUBLES
 	double dGoldSpentOnUnits = (double)m_pPlayer->GetTreasury()->GetExpensePerTurnUnitMaintenance();
 	double dAverageGoldPerUnit = dGoldSpentOnUnits / (double)MAX(1, m_pPlayer->getNumUnits());
 #else
 	float fGoldSpentOnUnits = (float)m_pPlayer->GetTreasury()->GetExpensePerTurnUnitMaintenance();
 	float fAverageGoldPerUnit = fGoldSpentOnUnits / (float)MAX(1, m_pPlayer->getNumUnits());
-#endif // AUI_MILITARY_USE_DOUBLES
-
-	// Don't do this if at war unless we're in a deficit primarily due to unit maintenance
-	if (GetNumberCivsAtWarWith() > 0 && !bInDeficit && m_eLandDefenseState > DEFENSE_STATE_NEUTRAL)
-	{
-		return;
-	}
+#endif
 
 	AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
 	// Are we running anything other than the Conquest Grand Strategy?
@@ -3753,7 +3753,7 @@ void CvMilitaryAI::DisbandObsoleteUnits()
 			LogScrapUnit(pNavalUnit, bInDeficit, bConquestGrandStrategy);
 		}
 	}
-#endif // AUI_MILITARY_DISBAND_OBSOLETE_TWEAKED
+#endif
 }
 
 /// Do we have the forces at hand for an attack?
