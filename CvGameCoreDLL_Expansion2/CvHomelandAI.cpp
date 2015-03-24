@@ -1016,7 +1016,7 @@ void CvHomelandAI::PlotHealMoves()
 				continue;
 #ifdef AUI_DANGER_PLOTS_REMADE
 			int iDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()), pUnit.pointer());
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 			// If plot is under threat, make sure we don't overheal; also, never actively stop to heal 
 			if (!pUnit->isAlwaysHeal() && !pUnit->isEmbarked() && !pUnit->plot()->isCity() && 
 #ifdef AUI_DANGER_PLOTS_REMADE
@@ -1025,10 +1025,10 @@ void CvHomelandAI::PlotHealMoves()
 #else
 				((m_pPlayer->GetPlotDanger(*(pUnit->plot())) <= 0 && pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints()) ||
 				(m_pPlayer->GetPlotDanger(*(pUnit->plot())) > 0 && pUnit->GetCurrHitPoints() + pUnit->healRate(pUnit->plot()) < pUnit->GetMaxHitPoints())))
-#endif //  AUI_DANGER_PLOTS_REMADE
+#endif
 #else
 			if(pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints() && !pUnit->isEmbarked() && !pUnit->plot()->isCity())
-#endif // AUI_HOMELAND_TWEAKED_HEAL_MOVES
+#endif
 			{
 				// If I'm a naval unit I need to be in friendly territory
 				if(pUnit->getDomainType() != DOMAIN_SEA || pUnit->plot()->IsFriendlyTerritory(m_pPlayer->GetID()))
@@ -1037,7 +1037,7 @@ void CvHomelandAI::PlotHealMoves()
 					if (!pUnit->IsUnderEnemyRangedAttack() && iDanger < pUnit->GetCurrHitPoints())
 #else
 					if (!pUnit->IsUnderEnemyRangedAttack())
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 					{
 						CvHomelandUnit unit;
 						unit.SetID(pUnit->GetID());
@@ -2478,7 +2478,7 @@ void CvHomelandAI::ExecuteExplorerMoves()
 					}
 #else
 					pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), pkStepPlot->getX(), pkStepPlot->getY(), MOVE_TERRITORY_NO_ENEMY | MOVE_MAXIMIZE_EXPLORE | MOVE_UNITS_IGNORE_DANGER, false, false, MISSIONAI_EXPLORE, pkStepPlot);
-#endif // AUI_HOMELAND_PARATROOPERS_PARADROP
+#endif
 #ifndef AUI_HOMELAND_FIX_EXECUTE_EXPLORER_MOVES_MOVE_AFTER_GOODY
 					pUnit->finishMoves();
 					UnitProcessed(pUnit->GetID());
@@ -2512,7 +2512,7 @@ void CvHomelandAI::ExecuteExplorerMoves()
 		int iBestPlotScore = 0;
 #ifdef AUI_DANGER_PLOTS_REMADE
 		bool bIgnoreHighDanger = m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer()) >= pUnit->GetCurrHitPoints();
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 #if defined(PATH_PLAN_LAST)
 		aBestPlotList.clear();
@@ -2540,7 +2540,7 @@ void CvHomelandAI::ExecuteExplorerMoves()
 #else
 			iMaxDX = iMovementRange - MAX(0, iDY);
 			for (iDX = -iMovementRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 			{
 				// No need for range check because loops are set up properly
 				pEvalPlot = plotXY(iUnitX, iUnitY, iDX, iDY);
@@ -2550,7 +2550,7 @@ void CvHomelandAI::ExecuteExplorerMoves()
 			for(int iY = -iMovementRange; iY <= iMovementRange; iY++)
 			{
 				CvPlot* pEvalPlot = plotXYWithRangeCheck(iUnitX, iUnitY, iX, iY, iMovementRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 				if(!pEvalPlot)
 				{
 					continue;
@@ -2581,7 +2581,7 @@ void CvHomelandAI::ExecuteExplorerMoves()
 				{
 					continue;
 				}
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 				DomainTypes eDomain = pUnit->getDomainType();
 				int iScore = CvEconomicAI::ScoreExplorePlot(pEvalPlot, eTeam, iBaseSightRange, eDomain);
@@ -2706,7 +2706,7 @@ void CvHomelandAI::ExecuteExplorerMoves()
 					{
 						continue;
 					}
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 					int iRating = aiExplorationPlotRatings[ui];
 
@@ -3187,8 +3187,8 @@ void CvHomelandAI::ExecuteMovesToSafestPlot()
 			iRange = FASTMAX(iRange, pUnit->getDropRange());
 #else
 			iRange = MAX(iRange, pUnit->getDropRange());
-#endif // AUI_FAST_COMP
-#endif // AUI_HOMELAND_PARATROOPERS_PARADROP
+#endif
+#endif
 
 			// For each plot within movement range of the fleeing unit
 #ifdef AUI_HEXSPACE_DX_LOOPS
@@ -3202,7 +3202,7 @@ void CvHomelandAI::ExecuteMovesToSafestPlot()
 #else
 				iMaxDX = iRange - MAX(0, iY);
 				for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 				{
 					// No need for range check because loops are set up properly
 					pPlot = plotXY(pUnit->getX(), pUnit->getY(), iX, iY);
@@ -3212,7 +3212,7 @@ void CvHomelandAI::ExecuteMovesToSafestPlot()
 				for(int iY = -iRange; iY <= iRange; iY++)
 				{
 					CvPlot* pPlot = GC.getMap().plot(pUnit->getX() + iX, pUnit->getY() + iY);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 					if(pPlot == NULL)
 					{
 						continue;
@@ -3233,12 +3233,12 @@ void CvHomelandAI::ExecuteMovesToSafestPlot()
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 					iDanger = m_pPlayer->GetPlotDanger(*pPlot, pUnit.pointer());
-					if (iDanger == MAX_INT)
+					if (iDanger >= pUnit->GetCurrHitPoints())
 						continue;
 					bool bDefaultPref = true;
 #else
 					iDanger = m_pPlayer->GetPlotDanger(*pPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 					bool bIsZeroDanger = (iDanger <= 0);
 					bool bIsInCity = pPlot->isFriendlyCity(*pUnit, false);
 					bool bIsInCover = (pPlot->getNumDefenders(m_pPlayer->GetID()) > 0) && !pUnit->IsCanDefend();
@@ -5175,7 +5175,7 @@ void CvHomelandAI::ExecuteAircraftInterceptions()
 				int iRange = GC.getUnitInfo(pUnit->getUnitType())->GetAirInterceptRange();
 				CvPlot* pUnitPlot = pUnit->plot();
 #ifdef AUI_DANGER_PLOTS_REMADE
-				if (m_pPlayer->GetPlotDanger(*pUnitPlot, pUnit.pointer(), AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
+				if (m_pPlayer->GetPlotDanger(*pUnitPlot, pUnit.pointer(), NULL, AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
 				{
 					continue;
 				}
@@ -5188,12 +5188,12 @@ void CvHomelandAI::ExecuteAircraftInterceptions()
 #else
 					int iMaxDX = iRange - MAX(0, iDY);
 					for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 					{
 						pEvalPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
 						if (pEvalPlot && pEvalPlot != pUnitPlot)
 						{
-							if (m_pPlayer->GetPlotDanger(*pEvalPlot, pUnit.pointer(), AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
+							if (m_pPlayer->GetPlotDanger(*pEvalPlot, pUnit.pointer(), NULL, AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
 							{
 								bCouldDieFromSweep = true;
 								goto EndLoop;
@@ -5241,7 +5241,7 @@ void CvHomelandAI::ExecuteAircraftInterceptions()
 		}
 	}
 }
-#endif // AUI_HOMELAND_AIRCRAFT_INTERCEPTIONS
+#endif
 
 #ifdef AUI_HOMELAND_PARATROOPERS_PARADROP
 bool CvHomelandAI::CheckAndExecuteParadrop(UnitHandle pUnit, CvPlot* pTarget, int iPathfindingTurns)
@@ -5316,10 +5316,10 @@ void CvHomelandAI::ExecuteAircraftMoves()
 		CvPlot* pUnitPlot = pUnit->plot();
 #ifdef AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
 		CvPlot* pAdjacentPlot = NULL;
-#endif // AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
+#endif
 #ifdef AUI_DANGER_PLOTS_REMADE
 		bool bIsBomber = pUnit->maxInterceptionProbability() <= 0;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 		CvUnit* pTransportUnit = NULL;
 		CvPlot* pBestPlot = NULL;
 		int iMostDangerous = 0;
@@ -5337,8 +5337,8 @@ void CvHomelandAI::ExecuteAircraftMoves()
 			if (5 * pLoopUnit->getDamage() > pLoopUnit->GetMaxHitPoints() && m_pPlayer->IsPlotUnderImmediateThreat(*pLoopUnitPlot))  // this might not be a good place to land
 #else
 			if(pLoopUnit->getDamage() > (GC.getMAX_HIT_POINTS() / 5))  // this might not be a good place to land
-#endif // AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
+#endif
 			{
 				continue;
 			}
@@ -5361,7 +5361,7 @@ void CvHomelandAI::ExecuteAircraftMoves()
 				iPlotDanger += m_pPlayer->GetPlotDanger(*pLoopUnitPlot, pUnit.pointer());
 #else
 			int iPlotDanger = m_pPlayer->GetPlotDanger(*pLoopUnitPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 #ifdef AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
 			iPlotDanger *= NUM_DIRECTION_TYPES;
@@ -5378,11 +5378,11 @@ void CvHomelandAI::ExecuteAircraftMoves()
 						iPlotDanger += m_pPlayer->GetPlotDanger(*pAdjacentPlot, pUnit.pointer());
 #else
 					iPlotDanger += m_pPlayer->GetPlotDanger(*pAdjacentPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 				}
 			}
 			iPlotDanger /= NUM_DIRECTION_TYPES;
-#endif // AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
+#endif
 			if (pLoopUnit->getArmyID() != FFreeList::INVALID_INDEX)
 			{
 #ifdef AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
@@ -5397,7 +5397,7 @@ void CvHomelandAI::ExecuteAircraftMoves()
 						iTempDanger += m_pPlayer->GetPlotDanger(*pTargetPlot, pUnit.pointer());
 #else
 					int iTempDanger = NUM_DIRECTION_TYPES * m_pPlayer->GetPlotDanger(*pTargetPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 					iTempDanger *= NUM_DIRECTION_TYPES;
 					for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
 					{
@@ -5412,7 +5412,7 @@ void CvHomelandAI::ExecuteAircraftMoves()
 								iTempDanger += m_pPlayer->GetPlotDanger(*pAdjacentPlot, pUnit.pointer());
 #else
 							iTempDanger += m_pPlayer->GetPlotDanger(*pAdjacentPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 						}
 					}
 					iTempDanger /= NUM_DIRECTION_TYPES;
@@ -5420,7 +5420,7 @@ void CvHomelandAI::ExecuteAircraftMoves()
 					iPlotDanger = FASTMAX(iPlotDanger, iTempDanger);
 #else
 					iPlotDanger = MAX(iPlotDanger, iTempDanger);
-#endif // AUI_FAST_COMP
+#endif
 				}
 			}
 			if (iPlotDanger > iMostDangerous)
@@ -5428,7 +5428,7 @@ void CvHomelandAI::ExecuteAircraftMoves()
 				iPlotDanger += 5000;
 			}
 			if(iPlotDanger >= iMostDangerous)
-#endif // AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
+#endif
 			{
 				iMostDangerous = iPlotDanger;
 				pBestPlot = pLoopUnitPlot;
@@ -5450,8 +5450,8 @@ void CvHomelandAI::ExecuteAircraftMoves()
 			if (5 * pLoopCity->getDamage() > pLoopCity->GetMaxHitPoints() && m_pPlayer->IsPlotUnderImmediateThreat(*pTarget))  // this might not be a good place to land
 #else
 			if(pLoopCity->getDamage() > (pLoopCity->GetMaxHitPoints() / 5))
-#endif // AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
+#endif
 			{
 				continue;
 			}
@@ -5474,7 +5474,7 @@ void CvHomelandAI::ExecuteAircraftMoves()
 				iPlotDanger += m_pPlayer->GetPlotDanger(*pTarget, pUnit.pointer());
 #else
 			int iPlotDanger = m_pPlayer->GetPlotDanger(*pTarget);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 #ifdef AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
 			iPlotDanger *= NUM_DIRECTION_TYPES;
 			for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
@@ -5490,14 +5490,14 @@ void CvHomelandAI::ExecuteAircraftMoves()
 						iPlotDanger += m_pPlayer->GetPlotDanger(*pAdjacentPlot, pUnit.pointer());
 #else
 					iPlotDanger += m_pPlayer->GetPlotDanger(*pAdjacentPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 				}
 			}
 			iPlotDanger /= NUM_DIRECTION_TYPES;
 			if (iPlotDanger > iMostDangerous)
 #else
 			if(iPlotDanger >= iMostDangerous)
-#endif // AUI_HOMELAND_FIX_EXECUTE_AIRCRAFT_MOVES
+#endif
 			{
 				iMostDangerous = iPlotDanger;
 				pBestPlot = pTarget;
@@ -5555,7 +5555,7 @@ void CvHomelandAI::ExecuteAircraftMoves()
 bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool /*bIgnoreUnits*/)
 #else
 bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 {
 	int iSearchRange = pUnit->SearchRange(1);
 
@@ -5574,7 +5574,7 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 #else
 		iMaxDX = iSearchRange - MAX(0, iDY);
 		for (iDX = -iSearchRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
@@ -5584,7 +5584,7 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 		for(int iDY = -(iSearchRange); iDY <= iSearchRange; iDY++)
 		{
 			CvPlot* pLoopPlot = plotXYWithRangeCheck(pUnit->getX(), pUnit->getY(), iDX, iDY, iSearchRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			if(!pLoopPlot)
 			{
 				continue;
@@ -5602,12 +5602,15 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 			int iDanger = m_pPlayer->GetPlotDanger(*pLoopPlot, pUnit);
-			if (iDanger == MAX_INT)
+			if (iDanger >= pUnit->GetCurrHitPoints())
 			{
 				continue;
 			}
 
 			int iValue = -iDanger;
+			UnitHandle hDefender = pLoopPlot->getBestDefender(m_pPlayer->GetID());
+			if (hDefender)
+				iValue = MIN(iValue, -m_pPlayer->GetPlotDanger(*pLoopPlot, hDefender.pointer()));
 #else
 			int iValue = 0;
 			if(pLoopPlot->getOwner() != NO_PLAYER && GET_PLAYER(pLoopPlot->getOwner()).getTeam() == m_pPlayer->getTeam())
@@ -5623,7 +5626,7 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 				iValue += int(pow(pCity->getStrengthValue() * double(GC.getMAX_CITY_DEFENSE_DAMAGE() - pCity->getDamage()), AUI_HOMELAND_TWEAKED_MOVE_CIVILIAN_TO_SAFETY_POW_ALLIED_STRENGTH) + 0.5);
 #else
 				iValue += pCity->getStrengthValue() * (GC.getMAX_CITY_DEFENSE_DAMAGE() - pCity->getDamage());
-#endif // AUI_HOMELAND_TWEAKED_MOVE_CIVILIAN_TO_SAFETY_POW_ALLIED_STRENGTH
+#endif
 			}
 			else if(!bIgnoreUnits)
 			{
@@ -5645,7 +5648,7 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 									iValue += int(pow(pLoopUnit->GetMaxDefenseStrength(pLoopPlot, NULL) * (double)pLoopUnit->GetCurrHitPoints(), AUI_HOMELAND_TWEAKED_MOVE_CIVILIAN_TO_SAFETY_POW_ALLIED_STRENGTH) + 0.5);
 #else
 									iValue += pLoopUnit->GetMaxDefenseStrength(pLoopPlot, NULL) * pLoopUnit->GetCurrHitPoints();
-#endif // AUI_HOMELAND_TWEAKED_MOVE_CIVILIAN_TO_SAFETY_POW_ALLIED_STRENGTH
+#endif
 								}
 							}
 						}
@@ -5654,7 +5657,7 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 			}
 
 			iValue -= m_pPlayer->GetPlotDanger(*pLoopPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 			aBestPlotList.push_back(pLoopPlot, iValue);
 		}
@@ -5664,7 +5667,7 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 	CvPlot* pBestPlot = NULL;
 #ifdef AUI_HOMELAND_PARATROOPERS_PARADROP
 	int iTurnsNeeded = MAX_INT;
-#endif // AUI_HOMELAND_PARATROOPERS_PARADROP
+#endif
 	uint uiListSize;
 	if ((uiListSize = aBestPlotList.size()) > 0)
 	{
@@ -5688,7 +5691,7 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 			pBestPlot = pPlot;
 #ifdef AUI_HOMELAND_PARATROOPERS_PARADROP
 			iTurnsNeeded = iPathTurns;
-#endif // AUI_HOMELAND_PARATROOPERS_PARADROP
+#endif
 			break;
 		}
 	}
@@ -5742,7 +5745,7 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 			}
 #else
 			pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), pBestPlot->getX(), pBestPlot->getY(), MOVE_UNITS_IGNORE_DANGER);
-#endif // AUI_HOMELAND_PARATROOPERS_PARADROP
+#endif
 			return true;
 		}
 	}

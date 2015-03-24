@@ -3850,7 +3850,7 @@ bool CvGlobals::GetHexDebugLayerString(CvPlot* pkPlot, const char* szLayerName, 
 			const int iValue = kPlayer.GetPlotDanger(*pkPlot, ePlayer);
 #else
 			const int iValue = kPlayer.GetPlotDanger(*pkPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 			sprintf_s(szBuffer, uiBufferLength, "%d", iValue);
 		}

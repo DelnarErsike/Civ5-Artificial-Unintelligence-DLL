@@ -15513,7 +15513,7 @@ bool CvUnit::IsUnderEnemyRangedAttack() const
 	int iTotalDamage = AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE;
 #else
 	int iTotalDamage = 0;
-#endif // AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
+#endif
 
 	for(int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
 	{
@@ -15537,7 +15537,7 @@ bool CvUnit::IsUnderEnemyRangedAttack() const
 						}
 #else
 						return true;
-#endif // AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
+#endif
 					}
 				}
 
@@ -15564,7 +15564,7 @@ bool CvUnit::IsUnderEnemyRangedAttack() const
 								if (iTotalDamage >= healRate(plot()) || GetCurrHitPoints() - iTotalDamage <= 0)
 #else
 								if (iTotalDamage > healRate(plot()))
-#endif // AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
+#endif
 								{
 									return true;
 								}
@@ -15583,13 +15583,13 @@ bool CvUnit::IsUnderEnemyRangedAttack() const
 									if (iTotalDamage >= healRate(plot()))
 #else
 									if (iTotalDamage > healRate(plot()))
-#endif // AUI_UNIT_FIX_UNDER_ENEMY_RANGED_ATTACK_HEALRATE
+#endif
 									{
 										return true;
 									}
 								}
 							}
-#endif // AUI_UNIT_CAN_EVER_RANGE_STRIKE_AT_OVERLOAD
+#endif
 						}
 					}
 				}

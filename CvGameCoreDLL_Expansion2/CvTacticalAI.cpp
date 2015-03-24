@@ -443,10 +443,10 @@ void CvTacticalAI::CommandeerUnits()
 				if (bInDanger || NearVisibleEnemy(pLoopUnit, FASTMAX(m_iRecruitRange, pLoopUnit->getDropRange())) ||
 #else
 				if (bInDanger || NearVisibleEnemy(pLoopUnit, MAX(m_iRecruitRange, pLoopUnit->getDropRange())) ||
-#endif // AUI_FAST_COMP
+#endif
 #else
 				if(bInDanger || NearVisibleEnemy(pLoopUnit, m_iRecruitRange) ||
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 #else
 				int iDanger = m_pPlayer->GetPlotDanger(*(pLoopUnit->plot()));
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
@@ -454,11 +454,11 @@ void CvTacticalAI::CommandeerUnits()
 				if (iDanger > 0 || NearVisibleEnemy(pLoopUnit, FASTMAX(m_iRecruitRange, pLoopUnit->getDropRange())) ||
 #else
 				if (iDanger > 0 || NearVisibleEnemy(pLoopUnit, MAX(m_iRecruitRange, pLoopUnit->getDropRange())) ||
-#endif // AUI_FAST_COMP
+#endif
 #else
 				if(iDanger > 0 || NearVisibleEnemy(pLoopUnit, m_iRecruitRange) ||
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
+#endif
 				        pLoopUnit->GetDeployFromOperationTurn() + GC.getAI_TACTICAL_MAP_TEMP_ZONE_TURNS() >= GC.getGame().getGameTurn())
 				{
 					pLoopUnit->setTacticalMove((TacticalAIMoveTypes)m_CachedInfoTypes[eTACTICAL_UNASSIGNED]);
@@ -470,7 +470,7 @@ void CvTacticalAI::CommandeerUnits()
 					pLoopUnit->setTacticalMove((TacticalAIMoveTypes)m_CachedInfoTypes[eTACTICAL_UNASSIGNED]);
 					m_CurrentTurnUnits.push_back(pLoopUnit->GetID());
 				}
-#endif // AUI_HOMELAND_PARATROOPERS_PARADROP
+#endif
 			}
 		}
 	}
@@ -1803,7 +1803,7 @@ void CvTacticalAI::FindTacticalTargets()
 						m_pPlayer->IsPlotUnderImmediateThreat(*pLoopPlot, m_pPlayer->GetID()))
 #else
 				        m_pPlayer->GetPlotDanger(*pLoopPlot) > 0)
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 				{
 					CvCity* pDefenseCity = pLoopPlot->GetAdjacentFriendlyCity(m_pPlayer->getTeam(), true/*bLandOnly*/);
 					if(pDefenseCity)
@@ -1814,7 +1814,7 @@ void CvTacticalAI::FindTacticalTargets()
 						newTarget.SetAuxIntData(pDefenseCity->getThreatValue() + m_pPlayer->GetPlotDanger(*pLoopPlot, pDefenseCity));
 #else
 						newTarget.SetAuxIntData(pDefenseCity->getThreatValue() + m_pPlayer->GetPlotDanger(*pLoopPlot));
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 						m_AllTargets.push_back(newTarget);
 					}
 				}
@@ -2697,7 +2697,7 @@ void CvTacticalAI::PlotMovesToSafety(bool bCombatUnits)
 			iDangerLevel = m_pPlayer->GetPlotDanger(*pPlot, pUnit.pointer());
 #else
 			iDangerLevel = m_pPlayer->GetPlotDanger(*pPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 			if(iDangerLevel > 0)
 			{
 				bool bAddUnit = false;
@@ -2721,7 +2721,7 @@ void CvTacticalAI::PlotMovesToSafety(bool bCombatUnits)
 #else
 						// Everyone else flees if under enemy fire or if at less than or equal to 50% combat strength
 						else if (pUnit->IsUnderEnemyRangedAttack() || pUnit->GetBaseCombatStrengthConsideringDamage() * 2 <= pUnit->GetBaseCombatStrength())
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 						{
 							bAddUnit = true;
 						}
@@ -2739,7 +2739,7 @@ void CvTacticalAI::PlotMovesToSafety(bool bCombatUnits)
 					if (!pUnit->isBarbarian() && !bAddUnit)
 #else
 					else if(!pUnit->isBarbarian())
-#endif // AUI_TACTICAL_FIX_PLOT_MOVES_TO_SAFETY_NOT_MAX_HEALTH_CHECK_DANGER
+#endif
 					{
 #ifdef AUI_TACTICAL_TWEAKED_ACCEPTABLE_DANGER
 						iAcceptableDanger = pUnit->GetBaseCombatStrengthConsideringDamage() * (int)(AUI_TACTICAL_TWEAKED_ACCEPTABLE_DANGER + 0.5 + 
@@ -2747,13 +2747,13 @@ void CvTacticalAI::PlotMovesToSafety(bool bCombatUnits)
 #else
 						int iAcceptableDanger;
 						iAcceptableDanger = pUnit->GetBaseCombatStrengthConsideringDamage() * 100;
-#endif // AUI_TACTICAL_TWEAKED_ACCEPTABLE_DANGER
+#endif
 						if(iDangerLevel > iAcceptableDanger)
 						{
 							bAddUnit = true;
 						}
 					}
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 				}
 				else
 				{
@@ -2809,7 +2809,7 @@ void CvTacticalAI::PlotMovesToSafety(bool bCombatUnits)
 			}
 		}
 	}
-#endif // AUI_TACTICAL_DISBAND_UNSAFE_CIVILIANS
+#endif
 }
 
 /// Move units to a better location
@@ -3394,33 +3394,30 @@ void CvTacticalAI::PlotHealMoves()
 		{
 			// Am I under 100% health and not embarked or already in a city?
 #ifdef AUI_TACTICAL_TWEAKED_HEAL_MOVES
-			if (pUnit->healRate(pUnit->plot()) <= 0)
+			// If plot is under threat, make sure we don't overheal; also, never actively stop to heal
+			if (pUnit->healRate(pUnit->plot()) <= 0 || pUnit->isAlwaysHeal() || pUnit->isEmbarked())
 				continue;
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 			int iDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()), pUnit.pointer());
-#endif // AUI_DANGER_PLOTS_REMADE
-			// If plot is under threat, make sure we don't overheal; also, never actively stop to heal 
-			if (!pUnit->isAlwaysHeal() && !pUnit->isEmbarked() && !pUnit->plot()->isCity() &&
-#ifdef AUI_DANGER_PLOTS_REMADE
-				(iDanger <= 0 && pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints()) ||
-				(pUnit->GetCurrHitPoints() + pUnit->healRate(pUnit->plot()) <= pUnit->GetMaxHitPoints() + iDanger))
+			if((iDanger <= 0 && pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints()) || 
+				(pUnit->GetCurrHitPoints() + pUnit->healRate(pUnit->plot()) <= pUnit->GetMaxHitPoints() + iDanger && iDanger <= pUnit->healRate(pUnit->plot())))
 #else
 				((m_pPlayer->GetPlotDanger(*(pUnit->plot())) <= 0 && pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints()) ||
 				(m_pPlayer->GetPlotDanger(*(pUnit->plot())) > 0 && pUnit->GetCurrHitPoints() + pUnit->healRate(pUnit->plot()) < pUnit->GetMaxHitPoints())))
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 #else
 			if(pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints() && !pUnit->isEmbarked() && !pUnit->plot()->isCity())
-#endif // AUI_TACTICAL_TWEAKED_HEAL_MOVES
+#endif
 			{
 				// If I'm a naval unit I need to be in friendly territory
 				if(pUnit->getDomainType() != DOMAIN_SEA || pUnit->plot()->IsFriendlyTerritory(m_pPlayer->GetID()))
 				{
 #ifdef AUI_DANGER_PLOTS_REMADE
-					if (!pUnit->IsUnderEnemyRangedAttack() && iDanger < pUnit->GetCurrHitPoints())
+					if (iDanger < pUnit->GetCurrHitPoints())
 #else
 					if (!pUnit->IsUnderEnemyRangedAttack())
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 					{
 						unit.SetID(pUnit->GetID());
 						m_CurrentMoveUnits.push_back(unit);
@@ -3458,7 +3455,7 @@ void CvTacticalAI::PlotCampDefenseMoves()
 			(!pCampDefender || (m_CurrentMoveUnits.size() > 0 && ExecuteMoveOfBlockingUnit(pCampDefender, m_pPlayer->getUnit(m_CurrentMoveUnits[0].GetID()), true))))
 #else
 		if(FindUnitsWithinStrikingDistance(pPlot, 1, 0, true /* bNoRangedUnits */, false /*bNavalOnly*/, false /*bMustMoveThrough*/))
-#endif // AUI_TACTICAL_FIX_USE_FIND_CLOSEST_TARGET	
+#endif
 		{
 			ExecuteMoveToPlot(pPlot);
 
@@ -3474,7 +3471,7 @@ void CvTacticalAI::PlotCampDefenseMoves()
 		else if (!pCampDefender && FindClosestUnit(pPlot, 1, false, true /* bMustBeRangedUnit */))
 #else
 		else if (FindUnitsWithinStrikingDistance(pPlot, 1, 0, false /* bNoRangedUnits */, false /*bNavalOnly*/, false /*bMustMoveThrough*/))
-#endif // AUI_TACTICAL_FIX_USE_FIND_CLOSEST_TARGET
+#endif
 		{
 			ExecuteMoveToPlot(pPlot);
 
@@ -3485,7 +3482,7 @@ void CvTacticalAI::PlotCampDefenseMoves()
 				LogTacticalMessage(strLogString);
 			}
 		}
-#endif // AUI_TACTICAL_FIX_CAMP_DEFENSE_RANGED_CAN_DEFEND
+#endif
 		pTarget = GetNextZoneTarget();
 	}
 }
@@ -3632,7 +3629,7 @@ void CvTacticalAI::PlotAirInterceptMoves()
 				int iRange = GC.getUnitInfo(pUnit->getUnitType())->GetAirInterceptRange();
 				pUnitPlot = pUnit->plot();
 #ifdef AUI_DANGER_PLOTS_REMADE	
-				if (m_pPlayer->GetPlotDanger(*pUnitPlot, pUnit.pointer(), AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
+				if (m_pPlayer->GetPlotDanger(*pUnitPlot, pUnit.pointer(), NULL, AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
 				{
 					continue;
 				}
@@ -3645,12 +3642,12 @@ void CvTacticalAI::PlotAirInterceptMoves()
 #else
 					int iMaxDX = iRange - MAX(0, iDY);
 					for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 					{
 						pEvalPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
 						if (pEvalPlot && pEvalPlot != pUnitPlot)
 						{
-							if (m_pPlayer->GetPlotDanger(*pEvalPlot, pUnit.pointer(), AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
+							if (m_pPlayer->GetPlotDanger(*pEvalPlot, pUnit.pointer(), NULL, AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
 							{
 								bCouldDieFromSweep = true;
 								goto EndLoop;
@@ -4292,17 +4289,17 @@ void CvTacticalAI::PlotWithdrawMoves()
 					if(plotDistance(pZone->GetClosestCity()->getX(), pZone->GetClosestCity()->getY(), pUnit->getX(), pUnit->getY()) <= FASTMAX(m_iRecruitRange, pUnit->getDropRange()))
 #else
 					if(plotDistance(pZone->GetClosestCity()->getX(), pZone->GetClosestCity()->getY(), pUnit->getX(), pUnit->getY()) <= MAX(m_iRecruitRange, pUnit->getDropRange()))
-#endif // AUI_FAST_COMP
+#endif
 #else
 					if(plotDistance(pZone->GetClosestCity()->getX(), pZone->GetClosestCity()->getY(), pUnit->getX(), pUnit->getY()) <= m_iRecruitRange)
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 					{
 						CvPlot* pPlot = pUnit->plot();
 #ifdef AUI_DANGER_PLOTS_REMADE
 						if (m_pPlayer->GetPlotDanger(*pPlot, pUnit.pointer()) > 0)
 #else
 						if(m_pPlayer->GetPlotDanger(*pPlot) > 0)
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 						{
 							if(pUnit->plot()->getOwner() != pUnit->getOwner())
 							{
@@ -4321,7 +4318,7 @@ void CvTacticalAI::PlotWithdrawMoves()
 					if (m_pPlayer->GetPlotDanger(*pPlot, pUnit.pointer()) > 0)
 #else
 					if(m_pPlayer->GetPlotDanger(*pPlot) > 0)
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 					{
 						if(pUnit->plot()->getOwner() != pUnit->getOwner())
 						{
@@ -4497,7 +4494,7 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 		if(pEscort->GeneratePath(pCivilian->plot(), 0, false, &iEscortTurns))
 #else
 		if(pEscort->GeneratePath(pCivilian->plot()))
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 		{
 			// He can, so have civilian remain in place
 #ifdef AUI_TACTICAL_PLOT_SINGLE_HEX_OPERATION_MOVES_CIVILIAN_TO_SAFETY
@@ -4505,13 +4502,13 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 			if (m_pPlayer->GetPlotDanger(*(pCivilian->plot()), pCivilian.pointer()) < pCivilian->GetCurrHitPoints())
 #else
 			if (!m_pPlayer->IsPlotUnderImmediateThreat(*(pCivilian->plot())))
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 			{
 				ExecuteMoveToPlot(pCivilian, pCivilian->plot());
 			}
 #else
 			ExecuteMoveToPlot(pCivilian, pCivilian->plot());
-#endif // AUI_TACTICAL_PLOT_SINGLE_HEX_OPERATION_MOVES_CIVILIAN_TO_SAFETY
+#endif
 
 			if(pThisArmy->GetNumSlotsFilled() > 1)
 			{
@@ -4522,7 +4519,7 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 					ExecuteMoveToPlot(pEscort, pCivilian->plot(), true, iEscortTurns);
 #else
 					ExecuteMoveToPlot(pEscort, pCivilian->plot());
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 					if(GC.getLogging() && GC.getAILogging())
 					{
 						CvString strTemp;
@@ -4560,7 +4557,7 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 							{
 								ExecuteMoveToPlot(pEscort, pPlot);
 								ExecuteMoveToPlot(pCivilian, pPlot);
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 								if(GC.getLogging() && GC.getAILogging())
 								{
 									CvString strTemp;
@@ -4586,13 +4583,13 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 			if (m_pPlayer->GetPlotDanger(*(pCivilian->plot()), pCivilian.pointer()) < pCivilian->GetCurrHitPoints())
 #else
 			if (!m_pPlayer->IsPlotUnderImmediateThreat(*(pCivilian->plot())))
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 			{
 				pCivilian->finishMoves();
 			}
 #else
 			pCivilian->finishMoves();
-#endif // AUI_TACTICAL_PLOT_SINGLE_HEX_OPERATION_MOVES_CIVILIAN_TO_SAFETY
+#endif
 			pEscort->finishMoves();
 			if(GC.getLogging() && GC.getAILogging())
 			{
@@ -4623,7 +4620,7 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 			if(!pCivilian->GeneratePath(pOperation->GetTargetPlot(), iFlags, false /*bReuse*/, &iCivilianTurns))
 #else
 			if(!pCivilian->GeneratePath(pOperation->GetTargetPlot(), iFlags, false /*bReuse*/))
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 			{
 				pOperation->RetargetCivilian(pCivilian.pointer(), pThisArmy);
 #ifdef AUI_TACTICAL_PLOT_SINGLE_HEX_OPERATION_MOVES_CIVILIAN_TO_SAFETY
@@ -4631,13 +4628,13 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 				if (m_pPlayer->GetPlotDanger(*(pCivilian->plot()), pCivilian.pointer()) < pCivilian->GetCurrHitPoints())
 #else
 				if (!m_pPlayer->IsPlotUnderImmediateThreat(*(pCivilian->plot())))
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 				{
 					pCivilian->finishMoves();
 				}
 #else
 				pCivilian->finishMoves();
-#endif // AUI_TACTICAL_PLOT_SINGLE_HEX_OPERATION_MOVES_CIVILIAN_TO_SAFETY
+#endif
 				pEscort = m_pPlayer->getUnit(pThisArmy->GetNextUnitID());
 				if(pEscort)
 				{
@@ -4661,7 +4658,7 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 					ExecuteMoveToPlot(pCivilian, pCivilianMove, bSaveMoves, iCivilianTurns);
 #else
 					ExecuteMoveToPlot(pCivilian, pCivilianMove, bSaveMoves);
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 					if(GC.getLogging() && GC.getAILogging())
 					{
 						CvString strLogString;
@@ -4689,11 +4686,11 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 					if(TurnsToReachTarget(pEscort, pCivilianMove, false, false, false, 1) <= 1)
 #else
 					if(TurnsToReachTarget(pEscort, pCivilianMove) <= 1)
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 					{
 						ExecuteMoveToPlot(pCivilian, pCivilianMove, bSaveMoves);
 						ExecuteMoveToPlot(pEscort, pCivilianMove);
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 						if(GC.getLogging() && GC.getAILogging())
 						{
 							CvString strLogString;
@@ -4720,7 +4717,7 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 							if(!pEscort->GeneratePath(pOperation->GetTargetPlot(), 0, false /*bReuse*/, &iEscortNewTurns))
 #else
 							if(!pEscort->GeneratePath(pOperation->GetTargetPlot(), 0, false /*bReuse*/))
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 							{
 								pOperation->RetargetCivilian(pCivilian.pointer(), pThisArmy);
 #ifdef AUI_TACTICAL_PLOT_SINGLE_HEX_OPERATION_MOVES_CIVILIAN_TO_SAFETY
@@ -4728,13 +4725,13 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 								if (m_pPlayer->GetPlotDanger(*(pCivilian->plot()), pCivilian.pointer()) < pCivilian->GetCurrHitPoints())
 #else
 								if (!m_pPlayer->IsPlotUnderImmediateThreat(*(pCivilian->plot())))
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 								{
 									pCivilian->finishMoves();
 								}
 #else
 								pCivilian->finishMoves();
-#endif // AUI_TACTICAL_PLOT_SINGLE_HEX_OPERATION_MOVES_CIVILIAN_TO_SAFETY
+#endif
 								pEscort->finishMoves();
 								if(GC.getLogging() && GC.getAILogging())
 								{
@@ -4761,11 +4758,11 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 								if(TurnsToReachTarget(pCivilian, pEscortMove, false, false, false, 1) <= 1)
 #else
 								if(TurnsToReachTarget(pCivilian, pEscortMove) <= 1)
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 								{
 									ExecuteMoveToPlot(pEscort, pEscortMove);
 									ExecuteMoveToPlot(pCivilian, pEscortMove, bSaveMoves);
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 									if(GC.getLogging() && GC.getAILogging())
 									{
 										CvString strLogString;
@@ -4843,13 +4840,13 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 								if (m_pPlayer->GetPlotDanger(*(pCivilian->plot()), pCivilian.pointer()) < pCivilian->GetCurrHitPoints())
 #else
 								if (!m_pPlayer->IsPlotUnderImmediateThreat(*(pCivilian->plot())))
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 								{
 									pCivilian->finishMoves();
 								}
 #else
 								pCivilian->finishMoves();
-#endif // AUI_TACTICAL_PLOT_SINGLE_HEX_OPERATION_MOVES_CIVILIAN_TO_SAFETY
+#endif
 								pEscort->finishMoves();
 								if(GC.getLogging() && GC.getAILogging())
 								{
@@ -7175,7 +7172,7 @@ void CvTacticalAI::ExecuteAttack(CvCity* pTargetCity, bool bInflictWhatWeTake, b
 													if (TurnsToReachTarget(pUnit, *it, false /*bReusePaths*/, false /*bIgnoreUnits*/, false /*bIgnoreStacking*/, 0) == 0)
 #else
 													if (TurnsToReachTarget(pUnit, *it, false /*bReusePaths*/, false /*bIgnoreUnits*/, false /*bIgnoreStacking*/) == 0)
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 													{
 														// Move up there
 														pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), (*it)->getX(), (*it)->getY());
@@ -7337,7 +7334,7 @@ void CvTacticalAI::ExecuteAttack(CvCity* pTargetCity, bool bInflictWhatWeTake, b
 
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 								CheckAndExecuteFreePillageMoves(pUnit);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 
 								pUnit->SetTacticalAIPlot(NULL);
 								UnitProcessed(m_CurrentMoveUnits[iI].GetID());
@@ -7393,7 +7390,16 @@ void CvTacticalAI::ExecuteAttack(CvCity* pTargetCity, bool bInflictWhatWeTake, b
 
 			if (pUnit)
 			{
-				if (pUnit->canMove() && (!bMustSurviveAttack || ((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage()) < pUnit->GetMaxHitPoints()) ||
+#ifdef AUI_DANGER_PLOTS_REMADE
+				int iDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()), pUnit.pointer());
+#endif
+				if (pUnit->canMove() && (!bMustSurviveAttack || 
+#ifdef AUI_DANGER_PLOTS_REMADE
+					(m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() + iDanger < pUnit->GetMaxHitPoints()) || 
+					(pUnit->getDamage() + iDanger >= pUnit->GetMaxHitPoints()) ||
+#else
+					((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage()) < pUnit->GetMaxHitPoints()) ||
+#endif
 					(bLandMeleeBlocked && pUnit->getDomainType() != DOMAIN_SEA) || (bSeaMeleeBlocked && pUnit->getDomainType() != DOMAIN_LAND)))
 				{
 					// Are we a melee unit
@@ -7496,7 +7502,13 @@ void CvTacticalAI::ExecuteAttack(CvCity* pTargetCity, bool bInflictWhatWeTake, b
 		UnitHandle pUnit = m_pPlayer->getUnit(apMeleeUnitsBlocked[iI].GetID());
 		if (pUnit)
 		{
-			if (pUnit->canMove() && (!bMustSurviveAttack || ((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage()) < pUnit->GetMaxHitPoints())))
+#ifdef AUI_DANGER_PLOTS_REMADE
+			int iDanger = m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer());
+			if (pUnit->canMove() && (!bMustSurviveAttack || (m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() + iDanger < pUnit->GetMaxHitPoints()) ||
+				(pUnit->getDamage() + iDanger >= pUnit->GetMaxHitPoints())))
+#else
+			if (pUnit->canMove() && (!bMustSurviveAttack || (m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() < pUnit->GetMaxHitPoints())))
+#endif
 			{
 				bool unitHasMoved = false;
 
@@ -7593,7 +7605,13 @@ void CvTacticalAI::ExecuteAttack(CvCity* pTargetCity, bool bInflictWhatWeTake, b
 
 			if (pUnit)
 			{
-				if (pUnit->getMoves() > 0 && (!bMustSurviveAttack || ((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage()) < pUnit->GetMaxHitPoints())))
+#ifdef AUI_DANGER_PLOTS_REMADE
+				int iDanger = m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer());
+				if (pUnit->canMove() && (!bMustSurviveAttack || (m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() + iDanger < pUnit->GetMaxHitPoints()) ||
+					(pUnit->getDamage() + iDanger >= pUnit->GetMaxHitPoints())))
+#else
+				if (pUnit->getMoves() > 0 && (!bMustSurviveAttack || (m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() < pUnit->GetMaxHitPoints())))
+#endif				
 				{
 					// Are we a melee unit
 					if (!pUnit->IsCanAttackRanged() && (!pUnit->isNoCapture() || iDamageRemaining > 1))
@@ -7850,7 +7868,13 @@ void CvTacticalAI::ExecuteAttack(CvUnit* pTargetUnit, bool bInflictWhatWeTake, b
 		UnitHandle pUnit = m_pPlayer->getUnit(m_CurrentMoveUnits[iI].GetID());
 		if (pUnit)
 		{
-			if (pUnit->canMove() && (!bMustSurviveAttack || ((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage()) < pUnit->GetMaxHitPoints())))
+#ifdef AUI_DANGER_PLOTS_REMADE
+			if (pUnit->canMove() && (!bMustSurviveAttack || 
+				(m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() + m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer(), pTargetUnit) < pUnit->GetMaxHitPoints()) ||
+				(pUnit->getDamage() + m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer()) >= pUnit->GetMaxHitPoints())))
+#else
+			if (pUnit->getMoves() > 0 && (!bMustSurviveAttack || (m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() < pUnit->GetMaxHitPoints())))
+#endif	
 			{
 				// Are we a melee unit
 				if (!pUnit->IsCanAttackRanged())
@@ -8116,7 +8140,13 @@ void CvTacticalAI::ExecuteAttack(CvUnit* pTargetUnit, bool bInflictWhatWeTake, b
 
 			if (pUnit)
 			{
-				if (pUnit->canMove() && (!bMustSurviveAttack || ((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage()) < pUnit->GetMaxHitPoints()) ||
+				if (pUnit->canMove() && (!bMustSurviveAttack ||
+#ifdef AUI_DANGER_PLOTS_REMADE
+					(m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() + m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer(), pTargetUnit) < pUnit->GetMaxHitPoints()) ||
+					(pUnit->getDamage() + m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer()) >= pUnit->GetMaxHitPoints()) ||
+#else
+					((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage()) < pUnit->GetMaxHitPoints()) ||
+#endif
 					(bLandMeleeBlocked && pUnit->getDomainType() != DOMAIN_SEA) || (bSeaMeleeBlocked && pUnit->getDomainType() != DOMAIN_LAND)))
 				{
 					// Are we a melee unit
@@ -8213,7 +8243,13 @@ void CvTacticalAI::ExecuteAttack(CvUnit* pTargetUnit, bool bInflictWhatWeTake, b
 		UnitHandle pUnit = m_pPlayer->getUnit(apMeleeUnitsBlocked[iI].GetID());
 		if (pUnit)
 		{
+#ifdef AUI_DANGER_PLOTS_REMADE
+			if (pUnit->canMove() && (!bMustSurviveAttack ||
+				(m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() + m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer(), pTargetUnit) < pUnit->GetMaxHitPoints()) ||
+				(pUnit->getDamage() + m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer()) >= pUnit->GetMaxHitPoints())))
+#else
 			if (pUnit->canMove() && (!bMustSurviveAttack || ((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage()) < pUnit->GetMaxHitPoints())))
+#endif
 			{
 				bool unitHasMoved = false;
 
@@ -8310,7 +8346,13 @@ void CvTacticalAI::ExecuteAttack(CvUnit* pTargetUnit, bool bInflictWhatWeTake, b
 
 			if (pUnit)
 			{
+#ifdef AUI_DANGER_PLOTS_REMADE
+				if (pUnit->canMove() && (!bMustSurviveAttack ||
+					(m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage() + m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer(), pTargetUnit) < pUnit->GetMaxHitPoints()) ||
+					(pUnit->getDamage() + m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer()) >= pUnit->GetMaxHitPoints())))
+#else
 				if (pUnit->getMoves() > 0 && (!bMustSurviveAttack || ((m_CurrentMoveUnits[iI].GetExpectedSelfDamage() + pUnit->getDamage()) < pUnit->GetMaxHitPoints())))
+#endif
 				{
 					// Are we a melee unit
 					if (!pUnit->IsCanAttackRanged())
@@ -8781,7 +8823,7 @@ void CvTacticalAI::ExecuteRepositionMoves()
 	CvPlot* pBestPlot = NULL;
 #ifdef AUI_TACTICAL_EXECUTE_REPOSITION_MOVES_PATROL_IF_MOVES_REMAIN
 	CvPlot* pRepositionPlot;
-#endif // AUI_TACTICAL_EXECUTE_REPOSITION_MOVES_PATROL_IF_MOVES_REMAIN
+#endif
 	CvString strTemp;
 
 	for(unsigned int iI = 0; iI < m_CurrentMoveUnits.size(); iI++)
@@ -8793,7 +8835,7 @@ void CvTacticalAI::ExecuteRepositionMoves()
 
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 			CheckAndExecuteFreePillageMoves(pUnit, MAX_INT);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 			// LAND MOVES
 			if(pUnit->getDomainType() == DOMAIN_LAND)
 			{
@@ -8802,10 +8844,10 @@ void CvTacticalAI::ExecuteRepositionMoves()
 				pBestPlot = FindNearbyTarget(pUnit, FASTMAX(m_iRepositionRange, pUnit->getDropRange()));
 #else
 				pBestPlot = FindNearbyTarget(pUnit, MAX(m_iRepositionRange, pUnit->getDropRange()));
-#endif // AUI_FAST_COMP
+#endif
 #else
 				pBestPlot = FindNearbyTarget(pUnit, m_iRepositionRange);
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 
 				if(pBestPlot)
 				{
@@ -8813,13 +8855,13 @@ void CvTacticalAI::ExecuteRepositionMoves()
 					{
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 						CheckAndExecuteFreePillageMoves(pUnit);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 #ifdef AUI_TACTICAL_EXECUTE_REPOSITION_MOVES_PATROL_IF_MOVES_REMAIN
 #ifdef AUI_DANGER_PLOTS_REMADE
-						if (pUnit->getMoves() > 0 && m_pPlayer->IsPlotUnderImmediateThreat(*pUnit->plot(), pUnit.pointer()))
+						if (pUnit->getMoves() > 0)
 #else
 						if (m_pPlayer->GetPlotDanger(*pUnit->plot()) > 0 && pUnit->getMoves() > 0)
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 						{
 							pRepositionPlot = GetBestRepositionPlot(pUnit, pBestPlot, 1);
 							if (pRepositionPlot)
@@ -8827,7 +8869,7 @@ void CvTacticalAI::ExecuteRepositionMoves()
 								pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), pRepositionPlot->getX(), pRepositionPlot->getY());
 							}
 						}
-#endif // AUI_TACTICAL_EXECUTE_REPOSITION_MOVES_PATROL_IF_MOVES_REMAIN
+#endif
 						pUnit->finishMoves();
 						UnitProcessed(m_CurrentMoveUnits[iI].GetID(), pUnit->IsCombatUnit());
 						if(GC.getLogging() && GC.getAILogging())
@@ -8992,16 +9034,16 @@ void CvTacticalAI::ExecuteMovesToSafestPlot()
 						continue;
 #else
 					iDanger = m_pPlayer->GetPlotDanger(*pPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 					bool bIsZeroDanger = (iDanger <= 0);
 					bool bIsInCity = pPlot->isFriendlyCity(*pUnit, false);
 					bool bIsInCover = (pPlot->getNumDefenders(ePlayerID) > 0) && !pUnit->IsCanDefend(pPlot); // only move to cover if I'm defenseless here
 #ifndef AUI_DANGER_PLOTS_REMADE
 					bool bIsInTerritory = (pPlot->getTeam() == ePlayerTeam);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 #ifdef AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_HIGH_DANGER_EMBARK
 					bool bNeedEmbark = ((eUnitDomain == DOMAIN_LAND) && (!pUnit->plot()->isWater()) && (pPlot->isWater()));
-#endif // AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_HIGH_DANGER_EMBARK
+#endif
 
 #if defined(PATH_PLAN_LAST)
 #ifdef AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_HIGH_DANGER_EMBARK
@@ -9013,11 +9055,11 @@ void CvTacticalAI::ExecuteMovesToSafestPlot()
 						iDanger = FASTMIN(iCombatMod * 900, 99999);
 #else
 						iDanger = MIN(iCombatMod * 900, 99999);
-#endif // AUI_FAST_COMP
+#endif
 						aDangerList.push_back(pPlot, iDanger);
 					}
 					else
-#endif // AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_HIGH_DANGER_EMBARK
+#endif
 					if(bIsInCity)
 					{
 #ifdef AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_LOW_DANGER_CITY
@@ -9025,7 +9067,7 @@ void CvTacticalAI::ExecuteMovesToSafestPlot()
 						aCityList.push_back(pPlot, int(iDanger * dCombatMod + 0.5));
 #else
 						aCityList.push_back(pPlot, iDanger);
-#endif // AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_LOW_DANGER_CITY
+#endif
 					}
 					else
 					if(bIsZeroDanger)
@@ -9034,7 +9076,7 @@ void CvTacticalAI::ExecuteMovesToSafestPlot()
 						aZeroDangerList.push_back(pPlot, iDanger);
 #else
 						aZeroDangerList.push_back(pPlot, (bIsInTerritory)?0:1);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 					}
 					else
 					if(bIsInCover)
@@ -11615,7 +11657,7 @@ CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget
 
 	if (pUnit->GetMovablePlotListOpt(movePlotList, plotTarget, false, iWithinTurns))
 	{
-		int iMinDanger = m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer());;
+		int iMinDanger = m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit.pointer());
 		int iMaxAttack = 0;
 		int iCurrentDanger;
 		int iCurrentAttack = 0;
@@ -11632,7 +11674,7 @@ CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget
 				iMaxAttack = pUnit->GetMaxRangedCombatStrength(pTargetUnit, pTargetCity, true, true);
 #else
 				iCurrentAttack = iMaxAttack;
-#endif // #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#endif
 			else
 				iMaxAttack = pUnit->GetMaxAttackStrength(NULL, plotTarget, pTargetUnit);
 		}
@@ -11651,7 +11693,7 @@ CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget
 #else
 				if (!bIsRanged)
 					iCurrentAttack = pUnit->GetMaxAttackStrength((*it), plotTarget, pTargetUnit);
-#endif // AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#endif
 			}
 			
 			if (iCurrentAttack >= iMaxAttack)
@@ -11660,7 +11702,7 @@ CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget
 				iCurrentDanger = m_pPlayer->GetPlotDanger(*(*it), pUnit.pointer());
 #else
 				iCurrentDanger = m_pPlayer->GetPlotDanger(*(*it));
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 				if (iCurrentDanger < iMinDanger || iCurrentAttack > iMaxAttack)
 				{
 					pBestRepositionPlot = (*it);
@@ -11673,7 +11715,7 @@ CvPlot* CvTacticalAI::GetBestRepositionPlot(UnitHandle pUnit, CvPlot* plotTarget
 
 	return pBestRepositionPlot;
 }
-#endif // AUI_TACTICAL_HELPERS_POSITIONING_AND_ORDER
+#endif
 
 /// Disable a move (probably because it is incompatible with a posture chosen)
 void CvTacticalAI::TurnOffMove(TacticalAIMoveTypes eType)
@@ -13019,7 +13061,7 @@ int CvTacticalAI::ComputeTotalExpectedDamage(CvTacticalTarget* pTarget, CvPlot* 
 					}
 #else
 					int iAttackerStrength = pAttacker->GetMaxAttackStrength(NULL, pTargetPlot, NULL);
-#endif // AUI_TACTICAL_FIX_COMPUTE_EXPECTED_DAMAGE_MELEE
+#endif
 					int iDefenderStrength = pDefender->GetMaxDefenseStrength(pTargetPlot, pAttacker.pointer());
 					UnitHandle pFireSupportUnit = CvUnitCombat::GetFireSupportUnit(pDefender->getOwner(), pTargetPlot->getX(), pTargetPlot->getY(), pAttacker->getX(), pAttacker->getY());
 					int iDefenderFireSupportCombatDamage = 0;
@@ -13173,12 +13215,12 @@ bool CvTacticalAI::MoveToEmptySpaceNearTarget(UnitHandle pUnit, CvPlot* pTarget,
 	{
 		return true;
 	}
-#endif // AUI_TACTICAL_FIX_MOVE_TO_EMPTY_SPACE_FROM_TARGET_CHECK_UNIT_PLOT_FIRST
+#endif
 
 	CvPlot* pLoopPlot;
 #ifdef AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER
 	CvWeightedVector<CvPlot*, NUM_DIRECTION_TYPES, true> pPossiblePlots;
-#endif // AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER
+#endif
 #if defined(AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL) || defined(AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER)
 	int iTurnsNeeded;
 #endif
@@ -13219,9 +13261,9 @@ bool CvTacticalAI::MoveToEmptySpaceNearTarget(UnitHandle pUnit, CvPlot* pTarget,
 							// Go ahead with mission
 							bool bMoveWasSafe;
 							MoveToUsingSafeEmbark(pUnit, pLoopPlot, bMoveWasSafe);
-#endif // AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
+#endif
 							return true;
-#endif // AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER	
+#endif
 						}
 					}
 				}
@@ -13236,7 +13278,7 @@ bool CvTacticalAI::MoveToEmptySpaceNearTarget(UnitHandle pUnit, CvPlot* pTarget,
 		pLoopPlot = pPossiblePlots.GetElement(0);
 #ifdef AUI_DANGER_PLOTS_REMADE
 		int iCurrentDanger = m_pPlayer->GetPlotDanger(*pLoopPlot, pUnit.pointer());
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 		for (int iI = 1; iI < pPossiblePlots.size(); iI++)
 		{
 			if (pPossiblePlots.GetWeight(iI) == iTurnsNeeded)
@@ -13247,12 +13289,12 @@ bool CvTacticalAI::MoveToEmptySpaceNearTarget(UnitHandle pUnit, CvPlot* pTarget,
 				if (iCurrentDanger > iTempDanger)
 #else
 				if (m_pPlayer->GetPlotDanger(*pLoopPlot) > m_pPlayer->GetPlotDanger(*pPossiblePlots.GetElement(iI)))
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 				{
 					pLoopPlot = pTempPlot;
 #ifdef AUI_DANGER_PLOTS_REMADE
 					iCurrentDanger = iTempDanger;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 				}
 			}
 			else
@@ -13265,10 +13307,10 @@ bool CvTacticalAI::MoveToEmptySpaceNearTarget(UnitHandle pUnit, CvPlot* pTarget,
 		MoveToUsingSafeEmbark(pUnit, pLoopPlot, bMoveWasSafe, iTurnsNeeded, true);
 #else
 		MoveToUsingSafeEmbark(pUnit, pLoopPlot, bMoveWasSafe);
-#endif // AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
+#endif
 		return true;
 	}
-#endif // AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER
+#endif
 	return false;
 }
 
@@ -13280,12 +13322,12 @@ bool CvTacticalAI::MoveToEmptySpaceTwoFromTarget(UnitHandle pUnit, CvPlot* pTarg
 	{
 		return true;
 	}
-#endif // AUI_TACTICAL_FIX_MOVE_TO_EMPTY_SPACE_FROM_TARGET_CHECK_UNIT_PLOT_FIRST
+#endif
 
 	CvPlot* pLoopPlot;
 #ifdef AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER
 	CvWeightedVector<CvPlot*, NUM_CITY_PLOTS - 1, true> pPossiblePlots;
-#endif // AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER
+#endif
 #if defined(AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL) || defined(AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER)
 	int iTurnsNeeded;
 #endif
@@ -13326,9 +13368,9 @@ bool CvTacticalAI::MoveToEmptySpaceTwoFromTarget(UnitHandle pUnit, CvPlot* pTarg
 							// Go ahead with mission
 							bool bMoveWasSafe;
 							MoveToUsingSafeEmbark(pUnit, pLoopPlot, bMoveWasSafe);
-#endif // AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
+#endif
 							return true;
-#endif // AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER
+#endif
 						}
 					}
 				}
@@ -13343,7 +13385,7 @@ bool CvTacticalAI::MoveToEmptySpaceTwoFromTarget(UnitHandle pUnit, CvPlot* pTarg
 		pLoopPlot = pPossiblePlots.GetElement(0);
 #ifdef AUI_DANGER_PLOTS_REMADE
 		int iCurrentDanger = m_pPlayer->GetPlotDanger(*pLoopPlot, pUnit.pointer());
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 		for (int iI = 1; iI < pPossiblePlots.size(); iI++)
 		{
 			if (pPossiblePlots.GetWeight(iI) == iTurnsNeeded)
@@ -13354,12 +13396,12 @@ bool CvTacticalAI::MoveToEmptySpaceTwoFromTarget(UnitHandle pUnit, CvPlot* pTarg
 				if (iCurrentDanger > iTempDanger)
 #else
 				if (m_pPlayer->GetPlotDanger(*pLoopPlot) > m_pPlayer->GetPlotDanger(*pPossiblePlots.GetElement(iI)))
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 				{
 					pLoopPlot = pTempPlot;
 #ifdef AUI_DANGER_PLOTS_REMADE
 					iCurrentDanger = iTempDanger;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 				}
 			}
 			else
@@ -13372,10 +13414,10 @@ bool CvTacticalAI::MoveToEmptySpaceTwoFromTarget(UnitHandle pUnit, CvPlot* pTarg
 		MoveToUsingSafeEmbark(pUnit, pLoopPlot, bMoveWasSafe, iTurnsNeeded, true);
 #else
 		MoveToUsingSafeEmbark(pUnit, pLoopPlot, bMoveWasSafe);
-#endif // AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
+#endif
 		return true;
 	}
-#endif // AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER
+#endif
 	return false;
 }
 
@@ -13384,7 +13426,7 @@ bool CvTacticalAI::MoveToEmptySpaceTwoFromTarget(UnitHandle pUnit, CvPlot* pTarg
 bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, bool &bMoveWasSafe, int iPathTurns, bool bPathGenerated)
 #else
 bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, bool &bMoveWasSafe)
-#endif // AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
+#endif
 {
 	bMoveWasSafe = true;
 
@@ -13393,7 +13435,7 @@ bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, 
 	{
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 		CheckAndExecuteFreePillageMoves(pUnit, MAX_INT);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 		if (!CheckAndExecuteParadrop(pUnit, pTargetPlot))
 		{
@@ -13401,10 +13443,10 @@ bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, 
 		}
 #else
 		pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), pTargetPlot->getX(), pTargetPlot->getY());
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 		CheckAndExecuteFreePillageMoves(pUnit);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 		return true;
 	}
 
@@ -13417,15 +13459,15 @@ bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, 
 	int iTurnsToTarget = MAX_INT;
 	// If a land unit, get path to target
 	if(!pUnit->GeneratePath(pTargetPlot, MOVE_UNITS_IGNORE_DANGER, false, &iTurnsToTarget))
-#endif // #ifdef AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
+#endif
 #else
 	// If a land unit, get path to target
 #ifdef AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
 	if (bPathGenerated || !pUnit->GeneratePath(pTargetPlot, MOVE_UNITS_IGNORE_DANGER))
 #else
 	if(!pUnit->GeneratePath(pTargetPlot))
-#endif // AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
+#endif
 	{
 		// No path this may happen if a unit has moved up and blocked our path to our target plot
 		// If calling routine is moving a bunch of units like this it should retry these units
@@ -13442,7 +13484,7 @@ bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, 
 		{
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 			CheckAndExecuteFreePillageMoves(pUnit, MAX_INT);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 			if (!CheckAndExecuteParadrop(pUnit, pTargetPlot, iTurnsToTarget))
 			{
@@ -13450,10 +13492,10 @@ bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, 
 			}
 #else
 			pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), pTargetPlot->getX(), pTargetPlot->getY());
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 			CheckAndExecuteFreePillageMoves(pUnit);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 			return true;
 		}
 
@@ -13466,7 +13508,7 @@ bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, 
 			int iPlotIndex = GC.getMap().plotNum(pMovePlot->getX(), pMovePlot->getY());
 #else
 			int iPlotIndex = GC.getMap().plotNum(pTargetPlot->getX(), pTargetPlot->getY());
-#endif // AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_CORRECT_PLOT
+#endif
 			CvTacticalAnalysisCell *pCell = m_pMap->GetCell(iPlotIndex);
 			if (pCell->IsSubjectToAttack())
 			{
@@ -13480,7 +13522,7 @@ bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, 
 				if (GC.getGame().GetTacticalAnalysisMap()->IsInEnemyDominatedZone(pMovePlot))
 #else
 				if (GC.getGame().GetTacticalAnalysisMap()->IsInEnemyDominatedZone(pTargetPlot))
-#endif // AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_CORRECT_PLOT
+#endif
 				{
 					// Also dangerous in an enemy dominated naval zone
 					bDangerous = true;
@@ -13492,7 +13534,7 @@ bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, 
 			{
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 				CheckAndExecuteFreePillageMoves(pUnit, MAX_INT);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 				if (!CheckAndExecuteParadrop(pUnit, pTargetPlot, iTurnsToTarget))
 				{
@@ -13500,10 +13542,10 @@ bool CvTacticalAI::MoveToUsingSafeEmbark(UnitHandle pUnit, CvPlot* pTargetPlot, 
 				}
 #else
 				pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), pTargetPlot->getX(), pTargetPlot->getY());
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 				CheckAndExecuteFreePillageMoves(pUnit);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 				return true;	
 			}
 
@@ -13632,7 +13674,7 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 	CvPlot* pPlot = NULL;
 #else
 	CvPlot* pPlot;
-#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_SEA_MOVE_POSSIBLE_NULL_POINTER
+#endif
 	CvTacticalTarget* pTarget;
 	int iMovementRate;
 
@@ -13652,13 +13694,13 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 			if (pPlot && pUnit->getArea() == pPlot->getArea())
 #else
 			if(pUnit->getArea() == pPlot->getArea())
-#endif // AUI_TACTICAL_FIX_FIND_BEST_BARBARIAN_SEA_MOVE_POSSIBLE_NULL_POINTER
+#endif
 			{
 #ifdef AUI_ASTAR_TURN_LIMITER
 				iValue = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, false, false, iBestValue - 1);
 #else
 				iValue = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 				if(iValue < iBestValue)
 				{
 					iBestValue = iValue;
@@ -13719,7 +13761,7 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 							iValue = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, false, false, iBestValue - 1);
 #else
 							iValue = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 							if(iValue < iBestValue)
 							{
 								iBestValue = iValue;
@@ -13738,7 +13780,7 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 	{
 #ifdef AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
 		const int iCurrentDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()));
-#endif // AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
+#endif
 		// Now looking for BEST score
 		iBestValue = 0;
 		int iMovementRange = pUnit->movesLeft() / GC.getMOVE_DENOMINATOR();
@@ -13753,7 +13795,7 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 #else
 			iMaxDX = iMovementRange - MAX(0, iY);
 			for (iX = -iMovementRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 			{
 				pConsiderPlot = plotXY(pUnit->getX(), pUnit->getY(), iX, iY);
 #else
@@ -13762,7 +13804,7 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 			for(int iY = -iMovementRange; iY <= iMovementRange; iY++)
 			{
 				CvPlot* pConsiderPlot = plotXYWithRangeCheck(pUnit->getX(), pUnit->getY(), iX, iY, iMovementRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 				if(!pConsiderPlot)
 				{
 					continue;
@@ -13788,13 +13830,13 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 				{
 					continue;
 				}
-#endif // AUI_TACTICAL_FIND_BARBARIAN_EXPLORE_TARGET_IGNORE_HIGH_DANGER_TILES
+#endif
 
 #ifdef AUI_ASTAR_PARADROP
 				if (!CanReachInXTurns(pUnit, pConsiderPlot, 1, false, true))
 #else
 				if(!CanReachInXTurns(pUnit, pConsiderPlot, 1))
-#endif // AUI_ASTAR_PARADROP
+#endif
 				{
 					continue;
 				}
@@ -13814,7 +13856,7 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 					else if (pConsiderPlot->isAdjacentOwned())
 #else
 				if(pConsiderPlot->isAdjacentOwned())
-#endif // AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
+#endif
 				{
 					iValue += 100;
 				}
@@ -13825,7 +13867,7 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 				{
 					iValue += 200;
 				}
-#endif // AUI_TACTICAL_FIX_FIND_BARBARIAN_EXPLORE_TARGET_OWNED_TILE_CHECKER
+#endif
 
 				// If still have no value, score equal to distance from my current plot
 				if(iValue == 0)
@@ -13834,14 +13876,14 @@ CvPlot* CvTacticalAI::FindBestBarbarianSeaMove(UnitHandle pUnit)
 					iValue = hexDistance(iX, iY);
 #else
 					iValue = plotDistance(pUnit->getX(), pUnit->getY(), pConsiderPlot->getX(), pConsiderPlot->getY());
-#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#endif
 				}
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 				int iOverkill = m_pPlayer->GetPlotDanger(*pConsiderPlot, pUnit.pointer()) - pUnit->GetCurrHitPoints();
 				if (iOverkill > 0)
 					iValue -= iOverkill;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 				if(iValue > iBestValue)
 				{
@@ -14004,7 +14046,7 @@ CvPlot* CvTacticalAI::FindBarbarianGankTradeRouteTarget(UnitHandle pUnit)
 #else
 		iMaxDX = iMovementRange - MAX(0, iY);
 		for (iX = -iMovementRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			pPlot = plotXY(pUnit->getX(), pUnit->getY(), iX, iY);
 #else
@@ -14013,7 +14055,7 @@ CvPlot* CvTacticalAI::FindBarbarianGankTradeRouteTarget(UnitHandle pUnit)
 		for (int iY = -iMovementRange; iY <= iMovementRange; iY++)
 		{
 			CvPlot* pPlot = plotXYWithRangeCheck(pUnit->getX(), pUnit->getY(), iX, iY, iMovementRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			if (!pPlot)
 			{
 				continue;
@@ -14038,7 +14080,7 @@ CvPlot* CvTacticalAI::FindBarbarianGankTradeRouteTarget(UnitHandle pUnit)
 			if (!CanReachInXTurns(pUnit, pPlot, 1, false, true))
 #else
 			if(!CanReachInXTurns(pUnit, pPlot, 1))
-#endif // AUI_ASTAR_PARADROP
+#endif
 			{
 				continue;
 			}
@@ -14096,14 +14138,14 @@ CvPlot* CvTacticalAI::FindBarbarianGankTradeRouteTarget(UnitHandle pUnit)
 				iValue = int(TurnsToReachTarget(pUnit, pPlot, true /*bReuse*/, false, false, iBestValue - 1) * M_LN2 / log((double)FASTMAX(iRoutes, 2)) + 0.5);
 #else
 				iValue = int(TurnsToReachTarget(pUnit, pPlot, true /*bReuse*/, false, false, iBestValue - 1) * M_LN2 / log((double)MAX(iRoutes, 2)) + 0.5);
-#endif // AUI_FAST_COMP
+#endif
 #else
 #ifdef AUI_FAST_COMP
 				iValue = int(TurnsToReachTarget(pUnit, pPlot, true /*bReuse*/) * M_LN2 / log((double)FASTMAX(iRoutes, 2)) + 0.5);
 #else
 				iValue = int(TurnsToReachTarget(pUnit, pPlot, true /*bReuse*/) * M_LN2 / log((double)MAX(iRoutes, 2)) + 0.5);
-#endif // AUI_FAST_COMP
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
+#endif
 				if (iValue < iBestValue)
 				{
 					pBestMovePlot = pPlot;
@@ -14112,7 +14154,7 @@ CvPlot* CvTacticalAI::FindBarbarianGankTradeRouteTarget(UnitHandle pUnit)
 			}
 		}
 	}
-#endif // AUI_TACTICAL_FIND_BARBARIAN_GANK_TRADE_ROUTE_TARGET_MULTITURN
+#endif
 	return pBestMovePlot;
 }
 
@@ -14143,16 +14185,16 @@ CvPlot* CvTacticalAI::FindNearbyTarget(UnitHandle pUnit, int iRange, AITacticalT
 					m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_HIGH_PRIORITY_CIVILIAN ||
 					m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_MEDIUM_PRIORITY_CIVILIAN ||
 					m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_LOW_PRIORITY_CIVILIAN ||
-#endif // AUI_TACTICAL_FIX_FIND_NEARBY_TARGET_CIVILIANS_POSSIBLE
+#endif
 #ifdef AUI_TACTICAL_FIND_NEARBY_TARGET_BARBARIANS_DONT_TARGET_CITIES
 					(m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_CITY && !m_pPlayer->isBarbarian()) ||
 #else
 			        m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_CITY ||
-#endif // AUI_TACTICAL_FIND_NEARBY_TARGET_BARBARIANS_DONT_TARGET_CITIES
+#endif
 #ifdef AUI_TACTICAL_FIX_FIND_NEARBY_TARGET_ALL_IMPROVEMENT_TYPES_POSSIBLE
 					m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_CITADEL ||
 					m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_IMPROVEMENT_RESOURCE ||
-#endif // AUI_TACTICAL_FIX_FIND_NEARBY_TARGET_ALL_IMPROVEMENT_TYPES_POSSIBLE
+#endif
 			        m_ZoneTargets[iI].GetTargetType() == AI_TACTICAL_TARGET_IMPROVEMENT)
 			{
 				bTypeMatch = true;
@@ -14182,7 +14224,7 @@ CvPlot* CvTacticalAI::FindNearbyTarget(UnitHandle pUnit, int iRange, AITacticalT
 						iValue = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, false, false, iBestValue - 1);
 #else
 						iValue = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 						if(iValue < iBestValue)
 						{
 							pBestMovePlot = pPlot;

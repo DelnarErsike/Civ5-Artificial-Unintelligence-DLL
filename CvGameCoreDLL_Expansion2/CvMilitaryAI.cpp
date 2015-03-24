@@ -4009,8 +4009,8 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 		if (5 * pUnitPlot->getPlotCity()->getDamage() > pUnitPlot->getPlotCity()->GetMaxHitPoints() && m_pPlayer->IsPlotUnderImmediateThreat(*pUnitPlot))
 #else
 		if (pUnitPlot->getPlotCity()->getDamage() > (pUnitPlot->getPlotCity()->GetMaxHitPoints() / 5))
-#endif // AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
+#endif
 		{
 			bNeedsToMove = true;
 		}
@@ -4027,8 +4027,8 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 			if (5 * pCarrier->getDamage() > pCarrier->GetMaxHitPoints() && m_pPlayer->IsPlotUnderImmediateThreat(*pUnitPlot))
 #else
 			if (pCarrier->getDamage() > (GC.getMAX_HIT_POINTS() / 5))
-#endif // AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
+#endif
 			{
 				bNeedsToMove = true;
 			}
@@ -4077,8 +4077,8 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 		if (5 * pLoopUnit->getDamage() > pLoopUnit->GetMaxHitPoints() && m_pPlayer->IsPlotUnderImmediateThreat(*pLoopUnitPlot))
 #else
 		if(pLoopUnit->getDamage() > (GC.getMAX_HIT_POINTS() / 5))  // this might not be a good place to land
-#endif // AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
+#endif
 		{
 			continue;
 		}
@@ -4088,7 +4088,7 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 		{
 			continue;
 		}
-#endif // AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
+#endif
 
 		if(pBestPlot != pUnitPlot && !pUnit->canRebaseAt(pUnitPlot, pLoopUnitPlot->getX(),pLoopUnitPlot->getY()))
 		{
@@ -4133,7 +4133,7 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 		// Found somewhere to rebase to
 		return true;
 	}
-#endif // AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
+#endif
 
 	CvCity* pLoopCity;
 	int iLoopCity = 0;
@@ -4148,8 +4148,8 @@ bool CvMilitaryAI::WillAirUnitRebase(CvUnit* pUnit) const
 		if (5 * pLoopCity->getDamage() > pLoopCity->GetMaxHitPoints() && m_pPlayer->IsPlotUnderImmediateThreat(*pTarget))
 #else
 		if(pLoopCity->getDamage() > (pLoopCity->GetMaxHitPoints() / 5))
-#endif // AUI_MILITARY_FIX_WILL_AIR_UNIT_REBASE
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
+#endif
 		{
 			continue;
 		}
@@ -4216,7 +4216,7 @@ int CvMilitaryAI::GetMaxPossibleInterceptions(CvPlot* pTargetPlot, bool bCountPe
 
 	return iRtnValue;
 }
-#endif // AUI_MILITARY_MAX_INTERCEPTS
+#endif
 
 #ifdef AUI_MILITARY_AITYPE_FLIP
 int CvMilitaryAI::DoUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert, int iMaxCount, DefenseState eThresholdLandDefenseState, DefenseState eThresholdNavalDefenseState, ThreatTypes eThresholdThreatState, bool bIncludeArmies)
@@ -4272,7 +4272,7 @@ int CvMilitaryAI::DoUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert, int iM
 
 	return iConvertCount;
 }
-#endif // AUI_MILITARY_AITYPE_FLIP
+#endif
 
 /// Assess nearby enemy air assets
 #ifdef AUI_MILITARY_NUM_AIR_UNITS_IN_RANGE_DYNAMIC_RANGE
@@ -4462,7 +4462,7 @@ CvPlot *CvMilitaryAI::GetBestAirSweepTarget(CvUnit* pFighter) const
 			pEvalPlot = plotXY(pFighter->getX(), pFighter->getY(), iDX, iDY);
 			if (pEvalPlot)
 			{
-				iPlotDanger = m_pPlayer->GetPlotDanger(*pEvalPlot, pFighter, AIR_ACTION_SWEEP);
+				iPlotDanger = m_pPlayer->GetPlotDanger(*pEvalPlot, pFighter, NULL, AIR_ACTION_SWEEP);
 				// We want the highest amount of received damaged that will not kill us (since highest received = highest interceptor strength = best target to take down)
 				if (iPlotDanger > iBestCount && iPlotDanger < pFighter->GetCurrHitPoints())
 				{

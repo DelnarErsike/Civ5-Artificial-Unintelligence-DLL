@@ -52,7 +52,7 @@ struct CvDangerPlotContents
 		m_apCities.clear();
 	};
 
-	int GetDanger(const CvUnit* pUnit, const int iAirAction = AIR_ACTION_ATTACK, int iAfterNIntercepts = 0);
+	int GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTargetUnit = NULL, const int iAirAction = AIR_ACTION_ATTACK, int iAfterNIntercepts = 0);
 	int GetDanger(CvCity* pCity, const CvUnit* pPretendGarrison = NULL, int iAfterNIntercepts = 0);
 	// Not normally used, primarily a helper tool
 	int GetDanger(const PlayerTypes ePlayer);
@@ -117,7 +117,7 @@ public:
 
 	void UpdateDanger(bool bPretendWarWithAllCivs = false, bool bIgnoreVisibility = false);
 #ifdef AUI_DANGER_PLOTS_REMADE
-	int GetDanger(const CvPlot& pPlot, const CvUnit* pUnit, const int iAirAction = AIR_ACTION_ATTACK, int iAfterNIntercepts = 0);
+	int GetDanger(const CvPlot& pPlot, const CvUnit* pUnit, const CvUnit* pAttackTargetUnit = NULL, const int iAirAction = AIR_ACTION_ATTACK, int iAfterNIntercepts = 0);
 	int GetDanger(const CvPlot& pPlot, CvCity* pCity, const CvUnit* pPretendGarrison = NULL, int iAfterNIntercepts = 0);
 	int GetDanger(const CvPlot& pPlot, const PlayerTypes ePlayer);
 	bool IsUnderImmediateThreat(const CvPlot& pPlot, const CvUnit* pUnit);

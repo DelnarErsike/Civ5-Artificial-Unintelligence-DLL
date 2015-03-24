@@ -2354,7 +2354,7 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 			}
 			return false;
 		}
-#endif // AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_WORK_BOATS_CONSIDER_ALL_SEA_PLOTS
+#endif
 	}
 
 #ifndef AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
@@ -2373,19 +2373,19 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 			return false;
 		}
 	}
-#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+#endif
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 	int iDanger = m_pPlayer->GetPlotDanger(*pPlot, pUnit);
-	if (iDanger >= pUnit->GetCurrHitPoints() || (!pUnit->IsCombatUnit() && iDanger > 0))
+	if (iDanger >= pUnit->GetCurrHitPoints())
 #else
 #ifdef AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH
 	if ((!pUnit->IsCombatUnit() && m_pPlayer->GetPlotDanger(*pPlot) > 0) || 
 		m_pPlayer->GetPlotDanger(*pPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH)
 #else
 	if(m_pPlayer->GetPlotDanger(*pPlot) > 0)
-#endif // AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
+#endif
 	{
 		if(m_bLogging)
 		{
@@ -2394,7 +2394,7 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 			strLog.Format("plotX: %d plotY: %d, danger: %d,, bailing due to danger", pPlot->getX(), pPlot->getY(), iDanger);
 #else
 			strLog.Format("plotX: %d plotY: %d, danger: %d,, bailing due to danger", pPlot->getX(), pPlot->getY(), m_pPlayer->GetPlotDanger(*pPlot));
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 			LogInfo(strLog, m_pPlayer, true);
 		}
 
