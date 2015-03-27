@@ -1350,8 +1350,12 @@ void CvPlayerCulture::DoSwapGreatWorks()
 						CvGreatWorkBuildingInMyEmpire building;
 						building.m_eBuilding = eBuilding;
 						building.m_iCityID = pLoopCity->GetID();
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
 #ifdef AUI_DANGER_PLOTS_REMADE
 						building.m_bEndangered = pLoopCity->getDamage() + m_pPlayer->GetPlotDanger(*pLoopCity->plot(), pLoopCity) >= pLoopCity->GetMaxHitPoints();
+#else
+						building.m_bEndangered = pLoopCity->getDamage() > 0 && m_pPlayer->IsUnderImmediateThreat(*pLoopCity->plot());
+#endif
 						building.m_bThemed = false;
 						building.m_bIsCoastal = pLoopCity->isCoastal();
 						building.m_iGreatWorkSlots = pkBuilding->GetGreatWorkCount();
@@ -1387,7 +1391,7 @@ void CvPlayerCulture::DoSwapGreatWorks()
 						int iNumSlots = pkBuilding->GetGreatWorkCount();
 						for (int iI = 0; iI < iNumSlots; iI++)
 						{
-#ifdef AUI_DANGER_PLOTS_REMADE
+#ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
 							int iGreatWorkIndex = pLoopCity->GetCityBuildings()->GetBuildingGreatWork(eBuildingClassType, iI);
 #else
 							int iGreatWorkIndex = pLoopCity->GetCityBuildings()->GetBuildingGreatWork((BuildingClassTypes)iBuildingClassLoop, iI);
