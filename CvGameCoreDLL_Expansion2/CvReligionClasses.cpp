@@ -5601,7 +5601,7 @@ bool CvReligionAI::DoHurryWithFaith(ReligionTypes eAvoidReligion)
 						static const char* orderTypeStrings[] = { "ORDER_TRAIN", "ORDER_CONSTRUCT", "ORDER_CREATE", "ORDER_PREPARE", "ORDER_MAINTAIN", "NO_ORDER" };
 						int orderIndex = ((pOrder->eOrderType < 0) || (pOrder->eOrderType > 4)) ? 5 : pOrder->eOrderType;
 						CvString strLogString;
-						strLogString.Format("DoHurry Option: order type %s, Turns Saved: %d, Gold Spent Per Turn of Production: %d", orderTypeStrings[orderIndex], iTurnsSaved, iBestFaithPerHammer);
+						strLogString.Format("DoHurry Option: order type %s, Turns Saved: %d, Gold Spent Per Turn of Production: %d", orderTypeStrings[orderIndex], iTurnsSaved, iBestFaithPerTurnHammers);
 						m_pPlayer->GetHomelandAI()->LogHomelandMessage(strLogString);
 					}
 				}
