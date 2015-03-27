@@ -23859,10 +23859,10 @@ void CvPlayer::ChangeUnitPurchaseCostModifier(int iChange)
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 //	--------------------------------------------------------------------------------
-int CvPlayer::GetPlotDanger(CvPlot& pPlot, const CvUnit* pUnit, const CvUnit* pAttackTargetUnit, const int iAirAction, int iAfterNIntercepts) const
+int CvPlayer::GetPlotDanger(CvPlot& pPlot, const CvUnit* pUnit, const CvUnit* pAttackTargetUnit, const int iAction, int iAfterNIntercepts) const
 {
 	if (pUnit)
-		return m_pDangerPlots->GetDanger(pPlot, pUnit, pAttackTargetUnit, iAirAction, iAfterNIntercepts);
+		return m_pDangerPlots->GetDanger(pPlot, pUnit, pAttackTargetUnit, iAction, iAfterNIntercepts);
 	else
 		return m_pDangerPlots->GetDanger(pPlot, GetID());
 }

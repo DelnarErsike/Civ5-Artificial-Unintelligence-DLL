@@ -1012,30 +1012,30 @@ void CvHomelandAI::PlotHealMoves()
 		{
 			// Am I under 100% health and not at sea or already in a city?
 #ifdef AUI_HOMELAND_TWEAKED_HEAL_MOVES
-			if (pUnit->healRate(pUnit->plot()) <= 0)
+			if (pUnit->healRate(pUnit->plot()) <= 0 || pUnit->isAlwaysHeal() || pUnit->isEmbarked())
 				continue;
 #ifdef AUI_DANGER_PLOTS_REMADE
-			int iDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()), pUnit.pointer());
-#endif
-			// If plot is under threat, make sure we don't overheal; also, never actively stop to heal 
-			if (!pUnit->isAlwaysHeal() && !pUnit->isEmbarked() && !pUnit->plot()->isCity() && 
-#ifdef AUI_DANGER_PLOTS_REMADE
-				(iDanger <= 0 && pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints()) ||
-				(pUnit->GetCurrHitPoints() + pUnit->healRate(pUnit->plot()) <= pUnit->GetMaxHitPoints() + iDanger))
+			int iHealAmount = -(m_pPlayer->GetPlotDanger(*(pUnit->plot()), pUnit.pointer(), NULL, ACTION_HEAL | ACTION_NO_MELEE));
+			// Make sure we will still heal despite ranged attacks (since we're dealing damage to melee attackers and we get defensive bonus from fortify, don't need to necessarily count them)
+			if (iHealAmount > 0)
 #else
-				((m_pPlayer->GetPlotDanger(*(pUnit->plot())) <= 0 && pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints()) ||
+			if (((m_pPlayer->GetPlotDanger(*(pUnit->plot())) <= 0 && pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints()) ||
 				(m_pPlayer->GetPlotDanger(*(pUnit->plot())) > 0 && pUnit->GetCurrHitPoints() + pUnit->healRate(pUnit->plot()) < pUnit->GetMaxHitPoints())))
 #endif
 #else
 			if(pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints() && !pUnit->isEmbarked() && !pUnit->plot()->isCity())
 #endif
 			{
+#ifdef AUI_DANGER_PLOTS_REMADE
+				// Make sure we won't die irrespective of healing
+				int iDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()), pUnit.pointer(), NULL, ACTION_HEAL);
+				if (iDanger < pUnit->GetCurrHitPoints())
+#else
 				// If I'm a naval unit I need to be in friendly territory
 				if(pUnit->getDomainType() != DOMAIN_SEA || pUnit->plot()->IsFriendlyTerritory(m_pPlayer->GetID()))
+#endif
 				{
-#ifdef AUI_DANGER_PLOTS_REMADE
-					if (!pUnit->IsUnderEnemyRangedAttack() && iDanger < pUnit->GetCurrHitPoints())
-#else
+#ifndef AUI_DANGER_PLOTS_REMADE
 					if (!pUnit->IsUnderEnemyRangedAttack())
 #endif
 					{
@@ -5175,7 +5175,7 @@ void CvHomelandAI::ExecuteAircraftInterceptions()
 				int iRange = GC.getUnitInfo(pUnit->getUnitType())->GetAirInterceptRange();
 				CvPlot* pUnitPlot = pUnit->plot();
 #ifdef AUI_DANGER_PLOTS_REMADE
-				if (m_pPlayer->GetPlotDanger(*pUnitPlot, pUnit.pointer(), NULL, AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
+				if (m_pPlayer->GetPlotDanger(*pUnitPlot, pUnit.pointer(), NULL, ACTION_AIR_INTERCEPT) >= pUnit->GetCurrHitPoints())
 				{
 					continue;
 				}
@@ -5193,7 +5193,7 @@ void CvHomelandAI::ExecuteAircraftInterceptions()
 						pEvalPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
 						if (pEvalPlot && pEvalPlot != pUnitPlot)
 						{
-							if (m_pPlayer->GetPlotDanger(*pEvalPlot, pUnit.pointer(), NULL, AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
+							if (m_pPlayer->GetPlotDanger(*pEvalPlot, pUnit.pointer(), NULL, ACTION_AIR_INTERCEPT) >= pUnit->GetCurrHitPoints())
 							{
 								bCouldDieFromSweep = true;
 								goto EndLoop;

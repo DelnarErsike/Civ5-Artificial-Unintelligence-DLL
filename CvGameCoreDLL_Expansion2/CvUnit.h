@@ -269,7 +269,7 @@ public:
 	int healRate(const CvPlot* pPlot, const bool bAssumeHealRateFromUnits = false, const int iAssumeHealRateFromUnits = 0) const;
 #else
 	int healRate(const CvPlot* pPlot) const;
-#endif // AUI_UNIT_HEALRATE_ASSUME_EXTRA_HEALRATE_FROM_UNIT
+#endif
 	int healTurns(const CvPlot* pPlot) const;
 	void doHeal();
 	void DoAttrition();
@@ -287,7 +287,7 @@ public:
 	bool canParadropAt(const CvPlot* pPlot, int iX, int iY, bool bIgnoreUnits = false) const;
 #else
 	bool canParadropAt(const CvPlot* pPlot, int iX, int iY) const;
-#endif // AUI_ASTAR_PARADROP
+#endif
 	bool paradrop(int iX, int iY);
 
 	bool canMakeTradeRoute(const CvPlot* pPlot) const;
@@ -484,21 +484,23 @@ public:
 
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 	int GetGenericMaxStrengthModifier(const CvUnit* pOtherUnit, const CvPlot* pBattlePlot, bool bIgnoreUnitAdjacency, const CvPlot* pFromPlot = NULL) const;
+	int GetMaxAttackStrength(const CvPlot* pFromPlot, const CvPlot* pToPlot, const CvUnit* pDefender, const int iDefenderExtraFortifyTurns = 0) const;
+	int GetMaxDefenseStrength(const CvPlot* pInPlot, const CvUnit* pAttacker, bool bFromRangedAttack = false, const int iExtraFortifyTurns = 0) const;
 #else
 	int GetGenericMaxStrengthModifier(const CvUnit* pOtherUnit, const CvPlot* pBattlePlot, bool bIgnoreUnitAdjacency) const;
-#endif
 	int GetMaxAttackStrength(const CvPlot* pFromPlot, const CvPlot* pToPlot, const CvUnit* pDefender) const;
 	int GetMaxDefenseStrength(const CvPlot* pInPlot, const CvUnit* pAttacker, bool bFromRangedAttack = false) const;
+#endif
 	int GetEmbarkedUnitDefense() const;
 
 	bool canSiege(TeamTypes eTeam) const;
 
 	int GetBaseRangedCombatStrength() const;
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-	int GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL) const;
+	int GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
 
-	int GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL) const;
-	int GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL) const;
+	int GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
+	int GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
 #else
 	int GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack) const;
 
@@ -510,7 +512,7 @@ public:
 	bool canAirDefend(const CvPlot* pPlot = NULL) const;
 
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-	int GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand = true, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL) const;
+	int GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand = true, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
 #else
 	int GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand = true) const;
 #endif
@@ -535,7 +537,11 @@ public:
 	bool isWaiting() const;
 	bool isFortifyable(bool bCanWaitForNextTurn = false) const;
 	bool IsEverFortifyable() const;
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	int fortifyModifier(int iExtraTurns = 0) const;
+#else
 	int fortifyModifier() const;
+#endif
 
 	int experienceNeeded() const;
 	int attackXPValue() const;
@@ -922,7 +928,7 @@ public:
 
 #ifdef AUI_UNIT_EXTRA_ATTACKS_GETTER
 	int getNumAttacks();
-#endif // AUI_UNIT_EXTRA_ATTACKS_GETTER
+#endif
 	void changeExtraAttacks(int iChange);
 
 	// Citadel
@@ -1236,7 +1242,7 @@ public:
 	const MissionData* GetMissionData(unsigned int iIndex);
 #else
 	const MissionData* GetMissionData(int iIndex);
-#endif // AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+#endif
 	CvPlot* GetMissionAIPlot();
 	MissionAITypes GetMissionAIType();
 	void SetMissionAI(MissionAITypes eNewMissionAI, CvPlot* pNewPlot, CvUnit* pNewUnit);
@@ -1311,17 +1317,19 @@ public:
 	
 #ifdef AUI_UNIT_RANGE_PLUS_MOVE
 	int GetRangePlusMoveToshot(bool bWithRoads = false) const;
-#endif // AUI_UNIT_RANGE_PLUS_MOVE
+#endif
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 	bool canMoveAndRangedStrike(int iX, int iY) const;
 	bool canMoveAndRangedStrike(const CvPlot* pTargetPlot) const;
 	bool GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bExitOnFound = false, int iWithinTurns = 0, const CvPlot* pFromPlot = NULL) const;
-#endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+#endif
 #ifdef AUI_UNIT_DO_AITYPE_FLIP
 	bool DoSingleUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert = false, bool bForceOff = false);
-#endif // AUI_UNIT_DO_AITYPE_FLIP
+#endif
 #ifdef AUI_DANGER_PLOTS_REMADE
 	FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL>& GetDangerPlotList(bool bMoveOnly = false);
+	FFastVector<CvPlot*, true, c_eCiv5GameplayDLL>& GetPlotsAttackedList();
+	void SetPlotAttacked(CvPlot* pPlot);
 #endif
 
 	// Ported in from old CvUnitAI class
@@ -1501,6 +1509,7 @@ protected:
 #ifdef AUI_DANGER_PLOTS_REMADE
 	FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL> vpDangerPlotList;
 	FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL> vpDangerPlotMoveOnlyList;
+	FFastVector<CvPlot*, true, c_eCiv5GameplayDLL> vpPlotsAttackedList;
 #endif
 
 	FAutoVariable<bool, CvUnit> m_bPromotionReady;

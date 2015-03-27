@@ -353,7 +353,7 @@ int CvDangerPlots::GetDanger(const CvPlot& pPlot, CvCity* pCity, const CvUnit* p
 }
 
 /// Return the maximum amount of damage a unit could take at this plot
-int CvDangerPlots::GetDanger(const CvPlot& pPlot, const CvUnit* pUnit, const CvUnit* pAttackTargetUnit, const int iAirAction, int iAfterNIntercepts)
+int CvDangerPlots::GetDanger(const CvPlot& pPlot, const CvUnit* pUnit, const CvUnit* pAttackTargetUnit, const int iAction, int iAfterNIntercepts)
 #else
 /// Return the danger value of a given plot
 int CvDangerPlots::GetDanger(const CvPlot& pPlot) const
@@ -363,7 +363,7 @@ int CvDangerPlots::GetDanger(const CvPlot& pPlot) const
 #ifdef AUI_DANGER_PLOTS_REMADE
 	if (pUnit)
 	{
-		return m_DangerPlots[idx].GetDanger(pUnit, pAttackTargetUnit, iAirAction, iAfterNIntercepts);
+		return m_DangerPlots[idx].GetDanger(pUnit, pAttackTargetUnit, iAction, iAfterNIntercepts);
 	}
 	return 0;
 #else
@@ -710,15 +710,22 @@ bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility)
 		return true;
 	}
 
-#if defined(AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG) || defined(AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS)
-	if (pUnit->isInvisible(GET_PLAYER(m_ePlayer).getTeam(), false))
+#ifdef AUI_DANGER_PLOTS_REMADE
+	if (pUnit->getDomainType() == DOMAIN_AIR)
 	{
-		return true;
+		return false;
+	}
+
+	FFastVector<CvPlot*, true, c_eCiv5GameplayDLL> vpPlotsAttackedList = pUnit->GetPlotsAttackedList();
+	for (FFastVector<CvPlot*, true, c_eCiv5GameplayDLL>::iterator it = vpPlotsAttackedList.begin(); it != vpPlotsAttackedList.end(); ++it)
+	{
+		if ((*it)->isVisible(GET_PLAYER(m_ePlayer).getTeam()))
+			return false;
 	}
 #endif
 
-#ifdef AUI_DANGER_PLOTS_REMADE
-	if (pUnit->getDomainType() == DOMAIN_AIR)
+#if defined(AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MAJORS_SEE_BARBARIANS_IN_FOG) || defined(AUI_DANGER_PLOTS_SHOULD_IGNORE_UNIT_MINORS_SEE_MAJORS)
+	if (pUnit->isInvisible(GET_PLAYER(m_ePlayer).getTeam(), false))
 	{
 		return true;
 	}
@@ -1179,13 +1186,23 @@ int CvDangerPlotContents::GetDanger(PlayerTypes ePlayer)
 }
 
 // Get the maximum damage unit could receive at this plot in the next turn (update this with CvUnitCombat changes!)
-int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTargetUnit, const int iAirAction, int iAfterNIntercepts)
+int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTargetUnit, const int iAction, int iAfterNIntercepts)
 {
 	CvUnit* pCurAttacker = NULL;
+	CvCity* pFriendlyCity = m_pPlot->getPlotCity();
+	if (pFriendlyCity && !m_pPlot->isFriendlyCity(*pUnit, false))
+		pFriendlyCity = NULL;
+	int iPlotDamage = 0;
+	if (m_iFlatPlotDamage != 0 && (pUnit->atPlot(*m_pPlot) || pUnit->canMoveInto(*m_pPlot)))
+	{
+		// Damage from plot (no unit in tile)
+		iPlotDamage = m_iFlatPlotDamage;
+	}
+
 	// Air units only take damage from interceptions
 	if (pUnit->getDomainType() == DOMAIN_AIR)
 	{
-		if (iAirAction & AIR_ACTION_INTERCEPT) // Max damage from a potential air sweep against our intercept
+		if (iAction & ACTION_AIR_INTERCEPT) // Max damage from a potential air sweep against our intercept
 		{
 			int iBestAirSweepDamage = 0;
 			int iCurrentAirSweepDamage = 0;
@@ -1224,7 +1241,7 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 			}
 			return iBestAirSweepDamage;
 		}
-		else
+		else if (iAction & (ACTION_AIR_SWEEP | ACTION_AIR_ATTACK))
 		{
 #ifdef AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
 			CvUnit* pInterceptor = pUnit->GetNthBestInterceptor(*m_pPlot, iAfterNIntercepts);
@@ -1234,7 +1251,7 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 			if (pInterceptor)
 			{
 				// Air sweeps take modified damage from interceptors
-				if (iAirAction & AIR_ACTION_SWEEP)
+				if (iAction & ACTION_AIR_SWEEP)
 				{
 					if (pInterceptor->getDomainType() != DOMAIN_AIR)
 					{
@@ -1263,25 +1280,70 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 						return iReceiveDamage;
 					}
 				}
-				else
+				else if (iAction & ACTION_AIR_ATTACK)
 				{
 					// Always assume interception is successful
 					return pInterceptor->GetInterceptionDamage(pUnit, false);
 				}
 			}
 		}
+		else
+		{
+			bool bWillBeCapped = true;
+			// If in a city and the city will survive all attack, return a danger value of 1
+			if (pFriendlyCity)
+			{
+				if (GetDanger(pFriendlyCity) + pFriendlyCity->getDamage() < pFriendlyCity->GetMaxHitPoints())
+				{
+					// Trivial amount to indicate that the plot can still be attacked
+					bWillBeCapped = false;
+				}
+			}
+			// Look for a possible plot defender
+			else
+			{
+				CvUnit* pBestDefender = NULL;
+				IDInfo* pUnitNode = m_pPlot->headUnitNode();
+				while (pUnitNode != NULL)
+				{
+					pBestDefender = getUnit(*pUnitNode);
+					pUnitNode = m_pPlot->nextUnitNode(pUnitNode);
+					if (pBestDefender && pBestDefender->getOwner() == pUnit->getOwner())
+					{
+						if (pBestDefender->domainCargo() == DOMAIN_AIR)
+						{
+							if (pBestDefender != pUnit)
+							{
+								if (GetDanger(pBestDefender) < pBestDefender->GetCurrHitPoints())
+								{
+									bWillBeCapped = false;
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+			// If Civilian would be captured on this tile (only happens if iPlotDamage isn't modified), return MAX_INT
+			if (bWillBeCapped)
+				return MAX_INT;
+			else
+			{
+				// If a unit always heals and will survive, add healrate
+				if ((pUnit->isAlwaysHeal() || iAction & ACTION_HEAL) && !pUnit->isBarbarian() && iPlotDamage < pUnit->GetCurrHitPoints())
+				{
+					iPlotDamage -= pUnit->healRate(m_pPlot);
+					// Overheals are ignored
+					if (pUnit->GetCurrHitPoints() > pUnit->GetMaxHitPoints() + iPlotDamage)
+						iPlotDamage = pUnit->GetCurrHitPoints() - pUnit->GetMaxHitPoints();
+				}
+				// Damage from improvements
+				iPlotDamage += GetCitadelDamage(pUnit);
+				return iPlotDamage;
+			}			
+		}
 		return 0;
 	}
-
-	int iPlotDamage = 0;
-	if (m_iFlatPlotDamage != 0 && (pUnit->atPlot(*m_pPlot) || pUnit->canMoveInto(*m_pPlot)))
-	{
-		// Damage from plot (no unit in tile)
-		iPlotDamage = m_iFlatPlotDamage;
-	}
-	CvCity* pFriendlyCity = m_pPlot->getPlotCity();
-	if (pFriendlyCity && !m_pPlot->isFriendlyCity(*pUnit, false))
-		pFriendlyCity = NULL;
 
 	// Civilians can be captured
 	if (!pUnit->IsCombatUnit() && (!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit)))
@@ -1342,15 +1404,15 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 		if (pFriendlyCity || pBestDefender)
 		{
 			// If a unit always heals and will survive, add healrate
-			if (pUnit->isAlwaysHeal() && !pUnit->isBarbarian() && iPlotDamage < pUnit->GetCurrHitPoints() && 
+			if ((pUnit->isAlwaysHeal() || iAction & ACTION_HEAL) && !pUnit->isBarbarian() && iPlotDamage < pUnit->GetCurrHitPoints() &&
 				(!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit)))
 			{
 				iPlotDamage -= pUnit->healRate(m_pPlot);
-				if (iPlotDamage < 0)
-					iPlotDamage = 0;
+				// Overheals are ignored
+				if (pUnit->GetCurrHitPoints() > pUnit->GetMaxHitPoints() + iPlotDamage)
+					iPlotDamage = pUnit->GetCurrHitPoints() - pUnit->GetMaxHitPoints();
 			}
 			// Damage from improvements
-			// TODO: Have this added after healrate is applied when danger is checked for whether a unit can heal at a tile
 			iPlotDamage += GetCitadelDamage(pUnit);
 			return iPlotDamage;
 		}
@@ -1363,15 +1425,15 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 		if (GetDanger(pFriendlyCity, (pUnit->getDomainType() == DOMAIN_LAND ? pUnit : NULL)) + pFriendlyCity->getDamage() < pFriendlyCity->GetMaxHitPoints())
 		{
 			// If a unit always heals and will survive, add healrate
-			if (pUnit->isAlwaysHeal() && !pUnit->isBarbarian() && iPlotDamage < pUnit->GetCurrHitPoints() &&
+			if ((pUnit->isAlwaysHeal() || iAction & ACTION_HEAL) && !pUnit->isBarbarian() && iPlotDamage < pUnit->GetCurrHitPoints() &&
 				(!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit)))
 			{
 				iPlotDamage -= pUnit->healRate(m_pPlot);
-				if (iPlotDamage < 0)
-					iPlotDamage = 0;
+				// Overheals are ignored
+				if (pUnit->GetCurrHitPoints() > pUnit->GetMaxHitPoints() + iPlotDamage)
+					iPlotDamage = pUnit->GetCurrHitPoints() - pUnit->GetMaxHitPoints();
 			}
 			// Damage from improvements
-			// TODO: Have this added after healrate is applied when danger is checked for whether a unit can heal at a tile
 			iPlotDamage += GetCitadelDamage(pUnit);
 
 			return iPlotDamage;
@@ -1387,7 +1449,11 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 	{
 		if (pUnit->IsCanAttackRanged())
 		{
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 			iDamageDealt = pUnit->GetRangeCombatDamage(pAttackTargetUnit, NULL, false, 0, NULL, m_pPlot);
+#else
+			iDamageDealt = pUnit->GetRangeCombatDamage(pAttackTargetUnit, NULL, false, 0);
+#endif
 		}
 		else
 		{
@@ -1402,11 +1468,21 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 #endif
 			}
 		}
+		if (iDamageDealt >= pAttackTargetUnit->GetCurrHitPoints())
+		{
+			if (pUnit->getHPHealedIfDefeatEnemy() > 0 && (!pUnit->IsHealIfDefeatExcludeBarbarians() || !pAttackTargetUnit->isBarbarian()))
+			{
+				iPlotDamage -= FASTMIN(pUnit->getHPHealedIfDefeatEnemy(), pUnit->getDamage() + (pUnit->IsCanAttackRanged() ? 0 : 
+					pUnit->getCombatDamage(pAttackTargetUnit->GetMaxDefenseStrength(pAttackTargetUnit->plot(), pUnit), 
+					pUnit->GetMaxAttackStrength(m_pPlot, pAttackTargetUnit->plot(), pAttackTargetUnit), pAttackTargetUnit->getDamage(), false, false, false)));
+			}
+		}
 	}
 
 	CvPlot* pAttackerPlot = NULL;
 	CvUnit* pInterceptor = NULL;
 	// Damage from units
+	// TODO: Implement support for withdrawing
 	for (DangerUnitVector::iterator it = m_apUnits.begin(); it < m_apUnits.end(); ++it)
 	{
 		pCurAttacker = (*it);
@@ -1435,7 +1511,7 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 						++iAfterNIntercepts;
 					}
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-					iPlotDamage += pCurAttacker->GetAirCombatDamage(pUnit, NULL, false, iInterceptDamage, m_pPlot);
+					iPlotDamage += pCurAttacker->GetAirCombatDamage(pUnit, NULL, false, iInterceptDamage, m_pPlot, NULL, (iAction & ACTION_HEAL) >> 3);
 #else
 					iPlotDamage += pCurAttacker->GetAirCombatDamage(pUnit, NULL, false, iInterceptDamage);
 #endif
@@ -1447,7 +1523,7 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 						if (iDamageDealt < pCurAttacker->GetCurrHitPoints())
 						{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt, m_pPlot);
+							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt, m_pPlot, NULL,(iAction & ACTION_HEAL) >> 3);
 #else
 							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt);
 #endif
@@ -1456,14 +1532,14 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 					else
 					{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, 0, m_pPlot);
+						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, 0, m_pPlot, NULL, (iAction & ACTION_HEAL) >> 3);
 #else
 						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false);
 #endif
 					}
 				}
 			}
-			else
+			else if (iAction & ~ACTION_NO_MELEE)
 			{
 				if (plotDistance(m_iX, m_iY, pCurAttacker->getX(), pCurAttacker->getY()) == 1)
 				{
@@ -1473,12 +1549,17 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 				{
 					if (iDamageDealt < pCurAttacker->GetCurrHitPoints())
 					{
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+						iPlotDamage += pCurAttacker->getCombatDamage(pCurAttacker->GetMaxAttackStrength(pAttackerPlot, m_pPlot, pUnit, (iAction & ACTION_HEAL) >> 3),
+							pUnit->GetMaxDefenseStrength(m_pPlot, pCurAttacker, false, (iAction & ACTION_HEAL) >> 3), pCurAttacker->getDamage() + iDamageDealt, false, false, false);
+#else
 						iPlotDamage += pCurAttacker->getCombatDamage(pCurAttacker->GetMaxAttackStrength(pAttackerPlot, m_pPlot, pUnit),
 							pUnit->GetMaxDefenseStrength(m_pPlot, pCurAttacker), pCurAttacker->getDamage() + iDamageDealt, false, false, false);
+#endif
 						if (pCurAttacker->isRangedSupportFire())
 						{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt, m_pPlot, pAttackerPlot);
+							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt, m_pPlot, pAttackerPlot, (iAction & ACTION_HEAL) >> 3);
 #else
 							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt);
 #endif
@@ -1487,12 +1568,17 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 				}
 				else
 				{
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+					iPlotDamage += pCurAttacker->getCombatDamage(pCurAttacker->GetMaxAttackStrength(pAttackerPlot, m_pPlot, pUnit, (iAction & ACTION_HEAL) >> 3),
+						pUnit->GetMaxDefenseStrength(m_pPlot, pCurAttacker, false, (iAction & ACTION_HEAL) >> 3), pCurAttacker->getDamage() + iDamageDealt, false, false, false);
+#else
 					iPlotDamage += pCurAttacker->getCombatDamage(pCurAttacker->GetMaxAttackStrength(pAttackerPlot, m_pPlot, pUnit),
 						pUnit->GetMaxDefenseStrength(m_pPlot, pCurAttacker), pCurAttacker->getDamage(), false, false, false);
+#endif
 					if (pCurAttacker->isRangedSupportFire())
 					{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, 0, m_pPlot, pAttackerPlot);
+						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, 0, m_pPlot, pAttackerPlot, (iAction & ACTION_HEAL) >> 3);
 #else
 						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false);
 #endif
@@ -1511,23 +1597,23 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTa
 		}
 
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-		iPlotDamage += (*it)->rangeCombatDamage(pUnit, NULL, false, m_pPlot);
+		iPlotDamage += (*it)->rangeCombatDamage(pUnit, NULL, false, m_pPlot, (iAction & ACTION_HEAL) >> 3);
 #else
 		iPlotDamage += (*it)->rangeCombatDamage(pUnit, NULL, false);
 #endif
 	}
 
 	// If a unit always heals and will survive, add healrate
-	if (pUnit->isAlwaysHeal() && !pUnit->isBarbarian() && iPlotDamage < pUnit->GetCurrHitPoints() &&
+	if ((pUnit->isAlwaysHeal() || iAction & ACTION_HEAL) && !pUnit->isBarbarian() && iPlotDamage < pUnit->GetCurrHitPoints() &&
 		(!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit)))
 	{
 		iPlotDamage -= pUnit->healRate(m_pPlot);
-		if (iPlotDamage < 0)
-			iPlotDamage = 0;
+		// Overheals are ignored
+		if (pUnit->GetCurrHitPoints() > pUnit->GetMaxHitPoints() + iPlotDamage)
+			iPlotDamage = pUnit->GetCurrHitPoints() - pUnit->GetMaxHitPoints();
 	}
 
 	// Damage from improvements
-	// TODO: Have this added after healrate is applied when danger is checked for whether a unit can heal at a tile
 	iPlotDamage += GetCitadelDamage(pUnit);
 
 	return iPlotDamage;

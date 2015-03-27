@@ -473,7 +473,7 @@ void CvUnitCombat::ResolveMeleeCombat(const CvCombatInfo& kCombatInfo, uint uiPa
 					pkAttacker->changeMoves(-1 * FASTMAX(GC.getMOVE_DENOMINATOR(), pkTargetPlot->movementCost(pkAttacker, pkAttacker->plot())));
 #else
 					pkAttacker->changeMoves(-1 * std::max(GC.getMOVE_DENOMINATOR(), pkTargetPlot->movementCost(pkAttacker, pkAttacker->plot())));
-#endif // AUI_FAST_COMP
+#endif
 
 					if(!pkAttacker->canMove() || !pkAttacker->isBlitz())
 					{
@@ -2653,6 +2653,9 @@ CvUnitCombat::ATTACK_RESULT CvUnitCombat::Attack(CvUnit& kAttacker, CvPlot& targ
 		if(eResult != ATTACK_QUEUED)
 		{
 			kAttacker.setMadeAttack(true);
+#ifdef AUI_DANGER_PLOTS_REMADE
+			kAttacker.SetPlotAttacked(&targetPlot);
+#endif
 
 			uint uiParentEventID = 0;
 			// Send the combat message if the target plot is visible.
@@ -2714,6 +2717,9 @@ CvUnitCombat::ATTACK_RESULT CvUnitCombat::AttackRanged(CvUnit& kAttacker, int iX
 		{
 			kAttacker.setMadeAttack(true);
 		}
+#ifdef AUI_DANGER_PLOTS_REMADE
+		kAttacker.SetPlotAttacked(pPlot);
+#endif
 		kAttacker.changeMoves(-GC.getMOVE_DENOMINATOR());
 	}
 
@@ -2828,6 +2834,9 @@ CvUnitCombat::ATTACK_RESULT CvUnitCombat::AttackAir(CvUnit& kAttacker, CvPlot& t
 	bool bDoImmediate = CvPreGame::quickCombat();
 	kAttacker.SetAutomateType(NO_AUTOMATE);
 	kAttacker.setMadeAttack(true);
+#ifdef AUI_DANGER_PLOTS_REMADE
+	kAttacker.SetPlotAttacked(&targetPlot);
+#endif
 
 	// Bombing a Unit
 	if(!targetPlot.isCity())
@@ -2932,6 +2941,9 @@ CvUnitCombat::ATTACK_RESULT CvUnitCombat::AttackAirSweep(CvUnit& kAttacker, CvPl
 	if(pInterceptor != NULL)
 	{
 		kAttacker.setMadeAttack(true);
+#ifdef AUI_DANGER_PLOTS_REMADE
+		kAttacker.SetPlotAttacked(&targetPlot);
+#endif
 		CvCombatInfo kCombatInfo;
 		CvUnitCombat::GenerateAirSweepCombatInfo(kAttacker, pInterceptor, targetPlot, &kCombatInfo);
 		CvUnit* pkDefender = kCombatInfo.getUnit(BATTLE_UNIT_DEFENDER);
@@ -3026,6 +3038,9 @@ CvUnitCombat::ATTACK_RESULT CvUnitCombat::AttackCity(CvUnit& kAttacker, CvPlot& 
 	if(eResult != ATTACK_QUEUED)
 	{
 		kAttacker.setMadeAttack(true);
+#ifdef AUI_DANGER_PLOTS_REMADE
+		kAttacker.SetPlotAttacked(&plot);
+#endif
 
 		// We are doing a non-ranged attack on a city
 		CvCombatInfo kCombatInfo;
@@ -3203,7 +3218,7 @@ void CvUnitCombat::ApplyPostCombatTraitEffects(CvUnit* pkWinner, CvUnit* pkLoser
 		int iCombatStrength = FASTMAX(pkLoser->getUnitInfo().GetCombat(), pkLoser->getUnitInfo().GetRangedCombat());
 #else
 		int iCombatStrength = max(pkLoser->getUnitInfo().GetCombat(), pkLoser->getUnitInfo().GetRangedCombat());
-#endif // AUI_FAST_COMP
+#endif
 		if(iCombatStrength > 0)
 		{
 			int iValue = iCombatStrength * pkWinner->GetGoldenAgeValueFromKills() / 100;

@@ -3399,23 +3399,27 @@ void CvTacticalAI::PlotHealMoves()
 				continue;
 
 #ifdef AUI_DANGER_PLOTS_REMADE
-			int iDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()), pUnit.pointer());
-			if((iDanger <= 0 && pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints()) || 
-				(pUnit->GetCurrHitPoints() + pUnit->healRate(pUnit->plot()) <= pUnit->GetMaxHitPoints() + iDanger && iDanger <= pUnit->healRate(pUnit->plot())))
+			int iHealAmount = -(m_pPlayer->GetPlotDanger(*(pUnit->plot()), pUnit.pointer(), NULL, ACTION_HEAL | ACTION_NO_MELEE));
+			// Make sure we will still heal despite ranged attacks (since we're dealing damage to melee attackers and we get defensive bonus from fortify, don't need to necessarily count them)
+			if (iHealAmount > 0)
 #else
-				((m_pPlayer->GetPlotDanger(*(pUnit->plot())) <= 0 && pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints()) ||
+			if ((m_pPlayer->GetPlotDanger(*(pUnit->plot())) <= 0 && pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints()) ||
 				(m_pPlayer->GetPlotDanger(*(pUnit->plot())) > 0 && pUnit->GetCurrHitPoints() + pUnit->healRate(pUnit->plot()) < pUnit->GetMaxHitPoints())))
 #endif
 #else
 			if(pUnit->GetCurrHitPoints() < pUnit->GetMaxHitPoints() && !pUnit->isEmbarked() && !pUnit->plot()->isCity())
 #endif
 			{
+#ifdef AUI_DANGER_PLOTS_REMADE
+				// Make sure we won't die irrespective of healing
+				int iDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()), pUnit.pointer(), NULL, ACTION_HEAL);
+				if (iDanger < pUnit->GetCurrHitPoints())
+#else
 				// If I'm a naval unit I need to be in friendly territory
 				if(pUnit->getDomainType() != DOMAIN_SEA || pUnit->plot()->IsFriendlyTerritory(m_pPlayer->GetID()))
+#endif
 				{
-#ifdef AUI_DANGER_PLOTS_REMADE
-					if (iDanger < pUnit->GetCurrHitPoints())
-#else
+#ifndef AUI_DANGER_PLOTS_REMADE
 					if (!pUnit->IsUnderEnemyRangedAttack())
 #endif
 					{
@@ -3629,7 +3633,7 @@ void CvTacticalAI::PlotAirInterceptMoves()
 				int iRange = GC.getUnitInfo(pUnit->getUnitType())->GetAirInterceptRange();
 				pUnitPlot = pUnit->plot();
 #ifdef AUI_DANGER_PLOTS_REMADE	
-				if (m_pPlayer->GetPlotDanger(*pUnitPlot, pUnit.pointer(), NULL, AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
+				if (m_pPlayer->GetPlotDanger(*pUnitPlot, pUnit.pointer(), NULL, ACTION_AIR_INTERCEPT) >= pUnit->GetCurrHitPoints())
 				{
 					continue;
 				}
@@ -3647,7 +3651,7 @@ void CvTacticalAI::PlotAirInterceptMoves()
 						pEvalPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
 						if (pEvalPlot && pEvalPlot != pUnitPlot)
 						{
-							if (m_pPlayer->GetPlotDanger(*pEvalPlot, pUnit.pointer(), NULL, AIR_ACTION_INTERCEPT) >= pUnit->GetCurrHitPoints())
+							if (m_pPlayer->GetPlotDanger(*pEvalPlot, pUnit.pointer(), NULL, ACTION_AIR_INTERCEPT) >= pUnit->GetCurrHitPoints())
 							{
 								bCouldDieFromSweep = true;
 								goto EndLoop;
@@ -11527,7 +11531,7 @@ void CvTacticalAI::ExecuteWithdrawMoves()
 				m_CurrentMoveUnits[iI].SetAttackStrength(1000-iTurnsToReachTarget);
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 				m_CurrentMoveUnits[iI].SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 				m_CurrentMoveUnits[iI].SetHealthPercent(10,10);
 			}
 		}
@@ -11846,13 +11850,13 @@ bool CvTacticalAI::FindUnitsForThisMove(TacticalAIMoveTypes eMove, CvPlot* pTarg
 										iLeastTurns = FASTMIN(1, iLeastTurns);
 #else
 										iLeastTurns = MIN(1, iLeastTurns);
-#endif // AUI_FAST_COMP
+#endif
 									}
 								}
 							}
 						}
 					}
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 					if(iNumTurnsAway == -1 || iLeastTurns <= iNumTurnsAway)
 					{
 						// If unit was suitable, and close enough, add it to the proper list
@@ -11860,20 +11864,20 @@ bool CvTacticalAI::FindUnitsForThisMove(TacticalAIMoveTypes eMove, CvPlot* pTarg
 						int iMoves = TurnsToReachTarget(pLoopUnit, pTarget, false, false, false, (iNumTurnsAway == -1 ? MAX_INT : iNumTurnsAway));
 #else
 						int iMoves = TurnsToReachTarget(pLoopUnit, pTarget);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 						if ((pLoopUnit->getDropRange() > 0 && iLeastTurns <= iNumTurnsAway) || (iMoves != MAX_INT && (iNumTurnsAway == -1 ||
 							(iNumTurnsAway == 0 && pLoopUnit->plot() == pTarget) || iMoves <= iNumTurnsAway)))
 #else
 						if(iMoves != MAX_INT && (iNumTurnsAway == -1 ||
 						                         (iNumTurnsAway == 0 && pLoopUnit->plot() == pTarget) || iMoves <= iNumTurnsAway))
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 						{
 							CvTacticalUnit unit;
 							unit.SetID(pLoopUnit->GetID());
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 							unit.SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 							unit.SetHealthPercent(pLoopUnit->GetCurrHitPoints(), pLoopUnit->GetMaxHitPoints());
 							unit.SetMovesToTarget(iMoves);
 
@@ -11987,20 +11991,20 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 				}
 #ifdef AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
 				bIsRangedDamage = false;
-#endif // AUI_TACTICAL_FIX_FIND_UNITS_WITHIN_STRIKING_DISTANCE_RANGED_LONG_DISTANCE
+#endif
 
 				int iTurnsCalculated = -1;	// If CanReachInXTurns does an actual pathfind, save the result so we don't just do the same one again.
 #ifdef AUI_ASTAR_PARADROP
 				if (bTargetUndefended && CanReachInXTurns(pLoopUnit, pTarget, iNumTurnsAway, false /*bIgnoreUnits*/, bIgnoreParadrop, &iTurnsCalculated))
 #else
 				if (bTargetUndefended && CanReachInXTurns(pLoopUnit, pTarget, iNumTurnsAway, false /*bIgnoreUnits*/, &iTurnsCalculated))
-#endif // AUI_ASTAR_PARADROP
+#endif
 				{
 					CvTacticalUnit unit;
 					unit.SetID(pLoopUnit->GetID());
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 					unit.SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 					unit.SetAttackStrength(iAttackStrength / 2);
 					unit.SetHealthPercent(pLoopUnit->GetCurrHitPoints(), pLoopUnit->GetMaxHitPoints());
 					m_CurrentMoveUnits.push_back(unit);
@@ -12011,7 +12015,7 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 				else if (!bWillPillage && !bTargetUndefended && pLoopUnit->IsCanAttackRanged())
 #else
 				else if(!bNoRangedUnits && !bWillPillage && pLoopUnit->IsCanAttackRanged())
-#endif // AUI_TACTICAL_FIND_UNITS_WITHIN_STRIKING_DISTANCE_NO_RANGED_SHORTCUT
+#endif
 				{
 #ifndef AUI_DANGER_PLOTS_REMADE
 					// Don't use air units for air strikes if at or below half health
@@ -12095,7 +12099,7 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 						unit.SetID(pLoopUnit->GetID());
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 						unit.SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 						unit.SetAttackStrength(iAttackStrength);
 						unit.SetHealthPercent(pLoopUnit->GetCurrHitPoints(), pLoopUnit->GetMaxHitPoints());
 						m_CurrentMoveUnits.push_back(unit);
@@ -12106,13 +12110,13 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 					else if ((iTurnsCalculated != -1 && iTurnsCalculated <= iNumTurnsAway) || (iTurnsCalculated == -1 && CanReachInXTurns(pLoopUnit, pTarget, iNumTurnsAway, false /*bIgnoreUnits*/, bIgnoreParadrop)))
 #else
 					else if ( (iTurnsCalculated != -1 && iTurnsCalculated <= iNumTurnsAway) || (iTurnsCalculated == -1 && CanReachInXTurns(pLoopUnit, pTarget, iNumTurnsAway, false /*bIgnoreUnits*/)) )
-#endif // AUI_ASTAR_PARADROP
+#endif
 					{
 						CvTacticalUnit unit;
 						unit.SetID(pLoopUnit->GetID());
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 						unit.SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 						unit.SetAttackStrength(iAttackStrength);
 						unit.SetHealthPercent(pLoopUnit->GetCurrHitPoints(), pLoopUnit->GetMaxHitPoints());
 						m_CurrentMoveUnits.push_back(unit);
@@ -12124,13 +12128,13 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 					else if (bIncludeBlockedUnits && CanReachInXTurns(pLoopUnit, pTarget, iNumTurnsAway, true /*bIgnoreUnits*/, bIgnoreParadrop))
 #else
 					else if (bIncludeBlockedUnits && CanReachInXTurns(pLoopUnit, pTarget, iNumTurnsAway, true /*bIgnoreUnits*/))
-#endif // AUI_ASTAR_PARADROP
+#endif
 					{
 						CvTacticalUnit unit;
 						unit.SetID(pLoopUnit->GetID());
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 						unit.SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 						unit.SetAttackStrength(iAttackStrength / 2);
 						unit.SetHealthPercent(pLoopUnit->GetCurrHitPoints(), pLoopUnit->GetMaxHitPoints());
 						m_CurrentMoveUnits.push_back(unit);
@@ -12220,12 +12224,12 @@ bool CvTacticalAI::FindParatroopersWithinStrikingDistance(CvPlot* pTarget)
 			unit.SetID(pLoopUnit->GetID());
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 			unit.SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 #ifdef AUI_TACTICAL_FIX_FIND_PARATROOPER_WITHIN_STRIKING_DISTANCE_MELEE_STRENGTH
 			unit.SetAttackStrength(pLoopUnit->GetMaxAttackStrength(NULL, pTarget, (pTarget->getPlotCity() != NULL ? NULL : pTarget->getBestDefender(NO_PLAYER, m_pPlayer->GetID()).pointer())));
 #else
 			unit.SetAttackStrength(pLoopUnit->GetMaxAttackStrength(NULL, NULL, NULL));
-#endif // AUI_TACTICAL_FIX_FIND_PARATROOPER_WITHIN_STRIKING_DISTANCE_MELEE_STRENGTH
+#endif
 			unit.SetHealthPercent(pLoopUnit->GetCurrHitPoints(), pLoopUnit->GetMaxHitPoints());
 			m_CurrentMoveUnits.push_back(unit);
 			rtnValue = true;
@@ -12406,7 +12410,7 @@ bool CvTacticalAI::FindClosestUnit(CvPlot* pTarget, int iNumTurnsAway, bool bMus
 									iTurns = FASTMIN(iTurns, 2);
 #else
 									iTurns = MIN(iTurns, 2);
-#endif // AUI_FAST_COMP
+#endif
 									bWillParadrop = true;
 									break;
 								}
@@ -12414,21 +12418,21 @@ bool CvTacticalAI::FindClosestUnit(CvPlot* pTarget, int iNumTurnsAway, bool bMus
 						}
 					}
 				}
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 				if(iTurns <= iNumTurnsAway)
 				{
 					CvTacticalUnit unit;
 					unit.SetID(pLoopUnit->GetID());
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 					unit.SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 					unit.SetAttackStrength(1000-iTurns);
 					unit.SetHealthPercent(10,10);
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 					unit.SetMovesToTarget((bWillParadrop ? iTurns : plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pTarget->getX(), pTarget->getY())));
 #else
 					unit.SetMovesToTarget(plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pTarget->getX(), pTarget->getY()));
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 					m_CurrentMoveUnits.push_back(unit);
 					rtnValue = true;
 				}
@@ -12520,19 +12524,19 @@ bool CvTacticalAI::FindClosestOperationUnit(CvPlot* pTarget, bool bSafeForRanged
 							}
 						}
 					}
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 					CvTacticalUnit unit;
 					unit.SetID(pLoopUnit->GetID());
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 					unit.SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 					unit.SetAttackStrength(1000-iTurns);
 					unit.SetHealthPercent(10,10);
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 					unit.SetMovesToTarget((bWillParadrop ? iTurns : plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pTarget->getX(), pTarget->getY())));
 #else
 					unit.SetMovesToTarget(plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pTarget->getX(), pTarget->getY()));
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 					m_CurrentMoveUnits.push_back(unit);
 					rtnValue = true;
 				}
@@ -12610,19 +12614,19 @@ bool CvTacticalAI::FindClosestNavalOperationUnit(CvPlot* pTarget, bool bEscorted
 							}
 						}
 					}
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 					CvTacticalUnit unit;
 					unit.SetID(pLoopUnit->GetID());
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 					unit.SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 					unit.SetAttackStrength(1000-iTurns);
 					unit.SetHealthPercent(10,10);
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 					unit.SetMovesToTarget((bWillParadrop ? iTurns : plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pTarget->getX(), pTarget->getY())));
 #else
 					unit.SetMovesToTarget(plotDistance(pLoopUnit->getX(), pLoopUnit->getY(), pTarget->getX(), pTarget->getY()));
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
 					m_CurrentMoveUnits.push_back(unit);
 					rtnValue = true;
 				}
@@ -12731,7 +12735,7 @@ void CvTacticalAI::ProcessAirUnitsInAttack(CvPlot* pTarget)
 					unit.SetID(pLoopUnit->GetID());
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 					unit.SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 					unit.SetAttackStrength(iAttackerStrength);
 					unit.SetHealthPercent(pLoopUnit->GetCurrHitPoints(), pLoopUnit->GetMaxHitPoints());
 					unit.SetInterceptor(pInterceptor);
@@ -12831,7 +12835,7 @@ bool CvTacticalAI::FindAirUnitsToAirSweep(CvPlot* pTarget)
 					unit.SetID(pLoopUnit->GetID());
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 					unit.SetOwner((PlayerTypes)m_pPlayer->GetID());
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 					unit.SetAttackStrength(iAttackStrength);
 					unit.SetHealthPercent(pLoopUnit->GetCurrHitPoints(), pLoopUnit->GetMaxHitPoints());
 					m_CurrentAirUnits.push_back(unit);

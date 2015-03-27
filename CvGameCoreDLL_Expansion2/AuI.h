@@ -142,9 +142,12 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_DO_SWAP_GREAT_WORKS_REMADE
 
 #ifdef AUI_DANGER_PLOTS_REMADE
-#define AIR_ACTION_ATTACK		0
-#define AIR_ACTION_SWEEP		1
-#define AIR_ACTION_INTERCEPT	2
+#define ACTION_DEFAULT			0
+#define ACTION_AIR_ATTACK		1
+#define ACTION_AIR_SWEEP		2
+#define ACTION_AIR_INTERCEPT	4
+#define ACTION_HEAL				8
+#define ACTION_NO_MELEE			16 // Used to make sure unit will heal overall if they only get ranged bombarded
 #endif
 
 // A* Pathfinding Stuff

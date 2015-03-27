@@ -4462,7 +4462,7 @@ CvPlot *CvMilitaryAI::GetBestAirSweepTarget(CvUnit* pFighter) const
 			pEvalPlot = plotXY(pFighter->getX(), pFighter->getY(), iDX, iDY);
 			if (pEvalPlot)
 			{
-				iPlotDanger = m_pPlayer->GetPlotDanger(*pEvalPlot, pFighter, NULL, AIR_ACTION_SWEEP);
+				iPlotDanger = m_pPlayer->GetPlotDanger(*pEvalPlot, pFighter, NULL, ACTION_AIR_SWEEP);
 				// We want the highest amount of received damaged that will not kill us (since highest received = highest interceptor strength = best target to take down)
 				if (iPlotDanger > iBestCount && iPlotDanger < pFighter->GetCurrHitPoints())
 				{

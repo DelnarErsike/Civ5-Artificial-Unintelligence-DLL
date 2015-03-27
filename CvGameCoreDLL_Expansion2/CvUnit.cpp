@@ -693,6 +693,7 @@ void CvUnit::initWithNameOffset(int iID, UnitTypes eUnit, int iNameOffset, UnitA
 #ifdef AUI_DANGER_PLOTS_REMADE
 	vpDangerPlotList.reserve(NUM_DIRECTION_TYPES * baseMoves());
 	vpDangerPlotMoveOnlyList.reserve(NUM_DIRECTION_TYPES * baseMoves());
+	vpPlotsAttackedList.reserve(MIN(getNumAttacks(), baseMoves()));
 #endif
 
 	if(bSetupGraphical)
@@ -1717,6 +1718,7 @@ void CvUnit::doTurn()
 #ifdef AUI_DANGER_PLOTS_REMADE
 	vpDangerPlotList.clear();
 	vpDangerPlotMoveOnlyList.clear();
+	vpPlotsAttackedList.clear();
 #endif
 	doDelayedDeath();
 }
@@ -5443,7 +5445,7 @@ int CvUnit::healRate(const CvPlot* pPlot) const
 			}
 		}
 	}
-#endif // AUI_UNIT_HEALRATE_ASSUME_EXTRA_HEALRATE_FROM_UNIT
+#endif
 	iExtraHeal += iBestHealFromUnits;
 
 	// Heal from territory ownership (friendly, enemy, etc.)
@@ -11087,7 +11089,11 @@ int CvUnit::GetGenericMaxStrengthModifier(const CvUnit* pOtherUnit, const CvPlot
 
 //	--------------------------------------------------------------------------------
 /// What is the max strength of this Unit when attacking?
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+int CvUnit::GetMaxAttackStrength(const CvPlot* pFromPlot, const CvPlot* pToPlot, const CvUnit* pDefender, const int iDefenderExtraFortifyTurns) const
+#else
 int CvUnit::GetMaxAttackStrength(const CvPlot* pFromPlot, const CvPlot* pToPlot, const CvUnit* pDefender) const
+#endif
 {
 	VALIDATE_OBJECT
 
@@ -11254,7 +11260,11 @@ int CvUnit::GetMaxAttackStrength(const CvPlot* pFromPlot, const CvPlot* pToPlot,
 		iModifier += iTempModifier;
 
 		// Bonus VS fortified
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+		if (pDefender->getFortifyTurns() + iDefenderExtraFortifyTurns > 0)
+#else
 		if(pDefender->getFortifyTurns() > 0)
+#endif
 			iModifier += attackFortifiedModifier();
 
 		// Bonus VS wounded
@@ -11277,7 +11287,11 @@ int CvUnit::GetMaxAttackStrength(const CvPlot* pFromPlot, const CvPlot* pToPlot,
 
 //	--------------------------------------------------------------------------------
 /// What is the max strength of this Unit when defending?
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+int CvUnit::GetMaxDefenseStrength(const CvPlot* pInPlot, const CvUnit* pAttacker, bool bFromRangedAttack, const int iExtraFortifyTurns) const
+#else
 int CvUnit::GetMaxDefenseStrength(const CvPlot* pInPlot, const CvUnit* pAttacker, bool bFromRangedAttack) const
+#endif
 {
 	VALIDATE_OBJECT
 
@@ -11324,7 +11338,11 @@ int CvUnit::GetMaxDefenseStrength(const CvPlot* pInPlot, const CvUnit* pAttacker
 			iModifier += iTempModifier;
 
 		// Fortification
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+		iTempModifier = fortifyModifier(iExtraFortifyTurns);
+#else
 		iTempModifier = fortifyModifier();
+#endif
 		iModifier += iTempModifier;
 
 		// City Defense
@@ -11465,7 +11483,7 @@ int CvUnit::GetBaseRangedCombatStrength() const
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack, const CvPlot* pTargetPlot, const CvPlot* pFromPlot) const
+int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack, const CvPlot* pTargetPlot, const CvPlot* pFromPlot, const int iDefenderExtraFortifyTurns) const
 {
 	VALIDATE_OBJECT
 
@@ -11729,7 +11747,11 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 		iModifier += domainModifier(pOtherUnit->getDomainType());
 
 		// Bonus VS fortified
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+		if (pOtherUnit->getFortifyTurns() + iDefenderExtraFortifyTurns > 0)
+#else
 		if(pOtherUnit->getFortifyTurns() > 0)
+#endif
 			iModifier += attackFortifiedModifier();
 
 		// Bonus VS wounded
@@ -11769,7 +11791,6 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 				iModifier += 25;
 			}
 		}
-		AUI_UNIT_FIX_BAD_BONUS_STACKS
 		// ATTACKING
 		if (bForRangedAttack)
 		{
@@ -12017,7 +12038,7 @@ bool CvUnit::canAirDefend(const CvPlot* pPlot) const
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-int CvUnit::GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage, const CvPlot* pTargetPlot, const CvPlot* pFromPlot) const
+int CvUnit::GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage, const CvPlot* pTargetPlot, const CvPlot* pFromPlot, const int iDefenderExtraFortifyTurns) const
 {
 	VALIDATE_OBJECT
 
@@ -12035,7 +12056,7 @@ int CvUnit::GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bInc
 		}
 	}
 
-	int iAttackerStrength = GetMaxRangedCombatStrength(pDefender, pCity, /*bAttacking*/ true, /*bForRangedAttack*/ true, pTargetPlot, pFromPlot);
+	int iAttackerStrength = GetMaxRangedCombatStrength(pDefender, pCity, /*bAttacking*/ true, /*bForRangedAttack*/ true, pTargetPlot, pFromPlot, iDefenderExtraFortifyTurns);
 #else
 int CvUnit::GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage) const
 {
@@ -12061,9 +12082,9 @@ int CvUnit::GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bInc
 	{
 		// Use Ranged combat value for defender, UNLESS it's a boat
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-		if (pDefender->getDomainType() == DOMAIN_SEA || (iDefenderStrength = pDefender->GetMaxRangedCombatStrength(this, /*pCity*/ NULL, false, /*bForRangedAttack*/ false, pTargetPlot, pFromPlot)) <= 0)
+		if (pDefender->getDomainType() == DOMAIN_SEA || (iDefenderStrength = pDefender->GetMaxRangedCombatStrength(this, /*pCity*/ NULL, false, /*bForRangedAttack*/ false, pTargetPlot, pFromPlot, iDefenderExtraFortifyTurns)) <= 0)
 		{
-			iDefenderStrength = pDefender->GetMaxDefenseStrength(pTargetPlot, this, /*bFromRangedAttack*/ true);
+			iDefenderStrength = pDefender->GetMaxDefenseStrength(pTargetPlot, this, /*bFromRangedAttack*/ true, iDefenderExtraFortifyTurns);
 #else
 		if(pDefender->GetMaxRangedCombatStrength(this, /*pCity*/ NULL, false, /*bForRangedAttack*/ false) > 0 && !pDefender->getDomainType() == DOMAIN_SEA)
 		{
@@ -12086,7 +12107,7 @@ int CvUnit::GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bInc
 	{
 		iDefenderStrength = pCity->getStrengthValue();
 	}
-#endif // AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#endif
 
 	// The roll will vary damage between 30 and 40 (out of 100) for two units of identical strength
 
@@ -12155,7 +12176,7 @@ int CvUnit::GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bInc
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-int CvUnit::GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage, const CvPlot* pTargetPlot, const CvPlot* pFromPlot) const
+int CvUnit::GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage, const CvPlot* pTargetPlot, const CvPlot* pFromPlot, const int iDefenderExtraFortifyTurns) const
 {
 	VALIDATE_OBJECT
 	if (pFromPlot == NULL)
@@ -12174,7 +12195,7 @@ int CvUnit::GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bI
 		}
 	}
 
-	int iAttackerStrength = GetMaxRangedCombatStrength(pDefender, pCity, true, /*bForRangedAttack*/ true, pTargetPlot, pFromPlot);
+	int iAttackerStrength = GetMaxRangedCombatStrength(pDefender, pCity, true, /*bForRangedAttack*/ true, pTargetPlot, pFromPlot, iDefenderExtraFortifyTurns);
 #else
 int CvUnit::GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage) const
 {
@@ -12218,7 +12239,7 @@ int CvUnit::GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bI
 
 		// Use Ranged combat value for defender, UNLESS it's a boat or an Impi (ranged support)
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-		else if (!pDefender->isRangedSupportFire() && pDefender->getDomainType() != DOMAIN_SEA && (iDefenderStrength = pDefender->GetMaxRangedCombatStrength(this, /*pCity*/ NULL, false, false, pTargetPlot, pFromPlot)) > 0)
+		else if (!pDefender->isRangedSupportFire() && pDefender->getDomainType() != DOMAIN_SEA && (iDefenderStrength = pDefender->GetMaxRangedCombatStrength(this, /*pCity*/ NULL, false, false, pTargetPlot, pFromPlot, iDefenderExtraFortifyTurns)) > 0)
 		{
 #else
 		else if(!pDefender->isRangedSupportFire() && pDefender->getDomainType() != DOMAIN_SEA && pDefender->GetMaxRangedCombatStrength(this, /*pCity*/ NULL, false, false) > 0)
@@ -12233,7 +12254,7 @@ int CvUnit::GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bI
 		else
 		{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-			iDefenderStrength = pDefender->GetMaxDefenseStrength(pTargetPlot, this, /*bFromRangedAttack*/ true);
+			iDefenderStrength = pDefender->GetMaxDefenseStrength(pTargetPlot, this, /*bFromRangedAttack*/ true, iDefenderExtraFortifyTurns);
 #else
 			iDefenderStrength = pDefender->GetMaxDefenseStrength(pDefender->plot(), this, /*bFromRangedAttack*/ true);
 #endif
@@ -12322,13 +12343,13 @@ int CvUnit::GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bI
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-int CvUnit::GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand, const CvPlot* pTargetPlot, const CvPlot* pFromPlot) const
+int CvUnit::GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand, const CvPlot* pTargetPlot, const CvPlot* pFromPlot, const int iDefenderExtraFortifyTurns) const
 {
 	if (pFromPlot == NULL && pAttacker)
 		pFromPlot = pAttacker->plot();
 	if (pTargetPlot == NULL)
 		pTargetPlot = plot();
-	int iAttackerStrength = pAttacker->GetMaxRangedCombatStrength(this, /*pCity*/ NULL, true, /*bForRangedAttack*/ false, pTargetPlot, pFromPlot);
+	int iAttackerStrength = pAttacker->GetMaxRangedCombatStrength(this, /*pCity*/ NULL, true, /*bForRangedAttack*/ false, pTargetPlot, pFromPlot, iDefenderExtraFortifyTurns);
 #else
 int CvUnit::GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand) const
 {
@@ -12338,8 +12359,8 @@ int CvUnit::GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand
 
 	// Use Ranged combat value for defender, UNLESS it's a boat
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-	if (getDomainType() == DOMAIN_SEA || (iDefenderStrength = GetMaxRangedCombatStrength(pAttacker, /*pCity*/ NULL, false, false, pTargetPlot, pFromPlot)) <= 0)
-		iDefenderStrength = GetMaxDefenseStrength(pTargetPlot, pAttacker);
+	if (getDomainType() == DOMAIN_SEA || (iDefenderStrength = GetMaxRangedCombatStrength(pAttacker, /*pCity*/ NULL, false, false, pTargetPlot, pFromPlot, iDefenderExtraFortifyTurns)) <= 0)
+		iDefenderStrength = GetMaxDefenseStrength(pTargetPlot, pAttacker, false, iDefenderExtraFortifyTurns);
 #else
 	if(GetMaxRangedCombatStrength(this, /*pCity*/ NULL, false, false) > 0 && !getDomainType() == DOMAIN_SEA)
 		iDefenderStrength = GetMaxRangedCombatStrength(pAttacker, /*pCity*/ NULL, false, false);
@@ -12780,11 +12801,23 @@ bool CvUnit::IsEverFortifyable() const
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+int CvUnit::fortifyModifier(int iExtraTurns) const
+#else
 int CvUnit::fortifyModifier() const
+#endif
 {
 	VALIDATE_OBJECT
 	int iValue = 0;
 	int iTurnsFortified = getFortifyTurns();
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	if (IsEverFortifyable())
+	{
+		iTurnsFortified += iExtraTurns;
+		if (iTurnsFortified > GC.getMAX_FORTIFY_TURNS())
+			iTurnsFortified = GC.getMAX_FORTIFY_TURNS();
+	}
+#endif
 
 	if(isRangedSupportFire())
 	{
@@ -20041,7 +20074,7 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 							pNode = pPathfinder->GetLastNode();
 							if (pNode)
 							{
-								if (pNode->m_iData2 == 1 && pNode->m_iData1 > getMustSetUpToRangedAttackCount())
+								if (pNode->m_iData2 == 1 && pNode->m_iData1 > getMustSetUpToRangedAttackCount() * GC.getMOVE_DENOMINATOR())
 								{
 									if (bExitOnFound)
 									{
@@ -20102,7 +20135,7 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const Cv
 
 	return plotData.size() > 0;
 }
-#endif // AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
+#endif
 
 #ifdef AUI_UNIT_DO_AITYPE_FLIP
 bool CvUnit::DoSingleUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert, bool bForceOff)
@@ -20158,7 +20191,7 @@ bool CvUnit::DoSingleUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert, bool 
 
 	return false;
 }
-#endif // AUI_UNIT_DO_AITYPE_FLIP
+#endif
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL>& CvUnit::GetDangerPlotList(bool bMoveOnly)
@@ -20167,6 +20200,16 @@ FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL>& CvUnit::GetDang
 		return vpDangerPlotMoveOnlyList;
 	else
 		return vpDangerPlotList;
+}
+
+FFastVector<CvPlot*, true, c_eCiv5GameplayDLL>& CvUnit::GetPlotsAttackedList()
+{
+	return vpPlotsAttackedList;
+}
+
+void CvUnit::SetPlotAttacked(CvPlot* pPlot)
+{
+	vpPlotsAttackedList.push_back(pPlot);
 }
 #endif
 
@@ -22576,14 +22619,14 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 #ifdef AUI_UNIT_PROMOTION_FIX_INSTAHEAL_ONLY_UNDER_THREAT
 		// Less than half health and under threat?
 #ifdef AUI_DANGER_PLOTS_REMADE
-		if (getDamage() > (GetMaxHitPoints() / 2) && GET_PLAYER(getOwner()).IsPlotUnderImmediateThreat(*plot(), this))
+		if (2 * getDamage() >= GetMaxHitPoints() && GET_PLAYER(getOwner()).GetPlotDanger(*plot(), this) >= GetCurrHitPoints())
 #else
-		if (getDamage() > (GetMaxHitPoints() / 2) && GET_PLAYER(getOwner()).IsPlotUnderImmediateThreat(*plot()))
-#endif // AUI_DANGER_PLOTS_REMADE
+		if (2 * getDamage() > GetMaxHitPoints() && GET_PLAYER(getOwner()).IsPlotUnderImmediateThreat(*plot()))
+#endif
 #else
 		// Less than half health?
 		if (getDamage() > (GetMaxHitPoints() / 2))
-#endif // AUI_UNIT_PROMOTION_FIX_INSTAHEAL_ONLY_UNDER_THREAT
+#endif
 		{
 			dValue += 1000;   // Enough to lock this one up
 		}
@@ -22709,7 +22752,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		{
 			dValue *= 2;
 		}
-#endif // AUI_UNIT_PROMOTION_TWEAKED_CITY_DEFENSE
+#endif
 	}
 
 	dTemp = (double)pkPromotionInfo->GetAttackFortifiedMod();
@@ -22729,7 +22772,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		dValue += dTemp * (50 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
 		fValue += fTemp * (50 + iFlavorOffense * 2);
-#endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
+#endif
 	}
 	else
 	{
@@ -22744,7 +22787,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		dValue += dTemp * (40 + iFlavorRecon * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
 		dValue += dTemp * (40 + iFlavorRecon * 2);
-#endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
+#endif
 	}
 	else
 	{
@@ -22759,7 +22802,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		dValue += dTemp * (20 + iFlavorDefense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
 		dValue += dTemp * (20 + iFlavorDefense * 2);
-#endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
+#endif
 	}
 	else
 	{
@@ -22774,7 +22817,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		dValue += dTemp * (20 + iFlavorDefense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
 		fValue += fTemp * (40 + iFlavorDefense * 2);
-#endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
+#endif
 	}
 	else
 	{
@@ -22790,7 +22833,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			dValue += 40 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS;
 #else
 			fValue += 40 + iFlavorOffense * 2;
-#endif // AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS
+#endif
 		}
 		else
 		{
@@ -22807,7 +22850,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			dValue += 40 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS;
 #else
 			fValue += 40 + iFlavorOffense * 2;
-#endif // AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS
+#endif
 		}
 		else
 		{
@@ -22875,7 +22918,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		dValue += dTemp * (50 + iFlavorMobile * AUI_UNIT_PROMOTION_TWEAKED_MOVECHANGE);
 #else
 		dValue += dTemp * (50 + iFlavorMobile * 2);
-#endif // AUI_UNIT_PROMOTION_TWEAKED_MOVECHANGE
+#endif
 	}
 	else
 	{
@@ -22898,7 +22941,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			dValue += 50 + (iFlavorMobile + iFlavorDefense + FASTMAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_MARCH;
 #else
 			dValue += 50 + (iFlavorMobile + iFlavorDefense + MAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_MARCH;
-#endif // AUI_FAST_COMP
+#endif
 		}
 		else
 		{
@@ -22906,14 +22949,14 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			dValue += 30 + (iFlavorMobile + iFlavorDefense + FASTMAX(iFlavorDefense, iFlavorOffense)) * 2;
 #else
 			dValue += 30 + (iFlavorMobile + iFlavorDefense + MAX(iFlavorDefense, iFlavorOffense)) * 2;
-#endif // AUI_FAST_COMP
+#endif
 #else
 			dValue += 50 + iFlavorMobile * 2;
 		}
 		else
 		{
 			dValue += 30 + iFlavorMobile * 2;
-#endif // AUI_UNIT_PROMOTION_TWEAKED_MARCH
+#endif
 		}
 	}
 
@@ -22933,7 +22976,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			dValue += 50 + (iFlavorMobile + iFlavorOffense + FASTMAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_BLITZ;
 #else
 			dValue += 50 + (iFlavorMobile + iFlavorOffense + MAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_BLITZ;
-#endif // AUI_FAST_COMP
+#endif
 		}
 		else
 		{
@@ -22941,14 +22984,14 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			dValue += 20 + (iFlavorMobile + iFlavorOffense + FASTMAX(iFlavorDefense, iFlavorOffense)) * 2;
 #else
 			dValue += 20 + (iFlavorMobile + iFlavorOffense + MAX(iFlavorDefense, iFlavorOffense)) * 2;
-#endif // AUI_FAST_COMP
+#endif
 #else
 			dValue += 50 + iFlavorMobile * 2;
 		}
 		else
 		{
 			dValue += 20 + iFlavorMobile * 2;
-#endif // AUI_UNIT_PROMOTION_TWEAKED_BLITZ
+#endif
 		}
 	}
 
@@ -22967,7 +23010,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			dValue += 30 + (iFlavorMobile + iFlavorOffense) * AUI_UNIT_PROMOTION_TWEAKED_MOVE_AFTER_ATTACK;
 #else
 			dValue += 30 + (iFlavorMobile + iFlavorOffense) * 2;
-#endif // AUI_UNIT_PROMOTION_TWEAKED_MOVE_AFTER_ATTACK
+#endif
 		}
 		else
 		{
@@ -23058,7 +23101,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 				{
 					dValue *= 2;
 				}
-#endif // AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
+#endif
 			}
 
 			dTemp = (double)pkPromotionInfo->GetTerrainDefensePercent(iI);
@@ -23084,7 +23127,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 				{
 					fValue *= 2;
 				}
-#endif // AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
+#endif
 			}
 
 			if(pkPromotionInfo->GetTerrainDoubleMove(iI))
@@ -23134,7 +23177,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 				{
 					fValue *= 2;
 				}
-#endif // AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
+#endif
 			}
 
 			dTemp = (double)pkPromotionInfo->GetFeatureDefensePercent(iI);;
@@ -23160,7 +23203,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 				{
 					fValue *= 2;
 				}			
-#endif // AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
+#endif
 			}
 
 			if(pkPromotionInfo->GetFeatureDoubleMove(iI))
@@ -23275,7 +23318,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		dValue += GC.getGame().getJonRandNumBinom(AUI_UNIT_PROMOTION_TWEAKED_RANDOM, "AI Promote");
 #else
 		dValue += GC.getGame().getJonRandNum(AUI_UNIT_PROMOTION_TWEAKED_RANDOM, "AI Promote");
-#endif // AUI_BINOM_RNG
+#endif
 	}
 
 	// Randomizer borrowed from CvReligionAI::ScoreBelief()
@@ -23285,7 +23328,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	{
 		fValue += GC.getGame().getJonRandNum(15, "AI Promote");
 	}
-#endif // AUI_UNIT_PROMOTION_TWEAKED_RANDOM
+#endif
 
 	return (int)(dValue + 0.5);
 #else
@@ -23313,7 +23356,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 #else
 		// Half health or less?
 		if(getDamage() >= (GetMaxHitPoints() / 2))
-#endif // AUI_UNIT_PROMOTION_FIX_INSTAHEAL_ONLY_UNDER_THREAT	
+#endif	
 		{
 			iValue += 1000;   // Enough to lock this one up
 		}
@@ -23439,7 +23482,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		{
 			iValue *= 2;
 		}
-#endif // AUI_UNIT_PROMOTION_TWEAKED_CITY_DEFENSE
+#endif
 	}
 
 	iTemp = pkPromotionInfo->GetAttackFortifiedMod();
@@ -23459,7 +23502,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		iValue += iTemp * (50 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
 		iValue += iTemp * (50 + iFlavorOffense * 2);
-#endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
+#endif
 	}
 	else
 	{
@@ -23474,7 +23517,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		iValue += iTemp * (40 + iFlavorRecon * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
 		iValue += iTemp * (40 + iFlavorRecon * 2);
-#endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
+#endif
 	}
 	else
 	{
@@ -23489,7 +23532,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		iValue += iTemp * (20 + iFlavorDefense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
 		iValue += iTemp * (20 + iFlavorDefense * 2);
-#endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
+#endif
 	}
 	else
 	{
@@ -23504,7 +23547,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		iValue += iTemp * (40 + iFlavorDefense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
 #else
 		iValue += iTemp * (40 + iFlavorDefense * 2);
-#endif // AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
+#endif
 	}
 	else
 	{
@@ -23520,7 +23563,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			iValue += 40 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS;
 #else
 			iValue += 40 + iFlavorOffense * 2;
-#endif // AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS
+#endif
 		}
 		else
 		{
@@ -23537,7 +23580,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 			iValue += 40 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS;
 #else
 			iValue += 40 + iFlavorOffense * 2;
-#endif // AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS
+#endif
 		}
 		else
 		{
@@ -23608,7 +23651,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		iValue += iTemp * (50 + iFlavorMobile * AUI_UNIT_PROMOTION_TWEAKED_MOVECHANGE);
 #else
 		iValue += iTemp * (50 + iFlavorMobile * 2);
-#endif // AUI_UNIT_PROMOTION_TWEAKED_MOVECHANGE
+#endif
 	}
 	else
 	{
@@ -23638,7 +23681,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		else
 		{
 			iValue += 30 + iFlavorMobile * 2;
-#endif // AUI_UNIT_PROMOTION_TWEAKED_MARCH
+#endif
 		}
 	}
 
@@ -23665,7 +23708,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		else
 		{
 			iValue += 20 + (iFlavorMobile + iFlavorOffense) * 2;
-#endif // AUI_UNIT_PROMOTION_TWEAKED_BLITZ
+#endif
 		}
 	}
 
