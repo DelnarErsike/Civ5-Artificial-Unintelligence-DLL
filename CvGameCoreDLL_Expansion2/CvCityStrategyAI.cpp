@@ -275,6 +275,10 @@ void CvCityStrategyAI::Init(CvAICityStrategies* pAICityStrategies, CvCity* pCity
 	m_pProjectProductionAI = FNEW(CvProjectProductionAI(pCity), c_eCiv5GameplayDLL, 0);
 	m_pProcessProductionAI = FNEW(CvProcessProductionAI(pCity), c_eCiv5GameplayDLL, 0);
 
+#ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+	m_RushList.reserve(SAFE_ESTIMATE_NUM_BUILDINGS + SAFE_ESTIMATE_NUM_UNITS);
+#endif
+
 	// Clear variables
 	Reset();
 }
@@ -386,7 +390,7 @@ void CvCityStrategyAI::FlavorUpdate()
 		if (GetCity()->IsPuppet() && ((FlavorTypes)iFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_MILITARY_TRAINING") ||
 			(FlavorTypes)iFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_NAVAL")))
 			continue;
-#endif // AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_PUPPETS_NULLIFY_BARRACKS
+#endif
 		int iFlavorValue = GetLatestFlavorValue((FlavorTypes)iFlavor);// m_piLatestFlavorValues[iFlavor];
 		
 #ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
@@ -396,14 +400,14 @@ void CvCityStrategyAI::FlavorUpdate()
 		{
 			iFlavorValue = GET_PLAYER(m_pCity->getOwner()).GetGrandStrategyAI()->ScienceFlavorBoost() * MAX(1, iFlavorValue);
 		}
-#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+#endif
 
 		m_pBuildingProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
 		m_pUnitProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
 		m_pProjectProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
 #ifndef AUI_GS_SCIENCE_FLAVOR_BOOST
 		m_pProcessProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
-#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+#endif
 	}
 }
 
@@ -1457,6 +1461,376 @@ void CvCityStrategyAI::DoTurn()
 		}
 	}
 }
+
+#ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+// Near carbon-copy of ChooseProduction
+void CvCityStrategyAI::ConstructRushList(YieldTypes eCurrency, BuildingTypes eIgnoreBldg, UnitTypes eIgnoreUnit)
+{
+	int iBldgLoop, iUnitLoop, iProjectLoop, iProcessLoop, iTempWeight;
+	CvCityBuildable buildable;
+	CvCityBuildable selection;
+	UnitTypes eUnitForOperation;
+	UnitTypes eUnitForArmy;
+
+	CvPlayerAI& kPlayer = GET_PLAYER(m_pCity->getOwner());
+	CvDiplomacyAI* pDiploAI = kPlayer.GetDiplomacyAI();
+
+	// Reset vector holding items we can currently build
+	m_Buildables.clear();
+	m_RushList.clear();
+
+	EconomicAIStrategyTypes eStrategyEnoughSettlers = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_ENOUGH_EXPANSION");
+	bool bEnoughSettlers = kPlayer.GetEconomicAI()->IsUsingStrategy(eStrategyEnoughSettlers);
+
+	// Check units for operations first
+	eUnitForOperation = m_pCity->GetUnitForOperation();
+	if (eUnitForOperation != NO_UNIT)
+	{
+		buildable.m_eBuildableType = CITY_BUILDABLE_UNIT_FOR_OPERATION;
+		buildable.m_iIndex = (int)eUnitForOperation;
+		buildable.m_iTurnsToConstruct = GetCity()->getProductionTurnsLeft(eUnitForOperation, 0);
+		iTempWeight = GC.getAI_CITYSTRATEGY_OPERATION_UNIT_BASE_WEIGHT();
+		int iOffenseFlavor = kPlayer.GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE")) + kPlayer.GetMilitaryAI()->GetNumberOfTimesOpsBuildSkippedOver();
+		iTempWeight += (GC.getAI_CITYSTRATEGY_OPERATION_UNIT_FLAVOR_MULTIPLIER() * iOffenseFlavor);
+
+		if (GetSpecialization() != NO_CITY_SPECIALIZATION && GC.getCitySpecializationInfo(GetSpecialization())->IsOperationUnitProvider())
+		{
+			iTempWeight *= 5;
+		}
+
+		// add in the weight of this unit as if I were deciding to build it without having a reason
+		iTempWeight += m_pUnitProductionAI->GetWeight(eUnitForOperation);
+
+		CvUnitEntry* pkUnitEntry = GC.getUnitInfo(eUnitForOperation);
+		if (pkUnitEntry && pkUnitEntry->GetDefaultUnitAIType() == UNITAI_SETTLE)
+		{
+			if (bEnoughSettlers)
+			{
+				iTempWeight = 0;
+			}
+			else
+			{
+				int iBestArea, iSecondBestArea;
+				int iNumGoodAreas = kPlayer.GetBestSettleAreas(kPlayer.GetEconomicAI()->GetMinimumSettleFertility(), iBestArea, iSecondBestArea);
+				if (iNumGoodAreas == 0)
+				{
+					iTempWeight = 0;
+				}
+			}
+		}
+
+		if (iTempWeight > 0)
+		{
+			m_Buildables.push_back(buildable, iTempWeight);
+		}
+
+	}
+
+	// Next units for sneak attack armies
+	eUnitForArmy = kPlayer.GetMilitaryAI()->GetUnitForArmy(GetCity());
+	if (eUnitForArmy != NO_UNIT)
+	{
+		buildable.m_eBuildableType = CITY_BUILDABLE_UNIT_FOR_ARMY;
+		buildable.m_iIndex = (int)eUnitForArmy;
+		buildable.m_iTurnsToConstruct = GetCity()->getProductionTurnsLeft(eUnitForArmy, 0);
+		iTempWeight = GC.getAI_CITYSTRATEGY_ARMY_UNIT_BASE_WEIGHT();
+		int iOffenseFlavor = kPlayer.GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE"));
+#ifdef AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NO_HIGH_DIFFICULTY_SKEW
+		iTempWeight += (GC.getAI_CITYSTRATEGY_OPERATION_UNIT_FLAVOR_MULTIPLIER() * iOffenseFlavor);
+#else
+		int iBonusMultiplier = max(1, GC.getGame().getHandicapInfo().GetID() - 5); // more at the higher difficulties
+		iTempWeight += (GC.getAI_CITYSTRATEGY_OPERATION_UNIT_FLAVOR_MULTIPLIER() * iOffenseFlavor * iBonusMultiplier);
+#endif
+		// add in the weight of this unit as if I were deciding to build it without having a reason
+		iTempWeight += m_pUnitProductionAI->GetWeight(eUnitForArmy);
+
+		if (iTempWeight > 0)
+		{
+			m_Buildables.push_back(buildable, iTempWeight);
+		}
+	}
+
+	// Loop through adding the available buildings
+	for (iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
+	{
+		const BuildingTypes eLoopBuilding = static_cast<BuildingTypes>(iBldgLoop);
+		CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eLoopBuilding);
+
+		//Skip if null
+		if (pkBuildingInfo == NULL)
+			continue;
+
+		// Make sure this building can be purchased now
+		if (iBldgLoop != eIgnoreBldg && m_pCity->IsCanPurchase(true, true, NO_UNIT, eLoopBuilding, NO_PROJECT, eCurrency))
+		{
+			buildable.m_eBuildableType = CITY_BUILDABLE_BUILDING;
+			buildable.m_iIndex = iBldgLoop;
+			buildable.m_iTurnsToConstruct = GetCity()->getProductionTurnsLeft(eLoopBuilding, 0);
+
+			iTempWeight = m_pBuildingProductionAI->GetWeight(eLoopBuilding);
+
+#ifdef AUI_CITYSTRATEGY_EMPHASIZE_FACTORIES_IF_NO_IDEOLOGY
+			if (kPlayer.GetPlayerPolicies()->GetLateGamePolicyTree() == NO_POLICY_BRANCH_TYPE &&
+				pkBuildingInfo->GetXBuiltTriggersIdeologyChoice() > 0)
+			{
+				iTempWeight *= AUI_CITYSTRATEGY_EMPHASIZE_FACTORIES_IF_NO_IDEOLOGY;
+			}
+#endif
+
+			// Don't build the UN if you aren't going for the diplo victory
+			if (pkBuildingInfo->IsDiplomaticVoting())
+			{
+				int iVotesNeededToWin = GC.getGame().GetVotesNeededForDiploVictory();
+				int iSecuredVotes = 0;
+				TeamTypes myTeamID = kPlayer.getTeam();
+				PlayerTypes myPlayerID = kPlayer.GetID();
+
+				// Loop through Players to see if they'll vote for this player
+				PlayerTypes eLoopPlayer;
+				TeamTypes eLoopTeam;
+				for (int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
+				{
+					eLoopPlayer = (PlayerTypes)iPlayerLoop;
+
+					if (GET_PLAYER(eLoopPlayer).isAlive())
+					{
+						eLoopTeam = GET_PLAYER(eLoopPlayer).getTeam();
+
+						// Liberated?
+						if (GET_TEAM(eLoopTeam).GetLiberatedByTeam() == myTeamID)
+						{
+							iSecuredVotes++;
+						}
+
+						// Minor civ?
+						else if (GET_PLAYER(eLoopPlayer).isMinorCiv())
+						{
+							// Best Relations?
+							if (GET_PLAYER(eLoopPlayer).GetMinorCivAI()->GetAlly() == myPlayerID)
+							{
+								iSecuredVotes++;
+							}
+						}
+					}
+				}
+
+				int iNumberOfPlayersWeNeedToBuyOff = MAX(0, iVotesNeededToWin - iSecuredVotes);
+
+				if (!pDiploAI || !pDiploAI->IsGoingForDiploVictory() || kPlayer.GetTreasury()->GetGold() < iNumberOfPlayersWeNeedToBuyOff * 500)
+				{
+					iTempWeight = 0;
+				}
+			}
+
+			// If the City is a puppet, it avoids Wonders (because the human can't change it if he wants to build it somewhere else!)
+			if (GetCity()->IsPuppet())
+			{
+				const CvBuildingClassInfo& kBuildingClassInfo = pkBuildingInfo->GetBuildingClassInfo();
+
+				if (isWorldWonderClass(kBuildingClassInfo) || isTeamWonderClass(kBuildingClassInfo) || isNationalWonderClass(kBuildingClassInfo) || isLimitedWonderClass(kBuildingClassInfo))
+				{
+					iTempWeight = 0;
+				}
+#ifndef AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_PUPPETS_NULLIFY_BARRACKS
+				// it also avoids military training buildings - since it can't build units
+				if (pkBuildingInfo->GetDomainFreeExperience(DOMAIN_LAND))
+				{
+					iTempWeight = 0;
+				}
+#endif
+				// they also like stuff that won't burden the empire with maintenance costs
+				if (pkBuildingInfo->GetGoldMaintenance() == 0)
+				{
+					iTempWeight *= 2;
+				}
+				// and they avoid any buildings that require resources
+				int iNumResources = GC.getNumResourceInfos();
+				for (int iResourceLoop = 0; iResourceLoop < iNumResources; iResourceLoop++)
+				{
+					if (pkBuildingInfo->GetResourceQuantityRequirement(iResourceLoop) > 0)
+					{
+						iTempWeight = 0;
+					}
+				}
+			}
+			if (iTempWeight > 0)
+				m_Buildables.push_back(buildable, iTempWeight);
+		}
+	}
+
+	// If the City is a puppet, it avoids training Units and projects
+	if (!GetCity()->IsPuppet())
+	{
+#ifdef AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_ACCURATE_SEA_SANITY_CHECK
+		int iI, iLoop;
+		CvCity* pLoopCity = NULL;
+#endif
+		// Loop through adding the available units
+		for (iUnitLoop = 0; iUnitLoop < GC.GetGameUnits()->GetNumUnits(); iUnitLoop++)
+		{
+			// Make sure this unit can be purchased now
+			if (iUnitLoop != eIgnoreUnit && m_pCity->IsCanPurchase(true, true, (UnitTypes)iUnitLoop, NO_BUILDING, NO_PROJECT, eCurrency))
+			{
+				buildable.m_eBuildableType = CITY_BUILDABLE_UNIT;
+				buildable.m_iIndex = iUnitLoop;
+				buildable.m_iTurnsToConstruct = GetCity()->getProductionTurnsLeft((UnitTypes)iUnitLoop, 0);
+
+				iTempWeight = m_pUnitProductionAI->GetWeight((UnitTypes)iUnitLoop);
+
+				CvUnitEntry* pkUnitEntry = GC.getUnitInfo((UnitTypes)iUnitLoop);
+				if (pkUnitEntry && pkUnitEntry->GetDefaultUnitAIType() == UNITAI_SETTLE)
+				{
+					if (bEnoughSettlers)
+					{
+						iTempWeight = 0;
+					}
+					else
+					{
+						int iBestArea, iSecondBestArea;
+						int iNumGoodAreas = kPlayer.GetBestSettleAreas(kPlayer.GetEconomicAI()->GetMinimumSettleFertility(), iBestArea, iSecondBestArea);
+						if (iNumGoodAreas == 0)
+						{
+							iTempWeight = 0;
+						}
+					}
+				}
+
+				// sanity check for building ships on small inland seas (not lakes)
+				if (pkUnitEntry)
+				{
+					DomainTypes eDomain = (DomainTypes)pkUnitEntry->GetDomainType();
+					if (eDomain == DOMAIN_SEA && pkUnitEntry->GetDefaultUnitAIType() != UNITAI_WORKER_SEA) // if needed allow workboats...
+					{
+						CvArea* pBiggestNearbyBodyOfWater = m_pCity->waterArea();
+						if (pBiggestNearbyBodyOfWater)
+						{
+#ifdef AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_ACCURATE_SEA_SANITY_CHECK
+							CvPlayer& kThisPlayer = GET_PLAYER(m_pCity->getOwner());
+							// Loop through all the players
+							for (iI = 0; iI < MAX_PLAYERS; iI++)
+							{
+								CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iI);
+								if (kPlayer.isAlive() && kPlayer.GetID() != kThisPlayer.GetID())
+								{
+									for (pLoopCity = kPlayer.firstCity(&iLoop); pLoopCity != NULL; pLoopCity = kPlayer.nextCity(&iLoop))
+									{
+										if (pLoopCity->waterArea())
+										{
+											if (pLoopCity->waterArea() == pBiggestNearbyBodyOfWater)
+											{
+												goto AreaHasOtherCity;
+											}
+										}
+									}
+								}
+							}
+							// Gets skipped over if there is at least one other civ's city on this water area
+							iTempWeight = 0;
+
+						AreaHasOtherCity:;
+#else
+							int iWaterTiles = pBiggestNearbyBodyOfWater->getNumTiles();
+							int iNumUnitsofMine = pBiggestNearbyBodyOfWater->getUnitsPerPlayer(m_pCity->getOwner());
+							if (iNumUnitsofMine * 5 > iWaterTiles)
+							{
+								iTempWeight = 0;
+							}
+#endif
+						}
+						else // this should never happen, but...
+						{
+							iTempWeight = 0;
+						}
+					}
+				}
+
+
+				if (iTempWeight > 0)
+					m_Buildables.push_back(buildable, iTempWeight);
+			}
+		}
+
+		// Loop through adding the available projects
+		for (iProjectLoop = 0; iProjectLoop < GC.GetGameProjects()->GetNumProjects(); iProjectLoop++)
+		{
+			if (m_pCity->IsCanPurchase(true, true, NO_UNIT, NO_BUILDING, (ProjectTypes)iProjectLoop, eCurrency))
+			{
+				buildable.m_eBuildableType = CITY_BUILDABLE_PROJECT;
+				buildable.m_iIndex = iProjectLoop;
+				buildable.m_iTurnsToConstruct = GetCity()->getProductionTurnsLeft((ProjectTypes)iProjectLoop, 0);
+				m_Buildables.push_back(buildable, m_pProjectProductionAI->GetWeight((ProjectTypes)iProjectLoop));
+			}
+		}
+	}
+
+	ReweightByCost();
+
+#ifdef AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
+	NormalizeList();
+#else
+	m_Buildables.SortItems();
+#endif
+
+	if (m_Buildables.GetTotalWeight() > 0)
+	{
+		int iRushIfMoreThanXTurns = GC.getAI_ATTEMPT_RUSH_OVER_X_TURNS_TO_BUILD();
+		if (GET_PLAYER(m_pCity->getOwner()).isMinorCiv())
+		{
+			iRushIfMoreThanXTurns *= GC.getMINOR_CIV_PRODUCTION_PERCENT();
+			iRushIfMoreThanXTurns /= 100;
+		}
+		// Choose from the best options (currently 4)
+		int iNumChoices = GC.getGame().getHandicapInfo().GetCityProductionNumOptions();
+		if (iNumChoices > m_Buildables.size())
+			iNumChoices = m_Buildables.size();
+		for (uint iI = 0; iI < (uint)iNumChoices; iI++)
+		{
+			selection = m_Buildables.GetElement(iI);
+
+			OrderData NewOrder;
+			NewOrder.eOrderType = ORDER_TRAIN;
+			NewOrder.iData1 = selection.m_iIndex;
+			NewOrder.iData2 = -1;
+			NewOrder.bSave = false;
+			NewOrder.bRush = selection.m_iTurnsToConstruct > iRushIfMoreThanXTurns;
+			
+			switch (selection.m_eBuildableType)
+			{
+			case CITY_BUILDABLE_UNIT:
+			case CITY_BUILDABLE_UNIT_FOR_ARMY:
+			case CITY_BUILDABLE_UNIT_FOR_OPERATION:
+			{
+				NewOrder.eOrderType = ORDER_TRAIN;
+				CvUnitEntry* pkUnitInfo = GC.getUnitInfo((UnitTypes)selection.m_iIndex);
+				if (pkUnitInfo)
+					NewOrder.iData2 = pkUnitInfo->GetDefaultUnitAIType();
+			}
+			break;
+
+			case CITY_BUILDABLE_BUILDING:
+				NewOrder.eOrderType = ORDER_CONSTRUCT;
+				break;
+
+			case CITY_BUILDABLE_PROJECT:
+				NewOrder.eOrderType = ORDER_CREATE;
+				break;
+			}
+
+			m_RushList.push_back(NewOrder);
+		}
+	}
+}
+
+int CvCityStrategyAI::GetRushListLength() const
+{
+	return m_RushList.size();
+}
+
+OrderData* CvCityStrategyAI::GetRushListItem(int iIndex)
+{
+	return &m_RushList.at(iIndex);
+}
+#endif
 
 void CvCityStrategyAI::ResetBestYields()
 {

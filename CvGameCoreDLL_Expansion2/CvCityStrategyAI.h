@@ -186,6 +186,11 @@ public:
 	// City AI methods
 	void ChooseProduction(bool bUseAsyncRandom, BuildingTypes eIgnoreBldg = NO_BUILDING, UnitTypes eIgnoreUnit = NO_UNIT);
 	void DoTurn();
+#ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+	void ConstructRushList(YieldTypes eCurrency = YIELD_GOLD, BuildingTypes eIgnoreBldg = NO_BUILDING, UnitTypes eIgnoreUnit = NO_UNIT);
+	int GetRushListLength() const;
+	OrderData* GetRushListItem(int iIndex);
+#endif
 
 	// these functions must be called together. Reset clears the internal arrays, update evalutes the city, and GetBestYieldAverage... returns the value that the builder AI uses.
 	void ResetBestYields();
@@ -203,7 +208,7 @@ private:
 	void ReweightByCost();
 #ifdef AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
 	void NormalizeList();
-#endif // AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
+#endif
 
 	// Logging functions
 	void LogFlavors(FlavorTypes eFlavor = NO_FLAVOR);
@@ -228,6 +233,9 @@ private:
 	CvProcessProductionAI* m_pProcessProductionAI;
 
 	CvWeightedVector<CvCityBuildable, (SAFE_ESTIMATE_NUM_BUILDINGS + SAFE_ESTIMATE_NUM_UNITS), true> m_Buildables;
+#ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+	FFastVector<OrderData, true, c_eCiv5GameplayDLL> m_RushList;
+#endif
 
 	static unsigned char  m_acBestYields[NUM_YIELD_TYPES][NUM_CITY_PLOTS];
 	unsigned short m_asBestYieldAverageTimes100[NUM_YIELD_TYPES];

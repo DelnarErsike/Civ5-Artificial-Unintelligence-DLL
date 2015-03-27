@@ -1751,89 +1751,68 @@ void CvEconomicAI::DoHurry()
 
 	CvCity* pLoopCity = 0;
 	int iTurnsSaved = 0;
+	int iGoldCost = 0;
 #ifndef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
 	int iHurryAmount = 0;
 	int iHurryAmountAvailable = 0;
 	int iI = 0;
-#endif // AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+#endif
 
 	CvCity* pBestHurryCity = NULL;
-	int iBestHurryTurnsSaved = 0;
 #ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
-	int iBestHurryIndex = 0;
-
-	// Exit if we don't have a set amount of gold, to avoid purchase overuse.
-	int comfortableGoldToHurry = GC.getAI_GOLD_PRIORITY_MINIMUM_PLOT_BUY_VALUE() / 2 + GC.getAI_GOLD_BALANCE_TO_HALVE_PLOT_BUY_MINIMUM() * (int)m_pPlayer->GetCurrentEra() / 7;
-	int playerGold = m_pPlayer->GetTreasury()->GetGold();
-
-	if (playerGold < comfortableGoldToHurry)
-	{
-		return;
-	}
+	OrderData* pBestHurryOrder = NULL;
+	int iBestGoldPerTurnHammers = MAX_INT;
 #else
+	int iBestHurryTurnsSaved = 0;
 	int iBestHurryAmount = 0;
 	int iBestHurryAmountAvailable = 0;
 	HurryTypes eBestHurryType = NO_HURRY;
-#endif // AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+#endif
 
 	// Look at each of our cities
 	for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 	{
 #ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
-		int iProdPercentRemaining = ((pLoopCity->getProductionNeeded() - pLoopCity->getProduction()) * 100) / pLoopCity->getProductionNeeded();
+		pLoopCity->GetCityStrategyAI()->ConstructRushList();
 
 		// Loop through all orders in the city
-		for (int iIndex = 0; iIndex < pLoopCity->getOrderQueueLength(); iIndex++)
+		for (int iIndex = 0; iIndex < pLoopCity->GetCityStrategyAI()->GetRushListLength(); iIndex++)
 		{
 			// What are we currently looking at?
-			pOrder = pLoopCity->getOrderFromQueue(iIndex);
+			pOrder = pLoopCity->GetCityStrategyAI()->GetRushListItem(iIndex);
 
 			// Can we rush it?
 			if (pOrder && pLoopCity->IsCanPurchase(pOrder))
 			{
-				if (iIndex == 0)
+				int iProductionNeeded = MAX_INT;
+				switch (pOrder->eOrderType)
 				{
-					// We skip if the build order is more than 2/3 done.
-					if (iProdPercentRemaining < 33)
-						continue;
-					iTurnsSaved = pLoopCity->getProductionTurnsLeft();
+				case ORDER_TRAIN:
+					iProductionNeeded = m_pPlayer->getProductionNeeded((UnitTypes)pOrder->iData1) * 100 - pLoopCity->getUnitProductionTimes100((UnitTypes)pOrder->iData1);
+					break;
+				case ORDER_CONSTRUCT:
+					iProductionNeeded = m_pPlayer->getProductionNeeded((BuildingTypes)pOrder->iData1) * 100 - pLoopCity->GetCityBuildings()->GetBuildingProductionTimes100((BuildingTypes)pOrder->iData1);
+					break;
+				case ORDER_CREATE:
+					iProductionNeeded = m_pPlayer->getProductionNeeded((ProjectTypes)pOrder->iData1) * 100 - pLoopCity->getProjectProductionTimes100((ProjectTypes)pOrder->iData1);
+					break;
+				case ORDER_PREPARE:
+					iProductionNeeded = m_pPlayer->getProductionNeeded((SpecialistTypes)pOrder->iData1) * 100 - pLoopCity->getSpecialistProductionTimes100((SpecialistTypes)pOrder->iData1);
+					break;
 				}
-				else
+				iTurnsSaved = iProductionNeeded / pLoopCity->getRawProductionDifferenceTimes100(true, false);
+				iGoldCost = pLoopCity->GetPurchaseCost(pOrder);
+				if (iGoldCost / iTurnsSaved < iBestGoldPerTurnHammers)
 				{
-					int iProductionNeeded = MAX_INT;
-					switch (pOrder->eOrderType)
-					{
-					case ORDER_TRAIN:
-						iProductionNeeded = m_pPlayer->getProductionNeeded((UnitTypes)pOrder->iData1) * 100 - pLoopCity->getUnitProductionTimes100((UnitTypes)pOrder->iData1);
-						break;
-					case ORDER_CONSTRUCT:
-						iProductionNeeded = m_pPlayer->getProductionNeeded((BuildingTypes)pOrder->iData1) * 100 - pLoopCity->GetCityBuildings()->GetBuildingProductionTimes100((BuildingTypes)pOrder->iData1);
-						break;
-					case ORDER_CREATE:
-						iProductionNeeded = m_pPlayer->getProductionNeeded((ProjectTypes)pOrder->iData1) * 100 - pLoopCity->getProjectProductionTimes100((ProjectTypes)pOrder->iData1);
-						break;
-					case ORDER_PREPARE:
-						iProductionNeeded = m_pPlayer->getProductionNeeded((SpecialistTypes)pOrder->iData1) * 100 - pLoopCity->getSpecialistProductionTimes100((SpecialistTypes)pOrder->iData1);
-						break;
-					}
-					iTurnsSaved = iProductionNeeded / pLoopCity->getRawProductionDifferenceTimes100(true, false);
-				}
-				// Also skip if we don't save any turns
-				if (iIndex == 0 && iTurnsSaved < 2)
-				{
-					continue;
-				}
-				if (iBestHurryTurnsSaved * MAX(1, iIndex) < iTurnsSaved)
-				{
-					iBestHurryTurnsSaved = iTurnsSaved;
+					iBestGoldPerTurnHammers = iGoldCost / iTurnsSaved;
 					pBestHurryCity = pLoopCity;
-					iBestHurryIndex = iIndex;
+					pBestHurryOrder = pOrder;
 					if (GC.getLogging() && GC.getAILogging())
 					{
 						static const char* orderTypeStrings[] = { "ORDER_TRAIN", "ORDER_CONSTRUCT", "ORDER_CREATE", "ORDER_PREPARE", "ORDER_MAINTAIN", "NO_ORDER" };
 						int orderIndex = ((pOrder->eOrderType < 0) || (pOrder->eOrderType > 4)) ? 5 : pOrder->eOrderType;
 						CvString strLogString;
-						strLogString.Format("DoHurry Option: order type %s, Index %d, Turns Saved: %d,remaining percent = %d", orderTypeStrings[orderIndex], iIndex, iTurnsSaved, (iIndex == 0 ? iProdPercentRemaining : 0));
+						strLogString.Format("DoHurry Option: order type %s, Turns Saved: %d, Gold Spent Per Turn of Production: %d", orderTypeStrings[orderIndex], iTurnsSaved, iBestGoldPerTurnHammers);
 						m_pPlayer->GetHomelandAI()->LogHomelandMessage(strLogString);
 #else
 		// What are we currently working on?
@@ -1878,7 +1857,7 @@ void CvEconomicAI::DoHurry()
 							pBestHurryCity = pLoopCity;
 							eBestHurryType = (HurryTypes)iI;
 						}
-#endif // AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+#endif
 					}
 				}
 			}
@@ -1889,15 +1868,21 @@ void CvEconomicAI::DoHurry()
 	if(pBestHurryCity != NULL)
 	{
 #ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
-		pBestHurryCity->PurchaseOrder(iBestHurryIndex);
-		if (iBestHurryIndex == 0)
+		PurchaseType ePurchaseType = PURCHASE_TYPE_BUILDING;
+		if (pBestHurryOrder->eOrderType == ORDER_TRAIN)
+			ePurchaseType = PURCHASE_TYPE_UNIT;
+		if (CanWithdrawMoneyForPurchase(ePurchaseType, pBestHurryCity->GetPurchaseCost(pBestHurryOrder)))
 		{
-			pBestHurryCity->AI_chooseProduction(false);
+			pBestHurryCity->PurchaseOrder(pBestHurryOrder);
+			if (pBestHurryCity->getOrderQueueLength() == 0)
+			{
+				pBestHurryCity->AI_chooseProduction(false);
+			}
 		}
 #else
 		pBestHurryCity->hurry(eBestHurryType);
 		pBestHurryCity->GetCityStrategyAI()->LogHurry(eBestHurryType, iBestHurryAmount, iBestHurryAmountAvailable, iBestHurryTurnsSaved);
-#endif // AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+#endif
 	}
 }
 

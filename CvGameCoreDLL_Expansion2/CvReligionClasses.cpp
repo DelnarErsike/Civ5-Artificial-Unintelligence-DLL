@@ -5096,7 +5096,7 @@ void CvReligionAI::DoFaithPurchases()
 	std::vector<BuildingClassTypes> eFaithBuilding = FaithBuildingAvailable(eReligion);
 #else
 	BuildingClassTypes eFaithBuilding = FaithBuildingAvailable(eReligion);
-#endif // AUI_RELIGION_FIX_MULTIPLE_FAITH_BUILDINGS
+#endif
 	bool bTooManyMissionaries = m_pPlayer->GetNumUnitsWithUnitAI(UNITAI_MISSIONARY) > GC.getRELIGION_MAX_MISSIONARIES();
 
 	CvString strLogMsg;
@@ -5120,7 +5120,7 @@ void CvReligionAI::DoFaithPurchases()
 		{
 			// Fill our cities with any Faith buildings possible
 			if(!BuyAnyAvailableFaithBuilding())
-#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_ENHANCE_INDUSTRIAL_RELIGION
+#endif
 			{
 #ifdef AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
 				if (DoHurryWithFaith())
@@ -5133,7 +5133,7 @@ void CvReligionAI::DoFaithPurchases()
 				else if (m_pPlayer->GetCurrentEra() >= GC.getInfoTypeForString("ERA_INDUSTRIAL"))
 #else
 				if(m_pPlayer->GetCurrentEra() >= GC.getInfoTypeForString("ERA_INDUSTRIAL"))
-#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
+#endif
 				{
 					UnitTypes eGPType = GetDesiredFaithGreatPerson();
 					if (eGPType != NO_UNIT)
@@ -5180,7 +5180,7 @@ void CvReligionAI::DoFaithPurchases()
 				}
 			}
 		}
-#endif // AUI_RELIGION_DO_FAITH_PURCHASES_PRIORITIZE_OTHER_RELIGION_HAPPINESS_BUILDINGS
+#endif
 #ifdef AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
 		// Hurry with faith at cities with a religion other than our own, so we can make use of another civ's faith purchase beliefs
 		else if (DoHurryWithFaith(eReligion))
@@ -5190,7 +5190,7 @@ void CvReligionAI::DoFaithPurchases()
 				strLogMsg += ", Hurried with Faith, From Another Religion";
 			}
 		}
-#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
+#endif
 
 		// Besides prophets, first priority is to convert all our non-puppet cities
 		else if(!bTooManyMissionaries && !AreAllOurCitiesConverted(eReligion, false /*bIncludePuppets*/))
@@ -5215,7 +5215,7 @@ void CvReligionAI::DoFaithPurchases()
 		else if(eFaithBuilding != NO_BUILDINGCLASS && !AreAllOurCitiesHaveFaithBuilding(eReligion, false /*bIncludePuppets*/))
 		{
 			BuyFaithBuilding(eReligion, eFaithBuilding);
-#endif // AUI_RELIGION_FIX_MULTIPLE_FAITH_BUILDINGS
+#endif
 
 			if(GC.getLogging())
 			{
@@ -5231,7 +5231,7 @@ void CvReligionAI::DoFaithPurchases()
 				strLogMsg += ", Hurried with Faith, From Our Religion";
 			}
 		}
-#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
+#endif
 
 		// Try to build other buildings with Faith if we took that belief
 		else if (CanBuyNonFaithBuilding())
@@ -5552,69 +5552,56 @@ bool CvReligionAI::DoHurryWithFaith(ReligionTypes eAvoidReligion)
 	OrderData* pOrder = 0;
 	CvCity* pLoopCity = 0;
 	int iTurnsSaved = 0;
+	int iFaithCost = 0;
 	CvCity* pBestHurryCity = NULL;
-	int iBestHurryTurnsSaved = 0;
-	int iBestHurryIndex = 0;
+	OrderData* pBestHurryOrder = NULL;
+	int iBestFaithPerTurnHammers = MAX_INT;
 	// Look at each of our cities
 	for (pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 	{
 		if (pLoopCity->GetCityReligions()->GetReligiousMajority() == eAvoidReligion)
 			continue;
 
-		int iProdPercentRemaining = ((pLoopCity->getProductionNeeded() - pLoopCity->getProduction()) * 100) / pLoopCity->getProductionNeeded();
+		pLoopCity->GetCityStrategyAI()->ConstructRushList(YIELD_FAITH);
 
 		// Loop through all orders in the city
-		for (int iIndex = 0; iIndex < pLoopCity->getOrderQueueLength(); iIndex++)
+		for (int iIndex = 0; iIndex < pLoopCity->GetCityStrategyAI()->GetRushListLength(); iIndex++)
 		{
 			// What are we currently looking at?
-			pOrder = pLoopCity->getOrderFromQueue(iIndex);
+			pOrder = pLoopCity->GetCityStrategyAI()->GetRushListItem(iIndex);
 
 			// Can we rush it?
 			if (pOrder && pLoopCity->IsCanPurchase(pOrder, YIELD_FAITH))
 			{
-				if (iIndex == 0)
+				int iProductionNeeded = MAX_INT;
+				switch (pOrder->eOrderType)
 				{
-					// We skip if the build order is more than 2/3 done.
-					if (iProdPercentRemaining < 33)
-						continue;
-					iTurnsSaved = pLoopCity->getProductionTurnsLeft();
+				case ORDER_TRAIN:
+					iProductionNeeded = m_pPlayer->getProductionNeeded((UnitTypes)pOrder->iData1) * 100 - pLoopCity->getUnitProductionTimes100((UnitTypes)pOrder->iData1);
+					break;
+				case ORDER_CONSTRUCT:
+					iProductionNeeded = m_pPlayer->getProductionNeeded((BuildingTypes)pOrder->iData1) * 100 - pLoopCity->GetCityBuildings()->GetBuildingProductionTimes100((BuildingTypes)pOrder->iData1);
+					break;
+				case ORDER_CREATE:
+					iProductionNeeded = m_pPlayer->getProductionNeeded((ProjectTypes)pOrder->iData1) * 100 - pLoopCity->getProjectProductionTimes100((ProjectTypes)pOrder->iData1);
+					break;
+				case ORDER_PREPARE:
+					iProductionNeeded = m_pPlayer->getProductionNeeded((SpecialistTypes)pOrder->iData1) * 100 - pLoopCity->getSpecialistProductionTimes100((SpecialistTypes)pOrder->iData1);
+					break;
 				}
-				else
+				iTurnsSaved = iProductionNeeded / pLoopCity->getRawProductionDifferenceTimes100(true, false);
+				iFaithCost = pLoopCity->GetPurchaseCost(pOrder, YIELD_FAITH);
+				if (iFaithCost / iTurnsSaved < iBestFaithPerTurnHammers)
 				{
-					int iProductionNeeded = MAX_INT;
-					switch (pOrder->eOrderType)
-					{
-					case ORDER_TRAIN:
-						iProductionNeeded = m_pPlayer->getProductionNeeded((UnitTypes)pOrder->iData1) * 100 - pLoopCity->getUnitProductionTimes100((UnitTypes)pOrder->iData1);
-						break;
-					case ORDER_CONSTRUCT:
-						iProductionNeeded = m_pPlayer->getProductionNeeded((BuildingTypes)pOrder->iData1) * 100 - pLoopCity->GetCityBuildings()->GetBuildingProductionTimes100((BuildingTypes)pOrder->iData1);
-						break;
-					case ORDER_CREATE:
-						iProductionNeeded = m_pPlayer->getProductionNeeded((ProjectTypes)pOrder->iData1) * 100 - pLoopCity->getProjectProductionTimes100((ProjectTypes)pOrder->iData1);
-						break;
-					case ORDER_PREPARE:
-						iProductionNeeded = m_pPlayer->getProductionNeeded((SpecialistTypes)pOrder->iData1) * 100 - pLoopCity->getSpecialistProductionTimes100((SpecialistTypes)pOrder->iData1);
-						break;
-					}
-					iTurnsSaved = iProductionNeeded / pLoopCity->getRawProductionDifferenceTimes100(true, false);
-				}
-				// Also skip if we don't save any turns
-				if (iIndex == 0 && iTurnsSaved < 2)
-				{
-					continue;
-				}
-				if (iBestHurryTurnsSaved * MAX(1, iIndex) < iTurnsSaved)
-				{
-					iBestHurryTurnsSaved = iTurnsSaved;
+					iBestFaithPerTurnHammers = iFaithCost / iTurnsSaved;
 					pBestHurryCity = pLoopCity;
-					iBestHurryIndex = iIndex;
+					pBestHurryOrder = pOrder;
 					if (GC.getLogging() && GC.getAILogging())
 					{
 						static const char* orderTypeStrings[] = { "ORDER_TRAIN", "ORDER_CONSTRUCT", "ORDER_CREATE", "ORDER_PREPARE", "ORDER_MAINTAIN", "NO_ORDER" };
 						int orderIndex = ((pOrder->eOrderType < 0) || (pOrder->eOrderType > 4)) ? 5 : pOrder->eOrderType;
 						CvString strLogString;
-						strLogString.Format("DoHurryWithFaith Option: order type %s, Index %d, Turns Saved: %d,remaining percent = %d", orderTypeStrings[orderIndex], iIndex, iTurnsSaved, (iIndex == 0 ? iProdPercentRemaining : 0));
+						strLogString.Format("DoHurry Option: order type %s, Turns Saved: %d, Gold Spent Per Turn of Production: %d", orderTypeStrings[orderIndex], iTurnsSaved, iBestFaithPerHammer);
 						m_pPlayer->GetHomelandAI()->LogHomelandMessage(strLogString);
 					}
 				}
@@ -5625,8 +5612,8 @@ bool CvReligionAI::DoHurryWithFaith(ReligionTypes eAvoidReligion)
 	// Now enact the best hurry we've found (only hurry one item per turn for now)
 	if (pBestHurryCity != NULL)
 	{
-		pBestHurryCity->PurchaseOrder(iBestHurryIndex, YIELD_FAITH);
-		if (iBestHurryIndex == 0)
+		pBestHurryCity->PurchaseOrder(pBestHurryOrder, YIELD_FAITH);
+		if (pBestHurryCity->getOrderQueueLength() == 0)
 		{
 			pBestHurryCity->AI_chooseProduction(false);
 		}
@@ -5637,7 +5624,7 @@ bool CvReligionAI::DoHurryWithFaith(ReligionTypes eAvoidReligion)
 		return false;
 	}
 }
-#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
+#endif
 
 /// AI's perceived worth of a belief
 int CvReligionAI::ScoreBelief(CvBeliefEntry* pEntry)
@@ -5646,10 +5633,10 @@ int CvReligionAI::ScoreBelief(CvBeliefEntry* pEntry)
 	double dRtnValue = 5.0;  // Base value since everything has SOME value
 #else
 	int iRtnValue = 5;  // Base value since everything has SOME value
-#endif // AUI_RELIGION_USE_DOUBLES
+#endif
 #ifdef AUI_RELIGION_SCORE_BELIEF_RAISE_COMPONENT_SCORES_TO_POWER
 	double dExponentOfBelief = AUI_RELIGION_SCORE_BELIEF_RAISE_COMPONENT_SCORES_TO_POWER; // Belief score is put to the power of this; it's to reduce the chance of the AI picking a non-ideal belief
-#endif // AUI_RELIGION_SCORE_BELIEF_RAISE_COMPONENT_SCORES_TO_POWER
+#endif
 
 	// Loop through each plot on map
 	int iPlotLoop;
