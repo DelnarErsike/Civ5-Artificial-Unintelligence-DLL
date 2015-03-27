@@ -12449,7 +12449,7 @@ bool CvCity::CanPlaceUnitHere(UnitTypes eUnitType)
 }
 
 #if defined(AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD) || defined(AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH)
-/// Can we purchase this production order with gold?
+/// Can we purchase this production order with (currency)?
 bool CvCity::IsCanPurchase(OrderData* pOrder, YieldTypes eCurrency)
 {
 	UnitTypes eUnitType = NO_UNIT;
@@ -12475,6 +12475,42 @@ bool CvCity::IsCanPurchase(OrderData* pOrder, YieldTypes eCurrency)
 	}
 
 	return IsCanPurchase(true, true, eUnitType, eBuildingType, eProjectType, eCurrency);
+}
+
+/// What is the (currency) cost of this order?
+bool CvCity::GetPurchaseCost(OrderData* pOrder, YieldTypes eCurrency)
+{
+	if (eCurrency == YIELD_GOLD)
+	{
+		switch (pOrder->eOrderType)
+		{
+		case ORDER_TRAIN:
+			return GetPurchaseCost((UnitTypes)(pOrder->iData1));
+			break;
+
+		case ORDER_CONSTRUCT:
+			return GetPurchaseCost((BuildingTypes)(pOrder->iData1));
+			break;
+
+		case ORDER_CREATE:
+			return GetPurchaseCost((ProjectTypes)(pOrder->iData1));
+			break;
+		}
+	}
+	else if (eCurrency == YIELD_FAITH)
+	{
+		switch (pOrder->eOrderType)
+		{
+		case ORDER_TRAIN:
+			return GetFaithPurchaseCost((UnitTypes)(pOrder->iData1), true);
+			break;
+
+		case ORDER_CONSTRUCT:
+			return GetFaithPurchaseCost((BuildingTypes)(pOrder->iData1));
+			break;
+		}
+	}
+	return MAX_INT;
 }
 #endif
 
@@ -12758,6 +12794,39 @@ void CvCity::PurchaseOrder(int iIndex, YieldTypes eCurrency)
 	}
 
 	Purchase(eUnitType, eBuildingType, eProjectType, eCurrency);
+}
+
+void CvCity::PurchaseOrder(OrderData* pOrder, YieldTypes eCurrency)
+{
+	if (IsCanPurchase(pOrder, eCurrency))
+	{
+		UnitTypes eUnitType = NO_UNIT;
+		BuildingTypes eBuildingType = NO_BUILDING;
+		ProjectTypes eProjectType = NO_PROJECT;
+
+		if (pOrder)
+		{
+			switch (pOrder->eOrderType)
+			{
+			case ORDER_TRAIN:
+				eUnitType = ((UnitTypes)(pOrder->iData1));
+				break;
+
+			case ORDER_CONSTRUCT:
+				eBuildingType = ((BuildingTypes)(pOrder->iData1));
+				break;
+
+			case ORDER_CREATE:
+				eProjectType = ((ProjectTypes)(pOrder->iData1));
+				break;
+
+			default:
+				return;
+			}
+		}
+
+		Purchase(eUnitType, eBuildingType, eProjectType, eCurrency);
+	}
 }
 #endif
 
@@ -14683,14 +14752,14 @@ CvUnit* CvCity::rangedStrikeTarget(CvPlot* pPlot)
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-int CvCity::rangeCombatUnitDefense(const CvUnit* pDefender, const CvPlot* pInPlot) const
+int CvCity::rangeCombatUnitDefense(const CvUnit* pDefender, const CvPlot* pInPlot, const int iDefenderExtraFortifyTurns) const
 {
 	if (pInPlot == NULL)
 		pInPlot = pDefender->plot();
 #else
 int CvCity::rangeCombatUnitDefense(const CvUnit* pDefender) const
 {
-#endif // AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#endif
 	int iDefenderStrength = 0;
 
 	// Use Ranged combat value for defender, UNLESS it's a boat
@@ -14698,19 +14767,19 @@ int CvCity::rangeCombatUnitDefense(const CvUnit* pDefender) const
 	if (pDefender->isEmbarked() || (pInPlot->isWater() && pDefender->getDomainType() == DOMAIN_LAND && !pInPlot->isValidDomainForAction(*pDefender)))
 #else
 	if (pDefender->isEmbarked())
-#endif // AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#endif
 	{
 		iDefenderStrength = pDefender->GetEmbarkedUnitDefense();;
 	}
 
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-	else if (!pDefender->isRangedSupportFire() && !pDefender->getDomainType() == DOMAIN_SEA && (iDefenderStrength = pDefender->GetMaxRangedCombatStrength(NULL, /*pCity*/ NULL, false, false, pInPlot, plot())) > 0)
+	else if (!pDefender->isRangedSupportFire() && !pDefender->getDomainType() == DOMAIN_SEA && (iDefenderStrength = pDefender->GetMaxRangedCombatStrength(NULL, /*pCity*/ NULL, false, false, pInPlot, plot(), iDefenderExtraFortifyTurns)) > 0)
 	{
 #else
 	else if(!pDefender->isRangedSupportFire() && !pDefender->getDomainType() == DOMAIN_SEA && pDefender->GetMaxRangedCombatStrength(NULL, /*pCity*/ NULL, false, false) > 0)
 	{
 		iDefenderStrength = pDefender->GetMaxRangedCombatStrength(NULL, /*pCity*/ NULL, false, false);
-#endif // AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#endif
 
 		// Ranged units take less damage from one another
 		iDefenderStrength *= /*125*/ GC.getRANGE_ATTACK_RANGED_DEFENDER_MOD();
@@ -14719,10 +14788,10 @@ int CvCity::rangeCombatUnitDefense(const CvUnit* pDefender) const
 	else
 	{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-		iDefenderStrength = pDefender->GetMaxDefenseStrength(pInPlot, NULL, /*bFromRangedAttack*/ true);
+		iDefenderStrength = pDefender->GetMaxDefenseStrength(pInPlot, NULL, /*bFromRangedAttack*/ true, iDefenderExtraFortifyTurns);
 #else
 		iDefenderStrength = pDefender->GetMaxDefenseStrength(pDefender->plot(), NULL, /*bFromRangedAttack*/ true);
-#endif // AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#endif
 	}
 
 	return iDefenderStrength;
@@ -14730,7 +14799,7 @@ int CvCity::rangeCombatUnitDefense(const CvUnit* pDefender) const
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-int CvCity::rangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, const CvPlot* pInPlot) const
+int CvCity::rangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, const CvPlot* pInPlot, const int iDefenderExtraFortifyTurns) const
 {
 	VALIDATE_OBJECT
 	
@@ -14778,7 +14847,7 @@ int CvCity::rangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncl
 		}
 
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-		iDefenderStrength = rangeCombatUnitDefense(pDefender, pInPlot);
+		iDefenderStrength = rangeCombatUnitDefense(pDefender, pInPlot, iDefenderExtraFortifyTurns);
 #else
 		iDefenderStrength = rangeCombatUnitDefense(pDefender);
 #endif

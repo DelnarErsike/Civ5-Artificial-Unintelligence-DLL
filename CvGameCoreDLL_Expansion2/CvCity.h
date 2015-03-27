@@ -695,8 +695,8 @@ public:
 	bool canRangedStrikeTarget(const CvPlot& targetPlot) const;
 
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-	int rangeCombatUnitDefense(_In_ const CvUnit* pDefender, const CvPlot* pInPlot = NULL) const;
-	int rangeCombatDamage(const CvUnit* pDefender, CvCity* pCity = NULL, bool bIncludeRand = true, const CvPlot* pInPlot = NULL) const;
+	int rangeCombatUnitDefense(_In_ const CvUnit* pDefender, const CvPlot* pInPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
+	int rangeCombatDamage(const CvUnit* pDefender, CvCity* pCity = NULL, bool bIncludeRand = true, const CvPlot* pInPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
 #else
 	int rangeCombatUnitDefense(_In_ const CvUnit* pDefender) const;
 	int rangeCombatDamage(const CvUnit* pDefender, CvCity* pCity = NULL, bool bIncludeRand = true) const;
@@ -811,7 +811,9 @@ public:
 
 #if defined(AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD) || defined(AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH)
 	bool IsCanPurchase(OrderData* pOrder, YieldTypes eCurrency = YIELD_GOLD);
+	bool GetPurchaseCost(OrderData* pOrder, YieldTypes eCurrency = YIELD_GOLD);
 	void PurchaseOrder(int iIndex = 0, YieldTypes eCurrency = YIELD_GOLD);
+	void PurchaseOrder(OrderData* pOrder, YieldTypes eCurrency = YIELD_GOLD);
 #endif
 
 	int iScratch; // know the scope of your validity
