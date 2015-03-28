@@ -1750,7 +1750,11 @@ void CvEconomicAI::DoHurry()
 	OrderData* pOrder = 0;
 
 	CvCity* pLoopCity = 0;
+#ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+	double dTurnsSaved = 0;
+#else
 	int iTurnsSaved = 0;
+#endif
 	int iGoldCost = 0;
 #ifndef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
 	int iHurryAmount = 0;
@@ -1761,7 +1765,8 @@ void CvEconomicAI::DoHurry()
 	CvCity* pBestHurryCity = NULL;
 #ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
 	OrderData* pBestHurryOrder = NULL;
-	int iBestGoldPerTurnHammers = MAX_INT;
+	double dBestGoldPerTurnHammers = MAX_INT;
+	double dGoldPerTurnHammers = 0;
 #else
 	int iBestHurryTurnsSaved = 0;
 	int iBestHurryAmount = 0;
@@ -1788,23 +1793,47 @@ void CvEconomicAI::DoHurry()
 				switch (pOrder->eOrderType)
 				{
 				case ORDER_TRAIN:
-					iProductionNeeded = m_pPlayer->getProductionNeeded((UnitTypes)pOrder->iData1) * 100 - pLoopCity->getUnitProductionTimes100((UnitTypes)pOrder->iData1);
-					break;
-				case ORDER_CONSTRUCT:
-					iProductionNeeded = m_pPlayer->getProductionNeeded((BuildingTypes)pOrder->iData1) * 100 - pLoopCity->GetCityBuildings()->GetBuildingProductionTimes100((BuildingTypes)pOrder->iData1);
-					break;
-				case ORDER_CREATE:
-					iProductionNeeded = m_pPlayer->getProductionNeeded((ProjectTypes)pOrder->iData1) * 100 - pLoopCity->getProjectProductionTimes100((ProjectTypes)pOrder->iData1);
-					break;
-				case ORDER_PREPARE:
-					iProductionNeeded = m_pPlayer->getProductionNeeded((SpecialistTypes)pOrder->iData1) * 100 - pLoopCity->getSpecialistProductionTimes100((SpecialistTypes)pOrder->iData1);
-					break;
-				}
-				iTurnsSaved = iProductionNeeded / pLoopCity->getRawProductionDifferenceTimes100(true, false);
-				iGoldCost = pLoopCity->GetPurchaseCost(pOrder);
-				if (iGoldCost / iTurnsSaved < iBestGoldPerTurnHammers)
 				{
-					iBestGoldPerTurnHammers = iGoldCost / iTurnsSaved;
+					UnitTypes eUnit = (UnitTypes)pOrder->iData1;
+					CvUnitEntry* pUnitEntry = GC.GetGameUnits()->GetEntry(eUnit);
+					if (!pUnitEntry || pUnitEntry->GetProductionCost() > 0)
+						iProductionNeeded = m_pPlayer->getProductionNeeded(eUnit) * 100 - pLoopCity->getUnitProductionTimes100(eUnit);
+				}
+				break;
+				case ORDER_CONSTRUCT:
+				{
+					BuildingTypes eBuilding = (BuildingTypes)pOrder->iData1;
+					CvBuildingEntry* pBuildingEntry = GC.GetGameBuildings()->GetEntry(eBuilding);
+					if (!pBuildingEntry || pBuildingEntry->GetProductionCost() > 0)
+						iProductionNeeded = m_pPlayer->getProductionNeeded(eBuilding) * 100 - pLoopCity->GetCityBuildings()->GetBuildingProductionTimes100(eBuilding);
+				}
+				break;
+				case ORDER_CREATE:
+				{
+					ProjectTypes eProject = (ProjectTypes)pOrder->iData1;
+					CvProjectEntry* pProjectEntry = GC.GetGameProjects()->GetEntry(eProject);
+					if (!pProjectEntry || pProjectEntry->GetProductionCost() > 0)
+						iProductionNeeded = m_pPlayer->getProductionNeeded(eProject) * 100 - pLoopCity->getProjectProductionTimes100(eProject);
+				}
+				break;
+				case ORDER_PREPARE:
+				{
+					SpecialistTypes eSpecialist = (SpecialistTypes)pOrder->iData1;
+					CvSpecialistInfo* pSpecialistInfo = GC.getSpecialistInfo(eSpecialist);
+					if (!pSpecialistInfo || pSpecialistInfo->getCost() > 0)
+						iProductionNeeded = m_pPlayer->getProductionNeeded(eSpecialist) * 100 - pLoopCity->getSpecialistProductionTimes100(eSpecialist);
+				}
+				break;
+				}
+				iGoldCost = pLoopCity->GetPurchaseCost(pOrder);
+				if (iProductionNeeded < MAX_INT)
+					dTurnsSaved = (double)iProductionNeeded / pLoopCity->getRawProductionDifferenceTimes100(true, false);
+				else
+					dTurnsSaved = MAX_INT;
+				dGoldPerTurnHammers = iGoldCost / dTurnsSaved;
+				if (dGoldPerTurnHammers < dBestGoldPerTurnHammers)
+				{
+					dBestGoldPerTurnHammers = dGoldPerTurnHammers;
 					pBestHurryCity = pLoopCity;
 					pBestHurryOrder = pOrder;
 					if (GC.getLogging() && GC.getAILogging())
@@ -1812,7 +1841,7 @@ void CvEconomicAI::DoHurry()
 						static const char* orderTypeStrings[] = { "ORDER_TRAIN", "ORDER_CONSTRUCT", "ORDER_CREATE", "ORDER_PREPARE", "ORDER_MAINTAIN", "NO_ORDER" };
 						int orderIndex = ((pOrder->eOrderType < 0) || (pOrder->eOrderType > 4)) ? 5 : pOrder->eOrderType;
 						CvString strLogString;
-						strLogString.Format("DoHurry Option: order type %s, Turns Saved: %d, Gold Spent Per Turn of Production: %d", orderTypeStrings[orderIndex], iTurnsSaved, iBestGoldPerTurnHammers);
+						strLogString.Format("DoHurry Option: order type %s, Turns Saved: %d, Gold Spent Per Turn of Production: %d", orderTypeStrings[orderIndex], dTurnsSaved, dBestGoldPerTurnHammers);
 						m_pPlayer->GetHomelandAI()->LogHomelandMessage(strLogString);
 #else
 		// What are we currently working on?
