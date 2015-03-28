@@ -12478,7 +12478,7 @@ bool CvCity::IsCanPurchase(OrderData* pOrder, YieldTypes eCurrency)
 }
 
 /// What is the (currency) cost of this order?
-bool CvCity::GetPurchaseCost(OrderData* pOrder, YieldTypes eCurrency)
+int CvCity::GetPurchaseCost(OrderData* pOrder, YieldTypes eCurrency)
 {
 	if (eCurrency == YIELD_GOLD)
 	{

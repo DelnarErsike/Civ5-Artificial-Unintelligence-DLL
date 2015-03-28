@@ -301,7 +301,7 @@ public:
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 	void OverrideGarrison(const CvUnit* pUnit);
 	void UnsetGarrisonOverride();
-#endif // AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#endif
 
 	CvPlot* getRallyPlot() const;
 	void setRallyPlot(CvPlot* pPlot);
@@ -811,7 +811,7 @@ public:
 
 #if defined(AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD) || defined(AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH)
 	bool IsCanPurchase(OrderData* pOrder, YieldTypes eCurrency = YIELD_GOLD);
-	bool GetPurchaseCost(OrderData* pOrder, YieldTypes eCurrency = YIELD_GOLD);
+	int GetPurchaseCost(OrderData* pOrder, YieldTypes eCurrency = YIELD_GOLD);
 	void PurchaseOrder(int iIndex = 0, YieldTypes eCurrency = YIELD_GOLD);
 	void PurchaseOrder(OrderData* pOrder, YieldTypes eCurrency = YIELD_GOLD);
 #endif

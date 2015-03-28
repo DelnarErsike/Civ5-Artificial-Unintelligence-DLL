@@ -1466,7 +1466,7 @@ void CvCityStrategyAI::DoTurn()
 // Near carbon-copy of ChooseProduction
 void CvCityStrategyAI::ConstructRushList(YieldTypes eCurrency, BuildingTypes eIgnoreBldg, UnitTypes eIgnoreUnit)
 {
-	int iBldgLoop, iUnitLoop, iProjectLoop, iProcessLoop, iTempWeight;
+	int iBldgLoop, iUnitLoop, iProjectLoop, iTempWeight;
 	CvCityBuildable buildable;
 	CvCityBuildable selection;
 	UnitTypes eUnitForOperation;
