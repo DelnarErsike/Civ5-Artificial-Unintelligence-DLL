@@ -221,7 +221,7 @@ void CvPlot::reset(int iX, int iY, bool bConstructorCall)
 	m_iStrategicValueAlone = 0;
 	m_iStrategicValueWithNeighbors = 0;
 	m_iStrategicValueAsCity = 0;
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 
 	m_uiTradeRouteBitFlags = 0;
 
@@ -1107,7 +1107,7 @@ bool CvPlot::isFreshWater() const
 #else
 		iMaxDX = 1 - MAX(0, iDY);
 		for (iDX = -1 - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
 #else
@@ -1116,7 +1116,7 @@ bool CvPlot::isFreshWater() const
 		for(iDY = -1; iDY <= 1; iDY++)
 		{
 			pLoopPlot	= plotXYWithRangeCheck(getX(), getY(), iDX, iDY, 1);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 
 			if(pLoopPlot != NULL)
 			{
@@ -1278,12 +1278,12 @@ CvPlot* CvPlot::getNearestLandPlotInternal(int iDistance) const
 #else
 		iMaxDX = iDistance - MAX(0, iDY);
 		for (iDX = -iDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 #else
 	for(int iDX = -iDistance; iDX <= iDistance; iDX++)
 	{
 		for(int iDY = -iDistance; iDY <= iDistance; iDY++)
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 		{
 			// bkw - revisit this, it works but is inefficient
 			CvPlot* pPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -1291,7 +1291,7 @@ CvPlot* CvPlot::getNearestLandPlotInternal(int iDistance) const
 			if (pPlot != NULL && !pPlot->isWater() && hexDistance(iDX, iDY) == iDistance)
 #else
 			if(pPlot != NULL && !pPlot->isWater() && plotDistance(getX(), getY(), pPlot->getX(), pPlot->getY()) == iDistance)
-#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#endif
 			{
 				return pPlot;
 			}
@@ -1867,13 +1867,13 @@ void CvPlot::updateSeeFromSight(bool bIncrement)
 	iRange = FASTMAX(GC.getRECON_VISIBILITY_RANGE() + 1, iRange);
 #ifndef AUI_PLOT_SEE_FROM_SIGHT_NO_MAXIMUM_SIGHT_RANGE
 	iRange = FASTMIN(8, iRange); // I don't care, I'm not looking more than 8 out, deal
-#endif // AUI_PLOT_SEE_FROM_SIGHT_NO_MAXIMUM_SIGHT_RANGE
+#endif
 #else
 	iRange = std::max(GC.getRECON_VISIBILITY_RANGE() + 1, iRange);
 #ifndef AUI_PLOT_SEE_FROM_SIGHT_NO_MAXIMUM_SIGHT_RANGE
 	iRange = std::min(8, iRange); // I don't care, I'm not looking more than 8 out, deal
-#endif // AUI_PLOT_SEE_FROM_SIGHT_NO_MAXIMUM_SIGHT_RANGE
-#endif // AUI_FAST_COMP
+#endif
+#endif
 
 #ifdef AUI_HEXSPACE_DX_LOOPS
 	int iMaxDX;
@@ -1885,7 +1885,7 @@ void CvPlot::updateSeeFromSight(bool bIncrement)
 #else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
 #else
@@ -1894,7 +1894,7 @@ void CvPlot::updateSeeFromSight(bool bIncrement)
 		for(iDY = -iRange; iDY <= iRange; iDY++)
 		{
 			pLoopPlot = plotXYWithRangeCheck(getX(), getY(), iDX, iDY, iRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 
 			if(pLoopPlot != NULL)
 			{
@@ -2518,7 +2518,7 @@ int CvPlot::getBuildTime(BuildTypes eBuild, PlayerTypes ePlayer) const
 	iTime *= FASTMAX(0, (GC.getTerrainInfo(getTerrainType())->getBuildModifier() + 100));
 #else
 	iTime *= std::max(0, (GC.getTerrainInfo(getTerrainType())->getBuildModifier() + 100));
-#endif // AUI_FAST_COMP
+#endif
 	iTime /= 100;
 
 	iTime *= GC.getGame().getGameSpeedInfo().getBuildPercent();
@@ -2578,7 +2578,7 @@ int CvPlot::getBuildTurnsLeft(BuildTypes eBuild, PlayerTypes ePlayer, int iNowEx
 	iBuildLeft = FASTMAX(0, iBuildLeft);
 #else
 	iBuildLeft = std::max(0, iBuildLeft);
-#endif // AUI_FAST_COMP
+#endif
 
 	iTurnsLeft = (iBuildLeft / iThenBuildRate);
 
@@ -2633,7 +2633,7 @@ int CvPlot::getBuildTurnsTotal(BuildTypes eBuild, PlayerTypes ePlayer) const
 	iBuildLeft = FASTMAX(0, iBuildLeft);
 #else
 	iBuildLeft = std::max(0, iBuildLeft);
-#endif // AUI_FAST_COMP
+#endif
 
 	iTurnsLeft = (iBuildLeft / iThenBuildRate);
 
@@ -2643,7 +2643,7 @@ int CvPlot::getBuildTurnsTotal(BuildTypes eBuild, PlayerTypes ePlayer) const
 	return FASTMAX(1, iTurnsLeft);
 #else
 	return std::max(1, iTurnsLeft);
-#endif // AUI_FAST_COMP
+#endif
 }
 
 
@@ -2690,7 +2690,7 @@ int CvPlot::getFeatureProduction(BuildTypes eBuild, PlayerTypes ePlayer, CvCity*
 	iProduction -= (std::max(0, (plotDistance(getX(), getY(), (*ppCity)->getX(), (*ppCity)->getY()) - 2)) * 5);
 
 	iProduction *= std::max(0, (GET_PLAYER((*ppCity)->getOwner()).getFeatureProductionModifier() + 100));
-#endif // AUI_FAST_COMP
+#endif
 	iProduction /= 100;
 
 	iProduction *= GC.getGame().getGameSpeedInfo().getFeatureProductionPercent();
@@ -2706,7 +2706,7 @@ int CvPlot::getFeatureProduction(BuildTypes eBuild, PlayerTypes ePlayer, CvCity*
 	return FASTMAX(0, iProduction);
 #else
 	return std::max(0, iProduction);
-#endif // AUI_FAST_COMP
+#endif
 }
 
 
@@ -2739,7 +2739,7 @@ const UnitHandle CvPlot::getBestDefender(PlayerTypes eOwner, PlayerTypes eAttack
 				if((eAttackingPlayer == NO_PLAYER) || (!(pLoopUnit->isInvisible(GET_PLAYER(eAttackingPlayer).getTeam(), false)) && (pLoopUnit->getDomainType() == DOMAIN_AIR || isVisible(GET_PLAYER(eAttackingPlayer).getTeam()))))
 #else
 				if((eAttackingPlayer == NO_PLAYER) || !(pLoopUnit->isInvisible(GET_PLAYER(eAttackingPlayer).getTeam(), false)))
-#endif // AUI_PLOT_FIX_GET_BEST_DEFENDER_CHECK_PLOT_VISIBILITY
+#endif
 				{
 					if(!bTestAtWar || eAttackingPlayer == NO_PLAYER || pLoopUnit->isEnemy(GET_PLAYER(eAttackingPlayer).getTeam(), this) || (NULL != pAttacker && pAttacker->isEnemy(GET_PLAYER(pLoopUnit->getOwner()).getTeam(), this)))
 					{
@@ -4460,7 +4460,7 @@ int CvPlot::getUpgradeTimeLeft(ImprovementTypes eImprovement, PlayerTypes ePlaye
 	return FASTMAX(1, iTurnsLeft);
 #else
 	return std::max(1, iTurnsLeft);
-#endif // AUI_FAST_COMP
+#endif
 }
 
 
@@ -5559,7 +5559,7 @@ void CvPlot::setPlotType(PlotTypes eNewValue, bool bRecalculate, bool bRebuildGr
 #ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 					calculateStrategicValue(false);
 					calculateStrategicValue(true);
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 				}
 			}
 		}
@@ -6974,7 +6974,7 @@ int CvPlot::getYield(YieldTypes eIndex) const
 int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnoreFeature, PlayerTypes eFutureOwner) const
 #else
 int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnoreFeature) const
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 {
 	ResourceTypes eResource;
 	int iYield;
@@ -7241,7 +7241,7 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 #endif
 		iYield += iMaxImprovementYieldChange;
 	}
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
+#endif
 
 	if(eTeam != NO_TEAM)
 	{
@@ -7282,7 +7282,7 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 	return FASTMAX(0, iYield);
 #else
 	return std::max(0, iYield);
-#endif // AUI_FAST_COMP
+#endif
 }
 
 
@@ -7293,7 +7293,7 @@ int CvPlot::calculateBestNatureYield(YieldTypes eIndex, TeamTypes eTeam) const
 	return FASTMAX(calculateNatureYield(eIndex, eTeam, false), calculateNatureYield(eIndex, eTeam, true));
 #else
 	return std::max(calculateNatureYield(eIndex, eTeam, false), calculateNatureYield(eIndex, eTeam, true));
-#endif // AUI_FAST_COMP
+#endif
 }
 
 
@@ -7388,7 +7388,7 @@ int CvPlot::calculateImprovementYieldChange(ImprovementTypes eImprovement, Yield
 			iBestYield = FASTMAX(iBestYield, pImprovement->GetRouteYieldChanges(iI, eYield));
 #else
 			iBestYield = std::max(iBestYield, pImprovement->GetRouteYieldChanges(iI, eYield));
-#endif // AUI_FAST_COMP
+#endif
 		}
 
 		iYield += iBestYield;
@@ -7697,7 +7697,7 @@ int CvPlot::calculateYield(YieldTypes eYield, bool bDisplay)
 		iYield = FASTMAX(iYield, kYield.getMinCity());
 #else
 		iYield = std::max(iYield, kYield.getMinCity());
-#endif // AUI_FAST_COMP
+#endif
 
 		// Mod for Player; used for Policies and such
 		int iTemp = GET_PLAYER(getOwner()).GetCityYieldChange(eYield);	// In hundreds - will be added to capitalYieldChange below
@@ -7746,7 +7746,7 @@ int CvPlot::calculateYield(YieldTypes eYield, bool bDisplay)
 	return FASTMAX(0, iYield);
 #else
 	return std::max(0, iYield);
-#endif // AUI_FAST_COMP
+#endif
 }
 
 
@@ -9570,7 +9570,7 @@ int CvPlot::getNumTimesInList(BaseVector<std::pair<CvPlot*, bool>, true>& aPlotL
 
 	return rtnValue;
 }
-#endif // AUI_PLOT_COUNT_OCCURANCES_IN_LIST
+#endif
 
 // Protected Functions...
 
@@ -9702,7 +9702,7 @@ void CvPlot::read(FDataStream& kStream)
 	kStream >> m_iStrategicValueAlone;
 	kStream >> m_iStrategicValueWithNeighbors;
 	kStream >> m_iStrategicValueAsCity;
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 
 	// the following members specify bit packing and do not resolve to
 	// any serializable type.
@@ -9923,7 +9923,7 @@ void CvPlot::write(FDataStream& kStream) const
 	kStream << m_iStrategicValueAlone;
 	kStream << m_iStrategicValueWithNeighbors;
 	kStream << m_iStrategicValueAsCity;
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 
 	kStream << m_bStartingPlot;
 	kStream << m_bHills;
@@ -10509,7 +10509,7 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 		iYield = FASTMAX(iYield, kYield.getMinCity());
 #else
 		iYield = std::max(iYield, kYield.getMinCity());
-#endif // AUI_FAST_COMP
+#endif
 
 		// Mod for Player; used for Policies and such
 		int iTemp = GET_PLAYER(getOwner()).GetCityYieldChange(eYield);	// In hundreds - will be added to capitalYieldChange below
@@ -10558,7 +10558,7 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 	return FASTMAX(0, iYield);
 #else
 	return std::max(0, iYield);
-#endif // AUI_FAST_COMP
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -10879,7 +10879,7 @@ void CvPlot::calculateStrategicValue(bool bForCity, bool bForInitialize, bool bD
 	int iStraitCount = FASTMAX(aiLandAreas.size(), (uint)1) - 1 + NUM_DIRECTION_TYPES * (FASTMAX(aiWaterAreas.size(), (uint)1) - 1);
 #else
 	int iStraitCount = MAX(aiLandAreas.size(), (uint)1) - 1 + NUM_DIRECTION_TYPES * (MAX(aiWaterAreas.size(), (uint)1) - 1);
-#endif // AUI_FAST_COMP
+#endif
 	iRtnValue += (iStraitCount) * GC.getCHOKEPOINT_STRATEGIC_VALUE();
 
 	// Everything afterwards has much smaller weight; scores of all adjacent tiles are averaged into one tile's worth of points
@@ -10925,7 +10925,7 @@ void CvPlot::calculateStrategicValue(bool bForCity, bool bForInitialize, bool bD
 		m_iStrategicValueWithNeighbors = iRtnValue;
 	}
 }
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 
 //	--------------------------------------------------------------------------------
 PlayerTypes CvPlot::GetBuilderAIScratchPadPlayer() const

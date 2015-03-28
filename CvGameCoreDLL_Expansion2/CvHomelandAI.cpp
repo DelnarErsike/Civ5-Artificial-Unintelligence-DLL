@@ -6210,7 +6210,7 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 	int iValue;
 #ifdef AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
 	int iValueBonus;
-#endif // AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
+#endif
 	int iBestValue;
 	int iI;
 
@@ -6249,8 +6249,8 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 						{
 #ifdef AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
 							iValueBonus = 5000;
-							if (pAdjacentPlot->isAdjacentPlayer(NO_PLAYER) || pAdjacentPlot->IsAdjacentOwnedByOtherTeam(m_pPlayer->getTeam()) ||
-								(pAdjacentPlot->isValidRoute(pUnit) && !pAdjacentPlot->isCity()))
+							if ((pUnit->IsCombatUnit() && (pAdjacentPlot->isAdjacentPlayer(NO_PLAYER) || pAdjacentPlot->IsAdjacentOwnedByOtherTeam(m_pPlayer->getTeam()))) ||
+								(pAdjacentPlot->isValidRoute(pUnit) && (!pAdjacentPlot->isCity() || !pUnit->IsCombatUnit())))
 							{
 								iValueBonus += 5000;
 							}
@@ -6259,14 +6259,33 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 #endif
 						}
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+						int iDanger = m_pPlayer->GetPlotDanger(*pAdjacentPlot, pUnit);
+						if (iDanger >= pUnit->GetCurrHitPoints())
+						{
+#ifdef AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
+							iValueBonus = 0;
+#else
+							// Almost nullifies the value bonus from being in our own territory
+							if (pAdjacentPlot->getOwner() == pUnit->getOwner())
+							{
+								iValue -= 9999;
+							}
+#endif
+							if (iMyDanger >= pUnit->GetCurrHitPoints())
+							{
+								iValue -= (iDanger - iMyDanger);
+							}
+							else
+							{
+								iValue = -1;
+							}
+						}
+#else
 #ifdef AUI_HOMELAND_TWEAKED_FIND_PATROL_TARGET_CIVILIAN_NO_DANGER
 						if (!pUnit->IsCombatUnit())
 						{
-#ifdef AUI_DANGER_PLOTS_REMADE
-							int iDanger = m_pPlayer->GetPlotDanger(*pAdjacentPlot, pUnit);
-#else
 							int iDanger = m_pPlayer->GetPlotDanger(*pAdjacentPlot);
-#endif
 							if (iDanger > 0)
 							{			
 								if (iMyDanger > 0)
@@ -6288,6 +6307,7 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 								}
 							}
 						}
+#endif
 #endif
 #ifdef AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
 						iValue += iValueBonus;

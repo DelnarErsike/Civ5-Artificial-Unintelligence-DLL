@@ -100,7 +100,7 @@ public:
 	int getNumTimesInList(std::vector<CvPlot*>& aPlotList, bool bTerminateAfterFirst = false) const;
 	int getNumTimesInList(BaseVector<CvPlot*, true>& aPlotList, bool bTerminateAfterFirst = false) const;
 	int getNumTimesInList(BaseVector<std::pair<CvPlot*, bool>, true>& aPlotList, bool bTerminateAfterFirst = false, bool* pValue = NULL) const;
-#endif // AUI_PLOT_COUNT_OCCURANCES_IN_LIST
+#endif
 
 	void doTurn();
 
@@ -538,7 +538,7 @@ public:
 	int calculateNatureYield(YieldTypes eIndex, TeamTypes eTeam, bool bIgnoreFeature = false, PlayerTypes eFutureOwner = NO_PLAYER) const;
 #else
 	int calculateNatureYield(YieldTypes eIndex, TeamTypes eTeam, bool bIgnoreFeature = false) const;
-#endif // AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#endif
 	int calculateBestNatureYield(YieldTypes eIndex, TeamTypes eTeam) const;
 	int calculateTotalBestNatureYield(TeamTypes eTeam) const;
 	int calculateImprovementYieldChange(ImprovementTypes eImprovement, YieldTypes eYield, PlayerTypes ePlayer, bool bOptimal = false, RouteTypes eAssumeThisRoute = NUM_ROUTE_TYPES) const;
@@ -859,7 +859,7 @@ protected:
 	int m_iStrategicValueAlone;
 	int m_iStrategicValueWithNeighbors;
 	int m_iStrategicValueAsCity;
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 
 	bool m_bImprovementPillaged:1;
 	bool m_bRoutePillaged:1;
