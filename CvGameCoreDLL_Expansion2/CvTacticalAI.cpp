@@ -9866,10 +9866,10 @@ void CvTacticalAI::ExecuteMoveToPlot(UnitHandle pUnit, CvPlot* pTarget, bool bSa
 #ifdef AUI_TACTICAL_EXECUTE_SWAP_TO_PLOT
 bool CvTacticalAI::ExecuteSwapToPlot(UnitHandle pUnit, UnitHandle pTargetUnit, bool bSaveMoves, bool bWantMovesLeft)
 {
-	int* piMovesLeft = NULL;
-	if (pUnit != pTargetUnit && pUnit->CanSwapWithUnitHere(*pTargetUnit->plot(), piMovesLeft))
+	int iMovesLeft = 0;
+	if (pUnit != pTargetUnit && pUnit->CanSwapWithUnitHere(*pTargetUnit->plot(), &iMovesLeft))
 	{
-		if (bWantMovesLeft && piMovesLeft && *piMovesLeft == 0)
+		if (bWantMovesLeft && iMovesLeft == 0)
 			return false;
 
 		pUnit->PushMission(CvTypes::getMISSION_SWAP_UNITS(), pTargetUnit->getX(), pTargetUnit->getY());
