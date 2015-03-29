@@ -1108,6 +1108,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_VOTING_TWEAKED_WORLD_RELIGION
 /// Uses a different algorithm and unifies the code for scoring voting on arts funding and sciences funding
 #define AUI_VOTING_TWEAKED_ARTS_SCIENCES_FUNDING
+/// Alters some of the algorithms and values used for scoring a proposal overall (instead of just its effects), primarily based on diplomatic relations with the proposer
+#define AUI_VOTING_TWEAKED_PROPOSAL_SCORING
 
 // Wonder Production AI Stuff
 /// Does a flavor update each time a wonder is to be chosen (helps when multiple wonders are to be chosen in a single turn)

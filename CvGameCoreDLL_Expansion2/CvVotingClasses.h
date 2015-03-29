@@ -897,8 +897,13 @@ private:
 
 	// Proposing
 	void AllocateProposals(CvLeague* pLeague);
+#ifdef AUI_VOTING_TWEAKED_PROPOSAL_SCORING
+	int ScoreProposal(CvLeague* pLeague, ResolutionTypes eResolution, int iChoice = LeagueHelpers::CHOICE_NONE, PlayerTypes eProposalPlayer = NO_PLAYER);
+	int ScoreProposal(CvLeague* pLeague, CvActiveResolution* pResolution, PlayerTypes eProposalPlayer = NO_PLAYER);
+#else
 	int ScoreProposal(CvLeague* pLeague, ResolutionTypes eResolution, int iChoice = LeagueHelpers::CHOICE_NONE);
 	int ScoreProposal(CvLeague* pLeague, CvActiveResolution* pResolution);
+#endif
 
 	// Logging
 	void LogVoteChoiceConsidered(CvEnactProposal* pProposal, int iChoice, int iScore);
