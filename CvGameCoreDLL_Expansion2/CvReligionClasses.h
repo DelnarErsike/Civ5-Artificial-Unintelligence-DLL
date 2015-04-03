@@ -508,10 +508,10 @@ private:
 #ifdef AUI_RELIGION_DO_FAITH_PURCHASES_PRIORITIZE_OTHER_RELIGION_HAPPINESS_BUILDINGS
 	bool BuyOtherReligionHappinessBuilding(ReligionTypes eAvoidReligion);
 	bool CanBuyOtherReligionHappinessBuilding(ReligionTypes eAvoidReligion);
-#endif // AUI_RELIGION_DO_FAITH_PURCHASES_PRIORITIZE_OTHER_RELIGION_HAPPINESS_BUILDINGS
+#endif
 #ifdef AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
 	bool DoHurryWithFaith(ReligionTypes eAvoidReligion = NO_RELIGION);
-#endif // AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
+#endif
 
 	int ScoreBelief(CvBeliefEntry* pEntry);
 #ifdef AUI_RELIGION_USE_DOUBLES
@@ -522,7 +522,7 @@ private:
 	int ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot);
 	int ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity);
 	int ScoreBeliefForPlayer(CvBeliefEntry* pEntry);
-#endif // AUI_RELIGION_USE_DOUBLES
+#endif
 
 	int ScoreCityForMissionary(CvCity* pCity, UnitHandle pUnit);
 	int ScoreCityForInquisitor(CvCity* pCity, UnitHandle pUnit);
@@ -536,7 +536,7 @@ private:
 	std::vector<BuildingClassTypes> FaithBuildingAvailable(ReligionTypes eReligion) const;
 #else
 	BuildingClassTypes FaithBuildingAvailable(ReligionTypes eReligion) const;
-#endif // AUI_RELIGION_FIX_MULTIPLE_FAITH_BUILDINGS
+#endif
 	bool CanBuyNonFaithBuilding() const;
 	UnitTypes GetDesiredFaithGreatPerson() const;
 

@@ -66,7 +66,7 @@ void cvStopWatch::EndPerfTest()
 	double dtTime = (double)(newTimerVal.QuadPart - m_oldTimerVal.QuadPart);
 #else
 	double dtTime = (double)newTimerVal.QuadPart - m_oldTimerVal.QuadPart;
-#endif // AUI_STOPWATCH_SUBTRACT_BEFORE_DELTA_CAST
+#endif
 	double dTicksPerSecond = (double)ms_ticksPerSecond.QuadPart;
 
 	m_dtseconds = dtTime/dTicksPerSecond;

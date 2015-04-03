@@ -1118,7 +1118,7 @@ bool CvWorldBuilderMapLoader::InitMap()
 	kMap.recalculateAreas(true);
 #else
 	kMap.recalculateAreas();
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 
 	OutputDebugStringA("Adding Scenario Elements...\n");
 

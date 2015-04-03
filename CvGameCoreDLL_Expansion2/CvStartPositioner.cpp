@@ -103,14 +103,14 @@ void CvStartPositioner::ComputeFoundValues()
 		// Store in player 1 slot for now
 		//   (Normally shouldn't be using a hard-coded player reference, but here in the pre-game initialization it is safe to do so.
 		//    Allows us to reuse this data storage instead of jamming even more data into the CvPlot class that will never be used at run-time).
-#endif // AUI_STARTPOSITIONER_FLAVORED_STARTS
+#endif
 		pLoopPlot = GC.getMap().plotByIndexUnchecked(iI);
 		CvAssert(pLoopPlot);
 		if(!pLoopPlot) continue;
 		int iValue = m_pSiteEvaluator->PlotFoundValue(pLoopPlot, NULL);
 #ifndef AUI_STARTPOSITIONER_FLAVORED_STARTS
 		pLoopPlot->setFoundValue((PlayerTypes)1, iValue);
-#endif // AUI_STARTPOSITIONER_FLAVORED_STARTS
+#endif
 
 		if(iValue > m_iBestFoundValueOnMap)
 		{
@@ -642,7 +642,7 @@ bool CvStartPositioner::AddCivToRegion(int iPlayerIndex, CvStartRegion region, b
 					//   (Normally shouldn't be using a hard-coded player reference, but here in the pre-game initialization it is safe to do so.
 					//    Allows us to reuse this data storage instead of jamming even more data into the CvPlot class that will never be used at run-time).
 					uiPlotFoundValue = pLoopPlot->getFoundValue((PlayerTypes)1);
-#endif // AUI_STARTPOSITIONER_FLAVORED_STARTS
+#endif
 
 #ifdef AUI_STARTPOSITIONER_COASTAL_CIV_WATER_BIAS
 					if ((bIsMinorCiv && GC.getMinorCivInfo(eMinorCivType)->GetMinorCivTrait() == MINOR_CIV_TRAIT_MARITIME) ||
@@ -653,7 +653,7 @@ bool CvStartPositioner::AddCivToRegion(int iPlayerIndex, CvStartRegion region, b
 					if(bIsMinorCiv)
 					{
 						if(GC.getMinorCivInfo(eMinorCivType)->GetMinorCivTrait() == MINOR_CIV_TRAIT_MARITIME)
-#endif // AUI_STARTPOSITIONER_COASTAL_CIV_WATER_BIAS
+#endif
 						{
 							if(!pLoopPlot->isCoastalLand(GC.getLAKE_MAX_AREA_SIZE()))
 							{

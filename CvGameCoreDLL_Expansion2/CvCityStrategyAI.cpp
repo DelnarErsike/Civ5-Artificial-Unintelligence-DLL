@@ -2096,14 +2096,14 @@ void CvCityStrategyAI::NormalizeList()
 		int iToDecrease = -FASTMAX(m_Buildables.GetWeight(m_Buildables.size() - 1) - 1, 0);
 #else
 		int iToDecrease = -MAX(m_Buildables.GetWeight(m_Buildables.size() - 1) - 1, 0);
-#endif // AUI_FAST_COMP
+#endif
 		for (int iI = 0; iI < m_Buildables.size(); iI++)
 		{
 			m_Buildables.IncreaseWeight(iI, iToDecrease);
 		}
 	}
 }
-#endif // AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
+#endif
 
 /// Log new flavor settings
 void CvCityStrategyAI::LogFlavors(FlavorTypes eFlavor)
@@ -2546,7 +2546,7 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_NeedTileImprovers(AICityStrategyT
 	if (iLastTurnWorkerDisbanded >= 0 && GC.getGame().getGameTurn() - iLastTurnWorkerDisbanded <= 25 * GC.getGame().getEstimateEndTurn() / 500)
 #else
 	if(iLastTurnWorkerDisbanded >= 0 && GC.getGame().getGameTurn() - iLastTurnWorkerDisbanded <= 25)
-#endif // AUI_CITYSTRATEGY_FIX_TILE_IMPROVERS_LAST_DISBAND_WORKER_TURN_SCALE
+#endif
 	{
 		return false;
 	}
@@ -2612,7 +2612,7 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_WantTileImprovers(AICityStrategyT
 	if (iLastTurnWorkerDisbanded >= 0 && GC.getGame().getGameTurn() - iLastTurnWorkerDisbanded <= 10 * GC.getGame().getEstimateEndTurn() / 500)
 #else
 	if(iLastTurnWorkerDisbanded >= 0 && GC.getGame().getGameTurn() - iLastTurnWorkerDisbanded <= 10)
-#endif // AUI_CITYSTRATEGY_FIX_TILE_IMPROVERS_LAST_DISBAND_WORKER_TURN_SCALE
+#endif
 	{
 		return false;
 	}

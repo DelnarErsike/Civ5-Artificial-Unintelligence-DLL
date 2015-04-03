@@ -3187,7 +3187,7 @@ ArchaeologyChoiceType CvPlayerCulture::GetArchaeologyChoice(CvPlot *pPlot)
 				m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriority((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")))
 #else
 			if (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"))
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 			{
 				if (m_pPlayer->GetDiplomacyAI()->GetMinorCivApproach(pPlot->getOwner()) != MINOR_CIV_APPROACH_CONQUEST)
 				{
@@ -4826,7 +4826,7 @@ bool CvPlayerCulture::WantsDiplomatDoingPropaganda(PlayerTypes eTargetPlayer) co
 	PolicyBranchTypes eTheirIdeology = GET_PLAYER(eTargetPlayer).GetPlayerPolicies()->GetLateGamePolicyTree();
 	if (eMyIdeology == NO_POLICY_BRANCH_TYPE || eTheirIdeology == NO_POLICY_BRANCH_TYPE || eMyIdeology == eTheirIdeology)
 		return false;
-#endif // AUI_PLAYERCULTURE_FIX_WANTS_DIPLOMAT_DOING_PROPAGANDA_ONLY_NON_SAME_IDEOLOGY
+#endif
 
 	// only return the top two
 #ifdef AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_INFLUENCE_TURNS_USED
@@ -4835,14 +4835,14 @@ bool CvPlayerCulture::WantsDiplomatDoingPropaganda(PlayerTypes eTargetPlayer) co
 #else
 	int iFirstValue = NO_INFLUENCE_LEVEL;
 	int iSecondValue = NO_INFLUENCE_LEVEL;
-#endif // AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_INFLUENCE_TURNS_USED
+#endif
 	PlayerTypes eFirstPlayer = NO_PLAYER;
 	PlayerTypes eSecondPlayer = NO_PLAYER;
 	int iInfluenceTurnsNeeded;
 
 #ifndef AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
 	// only do this if everybody is exotic
-#endif // AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
+#endif
 	for (uint ui = 0; ui < MAX_MAJOR_CIVS; ui++)
 	{
 		PlayerTypes ePlayer = (PlayerTypes)ui;
@@ -4862,7 +4862,7 @@ bool CvPlayerCulture::WantsDiplomatDoingPropaganda(PlayerTypes eTargetPlayer) co
 		{
 			continue;
 		}
-#endif // AUI_PLAYERCULTURE_FIX_WANTS_DIPLOMAT_DOING_PROPAGANDA_ONLY_NON_SAME_IDEOLOGY
+#endif
 
 #ifdef AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
 		// only do this if player is at least exotic but below influential
@@ -4876,7 +4876,7 @@ bool CvPlayerCulture::WantsDiplomatDoingPropaganda(PlayerTypes eTargetPlayer) co
 		{
 			return false;
 		}
-#endif // AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
+#endif
 
 #ifdef AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_INFLUENCE_TURNS_USED
 		iInfluenceTurnsNeeded = m_pPlayer->GetCulture()->GetTurnsToInfluential(ePlayer);
@@ -4898,7 +4898,7 @@ bool CvPlayerCulture::WantsDiplomatDoingPropaganda(PlayerTypes eTargetPlayer) co
 		if (iInfluenceLevel > iFirstValue && iInfluenceLevel > iSecondValue)
 #else
 		else if (iInfluenceLevel > iFirstValue && iInfluenceLevel > iSecondValue)
-#endif // AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_NO_EARLY_TERMINATION
+#endif
 		{
 			iSecondValue = iFirstValue;
 			eSecondPlayer = eFirstPlayer;
@@ -4910,7 +4910,7 @@ bool CvPlayerCulture::WantsDiplomatDoingPropaganda(PlayerTypes eTargetPlayer) co
 			iSecondValue = iInfluenceLevel;
 			eSecondPlayer = ePlayer;
 		}
-#endif // AUI_PLAYERCULTURE_WANTS_DIPLOMAT_DOING_PROPAGANDA_INFLUENCE_TURNS_USED
+#endif
 	}
 
 	return (eFirstPlayer == eTargetPlayer || eSecondPlayer == eTargetPlayer);
@@ -4926,7 +4926,7 @@ int CvPlayerCulture::GetMaxPropagandaDiplomatsWanted() const
 	if (m_pPlayer->GetCulture()->GetTourism() >= m_pPlayer->GetGrandStrategyAI()->ScienceFlavorBoost())
 #else
 	if (m_pPlayer->GetCulture()->GetTourism() > AUI_PLAYERCULTURE_GET_MAX_PROPAGANDA_DIPLOMATS_WANTED_FILTER_TOURISM)
-#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+#endif
 	{
 		// determine which civs have run out of techs to steal
 		for (uint ui = 0; ui < MAX_MAJOR_CIVS; ui++)
@@ -4960,7 +4960,7 @@ int CvPlayerCulture::GetMaxPropagandaDiplomatsWanted() const
 			iRtnValue++;
 		}
 	}
-#endif // AUI_PLAYERCULTURE_GET_MAX_PROPAGANDA_DIPLOMATS_WANTED_FILTER_TOURISM
+#endif
 
 	return iRtnValue;
 }

@@ -511,7 +511,7 @@ bool CvGame::InitMap(CvGameInitialItemsOverrides& kGameInitialItemsOverrides)
 
 #ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 	kMap.calculateStrategicValues(true);
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 
 	// Set all the observer teams to be able to see all the plots
 	for(int iI = 0; iI < MAX_PLAYERS; iI++)
@@ -4392,7 +4392,7 @@ double CvGame::getCurrentMinorCivDeviation()
 {// returns how much the ratio of City States to Players differs from the default.
 	return (getCurrentMinorCivRatio() / 2.0);
 }
-#endif // AUI_MINOR_CIV_RATIO
+#endif
 
 //	------------------------------------------------------------------------------------------------
 int CvGame::getGameTurn()
@@ -9059,7 +9059,7 @@ int CvGame::getJonRandNumBinom(int iNum, const char* pszLog)
 {
 	return m_jonRand.getBinom(iNum, pszLog);
 }
-#endif // AUI_BINOM_RNG
+#endif
 
 //	--------------------------------------------------------------------------------
 /// Get a synchronous random number in the range of 0...iNum-1
@@ -11175,7 +11175,7 @@ int CalculateDigSiteWeight(int iIndex, FFastVector<CvArchaeologyData, true, c_eC
 #else
 				iMaxDX = iRange - MAX(0, iDY);
 				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(iPlotX, iPlotY, iDX, iDY);
@@ -11237,7 +11237,7 @@ int CalculateDigSiteWeight(int iIndex, FFastVector<CvArchaeologyData, true, c_eC
 						if (chosenDigSites[pLoopPlot->GetPlotIndex()].m_eArtifactType != NO_GREAT_WORK_ARTIFACT_CLASS)
 						{
 							iDivisor++;
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 						}
 					}
 				}
@@ -11615,7 +11615,7 @@ void CvGame::SpawnArchaeologySitesHistorically()
 #else
 			iMaxDX = iRange - MAX(0, iDY);
 			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 			{
 				// No need for range check because loops are set up properly
 				pLoopPlot = plotXY(iPlotX, iPlotY, iDX, iDY);
@@ -11625,7 +11625,7 @@ void CvGame::SpawnArchaeologySitesHistorically()
 			for (int iDY = -iRange; iDY <= iRange; iDY++)
 			{
 				CvPlot* pLoopPlot = plotXYWithRangeCheck(iPlotX, iPlotY, iDX, iDY, iRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 				if (pLoopPlot)
 				{
 					int iIndex = pLoopPlot->GetPlotIndex();

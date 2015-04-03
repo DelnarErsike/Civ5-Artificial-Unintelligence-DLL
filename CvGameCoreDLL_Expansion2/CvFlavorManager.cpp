@@ -14,7 +14,7 @@
 
 #ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
 #include "CvGrandStrategyAI.h"
-#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
+#endif
 
 /// Constructor
 CvFlavorRecipient::CvFlavorRecipient():
@@ -166,7 +166,7 @@ void CvFlavorManager::Init(CvPlayer* pPlayer)
 #ifndef AUI_FLAVOR_MANAGER_HUMANS_GET_FLAVOR
 			// Copy over leaderhead defaults unless human
 			if(!pPlayer->isHuman())
-#endif // AUI_FLAVOR_MANAGER_HUMANS_GET_FLAVOR
+#endif
 			{
 				LeaderHeadTypes type = pPlayer->getPersonalityType();
 				if(type != NO_LEADER)
@@ -214,7 +214,7 @@ void CvFlavorManager::Init(CvPlayer* pPlayer)
 					m_piPersonalityFlavor[iI] = iDefaultFlavorValue;
 				}
 			}
-#endif // AUI_FLAVOR_MANAGER_HUMANS_GET_FLAVOR
+#endif
 
 			// Send out updated values to all recipients
 			BroadcastBaseFlavors();
@@ -452,7 +452,7 @@ void CvFlavorManager::RandomizeWeightsOnEraChange()
 {
 	RandomizeWeights(true);
 }
-#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+#endif
 
 // PRIVATE METHODS
 
@@ -461,13 +461,13 @@ void CvFlavorManager::RandomizeWeightsOnEraChange()
 void CvFlavorManager::RandomizeWeights(bool bHalveRandom)
 #else
 void CvFlavorManager::RandomizeWeights()
-#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+#endif
 {
 	int iI;
 	int iMin, iMax, iPlusMinus;
 #ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
 	bool bApplyTwice;
-#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
+#endif
 
 	iMin = /*0*/ GC.getPERSONALITY_FLAVOR_MIN_VALUE();
 	iMax = /*20*/ GC.getPERSONALITY_FLAVOR_MAX_VALUE();
@@ -482,7 +482,7 @@ void CvFlavorManager::RandomizeWeights()
 		}
 		iPlusMinus /= 2;
 	}
-#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+#endif
 
 	for(iI = 0; iI < GC.getNumFlavorTypes(); iI++)
 	{
@@ -491,7 +491,7 @@ void CvFlavorManager::RandomizeWeights()
 		if (m_piPersonalityFlavor[iI] >= 0)
 #else
 		if(m_piPersonalityFlavor[iI] != 0)
-#endif // AUI_FLAVOR_MANAGER_FIX_RANDOMIZE_WEIGHTS_ZEROED_OUT_FLAVOR
+#endif
 		{
 			m_piPersonalityFlavor[iI] = GetAdjustedValue(m_piPersonalityFlavor[iI], iPlusMinus, iMin, iMax);
 		}
@@ -514,12 +514,12 @@ void CvFlavorManager::RandomizeWeights()
 			if (m_piPersonalityFlavor[iI] >= 0)
 #else
 			if (m_piPersonalityFlavor[iI] != 0)
-#endif // AUI_FLAVOR_MANAGER_FIX_RANDOMIZE_WEIGHTS_ZEROED_OUT_FLAVOR
+#endif
 			{
 				m_piPersonalityFlavor[iI] = GetAdjustedValue(m_piPersonalityFlavor[iI], iPlusMinus, iMin, iMax);
 			}
 		}
-#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
+#endif
 	}
 }
 
@@ -527,7 +527,7 @@ void CvFlavorManager::RandomizeWeights()
 /// Add a random plus/minus to an integer (but keep it in range); distribution remains normal
 #else
 /// Add a random plus/minus to an integer (but keep it in range)
-#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USES_BINOM_RNG
+#endif
 int CvFlavorManager::GetAdjustedValue(int iOriginalValue, int iPlusMinus, int iMin, int iMax)
 {
 	int iAdjust;
@@ -535,51 +535,51 @@ int CvFlavorManager::GetAdjustedValue(int iOriginalValue, int iPlusMinus, int iM
 
 #ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 	int iReroll = 0;
-#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+#endif
 #ifdef AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
 	int iSign = (iPlusMinus < 0 ? -1 : 1);
-#endif // AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
+#endif
 
 #ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USES_BINOM_RNG
 #ifdef AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
 	iAdjust = iSign * GC.getGame().getJonRandNumBinom(2 * abs(iPlusMinus) + 1, "Adjusting Personality Flavor");
 #else
 	iAdjust = GC.getGame().getJonRandNumBinom((iPlusMinus * 2 + 1), "Adjusting Personality Flavor");
-#endif // AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
+#endif
 #else
 #ifdef AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
 	iAdjust = iSign * GC.getGame().getJonRandNum(2 * abs(iPlusMinus) + 1, "Adjusting Personality Flavor");
 #else
 	iAdjust = GC.getGame().getJonRandNum((iPlusMinus * 2 + 1), "Adjusting Personality Flavor");
-#endif // AUI_FLAVOR_MANAGER_FIX_GET_ADJUSTED_VALUE_NEGATIVE_PLUSMINUS
-#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USES_BINOM_RNG
+#endif
+#endif
 	iRtnValue = iOriginalValue + iAdjust - iPlusMinus;
 
 	if(iRtnValue < iMin)
 #ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 	{
 		iReroll = iMin - iRtnValue;
-#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+#endif
 		iRtnValue = iMin;
 #ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 	}
-#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+#endif
 	else if(iRtnValue > iMax)
 #ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 	{
 		iReroll = iMax - iRtnValue;
-#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+#endif
 		iRtnValue = iMax;
 #ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 	}
-#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+#endif
 
 #ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 	if (iReroll != 0)
 	{
 		iRtnValue = GetAdjustedValue(iRtnValue, iReroll, iMin, iMax);
 	}
-#endif // AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
+#endif
 
 	return iRtnValue;
 }

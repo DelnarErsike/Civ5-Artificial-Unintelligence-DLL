@@ -16,7 +16,7 @@
 
 #ifdef AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION
 #include "CvReligionClasses.h"
-#endif // AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION
+#endif
 
 /// Constructor
 CvPolicyAI::CvPolicyAI(CvPlayerPolicies* currentPolicies):
@@ -116,7 +116,7 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 	int* paiTempWeights;
 #if defined(AUI_MINOR_CIV_RATIO) || defined(AUI_GS_SCIENCE_FLAVOR_BOOST) || defined(AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY) || defined(AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION) || defined(AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER) || defined(AUI_POLICY_NULLIFY_EXPANSION_WEIGHT_FOR_OCC)
 	double dWeight = (double)iWeight;
-#endif // AUI_MINOR_CIV_RATIO
+#endif
 
 	CvPolicyXMLEntries* pkPolicyEntries = m_pCurrentPolicies->GetPolicies();
 	// Create a temporary array of weights
@@ -128,13 +128,13 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 	{
 		dWeight *= (1.0 + log(MAX(GC.getGame().getCurrentMinorCivDeviation(), exp(-1.0))));
 	}
-#endif // AUI_MINOR_CIV_RATIO
+#endif
 #ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
 	if (eFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"))
 	{
 		dWeight *= m_pCurrentPolicies->GetPlayer()->GetGrandStrategyAI()->ScienceFlavorBoost();
 	}
-#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+#endif
 #ifdef AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY
 	// Makes sure AI picks up happiness policies if it starts becoming unhappy
 	if (eFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_HAPPINESS"))
@@ -149,7 +149,7 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 			dWeight *= AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY;
 		}
 	}
-#endif // AUI_POLICY_MULTIPLY_HAPPINESS_WEIGHT_WHEN_UNHAPPY
+#endif
 #ifdef AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION
 	// Stops the AI from picking up Piety unless it has founded or will found a religion
 	if (eFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"))
@@ -164,7 +164,7 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 			dWeight *= AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION;
 		}
 	}
-#endif // AUI_POLICY_DIVIDE_RELIGION_WEIGHT_WHEN_NO_RELIGION
+#endif
 #ifdef AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER
 	// Stops the AI from opening Honor (or other military branches
 	if (m_pCurrentPolicies->GetNumPolicyBranchesUnlocked() < AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER / 2)
@@ -175,11 +175,11 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 			dWeight /= AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER * (m_pCurrentPolicies->GetNumPolicyBranchesUnlocked() + 1);
 		}
 	}
-#endif // AUI_POLICY_DIVIDE_MILITARY_WEIGHT_FOR_OPENER
+#endif
 #ifdef AUI_POLICY_NULLIFY_EXPANSION_WEIGHT_FOR_OCC
 	if (GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE) && eFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"))
 		dWeight = 0;
-#endif // AUI_POLICY_NULLIFY_EXPANSION_WEIGHT_FOR_OCC
+#endif
 
 	// Loop through all our policies
 	for(iPolicy = 0; iPolicy < pkPolicyEntries->GetNumPolicies(); iPolicy++)
@@ -200,7 +200,7 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 			paiTempWeights[iPolicy] = int(entry->GetFlavorValue(eFlavor) * dWeight * BoostFlavorDueToUniqueGP(entry) + 0.5);
 #else
 			paiTempWeights[iPolicy] = int(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
-#endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
+#endif
 		}
 #else
 #ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
@@ -210,9 +210,9 @@ void CvPolicyAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropaga
 			paiTempWeights[iPolicy] = int(entry->GetFlavorValue(eFlavor) * dWeight + 0.5);
 #else
 			paiTempWeights[iPolicy] = entry->GetFlavorValue(eFlavor) * iWeight;
-#endif // AUI_MINOR_CIV_RATIO
-#endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
-#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+#endif
+#endif
+#endif
 		else
 			paiTempWeights[iPolicy] = 0;
 	}
@@ -241,7 +241,7 @@ int CvPolicyAI::ChooseNextPolicy(CvPlayer* pPlayer)
 	CvWeightedVector<int, 64, true> aLevel3Tenets;
 #else
 	vector<int> aLevel3Tenets;
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 
 	bool bMustChooseTenet = (pPlayer->GetNumFreeTenets() > 0);
 
@@ -278,7 +278,7 @@ int CvPolicyAI::ChooseNextPolicy(CvPlayer* pPlayer)
 				aLevel3Tenets.push_back(iPolicyLoop, iWeight);
 #else
 				aLevel3Tenets.push_back(iPolicyLoop);
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 			}
 		}
 	}
@@ -307,10 +307,10 @@ int CvPolicyAI::ChooseNextPolicy(CvPlayer* pPlayer)
 	AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
 	AIGrandStrategyTypes eDiplomaticGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS");
 	AIGrandStrategyTypes eSpaceshipGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP");
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 #else
 	AIGrandStrategyTypes eCurrentGrandStrategy = pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy();
-#endif // AUI_POLICY_CHOOSE_NEXT_POLICY_TWEAKED_OPEN_NEW_BRANCH
+#endif
 
 	// Loop though the branches adding each as another possibility
 	if (!bMustChooseTenet)
@@ -351,13 +351,13 @@ int CvPolicyAI::ChooseNextPolicy(CvPlayer* pPlayer)
 							* (1.0 + (double)pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eConquestGrandStrategy))
 							* (1.0 + (double)pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eDiplomaticGrandStrategy))
 							* (1.0 + (double)pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio(eSpaceshipGrandStrategy)), 1.0/4.0) / 4.0;
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 #else
 						if(eCurrentGrandStrategy == eCultureGrandStrategy)
 						{
 							dBranchWeight /= 3;
 						}
-#endif // AUI_POLICY_CHOOSE_NEXT_POLICY_TWEAKED_OPEN_NEW_BRANCH
+#endif
 					}
 
 					m_AdoptablePolicies.push_back(iBranchLoop, (int)(dBranchWeight + 0.5));
@@ -380,11 +380,11 @@ int CvPolicyAI::ChooseNextPolicy(CvPlayer* pPlayer)
 						{
 							iBranchWeight /= 3;
 						}
-#endif // AUI_POLICY_CHOOSE_NEXT_POLICY_TWEAKED_OPEN_NEW_BRANCH
+#endif
 					}
 
 					m_AdoptablePolicies.push_back(iBranchLoop, iBranchWeight);
-#endif // AUI_POLICY_USE_DOUBLES
+#endif
 				}
 			}
 		}
@@ -496,7 +496,7 @@ int CvPolicyAI::ChooseNextPolicy(CvPlayer* pPlayer)
 				}
 			}
 		}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 	}
 
 	CvAssertMsg(m_AdoptablePolicies.GetTotalWeight() >= 0, "Total weights of considered policies should not be negative! Please send Anton your save file and version.");
@@ -560,7 +560,7 @@ void CvPolicyAI::DoChooseIdeology(CvPlayer *pPlayer)
 	int iDiploPriority = max(0, pPlayer->GetGrandStrategyAI()->GetUnitedNationsPriority());
 	int iTechPriority = max(0, pPlayer->GetGrandStrategyAI()->GetSpaceshipPriority());
 	int iCulturePriority = max(0, pPlayer->GetGrandStrategyAI()->GetCulturePriority());
-#endif // AUI_GS_PRIORITY_OVERHAUL
+#endif
 
 	// Rule out one ideology if we are clearly (at least 25% more priority) going for the victory this ideology doesn't support
 	int iClearPrefPercent = GC.getIDEOLOGY_PERCENT_CLEAR_VICTORY_PREF();
@@ -602,7 +602,7 @@ void CvPolicyAI::DoChooseIdeology(CvPlayer *pPlayer)
 	{
 		iAutocracyMultiplier = 0;
 	}
-#endif // AUI_POLICY_DO_CHOOSE_IDEOLOGY_TWEAKED_CLEAR_PREFS
+#endif
 
 	int iFreedomTotal = iDiploPriority + iTechPriority + iCulturePriority;
 	int iAutocracyTotal = iDiploPriority + iConquestPriority + iCulturePriority;
@@ -761,7 +761,7 @@ void CvPolicyAI::DoChooseIdeology(CvPlayer *pPlayer)
 	iFreedomPriority += GC.getGame().getJonRandNum(10, "Freedom random priority bump");
 	iAutocracyPriority += GC.getGame().getJonRandNum(10, "Autocracy random priority bump");
 	iOrderPriority += GC.getGame().getJonRandNum(10, "Order random priority bump");
-#endif // AUI_POLICY_DO_CHOOSE_IDEOLOGY_USES_BINOM_RNG
+#endif
 
 	stage = "After Random (1 to 10)";
 	LogIdeologyChoice(stage, iFreedomPriority, iAutocracyPriority, iOrderPriority);
@@ -787,9 +787,9 @@ void CvPolicyAI::DoChooseIdeology(CvPlayer *pPlayer)
 		iFreedomPriority += GC.getGame().getJonRandNum(10, "Freedom random priority bump");
 		iAutocracyPriority += GC.getGame().getJonRandNum(10, "Autocracy random priority bump");
 		iOrderPriority += GC.getGame().getJonRandNum(10, "Order random priority bump");
-#endif // AUI_POLICY_DO_CHOOSE_IDEOLOGY_USES_BINOM_RNG
+#endif
 	}
-#endif // AUI_POLICY_DO_CHOOSE_IDEOLOGY_TIEBREAKER
+#endif
 
 	// Pick the ideology
 	PolicyBranchTypes eChosenBranch;
@@ -797,7 +797,7 @@ void CvPolicyAI::DoChooseIdeology(CvPlayer *pPlayer)
 	if (iFreedomPriority > iAutocracyPriority && iFreedomPriority > iOrderPriority)
 #else
 	if (iFreedomPriority >= iAutocracyPriority && iFreedomPriority >= iOrderPriority)
-#endif // AUI_POLICY_DO_CHOOSE_IDEOLOGY_TIEBREAKER
+#endif
 	{
 		eChosenBranch = eFreedomBranch;
 	}
@@ -805,7 +805,7 @@ void CvPolicyAI::DoChooseIdeology(CvPlayer *pPlayer)
 	else if (iAutocracyPriority > iFreedomPriority && iAutocracyPriority > iOrderPriority)
 #else
 	else if (iAutocracyPriority >= iFreedomPriority && iAutocracyPriority >= iOrderPriority)
-#endif // AUI_POLICY_DO_CHOOSE_IDEOLOGY_TIEBREAKER
+#endif
 	{
 		eChosenBranch = eAutocracyBranch;
 	}
@@ -852,7 +852,7 @@ void CvPolicyAI::DoConsiderIdeologySwitch(CvPlayer* pPlayer)
 		int iDiploPriority = pPlayer->GetGrandStrategyAI()->GetUnitedNationsPriority();
 		int iTechPriority = pPlayer->GetGrandStrategyAI()->GetSpaceshipPriority();
 		int iCulturePriority = pPlayer->GetGrandStrategyAI()->GetCulturePriority();
-#endif // AUI_GS_PRIORITY_OVERHAUL
+#endif
 		int iClearPrefPercent = GC.getIDEOLOGY_PERCENT_CLEAR_VICTORY_PREF();
 #ifdef AUI_POLICY_DO_CONSIDER_IDEOLOGY_SWITCH_TWEAKED_CLEAR_PREFS
 		if (pPlayer->IsEmpireVeryUnhappy())
@@ -894,7 +894,7 @@ void CvPolicyAI::DoConsiderIdeologySwitch(CvPlayer* pPlayer)
 		{
 			bDontSwitchAutocracy = true;
 		}
-#endif // AUI_POLICY_DO_CONSIDER_IDEOLOGY_SWITCH_TWEAKED_CLEAR_PREFS
+#endif
 
 		int iTotalHappinessImprovement = iPublicOpinionUnhappiness + iHappinessPreferredIdeology - iHappinessCurrentIdeology;
 		if (iTotalHappinessImprovement >= 10)
@@ -1011,7 +1011,7 @@ int CvPolicyAI::GetBranchBuildingHappiness(CvPlayer* pPlayer, PolicyBranchTypes 
 				{
 					iSpecialPolicyBuildingHappiness += iSpecialistPopulation / 2;
 				}
-#endif // AUI_POLICY_GET_BRANCH_BUILDING_HAPPINESS_GET_ALL_HAPPINESS_SOURCES
+#endif
 			}
 		}
 	}
@@ -1066,7 +1066,7 @@ int CvPolicyAI::GetNumHappinessPolicies(CvPlayer* pPlayer, PolicyBranchTypes eBr
 				{
 					iRtnValue++;
 				}
-#endif // AUI_POLICY_GET_BRANCH_BUILDING_HAPPINESS_GET_ALL_HAPPINESS_SOURCES
+#endif
 			}
 		}
 	}
@@ -1138,13 +1138,13 @@ int CvPolicyAI::WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch)
 #else
 int CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
 #endif
-#endif // AUI_POLICY_USE_DOUBLES
+#endif
 {
 #ifdef AUI_POLICY_USE_DOUBLES
 	double dWeight = 0.0;
 #else
 	int iWeight = 0;
-#endif // AUI_POLICY_USE_DOUBLES
+#endif
 #if defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE) || defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER)
 	double dDivider = 1.0;
 #endif
@@ -1156,7 +1156,7 @@ int CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
 		// Older branches get less weight because there have been more chances to open them
 		if (!pkPolicyBranchInfo->IsLockedWithoutReligion() || pPlayer->GetReligions()->GetReligionCreatedByPlayer() == NO_RELIGION)
 			dDivider = MAX(1.0, sqrt((double)pPlayer->GetCurrentEra() - pkPolicyBranchInfo->GetEraPrereq()));
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif
 		
 		for(int iPolicyLoop = 0; iPolicyLoop < m_pCurrentPolicies->GetPolicies()->GetNumPolicies(); iPolicyLoop++)
 		{
@@ -1176,14 +1176,14 @@ int CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
 						dWeight += (m_PolicyAIWeights.GetWeight(iPolicyLoop) / dDivider);
 #else
 						dWeight += m_PolicyAIWeights.GetWeight(iPolicyLoop);
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif
 #else
 #ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
 						iWeight += int(m_PolicyAIWeights.GetWeight(iPolicyLoop) / dDivider + 0.5);
 #else
 						iWeight += m_PolicyAIWeights.GetWeight(iPolicyLoop);
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
-#endif // AUI_POLICY_USE_DOUBLES
+#endif
+#endif
 #else
 						// With no prereqs?
 						if(pkLoopPolicyInfo->GetPrereqAndPolicies(0) == NO_POLICY)
@@ -1193,16 +1193,16 @@ int CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
 							dWeight += (m_PolicyAIWeights.GetWeight(iPolicyLoop) / dDivider);
 #else
 							dWeight += m_PolicyAIWeights.GetWeight(iPolicyLoop);
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif
 #else
 #ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
 							iWeight += int(m_PolicyAIWeights.GetWeight(iPolicyLoop) / dDivider + 0.5);
 #else
 							iWeight += m_PolicyAIWeights.GetWeight(iPolicyLoop);
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
-#endif // AUI_POLICY_USE_DOUBLES
+#endif
+#endif
 						}
-#endif // AUI_POLICY_WEIGH_BRANCH_COUNT_POLICIES_WITH_PREREQ
+#endif
 					}
 				}
 			}
@@ -1214,13 +1214,13 @@ int CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
 		dWeight += (m_PolicyAIWeights.GetWeight(pkPolicyBranchInfo->GetFreePolicy()) / dDivider);
 #else
 		dWeight += m_PolicyAIWeights.GetWeight(pkPolicyBranchInfo->GetFreePolicy());
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif
 #else
 #ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
 		iWeight += int(m_PolicyAIWeights.GetWeight(pkPolicyBranchInfo->GetFreePolicy()) / dDivider + 0.5);
 #else
 		iWeight += m_PolicyAIWeights.GetWeight(pkPolicyBranchInfo->GetFreePolicy());
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif
 #endif AUI_POLICY_USE_DOUBLES
 
 #ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
@@ -1257,26 +1257,26 @@ int CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
 #else
 								dWeightFromVotes = pkBuildingInfo->GetExtraLeagueVotes() / dDivider * (1.01 + iFlavorDiplomacy * 2) / 1.01 *
 									(double)pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"));
-#endif // AUI_MINOR_CIV_RATIO
+#endif
 							}
 #ifdef AUI_POLICY_USE_DOUBLES
 							dWeight += MAX(dWeightFromFlavor, dWeightFromVotes);
 #else
 							iWeight += int(MAX(dWeightFromFlavor, dWeightFromVotes) + 0.5);
-#endif // AUI_POLICY_USE_DOUBLES
+#endif
 						}
 					}
 				}
 			}
 		}
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
+#endif
 	}
 
 #ifdef AUI_POLICY_USE_DOUBLES
 	return dWeight;
 #else
 	return iWeight;
-#endif // AUI_POLICY_USE_DOUBLES
+#endif
 }
 
 /// Based on game options (religion off, science off, etc.), would this branch do us any good?
@@ -1372,7 +1372,7 @@ double CvPolicyAI::BoostFlavorDueToUniqueGP(CvPolicyEntry* pEntry)
 
 	return dMultiplier;
 }
-#endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
+#endif
 
 /// Log all possible policy choices
 void CvPolicyAI::LogPossiblePolicies()

@@ -24,7 +24,7 @@ static const GUID CIV5_XP2_DLL_GUID =
 // {83F34FF0-3D60-43e7-AEDB-82C79867EE3F}
 static const GUID CIV5_XP2_DLL_GUID = 
 { 0x83f34ff0, 0x3d60, 0x43e7, { 0xae, 0xdb, 0x82, 0xc7, 0x98, 0x67, 0xee, 0x3f } };
-#endif // AUI_GUID
+#endif
 
 
 

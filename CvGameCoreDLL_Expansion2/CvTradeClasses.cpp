@@ -25,11 +25,11 @@
 #else
 #ifdef AUI_TRADE_SCORE_PRODUCTION_VALUE
 #include "CvGrandStrategyAI.h"
-#endif // AUI_TRADE_SCORE_PRODUCTION_VALUE
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_TOURISM_SCORE_USES_GRAND_STRATEGY
+#endif
+#endif
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
 #include "CvEconomicAI.h"
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+#endif
 
 //=====================================
 // CvGameTrade
@@ -4046,8 +4046,8 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	{
 		bIsToMinor = true;
 	}
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+#endif
+#endif
 
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
 	double dDiplomacyTaper = 1.0;
@@ -4060,7 +4060,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	{
 		dDiplomacyTaper *= double(m_pPlayer->GetTreasury()->GetGold() + m_pPlayer->GetTreasury()->AverageIncome(1)) / (double)MAX(m_pPlayer->GetTreasury()->GetGold(), 1);
 	}
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+#endif
 
 	CvPlayerTrade* pPlayerTrade = m_pPlayer->GetTrade();
 	CvPlayerTrade* pOtherPlayerTrade = GET_PLAYER(kTradeConnection.m_eDestOwner).GetTrade();
@@ -4840,7 +4840,7 @@ void CvTradeAI::PrioritizeTradeRoutes(TradeConnectionList& aTradeConnectionList)
 	{
 		aTradeConnectionList.push_back(aGoldSortedTR[ui].m_kTradeConnection);
 	}
-#endif // AUI_TRADE_UNBIASED_PRIORITIZE
+#endif
 }
 
 /// ChooseTradeUnitTargetPlot

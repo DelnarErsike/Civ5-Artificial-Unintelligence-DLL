@@ -38,7 +38,7 @@ public:
 	void DoTurn();
 #ifdef AUI_PUBLIC_HAS_MET_MAJOR
 	bool HasMetMajor();
-#endif // AUI_PUBLIC_HAS_MET_MAJOR
+#endif
 	int GetConquestPriority();
 	int GetCulturePriority();
 	int GetUnitedNationsPriority();
@@ -54,7 +54,7 @@ public:
 	double GetSpaceshipETAPriority();
 #else
 	int GetBaseGrandStrategyPriority(AIGrandStrategyTypes eGrandStrategy);
-#endif // AUI_GS_PRIORITY_OVERHAUL
+#endif
 
 	AIGrandStrategyTypes GetActiveGrandStrategy() const;
 	void SetActiveGrandStrategy(AIGrandStrategyTypes eGrandStrategy);
@@ -71,8 +71,8 @@ public:
 	bool IsGrandStrategySignificant(AIGrandStrategyTypes eGrandStrategy) const;
 #ifdef AUI_GS_PRIORITY_OVERHAUL
 	double GetGrandStrategyPriorityRatioSingle(AIGrandStrategyTypes eGrandStrategy) const;
-#endif // AUI_GS_PRIORITY_OVERHAUL
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
+#endif
 
 #ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
 	int ScienceFlavorBoost() const;
@@ -101,7 +101,7 @@ private:
 	void LogGrandStrategies(const FStaticVector< int, 5, true, c_eCiv5GameplayDLL >& /*vGrandStrategyPriorities*/);
 #else
 	void LogGrandStrategies(const FStaticVector< int, 5, true, c_eCiv5GameplayDLL >& vGrandStrategyPriorities);
-#endif // AUI_GS_BETTER_LOGGING
+#endif
 	void LogGuessOtherPlayerGrandStrategy(const FStaticVector< int, 5, true, c_eCiv5GameplayDLL >& vGrandStrategyPriorities, PlayerTypes ePlayer);
 
 	CvPlayer* m_pPlayer;

@@ -277,10 +277,10 @@ public:
 
 #ifdef AUI_MILITARY_MAX_INTERCEPTS
 	int GetMaxPossibleInterceptions(CvPlot* pTargetPlot, bool bCountPercents = false) const;
-#endif // AUI_MILITARY_MAX_INTERCEPTS
+#endif
 #ifdef AUI_MILITARY_AITYPE_FLIP
 	int DoUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert = false, int iMaxCount = MAX_INT, DefenseState eThresholdLandDefenseState = NO_DEFENSE_STATE, DefenseState eThresholdNavalDefenseState = NO_DEFENSE_STATE, ThreatTypes eThresholdThreatState = NO_THREAT_VALUE, bool bIncludeArmies = false);
-#endif // AUI_MILITARY_AITYPE_FLIP
+#endif
 
 	// Public logging functions
 	void LogDeclarationOfWar(PlayerTypes eOpponent);

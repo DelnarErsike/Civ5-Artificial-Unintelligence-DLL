@@ -429,7 +429,7 @@ void CvGameReligions::DoPlayerTurn(CvPlayer& kPlayer)
 				}
 #else
 				FoundPantheon(ePlayer, eBelief);
-#endif // AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
+#endif
 			}
 		}
 
@@ -456,7 +456,7 @@ void CvGameReligions::DoPlayerTurn(CvPlayer& kPlayer)
 			}
 #else
 			AddReformationBelief(ePlayer, eReligionCreated, eReformationBelief);
-#endif // AUI_RELIGION_FIX_POSSIBLE_NULL_POINTER
+#endif
 		}
 		else
 		{
@@ -1472,7 +1472,7 @@ bool CvGameReligions::HasCreatedReligion(PlayerTypes ePlayer) const
 	}
 
 	return false;
-#endif // AUI_RELIGION_REFORMAT_HAS_CREATED_RELIGION
+#endif
 }
 
 /// Has this player reformed their religion?
@@ -2356,7 +2356,7 @@ bool CvPlayerReligions::CanAffordFaithPurchase() const
 	int iCost;
 	int iLoop = 0;
 	CvCity* pLoopCity;
-#endif // AUI_RELIGION_FIX_CAN_AFFORD_FAITH_PURCHASE_NON_CAPITAL_RELIGION
+#endif
 	CvCity* pCapital = m_pPlayer->getCapitalCity();
 	if(pCapital)
 	{
@@ -2383,7 +2383,7 @@ bool CvPlayerReligions::CanAffordFaithPurchase() const
 					{
 						return true;
 					}
-#endif // AUI_RELIGION_FIX_CAN_AFFORD_FAITH_PURCHASE_NON_CAPITAL_RELIGION
+#endif
 				}
 			}
 		}
@@ -4687,7 +4687,7 @@ CvPlot* CvReligionAI::ChooseMissionaryTargetPlot(UnitHandle pUnit, int* piTurns)
 	AI_PERF_FORMAT("AI-perf-tact.csv", ("ChooseMissionaryTargetPlot: %s %d (Targeting %s), Turn %03d, %s", pUnit->getName().c_str(), pUnit->GetID(), pCity->getName().c_str(), GC.getGame().getElapsedGameTurns(), m_pPlayer->getCivilizationShortDescription()) );
 #else
 	AI_PERF_FORMAT("AI-perf-tact.csv", ("ChooseMissionaryTargetPlot: %s %d; %s, Turn %03d, %s", pUnit->getName().c_str(), pUnit->GetID(), pCity->getName().c_str(), GC.getGame().getElapsedGameTurns(), m_pPlayer->getCivilizationShortDescription()) );
-#endif // AUI_PERF_LOGGING_FORMATTING_TWEAKS
+#endif
 #pragma warning ( pop )
 
 	// Find adjacent plot with no units (that aren't our own)

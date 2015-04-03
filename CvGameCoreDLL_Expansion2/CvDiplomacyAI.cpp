@@ -1907,7 +1907,7 @@ int CvDiplomacyAI::GetRandomPersonalityWeight(int iOriginalValue) const
 	int iAdjust = GC.getGame().getJonRandNumBinom(iPlusMinus * 2 + 1, "Diplomacy AI Random Weight");
 #else
 	int iAdjust = GC.getGame().getJonRandNum((iPlusMinus * 2 + 1), "Diplomacy AI Random Weight");
-#endif // AUI_DIPLOMACY_GET_RANDOM_PERSONALITY_WEIGHT_USES_BINOM_RNG
+#endif
 	int iRtnValue = iOriginalValue + iAdjust - iPlusMinus;
 
 #ifdef AUI_DIPLOMACY_GET_RANDOM_PERSONALITY_WEIGHT_USE_REROLLS
@@ -1945,7 +1945,7 @@ int CvDiplomacyAI::GetRandomPersonalityWeight(int iOriginalValue) const
 		iRtnValue = iMin;
 	else if(iRtnValue > iMax)
 		iRtnValue = iMax;
-#endif // AUI_DIPLOMACY_GET_RANDOM_PERSONALITY_WEIGHT_USE_REROLLS
+#endif
 
 	return iRtnValue;
 }
@@ -5006,7 +5006,7 @@ bool CvDiplomacyAI::IsWantsOpenBordersWithPlayer(PlayerTypes ePlayer)
 	if (eCultureStrategy != NO_AIGRANDSTRATEGY && m_pPlayer->GetGrandStrategyAI()->IsGrandStrategySignificant(eCultureStrategy) && m_pPlayer->GetCulture()->GetTourism() > 0 )
 #else
 	if (eCultureStrategy != NO_AIGRANDSTRATEGY && m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == eCultureStrategy && m_pPlayer->GetCulture()->GetTourism() > 0 )
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 	{
 		// The civ we need influence on the most should ALWAYS be included
 		if (m_pPlayer->GetCulture()->GetCivLowestInfluence(false /*bCheckOpenBorders*/) == ePlayer)
@@ -8477,7 +8477,7 @@ void CvDiplomacyAI::DoUpdateVictoryDisputeLevels()
 #ifdef AUI_GS_PRIORITY_RATIO
 	// Still get disputes even if victory isn't perfect match
 	double dVictoryDisputePercent;
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 
 	// Loop through all (known) Players
 	for(int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
@@ -8530,7 +8530,7 @@ void CvDiplomacyAI::DoUpdateVictoryDisputeLevels()
 						iVictoryDisputeWeight += /*6*/ GC.getVICTORY_DISPUTE_GRAND_STRATEGY_MATCH_UNSURE();
 						break;
 					}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 				}
 
 				// Add weight for Player's competitiveness (0 - 10)
@@ -14269,7 +14269,7 @@ void CvDiplomacyAI::DoAngryBefriendedEnemy(PlayerTypes ePlayer, DiploStatementTy
 				iWeight += GC.getGame().getJonRandNumBinom(AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG, "Random roll for AI statement: 0");
 #else
 				iWeight += GC.getGame().getJonRandNum(7, "Random roll for AI statement: 0");
-#endif // AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG
+#endif
 
 				// We're mean enough to say something
 				if(iWeight >= 7)
@@ -14341,7 +14341,7 @@ void CvDiplomacyAI::DoAngryDenouncedFriend(PlayerTypes ePlayer, DiploStatementTy
 				iWeight += GC.getGame().getJonRandNumBinom(AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG, "Random roll for AI statement: 0");
 #else
 				iWeight += GC.getGame().getJonRandNum(7, "Random roll for AI statement: 0");
-#endif // AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG
+#endif
 
 				// We're mean enough to say something
 				if(iWeight >= 7)
@@ -14413,7 +14413,7 @@ void CvDiplomacyAI::DoHappyDenouncedEnemy(PlayerTypes ePlayer, DiploStatementTyp
 				iWeight += GC.getGame().getJonRandNumBinom(AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG, "Random roll for AI statement: 0");
 #else
 				iWeight += GC.getGame().getJonRandNum(7, "Random roll for AI statement: 0");
-#endif // AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG
+#endif
 
 				// We're chatty enough to say something
 				if(iWeight >= 7)
@@ -14485,7 +14485,7 @@ void CvDiplomacyAI::DoHappyBefriendedFriend(PlayerTypes ePlayer, DiploStatementT
 				iWeight += GC.getGame().getJonRandNumBinom(AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG, "Random roll for AI statement: 0");
 #else
 				iWeight += GC.getGame().getJonRandNum(7, "Random roll for AI statement: 0");
-#endif // AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG
+#endif
 
 				// We're chatty enough to say something
 				if(iWeight >= 7)
@@ -14615,7 +14615,7 @@ void CvDiplomacyAI::DoFYIBefriendedHumanEnemy(PlayerTypes ePlayer, DiploStatemen
 				iWeight += GC.getGame().getJonRandNumBinom(AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG, "Random roll for AI statement: 0");
 #else
 				iWeight += GC.getGame().getJonRandNum(7, "Random roll for AI statement: 0");
-#endif // AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG
+#endif
 
 				// We're mean enough to say something
 				if(iWeight >= 7)
@@ -14704,7 +14704,7 @@ void CvDiplomacyAI::DoFYIDenouncedHumanFriend(PlayerTypes ePlayer, DiploStatemen
 				iWeight += GC.getGame().getJonRandNumBinom(AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG, "Random roll for AI statement: 0");
 #else
 				iWeight += GC.getGame().getJonRandNum(7, "Random roll for AI statement: 0");
-#endif // AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG
+#endif
 
 				// We're mean enough to say something
 				if(iWeight >= 7)
@@ -14800,7 +14800,7 @@ void CvDiplomacyAI::DoFYIDenouncedHumanEnemy(PlayerTypes ePlayer, DiploStatement
 				iWeight += GC.getGame().getJonRandNumBinom(AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG, "Random roll for AI statement: 0");
 #else
 				iWeight += GC.getGame().getJonRandNum(7, "Random roll for AI statement: 0");
-#endif // AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG
+#endif
 
 				// We're mean enough to say something
 				if(iWeight >= 7)
@@ -14892,7 +14892,7 @@ void CvDiplomacyAI::DoFYIBefriendedHumanFriend(PlayerTypes ePlayer, DiploStateme
 				iWeight += GC.getGame().getJonRandNumBinom(AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG, "Random roll for AI statement: 0");
 #else
 				iWeight += GC.getGame().getJonRandNum(7, "Random roll for AI statement: 0");
-#endif // AUI_DIPLOMACY_DO_STATEMENT_USES_BINOM_RNG
+#endif
 
 				// We're mean enough to say something
 				if(iWeight >= 7)
@@ -18544,14 +18544,14 @@ int CvDiplomacyAI::GetCoopWarScore(PlayerTypes ePlayer, PlayerTypes eTargetPlaye
 	iWeight += GC.getGame().getJonRandNumBinom(GetBoldness(), "Diplomacy AI: Rand for whether AI wants to enter a coop war.");
 #else
 	iWeight += GC.getGame().getJonRandNumBinom(AUI_DIPLOMACY_GET_COOP_WAR_SCORE_USES_BINOM_RNG, "Diplomacy AI: Rand for whether AI wants to enter a coop war.");
-#endif // AUI_DIPLOMACY_GET_COOP_WAR_SCORE_MAX_RANDOM_VALUE_IS_BOLDNESS
+#endif
 #else
 #ifdef AUI_DIPLOMACY_GET_COOP_WAR_SCORE_MAX_RANDOM_VALUE_IS_BOLDNESS
 	iWeight += GC.getGame().getJonRandNum(GetBoldness(), "Diplomacy AI: Rand for whether AI wants to enter a coop war.");
 #else
 	iWeight += GC.getGame().getJonRandNum(5, "Diplomacy AI: Rand for whether AI wants to enter a coop war.");
-#endif // AUI_DIPLOMACY_GET_COOP_WAR_SCORE_MAX_RANDOM_VALUE_IS_BOLDNESS
-#endif // AUI_DIPLOMACY_GET_COOP_WAR_SCORE_USES_BINOM_RNG
+#endif
+#endif
 
 	// Weight must be high enough for us to return a true desire
 	if(iWeight >= 15)
@@ -18774,7 +18774,7 @@ void CvDiplomacyAI::DoDemandMade(PlayerTypes ePlayer)
 	int iRand = GC.getGame().getJonRandNumBinom(/*10*/ GC.getDEMAND_TURN_LIMIT_RAND(), "Diplomacy AI: Number of turns before demand can be accepted.");
 #else
 	int iRand = GC.getGame().getJonRandNum(/*10*/ GC.getDEMAND_TURN_LIMIT_RAND(), "Diplomacy AI: Number of turns before demand can be accepted.");
-#endif // AUI_DIPLOMACY_DO_DEMAND_MADE_USES_BINOM_RNG
+#endif
 	iNumTurns += iRand;
 
 	m_paiDemandTooSoonNumTurns[ePlayer] = iNumTurns;
@@ -18942,7 +18942,7 @@ bool CvDiplomacyAI::IsDontSettleAcceptable(PlayerTypes ePlayer) const
 	int iRand = GC.getGame().getJonRandNumBinom(/*100*/ GC.getDONT_SETTLE_RAND(), "Diplomacy AI: will AI agree to not settle near a player?");
 #else
 	int iRand = GC.getGame().getJonRandNum(/*100*/ GC.getDONT_SETTLE_RAND(), "Diplomacy AI: will AI agree to not settle near a player?");
-#endif // AUI_DIPLOMACY_IS_DONT_SETTLE_ACCEPTABLE_USES_BINOM_RNG
+#endif
 
 	// Passes the test?
 	if(iRand < iThreshold)
@@ -19027,7 +19027,7 @@ void CvDiplomacyAI::SetPlayerNoSettleRequestAccepted(PlayerTypes ePlayer, bool b
 				{
 					for(iLoopY = -(iRange); iLoopY <= iRange; iLoopY++)
 					{
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 						pNearbyPlot = plotXY(pLoopCity->getX(), pLoopCity->getY(), iLoopX, iLoopY);
 
 						if(pNearbyPlot != NULL)
@@ -19036,7 +19036,7 @@ void CvDiplomacyAI::SetPlayerNoSettleRequestAccepted(PlayerTypes ePlayer, bool b
 							if (hexDistance(iLoopX, iLoopY) <= iRange)
 #else
 							if(plotDistance(pNearbyPlot->getX(), pNearbyPlot->getY(), pLoopCity->getX(), pLoopCity->getY()) <= iRange)
-#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#endif
 							{
 								pNearbyPlot->SetNoSettling(eID, true);
 							}
@@ -19254,7 +19254,7 @@ bool CvDiplomacyAI::IsDoFAcceptable(PlayerTypes ePlayer)
 	iWeight += GC.getGame().getJonRandNumBinom(AUI_DIPLOMACY_IS_DOF_ACCEPTABLE_USES_BINOM_RNG, "Diplomacy AI: Rand for whether AI wants to work with player");
 #else
 	iWeight += GC.getGame().getJonRandNum(5, "Diplomacy AI: Rand for whether AI wants to work with player");
-#endif // AUI_DIPLOMACY_IS_DOF_ACCEPTABLE_USES_BINOM_RNG
+#endif
 
 	if(iWeight >= /*12*/ GC.getDOF_THRESHOLD())
 		return true;
@@ -19724,7 +19724,7 @@ int CvDiplomacyAI::GetDenounceWeight(PlayerTypes ePlayer, bool bBias)
 	iWeight += GC.getGame().getJonRandNumBinom(AUI_DIPLOMACY_GET_DENOUNCE_WEIGHT_USES_BINOM_RNG, "Diplomacy AI: Rand for whether AI wants to work with player");
 #else
 	iWeight += GC.getGame().getJonRandNum(5, "Diplomacy AI: Rand for whether AI wants to work with player");
-#endif // AUI_DIPLOMACY_GET_DENOUNCE_WEIGHT_USES_BINOM_RNG
+#endif
 
 	// Used when friends are asking us to denounce someone
 	if(bBias)

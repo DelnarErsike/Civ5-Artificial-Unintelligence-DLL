@@ -80,7 +80,7 @@ public:
 	void AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMoveTurnsAway);
 #ifdef AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
 	void AddImprovingMinorPlotsDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMoveTurnsAway);
-#endif // AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
+#endif
 	void AddRouteDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMoveTurnsAway);
 	void AddRepairDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMoveTurnsAway);
 	void AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMoveTurnsAway);
@@ -102,7 +102,7 @@ public:
 	int ScorePlot(bool bWillChop = false);
 #else
 	int ScorePlot();
-#endif // AUI_WORKER_SCORE_PLOT_CHOP
+#endif
 
 	BuildTypes GetBuildTypeFromImprovement(ImprovementTypes eImprovement);
 	//static YieldTypes GetDeficientYield (CvCity* pCity, bool bIgnoreHappiness = false); // this is different from the CityStrategy one because it checks unhappiness before declaring a food emergency

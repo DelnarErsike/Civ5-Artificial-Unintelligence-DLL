@@ -60,8 +60,8 @@ private:
 	double WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch);
 #else
 	double WeighBranch(PolicyBranchTypes eBranch);
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#endif
+#endif
 #else
 #ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
 	int WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch);
@@ -70,13 +70,13 @@ private:
 	int WeighBranch(CvPlayer* pPlayer, PolicyBranchTypes eBranch);
 #else
 	int WeighBranch(PolicyBranchTypes eBranch);
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
-#endif // AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
-#endif // AUI_POLICY_USE_DOUBLES
+#endif
+#endif
+#endif
 	bool IsBranchEffectiveInGame(PolicyBranchTypes eBranch);
 #ifdef AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
 	double BoostFlavorDueToUniqueGP(CvPolicyEntry* pEntry);
-#endif // AUI_POLICY_MULTIPLY_FLAVOR_WEIGHT_FOR_UNIQUE_GREAT_PERSON
+#endif
 
 	// Logging functions
 	void LogPossiblePolicies();

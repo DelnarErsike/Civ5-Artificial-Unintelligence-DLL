@@ -147,7 +147,7 @@ public:
 #ifdef AUI_MINOR_CIV_RATIO
 	double getCurrentMinorCivRatio();
 	double getCurrentMinorCivDeviation();
-#endif // AUI_MINOR_CIV_RATIO
+#endif
 
 	int getGameTurn();
 	void setGameTurn(int iNewValue);

@@ -55,7 +55,7 @@ protected:
 	virtual int ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 	virtual int ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#endif
 	virtual int ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
 #else
 	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer);
@@ -63,9 +63,9 @@ protected:
 	virtual int ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer);
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 	virtual int ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer);
-#endif // AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+#endif
 	virtual int ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer);
-#endif // AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 	virtual int ComputeTradeableResourceValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeStrategicValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
 

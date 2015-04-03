@@ -770,7 +770,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #ifndef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
 /// Identification of a possible choke point is now much more accurate
 #define AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_TWEAKED_CHOKEPOINT_CALCULATION
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 /// The helper values to compute the yield values of plots will recognize when the plot being targetted will be settled, so future yield will be different
 #define AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 /// Adds the happiness value of natural wonders to the happiness value of a plot

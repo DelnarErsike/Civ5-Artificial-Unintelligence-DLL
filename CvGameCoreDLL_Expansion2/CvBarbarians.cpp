@@ -37,7 +37,7 @@ bool CvBarbarians::IsPlotValidForBarbCamp(CvPlot* pPlot)
 #else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -55,7 +55,7 @@ bool CvBarbarians::IsPlotValidForBarbCamp(CvPlot* pPlot)
 
 			// If the counter is below -1 that means a camp was cleared recently
 			CvPlot* pLoopPlot = kMap.plot(iLoopPlotX, iLoopPlotY);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			if (pLoopPlot)
 			{
 				if (m_aiPlotBarbCampSpawnCounter[pLoopPlot->GetPlotIndex()] < -1)
@@ -421,7 +421,7 @@ void CvBarbarians::DoCamps()
 													{
 														for(iDY = -(iMaxDistanceToLook); iDY <= iMaxDistanceToLook; iDY++)
 														{
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 															pNearbyCampPlot = plotXY(pLoopPlot->getX(), pLoopPlot->getY(), iDX, iDY);
 
 															if(pNearbyCampPlot != NULL)
@@ -430,7 +430,7 @@ void CvBarbarians::DoCamps()
 																iPlotDistance = hexDistance(iDX, iDY);
 #else
 																iPlotDistance = plotDistance(pNearbyCampPlot->getX(), pNearbyCampPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY());
-#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#endif
 
 																// Can't be too close to a player
 																if(iPlotDistance <= iPlayerCapitalMinDistance)
@@ -729,7 +729,7 @@ void CvBarbarians::DoSpawnBarbarianUnit(CvPlot* pPlot, bool bIgnoreMaxBarbarians
 #else
 		iMaxDX = iRange - MAX(0, iY);
 		for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			// No need for range check because loops are set up properly
 			pNearbyPlot = plotXY(pPlot->getX(), pPlot->getY(), iX, iY);
@@ -740,7 +740,7 @@ void CvBarbarians::DoSpawnBarbarianUnit(CvPlot* pPlot, bool bIgnoreMaxBarbarians
 		{
 			// Cut off the corners of the area we're looking at that we don't want
 			pNearbyPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iX, iY, iRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 
 			if(pNearbyPlot != NULL)
 			{

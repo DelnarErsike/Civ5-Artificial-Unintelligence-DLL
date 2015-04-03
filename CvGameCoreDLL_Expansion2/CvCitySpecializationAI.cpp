@@ -497,7 +497,7 @@ void CvCitySpecializationAI::WeightSpecializations()
 					iGoldYieldWeight += grandStrategy->GetSpecializationBoost(YIELD_GOLD);
 					iScienceYieldWeight += grandStrategy->GetSpecializationBoost(YIELD_SCIENCE);
 				}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 			}
 		}
 
@@ -641,7 +641,7 @@ int CvCitySpecializationAI::WeightProductionSubtypes(int iFlavorWonder, int iFla
 					}
 				}
 			}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 		}
 	}
 

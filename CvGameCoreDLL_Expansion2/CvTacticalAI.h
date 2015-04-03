@@ -182,7 +182,7 @@ public:
 		}
 		curHitPoints = maxHitPoints - 
 			(maxHitPoints - curHitPoints) * (GC.getWOUNDED_DAMAGE_MULTIPLIER() + GET_PLAYER(m_eOwner).GetWoundedUnitDamageMod()) / 100;
-#endif // AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
+#endif
 		m_iHealthPercent = curHitPoints * 100 / maxHitPoints;
 	}
 	int GetHealthPercent() const

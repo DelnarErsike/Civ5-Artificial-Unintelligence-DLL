@@ -500,13 +500,13 @@ bool CvAIOperation::CheckOnTarget()
 	CvUnit* pCivilian;
 #ifdef AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
 	pCivilian = NULL;
-#endif // AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
+#endif
 	CvPlot* pCivilianPlot = NULL;
 #ifdef AUI_OPERATION_FIX_CHECK_ON_TARGET_POSSIBLE_NULL_POINTER
 	CvUnit* pEscort = NULL;
 #else
 	CvPlot* pEscortPlot;
-#endif // AUI_OPERATION_FIX_CHECK_ON_TARGET_POSSIBLE_NULL_POINTER
+#endif
 
 	if(GetFirstArmyID() == -1)
 	{
@@ -546,7 +546,7 @@ bool CvAIOperation::CheckOnTarget()
 #else
 						pEscortPlot = GET_PLAYER(m_eOwner).getUnit(pThisArmy->GetNextUnitID())->plot();
 						if(pCivilianPlot == pEscortPlot)
-#endif // AUI_OPERATION_FIX_CHECK_ON_TARGET_POSSIBLE_NULL_POINTER
+#endif
 						{
 							ArmyInPosition(pThisArmy);
 							return true;
@@ -575,12 +575,12 @@ bool CvAIOperation::CheckOnTarget()
 								+ GC.getGame().getJonRandNumBinom(AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE, "Brave Settler Roll")
 #else
 								+ GC.getGame().getJonRandNum(AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE, "Brave Settler Roll")
-#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_BINOMIAL
-#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_VALUE
+#endif
+#endif
 	> AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS)) // unless we'd rather play it safe
 #else
 							if (eOwner == -1 || GET_PLAYER(eOwner).getNumCities() > 1 || GET_PLAYER(eOwner).GetDiplomacyAI()->GetBoldness() > 5) // unless we'd rather play it safe
-#endif // AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_BOLDNESS
+#endif
 							{
 								ArmyInPosition(pThisArmy);
 								return true;
@@ -588,7 +588,7 @@ bool CvAIOperation::CheckOnTarget()
 						}
 					}
 				}
-#endif // AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
+#endif
 			}
 			else
 			{
@@ -1656,7 +1656,7 @@ static CvUnit* GetClosestUnit(CvOperationSearchUnitList& kSearchList, CvPlot* pk
 		int iBestDistance = MAX_INT;
 #ifdef AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
 		int iBestStrength = 0;
-#endif // AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
+#endif
 		CvIgnoreUnitsPathFinder& kPathFinder = GC.getIgnoreUnitsPathFinder();
 		for (CvOperationSearchUnitList::iterator itr = kSearchList.begin(); itr != kSearchList.end(); ++itr)
 		{
@@ -1740,7 +1740,7 @@ static CvUnit* GetClosestUnit(CvOperationSearchUnitList& kSearchList, CvPlot* pk
 					}
 				}
 			}
-#endif // AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+#endif
 
 #ifndef AUI_OPERATION_GET_CLOSEST_UNIT_NO_EARLY_BREAK
 			// Reasonably close?
@@ -1748,12 +1748,12 @@ static CvUnit* GetClosestUnit(CvOperationSearchUnitList& kSearchList, CvPlot* pk
 			if (iPathDistance <= iDistance && iPathDistance <= iBestDistance && pkLoopUnit->getDropRange() == 0)
 #else
 			if (iPathDistance <= iDistance && iPathDistance <= iBestDistance)
-#endif // AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
+#endif
 			{
 				pkBestUnit = pkLoopUnit;
 				break;
 			}
-#endif // AUI_OPERATION_GET_CLOSEST_UNIT_NO_EARLY_BREAK
+#endif
 
 			if (iPathDistance < iBestDistance)
 			{
@@ -1761,7 +1761,7 @@ static CvUnit* GetClosestUnit(CvOperationSearchUnitList& kSearchList, CvPlot* pk
 				iBestDistance = iPathDistance;
 #ifdef AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
 				iBestStrength = pkLoopUnit->GetBaseCombatStrengthConsideringDamage();
-#endif // AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
+#endif
 			}
 #ifdef AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
 			else if (iPathDistance == iBestDistance)
@@ -1793,7 +1793,7 @@ static CvUnit* GetClosestUnit(CvOperationSearchUnitList& kSearchList, CvPlot* pk
 					iBestStrength = pkLoopUnit->GetBaseCombatStrengthConsideringDamage();
 				}
 			}
-#endif // AUI_OPERATION_GET_CLOSEST_UNIT_GET_STRONGEST
+#endif
 
 			// Were we far away?  If so, this is probably the best we are going to do
 #ifdef AUI_OPERATION_GET_CLOSEST_UNIT_PARADROP
@@ -3319,7 +3319,7 @@ bool CvAIEscortedOperation::RetargetCivilian(CvUnit* pCivilian, CvArmyAI* pArmy)
 		}
 		if ((m_eCurrentState) == AI_OPERATION_STATE_ABORTED)
 			return false;
-#endif // AUI_OPERATION_FIX_RETARGET_CIVILIAN_ABORT_IF_UNREACHABLE_ESCORT
+#endif
 		SetTargetPlot(pBetterTarget);
 		pArmy->SetGoalPlot(pBetterTarget);
 	}
@@ -3484,7 +3484,7 @@ bool CvAIOperationFoundCity::ArmyInPosition(CvArmyAI* pArmy)
 	CvString strMsg;
 #ifdef AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
 	CvPlot* pNewTarget;
-#endif // AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
+#endif
 
 	switch (m_eCurrentState)
 	{
@@ -3635,13 +3635,13 @@ bool CvAIOperationFoundCity::ArmyInPosition(CvArmyAI* pArmy)
 			pArmy->SetArmyAIState(ARMYAISTATE_MOVING_TO_DESTINATION);
 			m_eCurrentState = AI_OPERATION_STATE_MOVING_TO_TARGET;
 		}
-#endif // AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
+#endif
 
 		// In all other cases use base class version
 	case AI_OPERATION_STATE_ABORTED:
 #ifndef AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
 	case AI_OPERATION_STATE_RECRUITING_UNITS:
-#endif // AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
+#endif
 		return CvAIOperation::ArmyInPosition(pArmy);
 		break;
 	};
@@ -4732,7 +4732,7 @@ static CvPlot* GetReachablePlot(UnitHandle pUnit, WeightedPlotVector& aPlots, in
 				int iTurnsCalculated = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, false, false, iFoundTurns);
 #else
 				int iTurnsCalculated = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, false);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 				if (iTurnsCalculated != MAX_INT)
 				{
 					if (iTurnsCalculated < iFoundTurns)
@@ -6046,7 +6046,7 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 
 #ifdef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 	CvFeatureInfo* pkFalloutFeature = GC.getFeatureInfo(FEATURE_FALLOUT);
-#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+#endif
 
 	// check all of our units to find the nukes
 	for(pLoopUnit = ownerPlayer.firstUnit(&iUnitLoop); pLoopUnit != NULL; pLoopUnit = ownerPlayer.nextUnit(&iUnitLoop))
@@ -6082,7 +6082,7 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 #else
 							iMaxDX = iBlastRadius - MAX(0, iDY);
 							for (iDX = -iBlastRadius - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 							{
 								// No need for range check because loops are set up properly
 								pLoopPlot = plotXY(pCityPlot->getX(), pCityPlot->getY(), iDX, iDY);
@@ -6092,7 +6092,7 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 							for(int iDY = -iBlastRadius; iDY <= iBlastRadius; iDY++)
 							{
 								CvPlot* pLoopPlot = plotXYWithRangeCheck(pCityPlot->getX(), pCityPlot->getY(), iDX, iDY, iBlastRadius);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 								if(pLoopPlot)
 								{
 									// who owns this plot?
@@ -6112,12 +6112,12 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 											}
 										}
 										iThisCityValue += iYieldChangeScore / 3;
-#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+#endif
 										if(pLoopPlot->getImprovementType() != NO_IMPROVEMENT)
 										{
 #ifndef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 											if(!pLoopPlot->IsImprovementPillaged())
-#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+#endif
 											{
 												iThisCityValue -= 5;
 												if(pLoopPlot->getResourceType(ePlotTeam) != NO_RESOURCE)  // we aren't nuking our own resources
@@ -6140,12 +6140,12 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 											}
 										}
 										iThisCityValue += iYieldChangeScore / 3;
-#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+#endif
 										if(pLoopPlot->getImprovementType() != NO_IMPROVEMENT)
 										{
 #ifndef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 											if(!pLoopPlot->IsImprovementPillaged())
-#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+#endif
 											{
 												iThisCityValue += 2;
 												if(pLoopPlot->getResourceType(ePlotTeam) != NO_RESOURCE)  // we like nuking our their resources
@@ -6200,7 +6200,7 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 							iThisCityValue += 1;
 #else
 							iThisCityValue *= 2;
-#endif // AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+#endif
 						}
 
 						if(iThisCityValue > iBestCity)

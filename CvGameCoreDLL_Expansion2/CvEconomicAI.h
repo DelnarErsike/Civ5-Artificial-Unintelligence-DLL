@@ -219,7 +219,7 @@ public:
 	{
 		m_iLastTurnWorkerDisbanded = iTurn;
 	};
-#endif // AUI_ECONOMIC_SETTER_LAST_TURN_WORKER_DISBANDED
+#endif
 	int GetVisibleAntiquitySites() const
 	{
 		return m_iVisibleAntiquitySites;

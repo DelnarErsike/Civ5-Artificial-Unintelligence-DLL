@@ -50,7 +50,7 @@ public:
 	BuildingTypes ChooseWonderForGreatEngineer(CvUnit* pUnit, bool bUseAsyncRandom, int& iWonderWeight, CvCity*& pCityToBuildAt);
 #else
 	BuildingTypes ChooseWonderForGreatEngineer(bool bUseAsyncRandom, int& iWonderWeight, CvCity*& pCityToBuildAt);
-#endif // AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+#endif
 
 	// Logging
 	void LogFlavors(FlavorTypes eFlavor = NO_FLAVOR);

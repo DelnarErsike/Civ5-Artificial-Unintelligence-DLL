@@ -27,7 +27,7 @@
 
 #ifdef AUI_BINOM_RNG
 #define BINOM_SHIFT   (30)
-#endif // AUI_BINOM_RNG
+#endif
 
 CvRandom::CvRandom() :
 	m_ulRandomSeed(0)
@@ -249,7 +249,7 @@ unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
 	m_ulRandomSeed = ulNewSeed;
 	return usRet;
 }
-#endif // AUI_BINOM_RNG
+#endif
 
 float CvRandom::getFloat()
 {

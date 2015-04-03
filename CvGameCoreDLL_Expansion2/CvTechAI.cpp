@@ -406,7 +406,7 @@ void CvTechAI::PropagateWeights(int iTech, int iWeight, int iPropagationPercent,
 void CvTechAI::ReweightByCost(CvPlayer *pPlayer, bool bWantsExpensive)
 #else
 void CvTechAI::ReweightByCost(CvPlayer *pPlayer)
-#endif // AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
+#endif
 {
 	TechTypes eTech;
 
@@ -416,7 +416,7 @@ void CvTechAI::ReweightByCost(CvPlayer *pPlayer)
 #ifdef AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
 	if (bWantsExpensive)
 		bNeedExpensiveTechs = true;
-#endif // AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
+#endif
 
 	for(int iI = 0; iI < m_ResearchableTechs.size(); iI++)
 	{

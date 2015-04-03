@@ -3795,7 +3795,7 @@ void CvTeam::SetHasEmbassyAtTeam(TeamTypes eIndex, bool bNewValue)
 #else
 							iMaxDX = iPopRange - MAX(0, iDY);
 							for (iDX = -iPopRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 							{
 								// No need for range check because loops are set up properly
 								pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -3805,7 +3805,7 @@ void CvTeam::SetHasEmbassyAtTeam(TeamTypes eIndex, bool bNewValue)
 							for(int iDY = -(iPopRange); iDY <= iPopRange; iDY++)
 							{
 								CvPlot* pLoopPlot = plotXYWithRangeCheck(pPlot->getX(), pPlot->getY(), iDX, iDY, iPopRange);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 								if(pLoopPlot == NULL)
 								{
 									continue;
@@ -6693,7 +6693,7 @@ void CvTeam::SetCurrentEra(EraTypes eNewValue)
 				{
 					kPlayer.GetFlavorManager()->RandomizeWeightsOnEraChange();
 				}
-#endif // AUI_TEAM_SET_CURRENT_ERA_RANDOMIZE_WEIGHTS_BY_HALF_ON_ERA_CHANGE
+#endif
 				int iNumFreePolicies = kPlayer.GetPlayerTraits()->GetFreeSocialPoliciesPerEra() > 0;
 				if (iNumFreePolicies > 0)
 				{

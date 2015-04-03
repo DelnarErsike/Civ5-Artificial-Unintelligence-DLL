@@ -59,7 +59,7 @@ void CvUnitMission::AutoMission(UnitHandle hUnit)
 				(bEscortedBuilder && GET_PLAYER(hUnit->getOwner()).GetPlotDanger(*(hUnit->plot()), hUnit.pointer()) >= hUnit->plot()->getBestDefender(hUnit->getOwner())->GetCurrHitPoints())))
 #else
 			if(!bEscortedBuilder && !hUnit->IsIgnoringDangerWakeup() && !hUnit->IsCombatUnit() && GET_PLAYER(hUnit->getOwner()).IsPlotUnderImmediateThreat(*(hUnit->plot())))
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 			{
 				hUnit->ClearMissionQueue();
 				hUnit->SetIgnoreDangerWakeup(true);

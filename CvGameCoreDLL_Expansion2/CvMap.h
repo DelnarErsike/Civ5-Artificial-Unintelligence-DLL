@@ -259,7 +259,7 @@ public:
 	void calculateStrategicValues(bool bForInitialize = false);
 #else
 	void recalculateAreas();
-#endif // AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+#endif
 	void calculateAreas();
 
 	// Landmass

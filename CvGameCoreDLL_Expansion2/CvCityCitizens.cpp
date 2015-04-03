@@ -393,7 +393,7 @@ void CvCityCitizens::DoTurn()
 			else if (eCurrentFocus == CITY_AI_FOCUS_TYPE_GOLD_GROWTH)
 				SetFocusType(CITY_AI_FOCUS_TYPE_GOLD);
 		}
-#endif // AUI_CITIZENS_DO_TURN_NO_FOOD_FOCUS_IF_UNHAPPY
+#endif
 	}
 
 	CvAssertMsg((GetNumCitizensWorkingPlots() + GetTotalSpecialistCount() + GetNumUnassignedCitizens()) <= GetCity()->getPopulation(), "Gameplay: More workers than population in the city.");
@@ -968,7 +968,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 	int iFoodConsumptionBonus = (pPlayer->isHalfSpecialistFood()) ? GC.getFOOD_CONSUMPTION_PER_POPULATION() / 2 : 0;
 #else
 	int iFoodConsumptionBonus = (pPlayer->isHalfSpecialistFood()) ? 1 : 0;
-#endif // AUI_CITIZENS_FIX_SPECIALIST_VALUE_HALF_FOOD_CONSUMPTION
+#endif
 
 	// Yield Values
 	int iFoodYieldValue = (GC.getAI_CITIZEN_VALUE_FOOD() * (pPlayer->specialistYield(eSpecialist, YIELD_FOOD) + iFoodConsumptionBonus));
@@ -979,11 +979,11 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 	int iFaithYieldValue = (GC.getAI_CITIZEN_VALUE_FAITH() * pPlayer->specialistYield(eSpecialist, YIELD_FAITH));
 #ifndef AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_GREAT_PERSON_POINTS
 	int iGPPYieldValue = pSpecialistInfo->getGreatPeopleRateChange() * 3; // TODO: un-hardcode this
-#endif // AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_GREAT_PERSON_POINTS
+#endif
 #ifndef AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_HAPPINESS
 	int iHappinessYieldValue = (m_pCity->GetPlayer()->isHalfSpecialistUnhappiness()) ? 5 : 0; // TODO: un-hardcode this
 	iHappinessYieldValue = m_pCity->GetPlayer()->IsEmpireUnhappy() ? iHappinessYieldValue * 2 : iHappinessYieldValue; // TODO: un-hardcode this
-#endif // AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_HAPPINESS
+#endif
 
 	// How much surplus food are we making?
 	int iExcessFoodTimes100 = m_pCity->getYieldRateTimes100(YIELD_FOOD, false) - (m_pCity->foodConsumption() * 100);
@@ -1048,7 +1048,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 			{
 				fGrandStrategyGPPMod += 1.0f;
 			}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 		}
 		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_ARTIST", true))
 		{
@@ -1061,7 +1061,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 			{
 				fGrandStrategyGPPMod += 1.0f;
 			}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 		}
 		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_MUSICIAN", true))
 		{
@@ -1074,7 +1074,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 			{
 				fGrandStrategyGPPMod += 1.0f;
 			}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 		}
 		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_SCIENTIST", true))
 		{
@@ -1087,11 +1087,11 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 			{
 				fGrandStrategyGPPMod += 1.0f;
 			}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 #ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
 			if (pPlayer->GetGrandStrategyAI()->ScienceFlavorBoost() >= AUI_GS_SCIENCE_FLAVOR_BOOST)
 				dGrandStrategyGPPMod *= 2;
-#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+#endif
 		}
 		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_MERCHANT", true))
 		{
@@ -1107,7 +1107,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 			{
 				fGrandStrategyGPPMod += 1.0f;
 			}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 			if (pPlayer->GetTreasury()->AverageIncome(1) < 0)
 				dGrandStrategyGPPMod *= 2;
 		}
@@ -1125,7 +1125,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 			{
 				fGrandStrategyGPPMod += 1.0f;
 			}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 		}
 		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_GREAT_GENERAL", true))
 		{
@@ -1138,7 +1138,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 			{
 				fGrandStrategyGPPMod += 1.0f;
 			}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 		}
 		else if (eGPUnitClass == (UnitClassTypes)GC.getInfoTypeForString("UNITCLASS_GREAT_ADMIRAL", true))
 		{
@@ -1151,12 +1151,12 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 			{
 				fGrandStrategyGPPMod += 1.0f;
 			}
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 		}
 
 		iGPPYieldValue = int(iGPPYieldValue * dGrandStrategyGPPMod * dAlreadyHaveCountMod * dFlavorMod * log(MAX(100.0 + iGPPModifier, 1.0)) / log(100.0) + 0.5);
 	}
-#endif // AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_GREAT_PERSON_POINTS
+#endif
 #ifdef AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_HAPPINESS
 	int iHappinessYieldValue = 0;
 	if (pPlayer->isHalfSpecialistUnhappiness())
@@ -1183,7 +1183,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 		// For the initial *50
 		iHappinessYieldValue /= 100;
 	}
-#endif // AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_HAPPINESS
+#endif
 
 	bool bAvoidGrowth = IsAvoidGrowth();
 
@@ -1409,7 +1409,7 @@ bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
 	else if (pBestPlot != NULL && iBestPlotValue >= GetSpecialistValue((SpecialistTypes)GC.getDEFAULT_SPECIALIST()))
 #else
 	else if (!bSpecialistBetterThanPlot && pBestPlot != NULL)
-#endif // AUI_CITIZENS_IS_PLOT_BETTER_THAN_DEFAULT_SPECIALIST
+#endif
 	{
 		// Now assign the guy to the best possible Plot
 		SetWorkingPlot(pBestPlot, true);
@@ -2023,7 +2023,7 @@ bool CvCityCitizens::IsPlotBlockaded(CvPlot* pPlot) const
 	{
 		for(iDY = -(iBlockadeDistance); iDY <= iBlockadeDistance; iDY++)
 		{
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			pNearbyPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 
 			if(pNearbyPlot != NULL)
@@ -2035,7 +2035,7 @@ bool CvCityCitizens::IsPlotBlockaded(CvPlot* pPlot) const
 					if(hexDistance(iDX, iDY) <= iBlockadeDistance)
 #else
 					if(plotDistance(pNearbyPlot->getX(), pNearbyPlot->getY(), pPlot->getX(), pPlot->getY()) <= iBlockadeDistance)
-#endif // AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
+#endif
 					{
 						// Enemy boat within range to blockade our plot?
 						if(pNearbyPlot->IsActualEnemyUnit(ePlayer))

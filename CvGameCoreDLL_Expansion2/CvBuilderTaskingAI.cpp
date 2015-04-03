@@ -2015,7 +2015,7 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 #else
 	// celtic rule: if this is a forest tile next to a city, do not chop the trees
 	if (m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest())
-#endif // AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL
+#endif
 	{
 		CvCity* pAdjacentCity = pPlot->GetAdjacentCity();
 		if (pAdjacentCity && pAdjacentCity->getOwner() == m_pPlayer->GetID())
@@ -2063,7 +2063,7 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 			}
 		}
 	}
-#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+#endif
 
 	BuildTypes eChopBuild = NO_BUILD;
 	for(int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
@@ -2154,7 +2154,7 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 				{
 					iYieldDifferenceWeight += int(iDeltaYield * log((double)MAX(1, pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop))) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE() + 0.5);
 				}
-#endif // AUI_WORKER_EVALUATE_FAITH
+#endif
 				break;
 #else
 			case YIELD_FOOD:
@@ -2198,9 +2198,9 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 				//{
 				//	iYieldDifferenceWeight += iDeltaYield * pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_SCIENCE();
 				//}
-#endif // AUI_WORKER_EVALUATE_FAITH
+#endif
 				break;
-#endif // AUI_WORKER_LOGARITHMIC_FLAVOR
+#endif
 			}
 		}
 	}
@@ -2227,7 +2227,7 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 	{
 		iWeight = iWeight * 2;
 	}
-#endif // AUI_WORKER_NO_CHOP_BIAS
+#endif
 
 	iWeight = CorrectWeight(iWeight);
 
@@ -2360,7 +2360,7 @@ void CvBuilderTaskingAI::AddScrubFalloutDirectives(CvUnit* pUnit, CvPlot* pPlot,
 		iWeight = GetBuildCostWeight(iWeight, pPlot, m_eFalloutRemove);
 		int iBuildTimeWeight = GetBuildTimeWeight(pUnit, pPlot, m_eFalloutRemove, false, iMoveTurnsAway);
 		iWeight += iBuildTimeWeight;
-#endif // AUI_WORKER_FIX_FALLOUT
+#endif
 
 
 		BuilderDirective directive;
@@ -2579,7 +2579,7 @@ int CvBuilderTaskingAI::FindTurnsAway(CvUnit* pUnit, CvPlot* pPlot)
 		return iResult;
 	}
 #endif
-#endif // AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER
+#endif
 }
 
 /// Get the weight determined by the cost of building the item
@@ -2673,7 +2673,7 @@ int CvBuilderTaskingAI::GetResourceWeight(ResourceTypes eResource, ImprovementTy
 		int iModifier = GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_LUXURY_RESOURCE() * pkResource->getHappiness();
 #ifdef AUI_WORKER_GET_RESOURCE_WEIGHT_CONSIDER_EXTRAS_FOR_HAPPINESS_FROM_RESOURCE
 		iModifier += GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_LUXURY_RESOURCE() * m_pPlayer->GetExtraHappinessPerLuxury();
-#endif // AUI_WORKER_GET_RESOURCE_WEIGHT_CONSIDER_EXTRAS_FOR_HAPPINESS_FROM_RESOURCE
+#endif
 
 		//if (m_pPlayer->IsEmpireUnhappy() || m_pPlayer->GetExcessHappiness() <= 2)
 		//{
@@ -2685,13 +2685,13 @@ int CvBuilderTaskingAI::GetResourceWeight(ResourceTypes eResource, ImprovementTy
 			if (m_pPlayer->GetPlayerTraits()->GetLuxuryHappinessRetention() > 0)
 				iModifier = iModifier * (m_pPlayer->GetPlayerTraits()->GetLuxuryHappinessRetention() + pkResource->getHappiness()) / pkResource->getHappiness();
 			iModifier += GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_LUXURY_RESOURCE() * GC.getHAPPINESS_PER_EXTRA_LUXURY();
-#endif // AUI_WORKER_GET_RESOURCE_WEIGHT_CONSIDER_EXTRAS_FOR_HAPPINESS_FROM_RESOURCE
+#endif
 #ifdef AUI_WORKER_GET_RESOURCE_WEIGHT_INCREASE_UNOWNED_LUXURY_WEIGHT
 			if (m_pPlayer->GetExcessHappiness() < -GC.getVERY_UNHAPPY_THRESHOLD())
 			{
 				iModifier = int(iModifier * pow(AUI_WORKER_GET_RESOURCE_WEIGHT_INCREASE_UNOWNED_LUXURY_WEIGHT, 1.0 - (double)m_pPlayer->GetExcessHappiness() / -(double)GC.getVERY_UNHAPPY_THRESHOLD()) + 0.5);
 			}
-#endif // AUI_WORKER_GET_RESOURCE_WEIGHT_INCREASE_UNOWNED_LUXURY_WEIGHT
+#endif
 		}
 		else
 		{
@@ -2723,7 +2723,7 @@ int CvBuilderTaskingAI::GetResourceWeight(ResourceTypes eResource, ImprovementTy
 					iMultiplyingAmount *= AUI_WORKER_TWEAKED_DONT_HAVE_MULTIPLIER;
 #else
 					iMultiplyingAmount *= 4;
-#endif // AUI_WORKER_TWEAKED_DONT_HAVE_MULTIPLIER
+#endif
 				}
 			}
 

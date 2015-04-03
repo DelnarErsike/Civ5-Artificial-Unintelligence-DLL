@@ -89,7 +89,7 @@ public:
 
 #ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
 	void RandomizeWeightsOnEraChange();
-#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+#endif
 
 private:
 
@@ -97,7 +97,7 @@ private:
 	void RandomizeWeights(bool bHalveRandom = false);
 #else
 	void RandomizeWeights();
-#endif // AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_ON_ERA_CHANGE
+#endif
 	void BroadcastFlavors(int* piDeltaFlavorValues, bool bDontUpdateCityFlavors);
 	void BroadcastBaseFlavors();
 

@@ -251,7 +251,7 @@ public:
 	int ScoreFoodTR(const TradeConnection& kTradeConnection, CvCity* /*pSmallestCity*/);
 #else
 	int ScoreFoodTR(const TradeConnection& kTradeConnection, CvCity* pSmallestCity);
-#endif // AUI_TRADE_SCORE_FOOD_VALUE
+#endif
 	int ScoreProductionTR (const TradeConnection& kTradeConnection, std::vector<CvCity*> aTargetCityList);
 
 	bool ChooseTradeUnitTargetPlot(CvUnit* pUnit, int& iOriginPlotIndex, int& iDestPlotIndex, TradeConnectionType& eTradeConnectionType, bool& bDisband, const TradeConnectionList& aTradeConnections);

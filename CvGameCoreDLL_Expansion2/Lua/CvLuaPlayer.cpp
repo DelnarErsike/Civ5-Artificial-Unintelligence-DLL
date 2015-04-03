@@ -8608,7 +8608,7 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 			if(!pkPlayer->canFound(pPlot->getX(), pPlot->getY()))
 #else
 			if(!pkPlayer->canFound(iPlotX, iPlotY))
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			{
 				continue;
 			}

@@ -882,7 +882,7 @@ protected:
 	FAutoVariable<int, CvCity> m_iGarrisonedUnit;  // unused
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 	UnitHandle m_hGarrisonOverride;
-#endif // AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#endif
 	FAutoVariable<int, CvCity> m_iResourceDemanded;
 	FAutoVariable<int, CvCity> m_iWeLoveTheKingDayCounter;
 	FAutoVariable<int, CvCity> m_iLastTurnGarrisonAssigned;

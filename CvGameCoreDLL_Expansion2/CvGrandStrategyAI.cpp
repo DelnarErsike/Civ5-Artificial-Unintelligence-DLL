@@ -15,11 +15,11 @@
 
 #ifdef AUI_GS_PRIORITY_OVERHAUL
 #include "CvGameCoreUtils.h"
-#endif // AUI_GS_PRIORITY_OVERHAUL
+#endif
 
 #ifdef AUI_GS_SPACESHIP_TECH_RATIO
 #include "CvTechAI.h"
-#endif // AUI_GS_SPACESHIP_TECH_RATIO
+#endif
 
 // must be included after all other headers
 #include "LintFree.h"
@@ -327,7 +327,7 @@ void CvGrandStrategyAI::DoTurn()
 		{
 			iPriority += /*50*/ GC.getAI_GRAND_STRATEGY_CURRENT_STRATEGY_WEIGHT();
 		}
-#endif // AUI_GS_PRIORITY_OVERHAUL
+#endif
 
 #ifdef AUI_GS_PRIORITY_OVERHAUL
 		SetGrandStrategyPriority(eGrandStrategy, int(fPriority + 0.5f));
@@ -387,7 +387,7 @@ void CvGrandStrategyAI::DoTurn()
 
 #ifndef AUI_GS_PRIORITY_OVERHAUL
 		ChangeGrandStrategyPriority(eGrandStrategy, -iChange);
-#endif // AUI_GS_PRIORITY_OVERHAUL
+#endif
 
 		viGrandStrategyChangeForLogging.push_back(-iChange);
 	}
@@ -476,7 +476,7 @@ int CvGrandStrategyAI::GetConquestPriority()
 	dPriority += (GetPlayer()->GetDiplomacyAI()->GetBoldness() + iGeneralApproachModifier) * (12 - sqrt(m_pPlayer->GetCurrentEra() + 1.0)); // make a little less likely as time goes on
 #else
 	dPriority += ((GetPlayer()->GetDiplomacyAI()->GetBoldness() + iGeneralApproachModifier) * (12 - m_pPlayer->GetCurrentEra())); // make a little less likely as time goes on
-#endif // AUI_GS_CONQUEST_TWEAKED_ERAS
+#endif
 
 	CvTeam& pTeam = GET_TEAM(GetPlayer()->getTeam());
 
@@ -501,7 +501,7 @@ int CvGrandStrategyAI::GetConquestPriority()
 			}
 		}
 		if (!bHasMetMajor)
-#endif // AUI_PUBLIC_HAS_MET_MAJOR
+#endif
 		{
 			dPriority += /*-50*/ GC.getAI_GRAND_STRATEGY_CONQUEST_NOBODY_MET_WEIGHT();
 		}
@@ -529,7 +529,7 @@ int CvGrandStrategyAI::GetConquestPriority()
 			// Make the likelihood of BECOMING a warmonger lower than dropping the bad behavior
 			if (dMilitaryRatio > 0)
 				dMilitaryRatio /= 2;
-#endif // AUI_GS_CONQUEST_TWEAKED_MILITARY_RATIO
+#endif
 
 			dPriority += dMilitaryRatio;	// This will add between -100 and 100 depending on this player's MilitaryStrength relative the world average. The number will typically be near 0 though, as it's fairly hard to get away from the world average
 		}
@@ -590,7 +590,7 @@ int CvGrandStrategyAI::GetConquestPriority()
 				if (iTotalLandPlayersMet / (double)iNumPlayersMet / (double)iTotalLandMe > 1)
 #else
 				if (iTotalLandPlayersMet / (double)iNumPlayersMet / (double)iTotalLandMe > 0)
-#endif // AUI_GS_CONQUEST_FIX_CRAMPED
+#endif
 				{
 					dPriority += /*20*/ GC.getAI_GRAND_STRATEGY_CONQUEST_CRAMPED_WEIGHT();
 				}
@@ -619,7 +619,7 @@ int CvGrandStrategyAI::GetConquestPriority()
 			}
 		}
 	}
-#endif // AUI_GS_CONQUEST_IGNORE_ENEMY_NUKES
+#endif
 
 	return (int)(dPriority + 0.5);
 #else
@@ -770,7 +770,7 @@ int CvGrandStrategyAI::GetConquestPriority()
 	}
 
 	return iPriority;
-#endif // AUI_GS_USE_DOUBLES
+#endif
 }
 
 /// Returns Priority for Culture Grand Strategy
@@ -792,7 +792,7 @@ int CvGrandStrategyAI::GetCulturePriority()
 	dPriority += (11 - sqrt(m_pPlayer->GetCurrentEra() + 1.0)) * 2.0 * iFlavorCulture;
 #else
 	dPriority += (10 - m_pPlayer->GetCurrentEra()) * iFlavorCulture * 200.0 / 100.0;
-#endif // AUI_GS_CULTURE_TWEAKED_ERAS
+#endif
 
 #ifdef AUI_GS_CULTURE_TWEAKED_CULTURE_TOURISM_AHEAD
 	// Loop through Players to see how we are doing on Tourism and Culture
@@ -930,7 +930,7 @@ int CvGrandStrategyAI::GetCulturePriority()
 	int iNumInfluential = m_pPlayer->GetCulture()->GetNumCivsInfluentialOn();
 	dPriority += iNumInfluential * GC.getAI_GS_CULTURE_INFLUENTIAL_CIV_MOD();
 
-#endif // AUI_GS_CULTURE_TWEAKED_CULTURE_TOURISM_AHEAD
+#endif
 
 	return (int)(dPriority + 0.5);
 
@@ -999,7 +999,7 @@ int CvGrandStrategyAI::GetCulturePriority()
 	iPriority += iNumInfluential * GC.getAI_GS_CULTURE_INFLUENTIAL_CIV_MOD();
 
 	return iPriority;
-#endif // AUI_GS_USE_DOUBLES
+#endif
 }
 
 /// Returns Priority for United Nations Grand Strategy
@@ -1032,7 +1032,7 @@ int CvGrandStrategyAI::GetUnitedNationsPriority()
 		dPriority += (11 - sqrt(m_pPlayer->GetCurrentEra() + 1.0)) * iFlavorDiplo * 2.0;
 #else
 		fPriority += (10 - m_pPlayer->GetCurrentEra()) * iFlavorDiplo * 150.0f / 100.0f;
-#endif // AUI_GS_DIPLOMATIC_TWEAKED_ERAS
+#endif
 	}
 	else
 	{
@@ -1047,7 +1047,7 @@ int CvGrandStrategyAI::GetUnitedNationsPriority()
 				int iFlavorDiplo = m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DIPLOMACY"));
 				dPriority += (10 - sqrt(m_pPlayer->GetCurrentEra() + 1.0)) * iFlavorDiplo * (double)MAX(4 - GC.getGame().GetGameLeagues()->GetNumLeaguesEverFounded(), 1);
 			}
-#endif // AUI_GS_DIPLOMATIC_TWEAKED_ERAS
+#endif
 			
 			// Votes we control
 			iVotesControlled += pLeague->CalculateStartingVotesForMember(ePlayer);
@@ -1222,7 +1222,7 @@ int CvGrandStrategyAI::GetUnitedNationsPriority()
 	iPriority -= m_pPlayer->GetPlayerTraits()->GetCityStateCombatModifier();
 
 	return iPriority;
-#endif // AUI_GS_USE_DOUBLES
+#endif
 }
 
 /// Returns Priority for Spaceship Grand Strategy
@@ -1244,19 +1244,19 @@ int CvGrandStrategyAI::GetSpaceshipPriority()
 	iFlavorScience += (int)(sqrt((double)(m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION")) *
 		MAX(m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH")), 
 		m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"))))) + 0.5);
-#endif // AUI_GS_SPACESHIP_TWEAKED_FLAVORS
+#endif
 
 	// the later the game the greater the chance
 #ifdef AUI_GS_SPACESHIP_TWEAKED_ERAS
 	dPriority += sqrt(m_pPlayer->GetCurrentEra() + 1.0) * iFlavorScience * 4.0;
 #else
 	dPriority += m_pPlayer->GetCurrentEra() * iFlavorScience * 150.0 / 100.0;
-#endif // AUI_GS_SPACESHIP_TWEAKED_ERAS
+#endif
 
 #ifdef AUI_GS_SPACESHIP_TECH_RATIO
 	// Give between 0 and 100 priority based on tech ratio; scaling is exponential, so higher tech civs get more priority
 	dPriority += pow(101.0, 1.0 - m_pPlayer->GetPlayerTechs()->GetTechAI()->GetTechRatio()) - 1;
-#endif // AUI_GS_SPACESHIP_TECH_RATIO
+#endif
 
 	// if I already built the Apollo Program I am very likely to follow through
 	ProjectTypes eApolloProgram = (ProjectTypes) GC.getInfoTypeForString("PROJECT_APOLLO_PROGRAM", true);
@@ -1276,7 +1276,7 @@ int CvGrandStrategyAI::GetSpaceshipPriority()
 			dPriority += GC.getAI_GS_SS_HAS_APOLLO_PROGRAM() * iFlavorScience / (double)GC.getFLAVOR_MAX_VALUE();
 		}
 	}
-#endif // AUI_GS_SPACESHIP_TWEAKED_ERAS
+#endif
 
 	return (int)(dPriority + 0.5);
 #else
@@ -1305,7 +1305,7 @@ int CvGrandStrategyAI::GetSpaceshipPriority()
 	}
 
 	return iPriority;
-#endif // AUI_GS_USE_DOUBLES
+#endif
 }
 
 #ifdef AUI_GS_PRIORITY_OVERHAUL
@@ -1985,7 +1985,7 @@ int CvGrandStrategyAI::ScienceFlavorBoost() const
 	if (IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST")))
 #else
 	if (GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"))
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 	{
 		if (m_pPlayer->GetPlayerTechs()->GetTechAI()->GetTechRatio() <= 0.25f)
 		{
@@ -2001,7 +2001,7 @@ int CvGrandStrategyAI::ScienceFlavorBoost() const
 	if (IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")))
 #else
 	if (GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 	{
 		UnitTypes eArchaeologist = (UnitTypes)GC.getInfoTypeForString("UNIT_ARCHAEOLOGIST", true);
 		if (eArchaeologist != NO_UNIT)
@@ -2022,7 +2022,7 @@ int CvGrandStrategyAI::ScienceFlavorBoost() const
 	if (IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")))
 #else
 	if (GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"))
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 	{
 		if (!GC.getGame().GetGameLeagues()->GetActiveLeague() || !GC.getGame().GetGameLeagues()->GetActiveLeague()->IsUnitedNations())
 		{
@@ -2068,7 +2068,7 @@ int CvGrandStrategyAI::ScienceFlavorBoost() const
 	if (IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP")))
 #else
 	if (GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"))
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 	{
 		ProjectTypes eApolloProgram = (ProjectTypes)GC.getInfoTypeForString("PROJECT_APOLLO_PROGRAM", true);
 		if (eApolloProgram != NO_PROJECT)
@@ -2091,7 +2091,7 @@ int CvGrandStrategyAI::ScienceFlavorBoost() const
 	}
 	return 1;
 }
-#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+#endif
 
 /// Get AI Flavor based on Personality and Grand Strategy Ratios
 int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
@@ -2104,11 +2104,11 @@ int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
 		dLowestRatio = FASTMIN(dLowestRatio, GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iI));
 #else
 		dLowestRatio = MIN(dLowestRatio, GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iI));
-#endif // AUI_FAST_COMP
+#endif
 	}
 	if (dLowestRatio == 1.0)
 		dLowestRatio = 0.0;
-#endif // AUI_GS_GET_PERSONALITY_AND_GRAND_STRATEGY_USE_COMPARE_TO_LOWEST_RATIO
+#endif
 #ifdef AUI_GS_USE_DOUBLES
 	// Personality flavors set as initial values
 	double dModdedFlavor = (double)m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
@@ -2124,7 +2124,7 @@ int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
 	dPercentTechsResearched = MAX(0.0, MIN(1.0, dPercentTechsResearched));
 #  else
 	const double dPercentTechsResearched = 1.0;
-#  endif // AUI_GS_SINUSOID_PERSONALITY_INFLUENCE
+#  endif
 
 	// Loop through all Grand Strategies, adding their flavor values to the modded value
 	for (int iI = 0; iI < GetAIGrandStrategies()->GetNumAIGrandStrategies(); iI++)
@@ -2135,7 +2135,7 @@ int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
 			(GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iI) - dLowestRatio) / (1.0 - dLowestRatio);
 #else
 			GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iGrandStrategiesLoop);
-#endif // AUI_GS_GET_PERSONALITY_AND_GRAND_STRATEGY_USE_COMPARE_TO_LOWEST_RATIO
+#endif
 	}
 # else
 	if(m_eActiveGrandStrategy != NO_AIGRANDSTRATEGY)
@@ -2143,7 +2143,7 @@ int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
 		CvAIGrandStrategyXMLEntry* pGrandStrategy = GetAIGrandStrategies()->GetEntry(m_eActiveGrandStrategy);
 		dModdedFlavor = pGrandStrategy->GetFlavorModValue(eFlavorType) + m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
 	}
-# endif // AUI_GS_PRIORITY_RATIO
+# endif
 	// Modded flavor can't be negative
 	dModdedFlavor = MAX((double)GC.getFLAVOR_MIN_VALUE(), dModdedFlavor);
 	return int(dModdedFlavor + 0.5);
@@ -2156,7 +2156,7 @@ int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
 		return iModdedFlavor;
 	}
 	return m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
-#endif // AUI_GS_USE_DOUBLES
+#endif
 }
 
 /// Returns the Active Grand Strategy for this Player: how am I trying to win right now?
@@ -2320,8 +2320,8 @@ bool CvGrandStrategyAI::IsGrandStrategySignificant(AIGrandStrategyTypes eGrandSt
 	}
 	return GetGrandStrategyPriorityRatio(eGrandStrategy) * GC.getNumAIGrandStrategyInfos() >= dGSRatioTotal;
 }
-#endif // AUI_GS_PRIORITY_OVERHAUL
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
+#endif
 
 
 // **********
@@ -2643,7 +2643,7 @@ int CvGrandStrategyAI::GetGuessOtherPlayerSpaceshipPriority(PlayerTypes ePlayer,
 void CvGrandStrategyAI::LogGrandStrategies(const FStaticVector< int, 5, true, c_eCiv5GameplayDLL >& /*vModifiedGrandStrategyPriorities*/)
 #else
 void CvGrandStrategyAI::LogGrandStrategies(const FStaticVector< int, 5, true, c_eCiv5GameplayDLL >& vModifiedGrandStrategyPriorities)
-#endif // AUI_GS_BETTER_LOGGING
+#endif
 {
 	if(GC.getLogging() && GC.getAILogging())
 	{

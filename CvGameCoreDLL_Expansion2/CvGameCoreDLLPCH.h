@@ -88,7 +88,7 @@ typedef wchar_t          wchar;
 #define AI_PERF_FORMAT(perfFileName, FormatValue) ((void)0)
 #define AI_PERF_FORMAT_NESTED(perfFileName, FormatValue) ((void)0)
 #endif
-#endif // AUI_PERF_LOGGING_ENABLED
+#endif
 
 #include <FireWorks/FDefNew.h>
 #include <FireWorks/FFireTypes.h>

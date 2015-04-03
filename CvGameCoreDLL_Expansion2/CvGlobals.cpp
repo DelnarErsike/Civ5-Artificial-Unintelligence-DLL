@@ -5697,7 +5697,7 @@ double CvGlobals::getDefineDOUBLE(const char* szName, bool bReportErrors)
 	getDefineValue(szName, dReturn, bReportErrors);
 	return dReturn;
 }
-#endif // AUI_CACHE_DOUBLE
+#endif
 
 bool CvGlobals::getDefineValue(const char* szName, int& iValue, bool bReportErrors)
 {
@@ -5765,7 +5765,7 @@ bool CvGlobals::getDefineValue(const char* szName, double& dValue, bool bReportE
 
 	return bSuccess;
 }
-#endif // AUI_CACHE_DOUBLE
+#endif
 
 bool CvGlobals::getDefineValue(const char* szName, CvString& strValue, bool bReportErrors)
 {

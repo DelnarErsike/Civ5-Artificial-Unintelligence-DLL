@@ -7593,13 +7593,13 @@ protected:
 	float getDefineFLOAT(const char* szName, bool bReportErrors = true);
 #ifdef AUI_CACHE_DOUBLE
 	double getDefineDOUBLE(const char* szName, bool bReportErrors = true);
-#endif // AUI_CACHE_DOUBLE
+#endif
 
 	bool getDefineValue(const char* szName, int& iValue, bool bReportErrors = true);
 	bool getDefineValue(const char* szName, float& fValue, bool bReportErrors = true);
 #ifdef AUI_CACHE_DOUBLE
 	bool getDefineValue(const char* szName, double& dValue, bool bReportErrors = true);
-#endif // AUI_CACHE_DOUBLE
+#endif
 	bool getDefineValue(const char* szName, CvString& szValue, bool bReportErrors = true);
 
 	// -- ints --

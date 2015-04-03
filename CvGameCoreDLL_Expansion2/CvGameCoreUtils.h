@@ -106,7 +106,7 @@ inline int hexDistance(int iDX, int iDY)
 		return FASTMAX(abs(iDX), abs(iDY));
 #else
 		return MAX(abs(iDX), abs(iDY));
-#endif // AUI_FAST_COMP
+#endif
 	}
 #else
 	if((iDX >= 0) == (iDY >= 0))  // the signs match
@@ -121,7 +121,7 @@ inline int hexDistance(int iDX, int iDY)
 		int iAbsDY = iDY >= 0 ? iDY : -iDY;
 		return iAbsDX >= iAbsDY ? iAbsDX : iAbsDY;
 	}
-#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+#endif
 }
 
 //
@@ -161,7 +161,7 @@ inline int plotDistance(int iX1, int iY1, int iX2, int iY2)
 	if (((iHX2 - iHX1) ^ (iWrappedDY)) >= 0)  // the signs match
 #else
 	if((iHX2 - iHX1 >= 0) == (iWrappedDY >= 0))  // the signs match
-#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+#endif
 	{
 		return iDX + iDY;
 	}
@@ -171,7 +171,7 @@ inline int plotDistance(int iX1, int iY1, int iX2, int iY2)
 		return (FASTMAX(iDX, iDY));
 #else
 		return (std::max(iDX, iDY));
-#endif // AUI_FAST_COMP
+#endif
 	}
 }
 
@@ -257,7 +257,7 @@ inline CvPlot* plotXYWithRangeCheck(int iX, int iY, int iDX, int iDY, int iRange
 	}
 
 	if(hexRange > iRange)
-#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+#endif
 	{
 		return NULL;
 	}
@@ -284,7 +284,7 @@ inline CvPlot* plotXYWithRangeCheck(int iX, int iY, int iDX, int iDY, int iRange
 		int iAbsDY = iDY >= 0 ? iDY : -iDY;
 		iDistance = iAbsDX >= iAbsDY ? iAbsDX : iAbsDY;
 	}
-#endif // AUI_GAME_CORE_UTILS_OPTIMIZATIONS
+#endif
 
 	if (iDistance > iRange)
 	{
@@ -293,7 +293,7 @@ inline CvPlot* plotXYWithRangeCheck(int iX, int iY, int iDX, int iDY, int iRange
 
 	return plotXY(iX, iY, iDX, iDY);
 }
-#endif // AUI_PLOT_XY_WITH_RANGE_CHECK_REFERENCE_DISTANCE
+#endif
 
 //	----------------------------------------------------------------------------
 inline DirectionTypes directionXY(int iSourceX, int iSourceY, int iDestX, int iDestY)

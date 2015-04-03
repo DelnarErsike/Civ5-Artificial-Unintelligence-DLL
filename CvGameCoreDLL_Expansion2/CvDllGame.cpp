@@ -535,7 +535,7 @@ bool CvDllGame::CanMoveUnitTo(ICvUnit1* pUnit, ICvPlot1* pPlot) const
 	GC.getInterfacePathFinder().SetData(pkUnit, 1);
 #else
 	GC.getInterfacePathFinder().SetData(pkUnit);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 
 	// can the unit actually walk there
 	bool bCanFindPath = GC.getInterfacePathFinder().GeneratePath(pkUnit->getX(), pkUnit->getY(), pkPlot->getX(), pkPlot->getY(), MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY /*iFlags*/, true/*bReuse*/);
@@ -557,7 +557,7 @@ bool CvDllGame::CanMoveUnitTo(ICvUnit1* pUnit, ICvPlot1* pPlot) const
 	{
 		return false;
 	}
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 
 	return true;
 }

@@ -309,10 +309,10 @@ private:
 
 #ifdef AUI_HOMELAND_AIRCRAFT_INTERCEPTIONS
 	void ExecuteAircraftInterceptions();
-#endif // AUI_HOMELAND_AIRCRAFT_INTERCEPTIONS
+#endif
 #ifdef AUI_HOMELAND_PARATROOPERS_PARADROP
 	bool CheckAndExecuteParadrop(UnitHandle pUnit, CvPlot* pTarget, int iPathfindingTurns = MAX_INT);
-#endif // AUI_HOMELAND_PARATROOPERS_PARADROP
+#endif
 
 	// Logging functions
 	CvString GetLogFileName(CvString& playerName) const;

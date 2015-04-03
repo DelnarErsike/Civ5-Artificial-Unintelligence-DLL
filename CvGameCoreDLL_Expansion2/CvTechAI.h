@@ -54,7 +54,7 @@ public:
 #ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
 	bool HaveAllUNTechs();
 	bool HaveAllInternetTechs();
-#endif // AUI_GS_SCIENCE_FLAVOR_BOOST
+#endif
 
 private:
 	// Internal methods
@@ -66,7 +66,7 @@ private:
 	void ReweightByCost(CvPlayer *pPlayer, bool bWantsExpensive = false);
 #else
 	void ReweightByCost(CvPlayer *pPlayer);
-#endif // AUI_TECHAI_CHOOSE_NEXT_TECH_FREE_TECH_WANTS_EXPENSIVE
+#endif
 
 	// Logging functions
 	void LogPossibleResearch();

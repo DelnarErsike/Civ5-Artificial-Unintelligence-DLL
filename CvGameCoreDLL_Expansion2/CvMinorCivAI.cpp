@@ -4651,7 +4651,7 @@ CvPlot* CvMinorCivAI::GetBestNearbyCampToKill()
 	{
 		for(iDY = -(iRange); iDY <= iRange; iDY++)
 		{
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			pLoopPlot = plotXY(pCapital->getX(), pCapital->getY(), iDX, iDY);
 
 			if(pLoopPlot != NULL)
@@ -7965,7 +7965,7 @@ int CvMinorCivAI::CalculateBullyMetric(PlayerTypes eBullyPlayer, bool bForUnit, 
 #else
 		iMaxDX = iComparisonRadius - MAX(0, iPlotLoopY);
 		for (iDX = -iComparisonRadius - MIN(0, iPlotLoopY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(iMinorCapitalX, iMinorCapitalY, iDX, iDY);
@@ -7975,7 +7975,7 @@ int CvMinorCivAI::CalculateBullyMetric(PlayerTypes eBullyPlayer, bool bForUnit, 
 		for(int iDY = -iComparisonRadius; iDY <= iComparisonRadius; iDY++)
 		{
 			pLoopPlot = ::plotXYWithRangeCheck(iMinorCapitalX, iMinorCapitalY, iDX, iDY, iComparisonRadius);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 
 			if(pLoopPlot != NULL)
 			{

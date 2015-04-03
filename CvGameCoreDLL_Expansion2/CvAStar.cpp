@@ -1322,7 +1322,7 @@ int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 				if (GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pToPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
 #else
 				if(GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pToPlot) > 0)
-#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+#endif
 				{
 					return FALSE;
 				}
@@ -1518,7 +1518,7 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 				iCost += (GC.getPATH_DAMAGE_WEIGHT() * FASTMAX(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
 #else
 				iCost += (GC.getPATH_DAMAGE_WEIGHT() * std::max(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
-#endif // AUI_FAST_COMP
+#endif
 			}
 
 			if(pToPlot->getExtraMovePathCost() > 0)
@@ -2197,21 +2197,21 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 						GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pFromPlot) <= pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
 #else
 					if (GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
-#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+#endif
 #else
 #ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
 					if (GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pToPlot) > 0 && GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pFromPlot) <= 0)
 #else
 					if(GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > 0)
-#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
-#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+#endif
+#endif
 #else
 #ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
 					if (GET_PLAYER(unit_owner).GetPlotDanger(*pFromPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
 #else
 					if(GET_PLAYER(unit_owner).GetPlotDanger(*pFromPlot) > 0)
-#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
-#endif // AUI_ASTAR_FIX_CONSIDER_DANGER_USES_TO_PLOT_NOT_FROM_PLOT
+#endif
+#endif
 #endif
 					{
 						return FALSE;
@@ -2287,7 +2287,7 @@ int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 		iMoves = FASTMIN(iMoves, pUnit->movesLeft());
 #else
 		iMoves = std::min(iMoves, pUnit->movesLeft());
-#endif // AUI_FAST_COMP
+#endif
 	}
 	else
 	{
@@ -2321,7 +2321,7 @@ int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 			iMoves = FASTMIN(iMoves, FASTMAX(0, iStartMoves - CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType()), pCacheData->maxMoves(), iStartMoves)));
 #else
 			iMoves = std::min(iMoves, std::max(0, iStartMoves - CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves(), iStartMoves)));
-#endif // AUI_FAST_COMP
+#endif
 		}
 	}
 
@@ -2618,7 +2618,7 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 				iCost += (GC.getPATH_DAMAGE_WEIGHT() * FASTMAX(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
 #else
 				iCost += (GC.getPATH_DAMAGE_WEIGHT() * std::max(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
-#endif // AUI_FAST_COMP
+#endif
 			}
 
 			if(pToPlot->getExtraMovePathCost() > 0)
@@ -2935,7 +2935,7 @@ int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const v
 		iMoves = FASTMIN(iMoves, pUnit->movesLeft());
 #else
 		iMoves = std::min(iMoves, pUnit->movesLeft());
-#endif // AUI_FAST_COMP
+#endif
 	}
 	else
 	{
@@ -2962,7 +2962,7 @@ int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const v
 		iMoves = FASTMIN(iMoves, FASTMAX(0, iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves())));
 #else
 		iMoves = std::min(iMoves, std::max(0, iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves())));
-#endif // AUI_FAST_COMP
+#endif
 	}
 
 	FAssertMsg(iMoves >= 0, "iMoves is expected to be non-negative (invalid Index)");
@@ -4224,7 +4224,7 @@ bool CvTwoLayerPathFinder::GenerateUnitPath(const CvUnit* pkUnit, int iXstart, i
 		SetData(pkUnit, iTargetTurns);
 #else
 		SetData(pkUnit);
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 		bool bResult = GeneratePath(iXstart, iYstart, iXdest, iYdest, iInfo, bReuse);
 		if(GC.getLogging() && GC.getAILogging())
 		{
@@ -5051,7 +5051,7 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 #endif
 		return TRUE;
 	}
-#endif // AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
+#endif
 
 	// Cache the data for the node
 	CvPathNodeCacheData& kToNodeCacheData = node->m_kCostCacheData;
@@ -5235,7 +5235,7 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 			{
 				return FALSE;
 			}
-#endif // AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+#endif
 			// This plot is of greater distance than previously, so we know the unit is ending its turn here (pNode), or it's trying to attack through a unit (and might end up on this tile if an attack fails to kill the enemy)
 			if(iNumTurns != iOldNumTurns || bPreviousNodeHostile)
 			{
@@ -5599,7 +5599,7 @@ void IncreaseMoveRangeForRoads(const CvUnit* pUnit, int& iRange)
 #else
 		int iMaxDX = iRange - MAX(0, iDY);
 		for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			pLoopPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
 			if (pLoopPlot)
@@ -5636,7 +5636,7 @@ int GetIncreasedMoveRangeForRoads(const CvUnit* pUnit, int iRange)
 	IncreaseMoveRangeForRoads(pUnit, iRange);
 	return iRange;
 }
-#endif // AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+#endif
 
 //	--------------------------------------------------------------------------------
 /// Can a unit reach this destination in "X" turns of movement (pass in 0 if need to make it in 1 turn with movement left)?
@@ -5647,7 +5647,7 @@ int GetIncreasedMoveRangeForRoads(const CvUnit* pUnit, int iRange)
 bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnoreUnits, bool bIgnoreParadrop, int* piTurns /* = NULL */)
 #else
 bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnoreUnits, int* piTurns /* = NULL */)
-#endif // AUI_ASTAR_PARADROP
+#endif
 {
 	int iDistance;
 
