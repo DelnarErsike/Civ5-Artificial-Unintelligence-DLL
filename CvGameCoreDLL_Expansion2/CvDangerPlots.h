@@ -17,8 +17,8 @@
 // Stores all possible damage sources on a tile (terrain, improvements, cities, units)
 struct CvDangerPlotContents
 {
-	typedef FStaticVector<CvUnit*, NUM_DIRECTION_TYPES * NUM_DIRECTION_TYPES + 1, true, c_eCiv5GameplayDLL> DangerUnitVector;
-	typedef FStaticVector<CvCity*, NUM_DIRECTION_TYPES, true, c_eCiv5GameplayDLL> DangerCityVector;
+	typedef FStaticVector<CvUnit*, NUM_DIRECTION_TYPES * NUM_DIRECTION_TYPES / 2, true, c_eCiv5GameplayDLL> DangerUnitVector;
+	typedef FStaticVector<CvCity*, NUM_DIRECTION_TYPES / 2, true, c_eCiv5GameplayDLL> DangerCityVector;
 
 	CvDangerPlotContents()
 	{
@@ -96,7 +96,7 @@ inline FDataStream & operator << (FDataStream & kStream, const CvDangerPlotConte
 	kStream << kStruct.m_iY;
 	return kStream;
 }
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //  CLASS:      CvDangerPlots
@@ -128,12 +128,12 @@ public:
 	void AddDanger(int iPlotX, int iPlotY, int iValue, bool bWithinOneMove);
 	int GetDanger(const CvPlot& pPlot) const;
 	bool IsUnderImmediateThreat(const CvPlot& pPlot) const;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 	int GetCityDanger(CvCity* pCity);  // sums the plots around the city to determine it's danger value
 
 #ifndef AUI_DANGER_PLOTS_REMADE
 	int ModifyDangerByRelationship(PlayerTypes ePlayer, CvPlot* pPlot, int iDanger);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 	bool ShouldIgnorePlayer(PlayerTypes ePlayer);
 	bool ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility = false);
@@ -143,7 +143,7 @@ public:
 	void AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot, bool bReuse = true);
 #else
 	void AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 	void AssignCityDangerValue(CvCity* pCity, CvPlot* pPlot);
 
 	void SetDirty();
@@ -161,7 +161,7 @@ protected:
 
 #ifndef AUI_DANGER_PLOTS_REMADE
 	int GetDangerValueOfCitadel() const;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 	PlayerTypes m_ePlayer;
 	bool m_bArrayAllocated;
@@ -182,7 +182,7 @@ protected:
 	CvDangerPlotContents* m_DangerPlots;
 #else
 	FFastVector<uint, true, c_eCiv5GameplayDLL, 0> m_DangerPlots;
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 };
 
 #endif //CIV5_PROJECT_CLASSES_H
