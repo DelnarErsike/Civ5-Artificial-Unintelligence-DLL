@@ -4434,7 +4434,7 @@ void CvTacticalAI::ReviewUnassignedUnits()
 			if (pUnit->isBarbarian())
 #else
 			if(pUnit->isBarbarian() || pUnit->getDomainType() == DOMAIN_AIR)
-#endif // AUI_TACTICAL_FIX_REVIEW_UNASSIGNED_UNITS_DO_NOT_SKIP_AIR
+#endif
 			{
 				pUnit->PushMission(CvTypes::getMISSION_SKIP());
 				pUnit->SetTurnProcessed(true);
@@ -4480,12 +4480,17 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 	{
 		return;
 	}
+#ifdef AUI_ASTAR_FIX_POSSIBLE_NULL_POINTERS
+	pEscort = m_pPlayer->getUnit(pThisArmy->GetNextUnitID());
+#endif
 
 	// ESCORT AND CIVILIAN MEETING UP
 	if(pThisArmy->GetArmyAIState() == ARMYAISTATE_WAITING_FOR_UNITS_TO_REINFORCE ||
 	        pThisArmy->GetArmyAIState() == ARMYAISTATE_WAITING_FOR_UNITS_TO_CATCH_UP)
 	{
+#ifndef AUI_ASTAR_FIX_POSSIBLE_NULL_POINTERS
 		pEscort = m_pPlayer->getUnit(pThisArmy->GetNextUnitID());
+#endif
 		if(!pEscort || pEscort->TurnProcessed())
 		{
 			// Escort died or was poached for other tactical action, operation will clean itself up when call CheckOnTarget()
@@ -4513,10 +4518,13 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 #else
 			ExecuteMoveToPlot(pCivilian, pCivilian->plot());
 #endif
-
+#ifndef AUI_ASTAR_FIX_POSSIBLE_NULL_POINTERS
 			if(pThisArmy->GetNumSlotsFilled() > 1)
+#endif
 			{
+#ifndef AUI_ASTAR_FIX_POSSIBLE_NULL_POINTERS
 				if(pEscort)
+#endif
 				{
 					// Move escort over
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
@@ -4613,7 +4621,11 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 		{
 			// Look at where we'd move this turn taking units into consideration
 			int iFlags = 0;
+#ifdef AUI_ASTAR_FIX_POSSIBLE_NULL_POINTERS
+			if(pEscort)
+#else
 			if(pThisArmy->GetNumSlotsFilled() > 1)
+#endif
 			{
 				iFlags = MOVE_UNITS_IGNORE_DANGER;
 			}
@@ -4639,7 +4651,9 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 #else
 				pCivilian->finishMoves();
 #endif
+#ifndef AUI_ASTAR_FIX_POSSIBLE_NULL_POINTERS
 				pEscort = m_pPlayer->getUnit(pThisArmy->GetNextUnitID());
+#endif
 				if(pEscort)
 				{
 					pEscort->finishMoves();
@@ -4656,7 +4670,11 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 			{
 				pCivilianMove = pCivilian->GetPathEndTurnPlot();
 				bSaveMoves = (pCivilianMove == pOperation->GetTargetPlot());
+#ifdef AUI_ASTAR_FIX_POSSIBLE_NULL_POINTERS
+				if(!pEscort)
+#else
 				if(pThisArmy->GetNumSlotsFilled() == 1)
+#endif
 				{
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 					ExecuteMoveToPlot(pCivilian, pCivilianMove, bSaveMoves, iCivilianTurns);
@@ -4675,8 +4693,9 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 
 				else
 				{
+#ifndef AUI_ASTAR_FIX_POSSIBLE_NULL_POINTERS
 					pEscort = m_pPlayer->getUnit(pThisArmy->GetNextUnitID());
-
+#endif
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 					int iEscortNewTurns = TurnsToReachTarget(pEscort, pCivilianMove);
 					// See if escort can move to the same location in one turn
@@ -4788,13 +4807,13 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 									if (m_pPlayer->GetPlotDanger(*(pCivilian->plot()), pCivilian.pointer()) < pCivilian->GetCurrHitPoints())
 #else
 									if (!m_pPlayer->IsPlotUnderImmediateThreat(*(pCivilian->plot())))
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif 
 									{
 										pCivilian->finishMoves();
 									}
 #else
 									pCivilian->finishMoves();
-#endif //  AUI_TACTICAL_PLOT_SINGLE_HEX_OPERATION_MOVES_CIVILIAN_TO_SAFETY
+#endif
 									pEscort->finishMoves();
 									if(GC.getLogging() && GC.getAILogging())
 									{
@@ -8934,7 +8953,7 @@ void CvTacticalAI::ExecuteMovesToSafestPlot()
 
 #ifndef AUI_DANGER_PLOTS_REMADE
 	TeamTypes ePlayerTeam = m_pPlayer->getTeam();
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 	PlayerTypes ePlayerID = m_pPlayer->GetID();
 
 	for(unsigned int iI = 0; iI < m_CurrentMoveUnits.size(); iI++)
@@ -8963,8 +8982,8 @@ void CvTacticalAI::ExecuteMovesToSafestPlot()
 			iRange = FASTMAX(iRange, pUnit->getDropRange());
 #else
 			iRange = MAX(iRange, pUnit->getDropRange());
-#endif // AUI_FAST_COMP
-#endif // AUI_TACTICAL_PARATROOPERS_PARADROP
+#endif
+#endif
 #if !defined(PATH_PLAN_LAST)
 			int iLowestDanger = MAX_INT;
 			bool bResultHasZeroDangerMove = false;
@@ -9009,7 +9028,7 @@ void CvTacticalAI::ExecuteMovesToSafestPlot()
 								{
 									continue;
 								}
-#endif // AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_CONSIDER_SAME_UNIT_TYPE
+#endif
 							}
 						}
 					}
@@ -11552,11 +11571,11 @@ void CvTacticalAI::ExecuteWithdrawMoves()
 			{
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 				CheckAndExecuteFreePillageMoves(pUnit, MAX_INT);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 				MoveToEmptySpaceNearTarget(pUnit, pNearestCity->plot(), (pUnit->getDomainType()==DOMAIN_LAND));
 #ifdef AUI_TACTICAL_FREE_PILLAGE
 				CheckAndExecuteFreePillageMoves(pUnit);
-#endif // AUI_TACTICAL_FREE_PILLAGE
+#endif
 
 				pUnit->finishMoves();
 				UnitProcessed(m_CurrentMoveUnits[iI].GetID(), pUnit->IsCombatUnit());
@@ -11617,7 +11636,7 @@ void CvTacticalAI::ExecuteEscortEmbarkedMoves()
 				if (TurnsToReachTarget(pUnit, pTarget, false, false, false, 1) <= 1)
 #else
 				if (TurnsToReachTarget(pUnit, pTarget) <= 1)
-#endif // AUI_ASTAR_TURN_LIMITER
+#endif
 				{
 #ifdef AUI_DANGER_PLOTS_REMADE
 					int iDanger = m_pPlayer->GetPlotDanger(*pTarget, pLoopUnit.pointer());
@@ -11625,7 +11644,7 @@ void CvTacticalAI::ExecuteEscortEmbarkedMoves()
 						iDanger += FASTMAX(pLoopUnit->GetBaseCombatStrength(true) , pLoopUnit->GetBaseRangedCombatStrength());
 #else
 					int iDanger = m_pPlayer->GetPlotDanger(*pTarget);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 					if (iDanger > iHighestDanger)
 					{
 						iHighestDanger = iDanger;
@@ -12485,11 +12504,11 @@ bool CvTacticalAI::FindClosestOperationUnit(CvPlot* pTarget, bool bSafeForRanged
 				m_pPlayer->IsPlotUnderImmediateThreat(*pTarget, pLoopUnit.pointer()))
 #else
 				m_pPlayer->GetPlotDanger(*pTarget) > 0)
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 			{
 				bValidUnit = false;
 			}
-#endif // AUI_TACTICAL_FIX_FIND_CLOSEST_OPERATION_UNIT_NO_EMBARK
+#endif
 
 			if(bValidUnit)
 			{
