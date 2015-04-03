@@ -22,7 +22,7 @@
 #ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
 #include "CvEconomicAI.h"
 #include "CvCitySpecializationAI.h"
-#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
+#endif
 
 CvWeightedVector<BuilderDirective, 100, true> CvBuilderTaskingAI::m_aDirectives;
 FStaticVector<int, SAFE_ESTIMATE_NUM_EXTRA_PLOTS, true, c_eCiv5GameplayDLL, 0> CvBuilderTaskingAI::m_aiNonTerritoryPlots; // plots that we need to evaluate that are outside of our territory
@@ -333,7 +333,7 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 
 #ifdef AUI_WORKER_INCA_HILLS
 	bool bIncaBonusActive = (m_pPlayer->GetPlayerTraits()->IsNoHillsImprovementMaintenance() && !m_pPlayer->isHuman());
-#endif // AUI_WORKER_INCA_HILLS
+#endif
 
 	while(pNode)
 	{
@@ -384,7 +384,7 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 			iRoadLength++;
 			iPlotsNeeded++;
 		}
-#endif // AUI_WORKER_INCA_HILLS
+#endif
 	}
 
 #ifdef AUI_WORKER_INCA_HILLS
@@ -401,7 +401,7 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 			iPlotsNeeded = 1;
 		}
 	}
-#endif // AUI_WORKER_INCA_HILLS
+#endif
 
 	// This is very odd
 	if(iRoadLength <= 0 || iPlotsNeeded <= 0)
@@ -832,7 +832,7 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 		AddRouteDirectives(pUnit, pPlot, iMoveTurnsAway);
 #ifdef AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
 		AddImprovingMinorPlotsDirectives(pUnit, pPlot, iMoveTurnsAway);
-#endif // AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
+#endif
 	}
 
 	m_aDirectives.StableSortItems();
@@ -974,10 +974,86 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 			}
 		}
 	}
-#endif // AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
+#endif
 
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
 	FeatureTypes eFeatureType = pPlot->getFeatureType();
+#endif
+
+#ifdef AUI_WORKER_FIX_CELTIC_IMPROVE_UNIMPROVED_FORESTS
+	// celtic rule: if this is a forest tile next to a city, do not improve this tile with a normal improvement (unless we're an AI in at least industrial)
+	if (m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest() && eExistingPlotImprovement == NO_IMPROVEMENT && pkResource->getResourceUsage() == RESOURCEUSAGE_LUXURY &&
+		((m_pPlayer->GetCurrentEra() < GC.getInfoTypeForString(AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL)) || m_pPlayer->isHuman()))
+	{
+		CvCity* pNextCity = pPlot->GetAdjacentCity();
+		if (pNextCity && pNextCity->getOwner() == m_pPlayer->GetID())
+		{
+			if (pPlot->getFeatureType() == FEATURE_FOREST)
+			{
+				int iMetPlayersWithoutResource = 0;
+				for (int iI = 0; iI < MAX_MAJOR_CIVS; iI++)
+				{
+					if (GET_PLAYER((PlayerTypes)iI).isAlive() && GET_TEAM(m_pPlayer->getTeam()).isHasMet(GET_PLAYER((PlayerTypes)iI).getTeam()))
+					{
+						if (GET_PLAYER((PlayerTypes)iI).getNumResourceAvailable(eResource, false) == 0)
+						{
+							iMetPlayersWithoutResource++;
+						}
+					}
+				}
+				if (m_pPlayer->getNumResourceAvailable(eResource, false) >= iMetPlayersWithoutResource + 1)
+				{
+					int iNeighboringForestCount = 1;
+					CvPlot* pAdjacentPlot = NULL;
+					for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+					{
+						pAdjacentPlot = pNextCity->plot()->getNeighboringPlot((DirectionTypes)iI);
+						// Make sure this plot is an unimproved forest with no current improvement in progress
+						if (pAdjacentPlot && pAdjacentPlot != pPlot && pAdjacentPlot->getFeatureType() == FEATURE_FOREST && pPlot->getImprovementType() == NO_IMPROVEMENT)
+						{
+							ResourceTypes eAdjacentResource = pPlot->getResourceType(m_pPlayer->getTeam());
+							if (eAdjacentResource == NO_RESOURCE || GC.getResourceInfo(eAdjacentResource)->getResourceUsage() == RESOURCEUSAGE_BONUS)
+							{
+								int iLoop;
+								for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+								{
+									CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
+									if (!pMissionPlot)
+									{
+										continue;
+									}
+
+									MissionAITypes eGroupMissionAI = pLoopUnit->GetMissionAIType();
+									if (eGroupMissionAI != MISSIONAI_BUILD)
+									{
+										continue;
+									}
+
+									if (pAdjacentPlot->getX() == pMissionPlot->getX() && pAdjacentPlot->getY() == pMissionPlot->getY())
+									{
+										BuildTypes eOtherBuild = pLoopUnit->getBuildType();
+										CvBuildInfo* pkBuild = GC.getBuildInfo(eOtherBuild);
+										if (pkBuild != NULL)
+										{
+											ImprovementTypes eImprovement = (ImprovementTypes)pkBuild->getImprovement();
+											if (eImprovement != NO_IMPROVEMENT)
+											{
+												goto NextTile;
+											}
+										}
+									}
+								}
+								iNeighboringForestCount++;
+							}
+						}
+					NextTile:;
+					}
+					if (iNeighboringForestCount == 3 || iNeighboringForestCount == 1)
+						return;
+				}
+			}
+		}
+	}
 #endif
 
 	// loop through the build types to find one that we can use
@@ -1162,7 +1238,57 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 		{
 			if (pPlot->getFeatureType() == FEATURE_FOREST)
 			{
+#ifdef AUI_WORKER_FIX_CELTIC_IMPROVE_UNIMPROVED_FORESTS
+				int iNeighboringForestCount = 1;
+				CvPlot* pAdjacentPlot = NULL;
+				for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+				{
+					pAdjacentPlot = pNextCity->plot()->getNeighboringPlot((DirectionTypes)iI);
+					// Make sure this plot is an unimproved forest with no current improvement in progress
+					if (pAdjacentPlot && pAdjacentPlot != pPlot && pAdjacentPlot->getFeatureType() == FEATURE_FOREST && pPlot->getImprovementType() == NO_IMPROVEMENT)
+					{
+						ResourceTypes eAdjacentResource = pPlot->getResourceType(m_pPlayer->getTeam());
+						if (eAdjacentResource == NO_RESOURCE || GC.getResourceInfo(eAdjacentResource)->getResourceUsage() == RESOURCEUSAGE_BONUS)
+						{
+							int iLoop;
+							for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+							{
+								CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
+								if (!pMissionPlot)
+								{
+									continue;
+								}
+
+								MissionAITypes eGroupMissionAI = pLoopUnit->GetMissionAIType();
+								if (eGroupMissionAI != MISSIONAI_BUILD)
+								{
+									continue;
+								}
+
+								if (pAdjacentPlot->getX() == pMissionPlot->getX() && pAdjacentPlot->getY() == pMissionPlot->getY())
+								{
+									BuildTypes eOtherBuild = pLoopUnit->getBuildType();
+									CvBuildInfo* pkBuild = GC.getBuildInfo(eOtherBuild);
+									if (pkBuild != NULL)
+									{
+										ImprovementTypes eImprovement = (ImprovementTypes)pkBuild->getImprovement();
+										if (eImprovement != NO_IMPROVEMENT)
+										{
+											goto NextTile;
+										}
+									}
+								}
+							}
+							iNeighboringForestCount++;
+						}
+					}
+				NextTile:;
+				}
+				if (iNeighboringForestCount == 3 || iNeighboringForestCount == 1)
+					return;
+#else
 				return;
+#endif
 			}
 		}
 	}
@@ -2781,7 +2907,7 @@ bool CvBuilderTaskingAI::DoesBuildHelpRush(CvUnit* pUnit, CvPlot* pPlot, BuildTy
 int CvBuilderTaskingAI::ScorePlot(bool bWillChop)
 #else
 int CvBuilderTaskingAI::ScorePlot()
-#endif // AUI_WORKER_SCORE_PLOT_CHOP
+#endif
 {
 	if(!m_pTargetPlot)
 	{
@@ -2793,7 +2919,7 @@ int CvBuilderTaskingAI::ScorePlot()
 	if(!pCity || pCity->IsRazing())
 #else
 	if(!pCity)
-#endif // AUI_WORKER_SCORE_PLOT_NO_SCORE_FROM_RAZE
+#endif
 	{
 		return -1;
 	}
@@ -2852,7 +2978,7 @@ int CvBuilderTaskingAI::ScorePlot()
 	{
 		dFoodFlavor = dProductionFlavor = dGoldFlavor = dScienceFlavor = dCultureFlavor = dFaithFlavor = (double)MAX(1, GC.getDEFAULT_FLAVOR_VALUE());
 	}
-#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
+#endif
 	for(uint ui = 0; ui < NUM_YIELD_TYPES; ui++)
 	{
 #ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
@@ -2878,7 +3004,7 @@ int CvBuilderTaskingAI::ScorePlot()
 		case YIELD_FAITH:
 #ifdef AUI_WORKER_EVALUATE_FAITH
 			dYieldValue *= log(dCultureFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
-#endif // AUI_WORKER_EVALUATE_FAITH
+#endif
 			break;
 #else
 		case YIELD_FOOD:
@@ -2899,11 +3025,11 @@ int CvBuilderTaskingAI::ScorePlot()
 		case YIELD_FAITH:
 #ifdef AUI_WORKER_EVALUATE_FAITH
 			dYieldValue = dFaithFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
-#endif // AUI_WORKER_EVALUATE_FAITH
+#endif
 			break;
-#endif // AUI_WORKER_LOGARITHMIC_FLAVOR
+#endif
 		}
-#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
+#endif
 
 		int iMultiplier = pCityStrategy->GetYieldDeltaTimes100((YieldTypes)ui);
 		int iAbsMultiplier = abs(iMultiplier);
@@ -2914,7 +3040,7 @@ int CvBuilderTaskingAI::ScorePlot()
 		{
 			dFlatBonus = AUI_WORKER_SCORE_PLOT_CHOP;
 		}
-#endif // AUI_WORKER_SCORE_PLOT_CHOP
+#endif
 
 #ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
 		// the multiplier being lower than zero means that we need more of this resource
@@ -3001,10 +3127,10 @@ int CvBuilderTaskingAI::ScorePlot()
 			else if(iYieldDelta < 0)
 			{
 				iScore += iYieldDelta * iAbsMultiplier;
-#endif // AUI_WORKER_SCORE_PLOT_CHOP
+#endif
 			}
 		}
-#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
+#endif
 	}
 
 	if(!bAnyNegativeMultiplier && eFocusYield != NO_YIELD)
@@ -3032,7 +3158,7 @@ int CvBuilderTaskingAI::ScorePlot()
 		case YIELD_FAITH:
 #ifdef AUI_WORKER_EVALUATE_FAITH
 			dYieldValue *= log(dCultureFlavor) * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
-#endif // AUI_WORKER_EVALUATE_FAITH
+#endif
 			break;
 #else
 		case YIELD_FOOD:
@@ -3053,11 +3179,11 @@ int CvBuilderTaskingAI::ScorePlot()
 		case YIELD_FAITH:
 #ifdef AUI_WORKER_EVALUATE_FAITH
 			dYieldValue *= dFaithFlavor * GC.getBUILDER_TASKING_PLOT_EVAL_MULTIPLIER_CULTURE();
-#endif // AUI_WORKER_EVALUATE_FAITH
+#endif
 			break;
-#endif // AUI_WORKER_LOGARITHMIC_FLAVOR
+#endif
 		}
-#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
+#endif
 		int iYieldDelta = m_aiProjectedPlotYields[eFocusYield] - m_aiCurrentPlotYields[eFocusYield];
 		if(iYieldDelta > 0)
 		{
@@ -3066,14 +3192,14 @@ int CvBuilderTaskingAI::ScorePlot()
 			iScore += int(m_aiProjectedPlotYields[eFocusYield] * AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS * dYieldValue + 0.5);
 #else
 			iScore += int(m_aiProjectedPlotYields[eFocusYield] * 100 * dYieldValue + 0.5);
-#endif // AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS
+#endif
 #else
 #ifdef AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS
 			iScore += m_aiProjectedPlotYields[eFocusYield] * AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS;
 #else
 			iScore += m_aiProjectedPlotYields[eFocusYield] * 100;
-#endif // AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS
-#endif // AUI_WORKER_SCORE_PLOT_FLAVORS
+#endif
+#endif
 		}
 	}
 
@@ -3090,7 +3216,7 @@ int CvBuilderTaskingAI::ScorePlot()
 	{
 		iScore /= AUI_WORKER_SCORE_PLOT_REDUCED_PUPPET_SCORE;
 	}
-#endif // AUI_WORKER_SCORE_PLOT_REDUCED_PUPPET_SCORE
+#endif
 
 	return iScore;
 }
@@ -3408,6 +3534,37 @@ void CvBuilderTaskingAI::UpdateProjectedPlotYields(CvPlot* pPlot, BuildTypes eBu
 	{
 		m_aiProjectedPlotYields[ui] = pPlot->getYieldWithBuild(eBuild, (YieldTypes)ui, false, m_pPlayer->GetID());
 		m_aiProjectedPlotYields[ui] = max(m_aiProjectedPlotYields[ui], 0);
+#ifdef AUI_WORKER_FIX_CELTIC_IMPROVE_UNIMPROVED_FORESTS
+		if (ui == YIELD_FAITH && m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest() && pPlot->getImprovementType() == NO_IMPROVEMENT)
+		{
+			CvBuildInfo* pBuildInfo = GC.getBuildInfo(eBuild);
+			if (pBuildInfo && (pBuildInfo->getImprovement() != NO_IMPROVEMENT || pBuildInfo->isFeatureRemove(FEATURE_FOREST)))
+			{
+				CvCity* pNextCity = pPlot->GetAdjacentCity();
+				if (pNextCity && pNextCity->getOwner() == m_pPlayer->GetID())
+				{
+					int iNeighboringForestCount = 1;
+					CvPlot* pAdjacentPlot = NULL;
+					for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+					{
+						pAdjacentPlot = pNextCity->plot()->getNeighboringPlot((DirectionTypes)iI);
+						if (pAdjacentPlot && pAdjacentPlot != pPlot && pAdjacentPlot->getFeatureType() == FEATURE_FOREST && pPlot->getImprovementType() == NO_IMPROVEMENT)
+						{
+							ResourceTypes eAdjacentResource = pPlot->getResourceType(m_pPlayer->getTeam());
+							if (eAdjacentResource == NO_RESOURCE || GC.getResourceInfo(eAdjacentResource)->getResourceUsage() == RESOURCEUSAGE_BONUS)
+							{
+								iNeighboringForestCount++;
+							}
+						}
+					}
+					if (iNeighboringForestCount == 3 || iNeighboringForestCount == 1)
+					{
+						m_aiProjectedPlotYields[YIELD_FAITH] -= 1;
+					}
+				}
+			}
+		}
+#endif
 
 		if(m_bLogging){
 			CvString strLog;
