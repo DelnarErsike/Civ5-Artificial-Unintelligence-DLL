@@ -2367,7 +2367,7 @@ CvPlot* CvAIEnemyTerritoryOperation::SelectInitialMusterPoint(CvArmyAI* pThisArm
 						if (GET_PLAYER(m_eOwner).IsPlotUnderImmediateThreat(*pCurrentPlot, m_eOwner))
 #else
 						if(GET_PLAYER(m_eOwner).GetPlotDanger(*pCurrentPlot) > 0)
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 						{
 							iDangerousPlots++;
 						}

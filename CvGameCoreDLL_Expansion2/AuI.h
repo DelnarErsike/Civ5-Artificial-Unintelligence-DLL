@@ -4,6 +4,9 @@
 #ifndef AUI_MODS_H
 #define AUI_MODS_H
 
+// Used for savegame compatibility
+#define AUI_VERSION 10
+
 // New mathematical constants
 #define M_E			2.71828182845904523536
 #define fM_E		2.718281828f		//!< e (float)
@@ -133,8 +136,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 
 // Giant AI overhauls that influence multiple AI classes
-/// Danger plots have been completely remade to return possible damage a unit can take at a tile instead of total strength value (parameter value is Save version)
-#define AUI_DANGER_PLOTS_REMADE (2)
+/// Danger plots have been completely remade to return possible damage a unit can take at a tile instead of total strength value
+#define AUI_DANGER_PLOTS_REMADE
 /// Queued attacks are dumb because they are constructed based on statistical averages instead of having the AI send out an attack and plan for follow-up attacks based on actual output
 #define AUI_QUEUED_ATTACKS_REMOVED
 /// All the functions related to swapping great works were written extremely poorly, so they have been or are being restructured or remade
@@ -257,6 +260,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_WORK_BOATS_CONSIDER_ALL_SEA_PLOTS
 /// Only disregard an impassable plot if the unit cannot enter impassable plots
 #define AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_FLYING_WORKER_DISREGARDS_PEAKS
+/// Added some extra checks for Celts so that 1) they will improve forests when there would still be enough unimproved ones remaining to give the same faith bonnus and 2) they will not improve luxury resources on forests if they do not get any use out of them and would lower faith
+#define AUI_WORKER_FIX_CELTIC_IMPROVE_UNIMPROVED_FORESTS
 
 // City Stuff
 /// Shifts the scout assignment code to EconomicAI
@@ -845,7 +850,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Considers units of the same type when executing move to safety (important if health is a factor in selecting units for this movetype)
 #define AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_CONSIDER_SAME_UNIT_TYPE
 #endif
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 /// Immediately skips some heavy computation if the function is not looking for ranged units and unit being checked is a ranged unit (originally from Ninakoru's Smart AI)
 #define AUI_TACTICAL_FIND_UNITS_WITHIN_STRIKING_DISTANCE_NO_RANGED_SHORTCUT
 /// When calculating the expected damage on a target from a melee unit, the AI will now use pTargetPlot and pDefender parameters when appropriate (instead of having them as NULL)
@@ -1044,6 +1049,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TRADE_SCORE_PRODUCTION_VALUE
 /// When prioritizing trade routes, the actual trade value of all three possible route types will be considered instead of prioritizing food > production > international
 #define AUI_TRADE_UNBIASED_PRIORITIZE
+/// If a tile is unowned and not an ocean tile, extra danger is added to the trade route (bit of a cheat with unrevealed tiles to count them, too, but it's negligible)
+#define AUI_TRADE_SCORE_TRADE_ROUTE_UNOWNED_TILE_EXTRA_DANGER (1)
 
 // Trait Classes Stuff
 /// Scales the threshold wonder competitiveness for choosing an engineer with game turn instead of having it be two binary checks

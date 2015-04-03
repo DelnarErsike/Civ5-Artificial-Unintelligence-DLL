@@ -331,7 +331,7 @@ void CvDangerPlots::AddDanger(int iPlotX, int iPlotY, int iValue, bool bWithinOn
 
 	m_DangerPlots[idx] += iValue;
 }
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 /// Return the maximum amount of damage that could be dealt to a non-specific unit at this plot
@@ -357,7 +357,7 @@ int CvDangerPlots::GetDanger(const CvPlot& pPlot, const CvUnit* pUnit, const CvU
 #else
 /// Return the danger value of a given plot
 int CvDangerPlots::GetDanger(const CvPlot& pPlot) const
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 {
 	const int idx = pPlot.getX() + pPlot.getY() * GC.getMap().getGridWidth();
 #ifdef AUI_DANGER_PLOTS_REMADE
@@ -368,7 +368,7 @@ int CvDangerPlots::GetDanger(const CvPlot& pPlot) const
 	return 0;
 #else
 	return m_DangerPlots[idx];
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 }
 
 #ifdef AUI_DANGER_PLOTS_REMADE
@@ -1065,7 +1065,7 @@ void CvDangerPlots::Read(FDataStream& kStream)
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 	m_DangerPlots = FNEW(CvDangerPlotContents[iGridSize], c_eCiv5GameplayDLL, 0);
-	if (uiVersion >= 2)
+	if (uiVersion >= 10)
 	{
 		for (int i = 0; i < iGridSize; i++)
 		{
@@ -1095,7 +1095,7 @@ void CvDangerPlots::Write(FDataStream& kStream) const
 {
 	// Current version number
 #ifdef AUI_DANGER_PLOTS_REMADE
-	uint uiVersion = AUI_DANGER_PLOTS_REMADE;
+	uint uiVersion = AUI_VERSION;
 #else
 	uint uiVersion = 1;
 #endif

@@ -7428,7 +7428,7 @@ int CvLuaPlayer::lGetPlotDanger(lua_State* L)
 	lua_pushinteger(L, pkPlayer->GetPlotDanger(*pkPlot, pkPlayer->GetID()));
 #else
 	lua_pushinteger(L, pkPlayer->GetPlotDanger(*pkPlot));
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 	return 1;
 }
 //------------------------------------------------------------------------------
@@ -8556,7 +8556,7 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 	int iEndSearchY   = iSettlerY + iEvalDistance;
 
 	CvMap& kMap = GC.getMap();
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 
 	TeamTypes eUnitTeam = pFoundingUnit->getTeam();
 
@@ -8581,7 +8581,7 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 #else
 		iMaxDX = iEvalDistance - MAX(0, iDY);
 		for (iDX = -iEvalDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif // AUI_FAST_COMP
+#endif
 		{
 			// No need for range check because loops are set up properly
 			pPlot = plotXY(iSettlerX, iSettlerY, iDX, iDY);
@@ -8591,7 +8591,7 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 		for(int iPlotY = iBeginSearchY; iPlotY != iEndSearchY; iPlotY++)
 		{
 			CvPlot* pPlot = kMap.plot(iPlotX, iPlotY);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 			if(!pPlot)
 			{
 				continue;
@@ -8626,14 +8626,14 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 				iSettlerDistance = hexDistance(iDX, iDY);
 #else
 				iSettlerDistance = plotDistance(iPlotX, iPlotY, iSettlerX, iSettlerY);
-#endif // AUI_HEXSPACE_DX_LOOPS
+#endif
 
 				//iValue = pPlot->getFoundValue(pkPlayer->GetID());
 #ifdef AUI_HEXSPACE_DX_LOOPS
 				iValue = pkPlayer->AI_foundValue(pPlot->getX(), pPlot->getY(), -1, false);
 #else
 				iValue = pkPlayer->AI_foundValue(iPlotX, iPlotY, -1, false);
-#endif //  AUI_HEXSPACE_DX_LOOPS
+#endif
 
 				iDistanceDropoff = (iDistanceDropoffMod * iSettlerDistance) / iEvalDistance;
 				iValue = iValue * (100 - iDistanceDropoff) / 100;
@@ -8641,7 +8641,7 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 				iDanger = pkPlayer->GetPlotDanger(*pPlot, pFoundingUnit);
 #else
 				iDanger = pkPlayer->GetPlotDanger(*pPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
+#endif
 				if(iDanger < 1000)
 				{
 					iValue = ((1000 - iDanger) * iValue) / 1000;
