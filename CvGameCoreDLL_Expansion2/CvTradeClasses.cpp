@@ -4077,12 +4077,19 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot, m_pPlayer->GetID());
 #else
 		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
 		if (iDangerValue == 0)
+#endif
 		{
 #ifdef AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
-			iDangerValue += AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER;
-#endif // AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
+			if (iDangerValue < AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER)
+				iDangerValue = AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER;
+#endif
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_UNOWNED_TILE_EXTRA_DANGER
+			if (!pPlot->isOwned() || (pPlot->isWater() && !pPlot->isShallowWater()))
+			{
+				iDangerValue += AUI_TRADE_SCORE_TRADE_ROUTE_UNOWNED_TILE_EXTRA_DANGER;
+			}
+#endif
 			if (!pPlot->isVisible(m_pPlayer->getTeam()))
 			{
 				iDangerValue += 1;
@@ -4102,7 +4109,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
 	if (bIsToMinor)
 		iOtherGoldAmount = 0;
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+#endif
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
 	double dGoldMod = log(MAX((m_pPlayer->GetTreasury()->AverageIncome(1) + (1.0 + log((double)m_pPlayer->getNumCities())) * iGoldAmount / 100.0), 1.0) /
 		MAX(m_pPlayer->GetTreasury()->AverageIncome(1), 1.0)) / M_LN2 / 100.0;
@@ -4128,7 +4135,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	{
 		iGoldDelta = 1;
 	}
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+#endif
 
 	// tech
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
@@ -4137,10 +4144,10 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
 	if (bIsToMinor)
 		dTechDifferenceP2fromP1 = 0;
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+#endif
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
 	dTechDifferenceP2fromP1 *= dDiplomacyTaper;
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+#endif
 
 	double dTechModP1 = log(MAX((m_pPlayer->GetScienceTimes100() + 200.0 * dTechDifferenceP1fromP2), 1.0) / (double)MAX(m_pPlayer->GetScienceTimes100(), 1)) / M_LN2;
 	double dTechModP2 = log(MAX((GET_PLAYER(kTradeConnection.m_eDestOwner).GetScienceTimes100() + 200.0 * dTechDifferenceP2fromP1), 1.0) /
@@ -4153,12 +4160,12 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
 	if (bIsToMinor)
 		iTechDifferenceP2fromP1 = 0;
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS
+#endif
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
 	iTechDifferenceP2fromP1 = int(iTechDifferenceP2fromP1 * dDiplomacyTaper + 0.5);
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+#endif 
 	int iTechDelta = iTechDifferenceP1fromP2 - iTechDifferenceP2fromP1;
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
+#endif
 
 	// religion
 	ReligionTypes eOwnerFoundedReligion = GC.getGame().GetGameReligions()->GetReligionCreatedByPlayer(m_pPlayer->GetID());
@@ -4181,7 +4188,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 			// Internally pressure is now 10 times greater than what is shown to user
 			iToPressure /= GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER();
 			iFromPressure /= GC.getRELIGION_MISSIONARY_PRESSURE_MULTIPLIER();
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_RELIGION_SCORING
+#endif
 
 			// if anyone is exerting pressure
 			if (bAnyFromCityPressure || bAnyToCityPressure)
@@ -4211,7 +4218,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 					{
 						iReligionDelta -= iFromPressure;
 					}
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_RELIGION_SCORING
+#endif
 				}
 			}
 		}
@@ -4228,37 +4235,37 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	dScore += dGoldDelta * dGoldValue; // since original function returned gold yield times 100
 #else
 	dScore += iGoldDelta * dGoldValue / 100.0; // since original function returned gold yield times 100
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+#endif
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
 	dScore += dTechDelta * dScienceValue; 
 #else
 	dScore += iTechDelta * dScienceValue;
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
+#endif
 	dScore += iReligionDelta * dFaithValue;
 #ifdef AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
 	dScore = (dScore * 10) / log((double)iDangerSum) * log(AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER);
 #else
 	dScore = (dScore * 10) / (double)iDangerSum;
-#endif // AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
+#endif
 #else
 	int iScore = 0;
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
 	iScore += int(dGoldDelta + 0.5);
 #else
 	iScore += iGoldDelta;
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME
+#endif
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
 	iScore += dTechDelta * 3; // 3 science = 1 gold
 #else
 	iScore += iTechDelta * 3; // 3 science = 1 gold
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_RELATIVE_TECH_SCORING
+#endif
 	iScore += iReligionDelta * 2; // 2 religion = 1 gold
 #ifdef AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
 	iScore = int((iScore * 10 * log(AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER)) / log((double)iDangerSum) + 0.5);
 #else
 	iScore = (iScore * 10) / iDangerSum;
-#endif // AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
+#endif
+#endif
 	
 	// if we have any tourism and the destination owner is not a minor civ
 	if (m_pPlayer->GetCulture()->GetTourism() > 0 && !GET_PLAYER(kTradeConnection.m_eDestOwner).isMinorCiv())
@@ -4272,7 +4279,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 			dScore *= (1 + 2.0 * (double)m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")));
 #else
 			iScore *= (1 + 2 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")));
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
+#endif
 #else
 			if (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
@@ -4280,14 +4287,14 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 #else
 				iScore *= 3;
 #endif
-#endif // AUI_GS_PRIORITY_RATIO
+#endif
 #else
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
 			dScore *= 2;
 #else
 			iScore *= 2;
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_TOURISM_SCORE_USES_GRAND_STRATEGY
+#endif
+#endif
 		}
 	}
 
@@ -4295,7 +4302,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	return int(dScore + 0.5);
 #else
 	return iScore;
-#endif // AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
+#endif
 }
 
 /// Score Food TR
@@ -4303,7 +4310,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* /*pSmallestCity*/)
 #else
 int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSmallestCity)
-#endif // AUI_TRADE_SCORE_FOOD_VALUE
+#endif
 {
 	if (kTradeConnection.m_eConnectionType != TRADE_CONNECTION_FOOD)
 	{
@@ -4340,12 +4347,19 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot, m_pPlayer->GetID());
 #else
 		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
 		if (iDangerValue == 0)
+#endif
 		{
 #ifdef AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
-			iDangerValue += AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER;
-#endif // AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
+			if (iDangerValue < AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER)
+				iDangerValue = AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER;
+#endif
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_UNOWNED_TILE_EXTRA_DANGER
+			if (!pPlot->isOwned() || (pPlot->isWater() && !pPlot->isShallowWater()))
+			{
+				iDangerValue += AUI_TRADE_SCORE_TRADE_ROUTE_UNOWNED_TILE_EXTRA_DANGER;
+			}
+#endif
 			if (!pPlot->isVisible(m_pPlayer->getTeam()))
 			{
 				iDangerValue += 1;
@@ -4412,7 +4426,7 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 	dScore = (dScore * 10) / log((double)iDangerSum) * log(AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER);
 #else
 	dScore = (dScore * 10) / (double)iDangerSum;
-#endif // AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
+#endif
 
 	return int(dScore + 0.5);
 #else
@@ -4457,7 +4471,7 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 	}
 
 	return iDistanceScore - iDangerSum;
-#endif // AUI_TRADE_SCORE_FOOD_VALUE
+#endif
 }
 
 /// Score Production TR
@@ -4493,7 +4507,7 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 	for (uint ui = 0; ui < aTargetCityList.size(); ui++)
 	{
 		if (kTradeConnection.m_iDestX == aTargetCityList[ui]->getX() && kTradeConnection.m_iDestY == aTargetCityList[ui]->getY())
-#endif // AUI_TRADE_SCORE_PRODUCTION_VALUE
+#endif
 		{
 			bValidTarget = true;
 			break;
@@ -4521,12 +4535,19 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot, m_pPlayer->GetID());
 #else
 		int iDangerValue = m_pPlayer->GetPlotDanger(*pPlot);
-#endif // AUI_DANGER_PLOTS_REMADE
 		if (iDangerValue == 0)
+#endif
 		{
 #ifdef AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
-			iDangerValue += AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER;
-#endif // AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER
+			if (iDangerValue < AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER)
+				iDangerValue = AUI_TRADE_SCORE_TRADE_ROUTE_BASE_DANGER;
+#endif
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_UNOWNED_TILE_EXTRA_DANGER
+			if (!pPlot->isOwned() || (pPlot->isWater() && !pPlot->isShallowWater()))
+			{
+				iDangerValue += AUI_TRADE_SCORE_TRADE_ROUTE_UNOWNED_TILE_EXTRA_DANGER;
+			}
+#endif
 			if (!pPlot->isVisible(m_pPlayer->getTeam()))
 			{
 				iDangerValue += 1;
@@ -4593,7 +4614,7 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 	dScore = (dScore * 10) / log((double)iDangerSum) * log(AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER);
 #else
 	dScore = (dScore * 10) / (double)iDangerSum;
-#endif // AUI_TRADE_SCORE_TRADE_ROUTE_DIVIDE_BY_LOG_TOTAL_DANGER
+#endif
 
 	return int(dScore + 0.5);
 #else
@@ -4632,7 +4653,7 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 	}
 
 	return iDistanceScore - iDangerSum;
-#endif // AUI_TRADE_SCORE_PRODUCTION_VALUE
+#endif
 }
 
 // sort player numbers
