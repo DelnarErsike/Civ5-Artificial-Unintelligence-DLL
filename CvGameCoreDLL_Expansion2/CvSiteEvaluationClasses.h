@@ -47,7 +47,7 @@ protected:
 	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
 #else
 	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer);
-#endif // #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+#endif
 	virtual int ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);

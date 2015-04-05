@@ -6995,7 +6995,7 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 	CvCity* pWorkingCity = getWorkingCity();
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
 	PlayerTypes eOwner = (PlayerTypes)m_eOwner;
-	if (eFutureOwner != NO_PLAYER && eOwner == NO_PLAYER)
+	if (eFutureOwner != NO_PLAYER)
 	{
 		eOwner = eFutureOwner;
 		pWorkingCity = GET_PLAYER(eFutureOwner).getCapitalCity();
