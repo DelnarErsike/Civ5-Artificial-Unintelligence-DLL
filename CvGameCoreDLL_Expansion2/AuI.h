@@ -321,8 +321,20 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_DANGER_PLOTS_FIX_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_IGNORE_ALL_NONWARRED
 /// When adding danger from a source, the attack strength of the source onto the plot is added instead of the base attack strength
 #define AUI_DANGER_PLOTS_ADD_DANGER_CONSIDER_TERRAIN_STRENGTH_MODIFICATION
-/// Counts air unit strength into danger (commented out for now)
-//#define AUI_DANGER_PLOTS_COUNT_AIR_UNITS
+
+// Deals Stuff
+/// Tweaked various ways that certain resources are valued when making deals
+#define AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+/// Tweaked the way cities are scored, eg. including the cities yields and better calculating the happiness change luxuries will bring
+#define AUI_DEALAI_TWEAKED_CITY_VALUE
+/// Altered the way Open Borders Agreements are scored in some cases
+#define AUI_DEALAI_TWEAKED_OPEN_BORDERS_VALUE
+/// Defensive pacts now consider the military value of the pact instead of just going by a binary system based on opinion
+#define AUI_DEALAI_TWEAKED_DEFENSIVE_PACT_VALUE
+/// Altered the way Research Agreements are scored in some cases
+#define AUI_DEALAI_TWEAKED_RESEARCH_AGREEMENT_VALUE
+/// Tweaked the way bribing a civ to go to war with another civ works
+#define AUI_DEALAI_TWEAKED_THIRDPARTY_WAR_VALUE
 
 // DiplomacyAI Stuff
 /// If the first adjusted value is out of bounds, keep rerolling with the amount with which it is out of bounds until we remain in bounds
@@ -345,6 +357,12 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// When adding an extra, random value to the score of whether to denounce a player, the AI will use the binomial RNG for a normal distribution instead of a flat one
 #define AUI_DIPLOMACY_GET_DENOUNCE_WEIGHT_USES_BINOM_RNG (5)
 #endif
+/// War damage to a player will increase that player's value demanded (instead of decreasing), since reparations need to be paid
+#define AUI_DIPLOMACY_WAR_DAMAGE_EFFECT_INVERTED
+/// If the AI's war goal is conquest, they will now accept peace treaties that force the other player to give them cities (thereby accelerating conquest)
+#define AUI_DIPLOMACY_FIXED_DO_PEACE_UPDATE_WILLINGNESS_MULTISTAGE_CONQUEST
+/// The minimum turn time before peace is accepted with humans scales with the game's speed
+#define AUI_DIPLOMACY_IS_WILLING_TO_MAKE_PEACE_WITH_HUMAN_SCALES_WITH_SPEED
 
 // EconomicAI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)

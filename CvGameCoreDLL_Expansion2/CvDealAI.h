@@ -34,9 +34,15 @@ public:
 	void Read(FDataStream& kStream);
 	void Write(FDataStream& kStream) const;
 
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+	CvPlayer* GetPlayer() const;
+
+	TeamTypes GetTeam() const;
+#else
 	CvPlayer* GetPlayer();
 
 	TeamTypes GetTeam();
+#endif
 
 	int GetDealPercentLeewayWithAI() const;
 	int GetDealPercentLeewayWithHuman() const;
@@ -59,13 +65,22 @@ public:
 	// What is something worth? - bUseEvenValue will see what the mean is between two AI players (us and eOtherPlayer) - will NOT work with a human involved
 
 	int GetDealValue(CvDeal* pDeal, int& iValueImOffering, int& iValueTheyreOffering, bool bUseEvenValue);
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+	int GetTradeItemValue(TradeableItems eItem, bool bFromMe, PlayerTypes eOtherPlayer, int iData1, int iData2, int iData3, bool bFlag1, int iDuration, bool bUseEvenValue, CvDeal* pInDeal);
+#else
 	int GetTradeItemValue(TradeableItems eItem, bool bFromMe, PlayerTypes eOtherPlayer, int iData1, int iData2, int iData3, bool bFlag1, int iDuration, bool bUseEvenValue);
+#endif
 
 	// Value of individual trade items - bUseEvenValue will see what the mean is between two AI players (us and eOtherPlayer) - will NOT work with a human involved
 
 	int GetGoldForForValueExchange(int iGoldOrValue, bool bNumGoldFromValue, bool bFromMe, PlayerTypes eOtherPlayer, bool bUseEvenValue, bool bRoundUp);
 	int GetGPTforForValueExchange(int iGPTorValue, bool bNumGPTFromValue, int iNumTurns, bool bFromMe, PlayerTypes eOtherPlayer, bool bUseEvenValue, bool bRoundUp);
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+	int GetResourceValue(ResourceTypes eResource, int iResourceQuantity, int iNumTurns, bool bFromMe, PlayerTypes eOtherPlayer, CvDeal* pInDeal);
+	void GetDealHappinessValues(CvDeal* pDeal, int* piOurHappinessGain, int* piTheirHappinessGain, int* piOurLuxuriesRemaining = NULL, int* piTheirLuxuriesRemaining = NULL) const;
+#else
 	int GetResourceValue(ResourceTypes eResource, int iResourceQuantity, int iNumTurns, bool bFromMe, PlayerTypes eOtherPlayer);
+#endif
 	int GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlayer, bool bUseEvenValue);
 	int GetEmbassyValue(bool bFromMe, PlayerTypes eOtherPlayer, bool bUseEvenValue);
 	int GetOpenBordersValue(bool bFromMe, PlayerTypes eOtherPlayer, bool bUseEvenValue);
@@ -74,7 +89,11 @@ public:
 	int GetTradeAgreementValue(bool bFromMe, PlayerTypes eOtherPlayer, bool bUseEvenValue);
 	int GetPeaceTreatyValue(PlayerTypes eOtherPlayer);
 	int GetThirdPartyPeaceValue(bool bFromMe, PlayerTypes eOtherPlayer, TeamTypes eWithTeam);
+#ifdef AUI_DEALAI_TWEAKED_THIRDPARTY_WAR_VALUE
+	int GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, TeamTypes eWithTeam, bool bCountDefensivePacts = true);
+#else
 	int GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, TeamTypes eWithTeam);
+#endif
 	int GetVoteCommitmentValue(bool bFromMe, PlayerTypes eOtherPlayer, int iProposalID, int iVoteChoice, int iNumVotes, bool bRepeal, bool bUseEvenValue);
 
 	// Potential items an AI can try to add to a deal to even it out - bUseEvenValue will see what the mean is between two AI players (us and eOtherPlayer) - will NOT work with a human involved

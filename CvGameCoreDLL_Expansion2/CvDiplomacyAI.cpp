@@ -5138,14 +5138,66 @@ void CvDiplomacyAI::DoUpdatePeaceTreatyWillingness()
 					}
 				}
 
+#ifdef AUI_DIPLOMACY_WAR_DAMAGE_EFFECT_INVERTED
+				int iWarDamageScore = -GC.getPEACE_WILLINGNESS_OFFER_WAR_DAMAGE_MINOR();
+				// How much damage have we taken? (and they must pay reparations for)
+				switch (GetWarDamageLevel(eLoopPlayer))
+				{
+				case WAR_DAMAGE_LEVEL_NONE:
+					iWarDamageScore -= /*0*/ GC.getPEACE_WILLINGNESS_OFFER_WAR_DAMAGE_NONE();
+					break;
+				case WAR_DAMAGE_LEVEL_MINOR:
+					iWarDamageScore -= /*10*/ GC.getPEACE_WILLINGNESS_OFFER_WAR_DAMAGE_MINOR();
+					break;
+				case WAR_DAMAGE_LEVEL_MAJOR:
+					iWarDamageScore -= /*20*/ GC.getPEACE_WILLINGNESS_OFFER_WAR_DAMAGE_MAJOR();
+					break;
+				case WAR_DAMAGE_LEVEL_SERIOUS:
+					iWarDamageScore -= /*50*/ GC.getPEACE_WILLINGNESS_OFFER_WAR_DAMAGE_SERIOUS();
+					break;
+				case WAR_DAMAGE_LEVEL_CRIPPLED:
+					iWarDamageScore = /*80*/ -GC.getPEACE_WILLINGNESS_OFFER_WAR_DAMAGE_CRIPPLED();
+					break;
+				default:
+					break;
+				}
+
+				// How much damage have we dished out? (and we may need to pay reparations for)
+				switch (GET_PLAYER(eLoopPlayer).GetDiplomacyAI()->GetWarDamageLevel(GetPlayer()->GetID()))
+				{
+				case WAR_DAMAGE_LEVEL_NONE:
+					iWarDamageScore += /*0*/ GC.getPEACE_WILLINGNESS_OFFER_WAR_DAMAGE_NONE();
+					break;
+				case WAR_DAMAGE_LEVEL_MINOR:
+					iWarDamageScore += /*10*/ GC.getPEACE_WILLINGNESS_OFFER_WAR_DAMAGE_MINOR();
+					break;
+				case WAR_DAMAGE_LEVEL_MAJOR:
+					iWarDamageScore += /*20*/ GC.getPEACE_WILLINGNESS_OFFER_WAR_DAMAGE_MAJOR();
+					break;
+				case WAR_DAMAGE_LEVEL_SERIOUS:
+					iWarDamageScore += /*50*/ GC.getPEACE_WILLINGNESS_OFFER_WAR_DAMAGE_SERIOUS();
+					break;
+				case WAR_DAMAGE_LEVEL_CRIPPLED:
+					iWarDamageScore += /*80*/ GC.getPEACE_WILLINGNESS_OFFER_WAR_DAMAGE_CRIPPLED();
+					break;
+				default:
+					break;
+				}
+#endif
+
 				// If we're out for conquest then no peace!
+#ifndef AUI_DIPLOMACY_FIXED_DO_PEACE_UPDATE_WILLINGNESS_MULTISTAGE_CONQUEST
 				if(GetWarGoal(eLoopPlayer) != WAR_GOAL_CONQUEST)
+#endif
 				{
 					eWarProjection = GetWarProjection(eLoopPlayer);
 
 					// What we're willing to give up.  The higher the number the more we're willing to part with
 
 //					if (IsWantsPeaceWithPlayer(eLoopPlayer))
+#ifdef AUI_DIPLOMACY_FIXED_DO_PEACE_UPDATE_WILLINGNESS_MULTISTAGE_CONQUEST
+					if (GetWarGoal(eLoopPlayer) != WAR_GOAL_CONQUEST)
+#endif
 					{
 						// How is the war going?
 						switch(eWarProjection)
@@ -5172,6 +5224,9 @@ void CvDiplomacyAI::DoUpdatePeaceTreatyWillingness()
 							break;
 						}
 
+#ifdef AUI_DIPLOMACY_WAR_DAMAGE_EFFECT_INVERTED
+						iWillingToOfferScore += iWarDamageScore;
+#else
 						// How much damage have we taken?
 						switch(GetWarDamageLevel(eLoopPlayer))
 						{
@@ -5215,6 +5270,7 @@ void CvDiplomacyAI::DoUpdatePeaceTreatyWillingness()
 						default:
 							break;
 						}
+#endif
 
 						// Do the final assessment
 						if(iWillingToOfferScore >= /*180*/ GC.getPEACE_WILLINGNESS_OFFER_THRESHOLD_UN_SURRENDER())
@@ -5293,6 +5349,20 @@ void CvDiplomacyAI::DoUpdatePeaceTreatyWillingness()
 						break;
 					}
 
+#ifdef AUI_DIPLOMACY_WAR_DAMAGE_EFFECT_INVERTED
+					// Reparations need to be paid!
+					iWillingToAcceptScore += iWarDamageScore;
+#endif
+#ifdef AUI_DIPLOMACY_FIXED_DO_PEACE_UPDATE_WILLINGNESS_MULTISTAGE_CONQUEST
+					// Only capitulation and unconditional surrender are accepted
+					if (GetWarGoal(eLoopPlayer) == WAR_GOAL_CONQUEST)
+					{
+						if (iWillingToAcceptScore < GC.getPEACE_WILLINGNESS_ACCEPT_THRESHOLD_SURRENDER())
+							iWillingToAcceptScore = GC.getPEACE_WILLINGNESS_ACCEPT_THRESHOLD_SURRENDER();
+						iWillingToAcceptScore *= 2;
+					}
+#endif
+
 					// Do the final assessment
 					if(iWillingToAcceptScore >= /*150*/ GC.getPEACE_WILLINGNESS_ACCEPT_THRESHOLD_UN_SURRENDER())
 						eTreatyWillingToAccept = PEACE_TREATY_UNCONDITIONAL_SURRENDER;
@@ -5333,7 +5403,11 @@ bool CvDiplomacyAI::IsWillingToMakePeaceWithHuman(PlayerTypes ePlayer)
 	CvPlayer& kHumanPlayer = GET_PLAYER(ePlayer);
 	if (kHumanPlayer.isHuman())
 	{
+#ifdef AUI_DIPLOMACY_IS_WILLING_TO_MAKE_PEACE_WITH_HUMAN_SCALES_WITH_SPEED
+		bool bWillMakePeace = GetPlayerNumTurnsAtWar(ePlayer) >= 5 * GC.getGame().getEstimateEndTurn() / 500;
+#else
 		bool bWillMakePeace = GetPlayerNumTurnsAtWar(ePlayer) >= 5;
+#endif
 
 		if(!GET_TEAM(m_pPlayer->getTeam()).canChangeWarPeace(kHumanPlayer.getTeam()))
 		{

@@ -19,6 +19,10 @@
 // must be included after all other headers
 #include "LintFree.h"
 
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+#include "CvMilitaryAI.h"
+#endif
+
 //======================================================================================================
 //					CvDealAI
 //======================================================================================================
@@ -68,13 +72,21 @@ void CvDealAI::Write(FDataStream& kStream) const
 }
 
 /// Returns the Player object this DealAI is associated with
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+CvPlayer* CvDealAI::GetPlayer() const
+#else
 CvPlayer* CvDealAI::GetPlayer()
+#endif
 {
 	return m_pPlayer;
 }
 
 // Helper function which returns this player's TeamType
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+TeamTypes CvDealAI::GetTeam() const
+#else
 TeamTypes CvDealAI::GetTeam()
+#endif
 {
 	return m_pPlayer->getTeam();
 }
@@ -812,7 +824,11 @@ int CvDealAI::GetDealValue(CvDeal* pDeal, int& iValueImOffering, int& iValueThey
 		// Multiplier is -1 if we're giving something away, 1 if we're receiving something
 		int iValueMultiplier = bFromMe ? -1 : 1;
 
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+		iItemValue = GetTradeItemValue(it->m_eItemType, bFromMe, eOtherPlayer, it->m_iData1, it->m_iData2, it->m_iData3, it->m_bFlag1, it->m_iDuration, bUseEvenValue, pDeal);
+#else
 		iItemValue = GetTradeItemValue(it->m_eItemType, bFromMe, eOtherPlayer, it->m_iData1, it->m_iData2, it->m_iData3, it->m_bFlag1, it->m_iDuration, bUseEvenValue);
+#endif
 
 		iItemValue *= iValueMultiplier;
 		iDealValue += iItemValue;
@@ -832,7 +848,11 @@ int CvDealAI::GetDealValue(CvDeal* pDeal, int& iValueImOffering, int& iValueThey
 }
 
 /// What is a particular item worth?
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+int CvDealAI::GetTradeItemValue(TradeableItems eItem, bool bFromMe, PlayerTypes eOtherPlayer, int iData1, int iData2, int iData3, bool bFlag1, int iDuration, bool bUseEvenValue, CvDeal* pInDeal)
+#else
 int CvDealAI::GetTradeItemValue(TradeableItems eItem, bool bFromMe, PlayerTypes eOtherPlayer, int iData1, int iData2, int iData3, bool bFlag1, int iDuration, bool bUseEvenValue)
+#endif
 {
 	CvAssert(eOtherPlayer >= 0);
 	CvAssert(eOtherPlayer < MAX_MAJOR_CIVS);
@@ -846,7 +866,11 @@ int CvDealAI::GetTradeItemValue(TradeableItems eItem, bool bFromMe, PlayerTypes 
 	else if(eItem == TRADE_ITEM_GOLD_PER_TURN)
 		iItemValue = GetGPTforForValueExchange(/*Gold Per Turn Amount*/ iData1, /*bNumGPTFromValue*/ false, iDuration, bFromMe, eOtherPlayer, bUseEvenValue, /*bRoundUp*/ false);
 	else if(eItem == TRADE_ITEM_RESOURCES)
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+		iItemValue = GetResourceValue(/*ResourceType*/ (ResourceTypes) iData1, /*Quantity*/ iData2, iDuration, bFromMe, eOtherPlayer, pInDeal);
+#else
 		iItemValue = GetResourceValue(/*ResourceType*/ (ResourceTypes) iData1, /*Quantity*/ iData2, iDuration, bFromMe, eOtherPlayer);
+#endif
 	else if(eItem == TRADE_ITEM_CITIES)
 		iItemValue = GetCityValue(/*iX*/ iData1, /*iY*/ iData2, bFromMe, eOtherPlayer, bUseEvenValue);
 	else if(eItem == TRADE_ITEM_ALLOW_EMBASSY)
@@ -1163,7 +1187,11 @@ int CvDealAI::GetGPTforForValueExchange(int iGPTorValue, bool bNumGPTFromValue, 
 }
 
 /// How much is a Resource worth?
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, int iNumTurns, bool bFromMe, PlayerTypes eOtherPlayer, CvDeal* pInDeal)
+#else
 int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, int iNumTurns, bool bFromMe, PlayerTypes eOtherPlayer)
+#endif
 {
 	CvAssertMsg(GetPlayer()->GetID() != eOtherPlayer, "DEAL_AI: Trying to check value of a Resource with oneself.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 
@@ -1174,11 +1202,242 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 	if (pkResourceInfo == NULL)
 		return 0;
 
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+	CvPlayer* pOtherPlayer = NULL;
+	if (eOtherPlayer != NO_PLAYER)
+	{
+		pOtherPlayer = &GET_PLAYER(eOtherPlayer);
+		if (!pOtherPlayer)
+			return 0;
+	}
+	CvCity* pLoopCity = NULL;
+	int iLoop;
+	if (bFromMe)
+	{
+		for (pLoopCity = pOtherPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = pOtherPlayer->nextCity(&iLoop))
+		{
+			if (pLoopCity->GetWeLoveTheKingDayCounter() <= 0 && pLoopCity->GetResourceDemanded() == eResource)
+			{
+				iItemValue++;
+			}
+		}
+	}
+	else
+	{
+		for (pLoopCity = GetPlayer()->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = GetPlayer()->nextCity(&iLoop))
+		{
+			if (pLoopCity->GetWeLoveTheKingDayCounter() <= 0 && pLoopCity->GetResourceDemanded() == eResource)
+			{
+				iItemValue++;
+			}
+		}
+	}
+	int iTheirHappinessGain = 0;
+	int iOurHappinessGain = 0;
+	int iTheirLuxuryResourceCount = 0;
+	int iOurLuxuryResourceCount = 0;
+	GetDealHappinessValues(pInDeal, &iOurHappinessGain, &iTheirHappinessGain, &iOurLuxuryResourceCount, &iTheirLuxuryResourceCount);
+	int iTheirOriginalHappinessGain = iTheirHappinessGain;
+	int iOurOriginalHappinessGain = iOurHappinessGain;
+#endif
+
 	ResourceUsageTypes eUsage = pkResourceInfo->getResourceUsage();
 
 	// Luxury Resource
 	if(eUsage == RESOURCEUSAGE_LUXURY)
 	{
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+		// More happiness gets less useful at higher levels of existing happiness
+		double dOurHappinessDampener = 2.0 / (1.0 + exp((double)GetPlayer()->GetExcessHappiness() / GC.getSUPER_UNHAPPY_THRESHOLD()));
+		double dTheirHappinessDampener = 2.0 / (1.0 + exp((double)pOtherPlayer->GetExcessHappiness() / GC.getSUPER_UNHAPPY_THRESHOLD()));
+		// Commerce is not checked for extra luxury thing because it's always the last policy in the tree
+		PolicyBranchTypes ePatronageBranch = (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_PATRONAGE", true /*bHideAssert*/);
+		int iTheirPatronagePolicies = 1;
+		if (ePatronageBranch != NO_POLICY_BRANCH_TYPE)
+		{
+			iTheirPatronagePolicies = pOtherPlayer->GetPlayerPolicies()->GetNumPoliciesOwnedInBranch(ePatronageBranch);
+			// From here on, iTheirPatronagePolicies will be used as a happiness divider
+			if (iTheirPatronagePolicies > 5)
+				// If there are 6 or more policies, the luxury booster will always be unlocked
+				iTheirPatronagePolicies = 1;
+			else
+				// If there are 4 or 5 policies, there are always 2 possible policy allocations, one of which has the luxury booster and one that doesn't; the average is 1/2
+				iTheirPatronagePolicies = 2;
+		}
+		if (!GC.getGame().GetGameLeagues()->IsLuxuryHappinessBanned(GetPlayer()->GetID(), eResource))
+		{
+			int iBaseHappiness = pkResourceInfo->getHappiness();
+			if (bFromMe)
+			{
+				if (pOtherPlayer->getNumResourceAvailable(eResource) == 0)
+				{
+					if (pOtherPlayer->IsMinorResourceBonus() && pOtherPlayer->getResourceFromMinors(eResource) > 0)
+						iTheirHappinessGain += ((100 + (/*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER() - 100) / iTheirPatronagePolicies) * iBaseHappiness) / 100;
+					else
+						iTheirHappinessGain += iBaseHappiness;
+					iTheirHappinessGain += pOtherPlayer->GetExtraHappinessPerLuxury();
+					if (iTheirLuxuryResourceCount > 0)
+						iTheirHappinessGain += GC.getHAPPINESS_PER_EXTRA_LUXURY();
+				}
+				if (GetPlayer()->getNumResourceAvailable(eResource) == 1)
+				{
+					int iHappinessRetention = GetPlayer()->GetPlayerTraits()->GetLuxuryHappinessRetention();
+					if (iHappinessRetention > 0)
+					{
+						iOurHappinessGain -= (iBaseHappiness - (iBaseHappiness * iHappinessRetention) / 100);
+					}
+					else
+					{
+						if (GetPlayer()->IsMinorResourceBonus() && GetPlayer()->getResourceFromMinors(eResource) > 0)
+							iOurHappinessGain -= (/*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER() * iBaseHappiness) / 100;
+						else
+							iOurHappinessGain -= iBaseHappiness;
+						iOurHappinessGain -= GetPlayer()->GetExtraHappinessPerLuxury();
+						if (iOurLuxuryResourceCount > 1)
+							iOurHappinessGain -= GC.getHAPPINESS_PER_EXTRA_LUXURY();
+					}
+				}
+			}
+			else
+			{
+				if (GetPlayer()->getNumResourceAvailable(eResource) == 0)
+				{
+					if (GetPlayer()->IsMinorResourceBonus() && GetPlayer()->getResourceFromMinors(eResource) > 0)
+						iOurHappinessGain += (/*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER() * iBaseHappiness) / 100;
+					else
+						iOurHappinessGain += iBaseHappiness;
+					iOurHappinessGain += GetPlayer()->GetExtraHappinessPerLuxury();
+					if (iOurLuxuryResourceCount > 0)
+						iOurHappinessGain += GC.getHAPPINESS_PER_EXTRA_LUXURY();
+				}
+				if (pOtherPlayer->getNumResourceAvailable(eResource) == 1)
+				{
+					int iHappinessRetention = pOtherPlayer->GetPlayerTraits()->GetLuxuryHappinessRetention();
+					if (iHappinessRetention > 0)
+					{
+						iTheirHappinessGain -= (iBaseHappiness - (iBaseHappiness * iHappinessRetention) / 100);
+					}
+					else
+					{
+						if (pOtherPlayer->IsMinorResourceBonus() && pOtherPlayer->getResourceFromMinors(eResource) > 0)
+							iTheirHappinessGain -= ((100 + (/*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER() - 100) / iTheirPatronagePolicies) * iBaseHappiness) / 100;
+						else
+							iTheirHappinessGain -= iBaseHappiness;
+						iTheirHappinessGain -= pOtherPlayer->GetExtraHappinessPerLuxury();
+						if (iTheirLuxuryResourceCount > 1)
+							iTheirHappinessGain -= GC.getHAPPINESS_PER_EXTRA_LUXURY();
+					}
+				}
+			}
+			// If we're gaining happiness and we're on favorable terms with the other player, we can accept it if they get more happiness out of the deal than we do
+			if (iOurHappinessGain - iOurOriginalHappinessGain > 0 && GetPlayer()->GetDiplomacyAI()->GetMajorCivOpinion(eOtherPlayer) > MAJOR_CIV_OPINION_NEUTRAL)
+			{
+				dTheirHappinessDampener *= MAJOR_CIV_OPINION_NEUTRAL;
+				dTheirHappinessDampener /= GetPlayer()->GetDiplomacyAI()->GetMajorCivOpinion(eOtherPlayer);
+			}
+			int iHappinessValueGained = int(iOurHappinessGain * dOurHappinessDampener - iTheirHappinessGain * dTheirHappinessDampener 
+				- (iOurOriginalHappinessGain * dOurHappinessDampener - iTheirOriginalHappinessGain * dTheirHappinessDampener) + 0.5);
+			if (bFromMe)
+				iHappinessValueGained = -iHappinessValueGained;
+
+			iItemValue += iResourceQuantity * iHappinessValueGained * iNumTurns * 2;	// Ex: 1 Silk for 4 Happiness * 30 turns * 2 = 240
+		}
+	}
+	// Strategic Resource
+	else if(eUsage == RESOURCEUSAGE_STRATEGIC)
+	{
+		if (bFromMe)
+		{
+			if (GET_TEAM(pOtherPlayer->getTeam()).IsResourceObsolete(eResource))
+			{
+				iItemValue = 0;
+			}
+			else
+			{
+				int iResourcesUsedByBuildings = 0;
+				for (int iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
+				{
+					const BuildingTypes eLoopBuilding = static_cast<BuildingTypes>(iBldgLoop);
+					CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eLoopBuilding);
+					if (pkBuildingInfo && pkBuildingInfo->GetResourceQuantityRequirement(eResource) > 0 && pOtherPlayer->canConstruct(eLoopBuilding, false, true))
+					{
+						BuildingClassTypes eBuildingClassInfo = (BuildingClassTypes)pkBuildingInfo->GetBuildingClassType();
+						CvBuildingClassInfo* pkBuildingClassInfo = GC.getBuildingClassInfo(eBuildingClassInfo);
+						if (pkBuildingClassInfo)
+						{
+							const int iMaxBuildingInstances = pkBuildingClassInfo->getMaxPlayerInstances() + pkBuildingClassInfo->getExtraPlayerInstances();
+							int iCurBuildingCount = pOtherPlayer->getBuildingClassCount(eBuildingClassInfo);
+							for (pLoopCity = pOtherPlayer->firstCity(&iLoop); pLoopCity != NULL && iCurBuildingCount < iMaxBuildingInstances; pLoopCity = pOtherPlayer->nextCity(&iLoop))
+							{
+								if (pLoopCity->canConstruct(eLoopBuilding, false, true))
+								{
+									iResourcesUsedByBuildings += pkBuildingInfo->GetResourceQuantityRequirement(eResource);
+									iCurBuildingCount++;
+								}
+							}
+						}
+					}
+				}
+				if (pOtherPlayer->getNumResourceAvailable(eResource) <= 1 && pOtherPlayer->GetMilitaryAI()->GetNumberCivsAtWarWith() > 0)
+				{
+					if (pOtherPlayer->GetMilitaryAI()->GetLandDefenseState() > DEFENSE_STATE_NEUTRAL)
+					{
+						iResourceQuantity = int(iResourceQuantity * pow(2.0, double(MAJOR_CIV_OPINION_NEUTRAL - GetPlayer()->GetDiplomacyAI()->GetMajorCivOpinion(eOtherPlayer)) / 3.0) + 0.5);
+					}
+				}
+				if (iResourcesUsedByBuildings > pOtherPlayer->getNumResourceAvailable(eResource))
+				{
+					iResourceQuantity *= 2 - (pOtherPlayer->getNumResourceAvailable(eResource) + GetPlayer()->GetDiplomacyAI()->GetMajorCivOpinion(eOtherPlayer)) / (iResourcesUsedByBuildings + MAJOR_CIV_OPINION_NEUTRAL);
+				}
+				iItemValue += (iResourceQuantity * iNumTurns * 150 / 100);	// Ex: 5 Iron for 30 turns * 2 = value of 300
+			}
+		}
+		else
+		{
+			if (GET_TEAM(GetPlayer()->getTeam()).IsResourceObsolete(eResource))
+			{
+				iItemValue = 0;
+			}
+			else
+			{
+				iResourceQuantity = FASTMIN(FASTMAX((int)NUM_DIRECTION_TYPES, GetPlayer()->getNumCities()), iResourceQuantity);
+				int iResourcesUsedByBuildings = 0;
+				for (int iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
+				{
+					const BuildingTypes eLoopBuilding = static_cast<BuildingTypes>(iBldgLoop);
+					CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eLoopBuilding);
+					if (pkBuildingInfo && pkBuildingInfo->GetResourceQuantityRequirement(eResource) > 0 && GetPlayer()->canConstruct(eLoopBuilding, false, true))
+					{
+						BuildingClassTypes eBuildingClassInfo = (BuildingClassTypes)pkBuildingInfo->GetBuildingClassType();
+						CvBuildingClassInfo* pkBuildingClassInfo = GC.getBuildingClassInfo(eBuildingClassInfo);
+						if (pkBuildingClassInfo)
+						{
+							const int iMaxBuildingInstances = pkBuildingClassInfo->getMaxPlayerInstances() + pkBuildingClassInfo->getExtraPlayerInstances();
+							int iCurBuildingCount = pOtherPlayer->getBuildingClassCount(eBuildingClassInfo);
+							for (pLoopCity = GetPlayer()->firstCity(&iLoop); pLoopCity != NULL && iCurBuildingCount < iMaxBuildingInstances; pLoopCity = GetPlayer()->nextCity(&iLoop))
+							{
+								if (pLoopCity->canConstruct(eLoopBuilding, false, true))
+								{
+									iResourcesUsedByBuildings += pkBuildingInfo->GetResourceQuantityRequirement(eResource);
+									iCurBuildingCount++;
+								}
+							}
+						}
+					}
+				}
+				DefenseState eMyDefenseState = GetPlayer()->GetMilitaryAI()->GetLandDefenseState();
+				if ((eMyDefenseState < DEFENSE_STATE_NEUTRAL) || (GetPlayer()->getNumResourceAvailable(eResource) <= 1 && eMyDefenseState > DEFENSE_STATE_NEUTRAL))
+				{
+					iResourceQuantity = int(iResourceQuantity * pow(2.0, double(eMyDefenseState - DEFENSE_STATE_NEUTRAL)) + 0.5);
+				}
+				if (iResourcesUsedByBuildings > pOtherPlayer->getNumResourceAvailable(eResource))
+				{
+					iResourceQuantity *= 2 - (pOtherPlayer->getNumResourceAvailable(eResource) + 3) / (iResourcesUsedByBuildings + 3);
+				}
+				iItemValue += (iResourceQuantity * iNumTurns * 150 / 100);	// Ex: 5 Iron for 30 turns * 2 = value of 300
+			}
+		}
+#else
 		if (GC.getGame().GetGameLeagues()->IsLuxuryHappinessBanned(GetPlayer()->GetID(), eResource))
 		{
 			iItemValue = 0;
@@ -1226,6 +1485,7 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 		{
 			iItemValue = 0;
 		}
+#endif
 	}
 
 	// Increase value if it's from us and we don't like the guy
@@ -1294,6 +1554,159 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 	return iItemValue;
 }
 
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+/// How much happiness is gained (or lost) for each side if the deal is finalized?
+void CvDealAI::GetDealHappinessValues(CvDeal* pDeal, int* piOurHappinessGain, int* piTheirHappinessGain, int* piOurLuxuriesRemaining, int* piTheirLuxuriesRemaining) const
+{
+	if (!pDeal)
+		return;
+	PlayerTypes eMyPlayer = GetPlayer()->GetID();
+	PlayerTypes eOtherPlayer = pDeal->m_eFromPlayer == eMyPlayer ? pDeal->m_eToPlayer : pDeal->m_eFromPlayer;
+	CvPlayer* pOtherPlayer = NULL;
+	if (eOtherPlayer != NO_PLAYER)
+	{
+		pOtherPlayer = &GET_PLAYER(eOtherPlayer);
+		if (!pOtherPlayer)
+			return;
+	}
+
+	int iOurLuxuryResourceCount = 0;
+	int iTheirLuxuryResourceCount = 0;
+	ResourceTypes eResource;
+	for (int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+	{
+		eResource = (ResourceTypes)iResourceLoop;
+		
+		if (GetPlayer()->GetHappinessFromLuxury(eResource) > 0)
+		{
+			iOurLuxuryResourceCount++;
+		}
+		if (pOtherPlayer->GetHappinessFromLuxury(eResource) > 0)
+		{
+			iTheirLuxuryResourceCount++;
+		}
+	}
+
+	// Commerce is not checked for extra luxury thing because it's always the last policy in the tree
+	PolicyBranchTypes ePatronageBranch = (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_PATRONAGE", true /*bHideAssert*/);
+	int iTheirPatronagePolicies = 1;
+	if (ePatronageBranch != NO_POLICY_BRANCH_TYPE)
+	{
+		iTheirPatronagePolicies = pOtherPlayer->GetPlayerPolicies()->GetNumPoliciesOwnedInBranch(ePatronageBranch);
+		// From here on, iTheirPatronagePolicies will be used as a happiness divider
+		if (iTheirPatronagePolicies > 5)
+			// If there are 6 or more policies, the luxury booster will always be unlocked
+			iTheirPatronagePolicies = 1;
+		else
+			// If there are 4 or 5 policies, there are always 2 possible policy allocations, one of which has the luxury booster and one that doesn't; the average is 1/2
+			iTheirPatronagePolicies = 2;
+	}
+
+	int iTempOurHappinessGain = 0;
+	int iTempTheirHappinessGain = 0;
+	for (TradedItemList::iterator it = pDeal->m_TradedItems.begin(); it != pDeal->m_TradedItems.end(); ++it)
+	{
+		if (it->m_eItemType != TRADE_ITEM_RESOURCES)
+			continue;
+
+		ResourceTypes eResource = (ResourceTypes)it->m_iData1;
+		const CvResourceInfo* pkResourceInfo = GC.getResourceInfo(eResource);
+		CvAssert(pkResourceInfo != NULL);
+		if (pkResourceInfo == NULL)
+			continue;
+		ResourceUsageTypes eUsage = pkResourceInfo->getResourceUsage();
+		if (eUsage != RESOURCEUSAGE_LUXURY || GC.getGame().GetGameLeagues()->IsLuxuryHappinessBanned(eMyPlayer, eResource))
+			continue;
+
+		iTempOurHappinessGain = 0;
+		iTempTheirHappinessGain = 0;
+		int iBaseHappiness = pkResourceInfo->getHappiness();
+		if (eMyPlayer == it->m_eFromPlayer)
+		{
+			if (pOtherPlayer->getNumResourceAvailable(eResource) == 0)
+			{
+				iTempTheirHappinessGain = iBaseHappiness;
+				if (pOtherPlayer->IsMinorResourceBonus() && pOtherPlayer->getResourceFromMinors(eResource) > 0)
+				{
+					iTempTheirHappinessGain *= 100 + (/*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER() - 100) / iTheirPatronagePolicies;
+					iTempTheirHappinessGain /= 100;
+				}
+				iTempTheirHappinessGain += pOtherPlayer->GetExtraHappinessPerLuxury();
+				if (iTheirLuxuryResourceCount > 0)
+				{
+					iTempTheirHappinessGain += GC.getHAPPINESS_PER_EXTRA_LUXURY();
+				}
+			}
+			if (GetPlayer()->getNumResourceAvailable(eResource) == 1)
+			{
+				iOurLuxuryResourceCount--;
+				iTempOurHappinessGain = -iBaseHappiness;
+				int iHappinessRetention = GetPlayer()->GetPlayerTraits()->GetLuxuryHappinessRetention();
+				if (iHappinessRetention > 0)
+				{
+					iTempOurHappinessGain += (iBaseHappiness * iHappinessRetention) / 100;
+				}
+				else
+				{
+					if (GetPlayer()->IsMinorResourceBonus() && GetPlayer()->getResourceFromMinors(eResource) > 0)
+					{
+						iTempOurHappinessGain *= /*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER();
+						iTempOurHappinessGain /= 100 * iTheirPatronagePolicies;
+					}
+					iTempOurHappinessGain -= GetPlayer()->GetExtraHappinessPerLuxury();
+					if (iOurLuxuryResourceCount > 0)
+						iTempOurHappinessGain -= GC.getHAPPINESS_PER_EXTRA_LUXURY();
+				}
+			}
+		}
+		else
+		{
+			if (GetPlayer()->getNumResourceAvailable(eResource) == 0)
+			{
+				iTempOurHappinessGain = iBaseHappiness;
+				if (GetPlayer()->IsMinorResourceBonus() && GetPlayer()->getResourceFromMinors(eResource) > 0)
+				{
+					iTempOurHappinessGain *= /*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER();
+					iTempOurHappinessGain /= 100 * iTheirPatronagePolicies;
+				}
+				iTempOurHappinessGain += GetPlayer()->GetExtraHappinessPerLuxury();
+				if (iOurLuxuryResourceCount > 0)
+				{
+					iTempOurHappinessGain += GC.getHAPPINESS_PER_EXTRA_LUXURY();
+				}
+			}
+			if (pOtherPlayer->getNumResourceAvailable(eResource) == 1)
+			{
+				iTheirLuxuryResourceCount--;
+				iTempTheirHappinessGain = -iBaseHappiness;
+				int iHappinessRetention = pOtherPlayer->GetPlayerTraits()->GetLuxuryHappinessRetention();
+				if (iHappinessRetention > 0)
+				{
+					iTempTheirHappinessGain += (iBaseHappiness * iHappinessRetention) / 100;
+				}
+				else
+				{
+					if (pOtherPlayer->IsMinorResourceBonus() && pOtherPlayer->getResourceFromMinors(eResource) > 0)
+					{
+						iTempTheirHappinessGain *= 100 + (/*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER() - 100) / iTheirPatronagePolicies;
+						iTempTheirHappinessGain /= 100;
+					}
+					iTempTheirHappinessGain -= GetPlayer()->GetExtraHappinessPerLuxury();
+					if (iTheirLuxuryResourceCount > 0)
+						iTempTheirHappinessGain -= GC.getHAPPINESS_PER_EXTRA_LUXURY();
+				}
+			}
+		}
+		*piOurHappinessGain += iTempOurHappinessGain;
+		*piTheirHappinessGain += iTempTheirHappinessGain;
+	}
+	if (piOurLuxuriesRemaining)
+		*piOurLuxuriesRemaining = iOurLuxuryResourceCount;
+	if (piTheirLuxuriesRemaining)
+		*piTheirLuxuriesRemaining = iTheirLuxuryResourceCount;
+}
+#endif
+
 /// How much is a City worth?
 int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlayer, bool bUseEvenValue)
 {
@@ -1302,6 +1715,45 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 	int iItemValue = 0;
 
 	CvCity* pCity = GC.getMap().plot(iX, iY)->getPlotCity();
+#ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
+	CvPlayer* pOtherPlayer = &GET_PLAYER(eOtherPlayer);
+	if (!pOtherPlayer)
+		return 0;
+
+	int iTheirHappinessGain = 0;
+	int iOurHappinessGain = 0;
+	int iOurLuxuryResourceCount = 0;
+	int iTheirLuxuryResourceCount = 0;
+	ResourceTypes eResource;
+	for (int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+	{
+		eResource = (ResourceTypes)iResourceLoop;
+
+		if (GetPlayer()->GetHappinessFromLuxury(eResource) > 0)
+		{
+			iOurLuxuryResourceCount++;
+		}
+		if (pOtherPlayer->GetHappinessFromLuxury(eResource) > 0)
+		{
+			iTheirLuxuryResourceCount++;
+		}
+	}
+
+	// Commerce is not checked for extra luxury thing because it's always the last policy in the tree
+	PolicyBranchTypes ePatronageBranch = (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_PATRONAGE", true /*bHideAssert*/);
+	int iTheirPatronagePolicies = 1;
+	if (ePatronageBranch != NO_POLICY_BRANCH_TYPE)
+	{
+		iTheirPatronagePolicies = pOtherPlayer->GetPlayerPolicies()->GetNumPoliciesOwnedInBranch(ePatronageBranch);
+		// From here on, iTheirPatronagePolicies will be used as a happiness divider
+		if (iTheirPatronagePolicies > 5)
+			// If there are 6 or more policies, the luxury booster will always be unlocked
+			iTheirPatronagePolicies = 1;
+		else
+			// If there are 4 or 5 policies, there are always 2 possible policy allocations, one of which has the luxury booster and one that doesn't; the average is 1/2
+			iTheirPatronagePolicies = 2;
+	}
+#endif
 
 	if(pCity != NULL)
 	{
@@ -1311,6 +1763,12 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 		// okay, I'm only going to count in the 3-rings plots since we can't actually use any others (I realize there may be a resource way out there)
 
 		int goldPerPlot = GetPlayer()->GetBuyPlotCost(); // this is how much ANY plot is worth to me right now
+#ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
+		if (bFromMe)
+			goldPerPlot = pOtherPlayer->GetBuyPlotCost(); // use other player's thingy for this
+		int iNumTurns = FASTMIN(1, GC.getGame().getEstimateEndTurn() - GC.getGame().getGameTurn());
+		iNumTurns = FASTMAX(GC.getGame().getEstimateEndTurn() * 120 / 500, iNumTurns); // let's not go hog wild here
+#endif
 
 		int iGoldValueOfPlots = 0;
 		int iGoldValueOfImprovedPlots = 0;
@@ -1320,14 +1778,29 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 			CvPlot* pLoopPlot = pCity->GetCityCitizens()->GetCityPlotFromIndex(iI);
 			if(NULL != pLoopPlot && pCity->GetID() == pLoopPlot->GetCityPurchaseID())
 			{
+#ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
+				int iFoodYieldValue = (/*12*/ GC.getAI_CITIZEN_VALUE_FOOD() * pLoopPlot->getYield(YIELD_FOOD));
+				if (pCity->getPopulation() < 5)
+					iFoodYieldValue *= 2;
+				else
+					iFoodYieldValue /= 2;
+				int iProductionYieldValue = (/*8*/ GC.getAI_CITIZEN_VALUE_PRODUCTION() * pLoopPlot->getYield(YIELD_PRODUCTION));
+				int iGoldYieldValue = (/*10*/ GC.getAI_CITIZEN_VALUE_GOLD() * pLoopPlot->getYield(YIELD_GOLD));
+				int iScienceYieldValue = (/*6*/ GC.getAI_CITIZEN_VALUE_SCIENCE() * pLoopPlot->getYield(YIELD_SCIENCE));
+				int iCultureYieldValue = (GC.getAI_CITIZEN_VALUE_CULTURE() * pLoopPlot->getYield(YIELD_CULTURE));
+				int iFaithYieldValue = (GC.getAI_CITIZEN_VALUE_FAITH() * pLoopPlot->getYield(YIELD_FAITH));
+				iGoldValueOfImprovedPlots += iFoodYieldValue + iProductionYieldValue + iGoldYieldValue + iScienceYieldValue + iCultureYieldValue + iFaithYieldValue;
+#endif
 				if(iI > 6)
 				{
 					iGoldValueOfPlots += goldPerPlot; // this is a bargain, but at least it's in the ballpark
 				}
+#ifndef AUI_DEALAI_TWEAKED_CITY_VALUE
 				if(pLoopPlot->getImprovementType() != NO_IMPROVEMENT)
 				{
 					iGoldValueOfImprovedPlots += goldPerPlot * 25;
 				}
+#endif
 				ResourceTypes eResource = pLoopPlot->getNonObsoleteResourceType(GetPlayer()->getTeam());
 				if(eResource != NO_RESOURCE)
 				{
@@ -1339,6 +1812,60 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 						// Luxury Resource
 						if(eUsage == RESOURCEUSAGE_LUXURY)
 						{
+#ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
+							int iBaseHappiness = pkResourceInfo->getHappiness();
+							if (bFromMe)
+							{
+								if (pOtherPlayer->getNumResourceAvailable(eResource) == 0)
+								{
+									if (pOtherPlayer->IsMinorResourceBonus() && pOtherPlayer->getResourceFromMinors(eResource) > 0)
+										iTheirHappinessGain += ((100 + (/*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER() - 100) / iTheirPatronagePolicies) * iBaseHappiness) / 100;
+									else
+										iTheirHappinessGain += iBaseHappiness;
+									iTheirHappinessGain += pOtherPlayer->GetExtraHappinessPerLuxury();
+									if (iTheirLuxuryResourceCount > 0)
+										iTheirHappinessGain += GC.getHAPPINESS_PER_EXTRA_LUXURY();
+								}
+								if (GetPlayer()->getNumResourceAvailable(eResource) == 1)
+								{
+									if (GetPlayer()->IsMinorResourceBonus() && GetPlayer()->getResourceFromMinors(eResource) > 0)
+										iOurHappinessGain -= (/*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER() * iBaseHappiness) / 100;
+									else
+										iOurHappinessGain -= iBaseHappiness;
+									iOurHappinessGain -= GetPlayer()->GetExtraHappinessPerLuxury();
+									if (iOurLuxuryResourceCount > 1)
+										iOurHappinessGain -= GC.getHAPPINESS_PER_EXTRA_LUXURY();
+								}
+							}
+							else
+							{
+								if (GetPlayer()->getNumResourceAvailable(eResource) == 0)
+								{
+									if (GetPlayer()->IsMinorResourceBonus() && GetPlayer()->getResourceFromMinors(eResource) > 0)
+										iTheirHappinessGain += (/*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER() * iBaseHappiness) / 100;
+									else
+										iTheirHappinessGain += iBaseHappiness;
+									iTheirHappinessGain += GetPlayer()->GetExtraHappinessPerLuxury();
+									if (iTheirLuxuryResourceCount > 0)
+										iTheirHappinessGain += GC.getHAPPINESS_PER_EXTRA_LUXURY();
+								}
+								if (pOtherPlayer->getNumResourceAvailable(eResource) == 1)
+								{
+									if (pOtherPlayer->IsMinorResourceBonus() && pOtherPlayer->getResourceFromMinors(eResource) > 0)
+										iOurHappinessGain -= ((100 + (/*150*/ GC.getMINOR_POLICY_RESOURCE_HAPPINESS_MULTIPLIER() - 100) / iTheirPatronagePolicies) * iBaseHappiness) / 100;
+									else
+										iOurHappinessGain -= iBaseHappiness;
+									iOurHappinessGain -= pOtherPlayer->GetExtraHappinessPerLuxury();
+									if (iOurLuxuryResourceCount > 1)
+										iOurHappinessGain -= GC.getHAPPINESS_PER_EXTRA_LUXURY();
+								}
+							}
+							// No dampener here
+							int iHappinessValueGained = iOurHappinessGain - iTheirHappinessGain;
+							if (bFromMe)
+								iHappinessValueGained = -iHappinessValueGained;
+							iGoldValueOfResourcePlots += (iResourceQuantity * iHappinessValueGained * iNumTurns * 2);	// Ex: 1 Silk for 4 Happiness * 30 turns * 2 = 240
+#else
 							int iNumTurns = min(1,GC.getGame().getMaxTurns() - GC.getGame().getGameTurn());
 							iNumTurns = max(120,iNumTurns); // let's not go hog wild here
 							int iHappinessFromResource = pkResourceInfo->getHappiness();
@@ -1351,6 +1878,7 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 									iGoldValueOfResourcePlots += (iResourceQuantity * iHappinessFromResource * iNumTurns * 4);
 								}
 							}
+#endif
 						}
 						// Strategic Resource
 						else if(eUsage == RESOURCEUSAGE_STRATEGIC)
@@ -1362,7 +1890,12 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 				}
 			}
 		}
+#ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
+		iGoldValueOfImprovedPlots *= GC.getEACH_GOLD_PER_TURN_VALUE_PERCENT() * iNumTurns;
+		iGoldValueOfImprovedPlots /= 100 * GC.getAI_CITIZEN_VALUE_GOLD();
+#else
 		iGoldValueOfImprovedPlots /= 100;
+#endif
 
 		iItemValue = iItemValue + iGoldValueOfPlots + iGoldValueOfImprovedPlots + iGoldValueOfResourcePlots;
 
@@ -1372,8 +1905,12 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 		if(bFromMe)
 		{
 			// Wonders are nice
+#ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
+			iItemValue = int(iItemValue * sqrt(4.0 * pCity->getNumWorldWonders()) + 0.5);
+#else
 			if(pCity->hasActiveWorldWonder())
 				iItemValue *= 2;
+#endif
 
 			// Adjust for how well a war against this player would go (or is going)
 			switch(GetPlayer()->GetDiplomacyAI()->GetWarProjection(eOtherPlayer))
@@ -1419,18 +1956,70 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 				{
 					CvCity* pLoopCity;
 					int iCityLoop;
+#ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
+					int iBestDistance = MAX_INT;
+#else
 					int iBestDistance = 99;
+#endif
 					for(pLoopCity = m_pPlayer->firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iCityLoop))
 					{
+#ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
+						if (pLoopCity->IsPuppet())
+							continue;
+#endif
 						int iDistFromThisCity = plotDistance(iX, iY, pLoopCity->getX(), pLoopCity->getY());
+#ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
+						if (pLoopCity->getArea() != pCity->getArea())
+							if (pLoopCity->waterArea() != pCity->waterArea())
+								iDistFromThisCity *= 2;
+							else
+								iDistFromThisCity = (iDistFromThisCity * 3) / 2;
+#endif
 						if(iDistFromThisCity < iBestDistance)
 						{
 							iBestDistance = iDistFromThisCity;
 						}
 					}
+#ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
+					// The closest city they have (used as a zero)
+					int iBestOtherCityDistance = iBestDistance;
+					CvCity* pLoopTheirCity;
+					int iTheirCityLoop;
+					for (pLoopTheirCity = pOtherPlayer->firstCity(&iTheirCityLoop); pLoopTheirCity != NULL; pLoopTheirCity = pOtherPlayer->nextCity(&iTheirCityLoop))
+					{
+						if (pLoopTheirCity != pCity)
+						{
+							for (pLoopCity = m_pPlayer->firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iCityLoop))
+							{
+								if (!pLoopCity->IsPuppet())
+								{
+									int iDistFromThisCity = plotDistance(pLoopTheirCity->getX(), pLoopTheirCity->getY(), pLoopCity->getX(), pLoopCity->getY());
+									if (pLoopCity->getArea() != pLoopTheirCity->getArea())
+										if (pLoopCity->waterArea() != pLoopTheirCity->waterArea())
+											iDistFromThisCity *= 2;
+										else
+											iDistFromThisCity = (iDistFromThisCity * 3) / 2;
+									if (iDistFromThisCity < iBestOtherCityDistance)
+									{
+										iBestOtherCityDistance = iDistFromThisCity;
+									}
+								}
+							}
+						}
+					}
+					iBestDistance -= iBestOtherCityDistance;
+					if (iBestDistance < 5)
+						iBestDistance = 5;
+#else
 					iBestDistance = (iBestDistance > 4) ? iBestDistance : 5;
+#endif
 					iItemValue /= iBestDistance - 4;
+#ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
+					if (iItemValue < 100)
+						iItemValue = 100;
+#else
 					iItemValue = (iItemValue >= 100) ? iItemValue : 100;
+#endif
 				}
 			}
 		}
@@ -1514,9 +2103,13 @@ int CvDealAI::GetOpenBordersValue(bool bFromMe, PlayerTypes eOtherPlayer, bool b
 
 	MajorCivApproachTypes eApproach = GetPlayer()->GetDiplomacyAI()->GetMajorCivApproach(eOtherPlayer, /*bHideTrueFeelings*/ true);
 
+#ifdef AUI_DEALAI_TWEAKED_OPEN_BORDERS_VALUE
+	CvPlayer &kOtherPlayer = GET_PLAYER(eOtherPlayer);
+#else
 	// If we're friends, then OB is always equally valuable to both parties
 	if(eApproach == MAJOR_CIV_APPROACH_FRIENDLY)
 		return 50;
+#endif
 
 	int iItemValue = 0;
 
@@ -1548,6 +2141,10 @@ int CvDealAI::GetOpenBordersValue(bool bFromMe, PlayerTypes eOtherPlayer, bool b
 		}
 
 		// Opinion also matters
+#ifdef AUI_DEALAI_TWEAKED_OPEN_BORDERS_VALUE
+		// If we're friends, then OB is always equally valuable to both parties
+		if (eApproach != MAJOR_CIV_APPROACH_FRIENDLY)
+#endif
 		switch(GetPlayer()->GetDiplomacyAI()->GetMajorCivOpinion(eOtherPlayer))
 		{
 		case MAJOR_CIV_OPINION_ALLY:
@@ -1579,8 +2176,29 @@ int CvDealAI::GetOpenBordersValue(bool bFromMe, PlayerTypes eOtherPlayer, bool b
 			break;
 		}
 
+#ifdef AUI_DEALAI_TWEAKED_OPEN_BORDERS_VALUE
+		int iNumEnemiesAtWarWith = 0;
+		for (int iI = 0; iI < MAX_MAJOR_CIVS; iI++)
+		{
+			if ((PlayerTypes)iI != eOtherPlayer && (PlayerTypes)iI != GetPlayer()->GetID())
+			{
+				WarStateTypes eWarState = kOtherPlayer.GetDiplomacyAI()->GetWarState((PlayerTypes)iI);
+				if (eWarState > WAR_STATE_NEARLY_DEFEATED && eWarState != WAR_STATE_NEARLY_WON)
+				{
+					if (GetPlayer()->GetDiplomacyAI()->GetMajorCivOpinion(eOtherPlayer) > GetPlayer()->GetDiplomacyAI()->GetMajorCivOpinion((PlayerTypes)iI))
+					{
+						if (GetPlayer()->GetProximityToPlayer((PlayerTypes)iI) >= kOtherPlayer.GetProximityToPlayer((PlayerTypes)iI))
+						{
+							iNumEnemiesAtWarWith++;
+						}
+					}
+				}
+			}
+		}
+#else
 		// If they're at war with our enemies then we're more likely to give them OB
 		int iNumEnemiesAtWarWith = GetPlayer()->GetDiplomacyAI()->GetNumOurEnemiesPlayerAtWarWith(eOtherPlayer);
+#endif
 		if(iNumEnemiesAtWarWith >= 2)
 		{
 			iItemValue *= 10;
@@ -1596,7 +2214,9 @@ int CvDealAI::GetOpenBordersValue(bool bFromMe, PlayerTypes eOtherPlayer, bool b
 		AIGrandStrategyTypes eCultureStrategy = (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE");
 		if (eCultureStrategy != NO_AIGRANDSTRATEGY && GetPlayer()->GetGrandStrategyAI()->GetGuessOtherPlayerActiveGrandStrategy(eOtherPlayer) == eCultureStrategy)
 		{
+#ifndef AUI_DEALAI_TWEAKED_OPEN_BORDERS_VALUE
 			CvPlayer &kOtherPlayer = GET_PLAYER(eOtherPlayer);
+#endif
 
 			// If he has tourism and he's not influential on us yet, resist!
 			if (kOtherPlayer.GetCulture()->GetTourism() > 0 && kOtherPlayer.GetCulture()->GetInfluenceOn(GetPlayer()->GetID()) < INFLUENCE_LEVEL_INFLUENTIAL)
@@ -1610,6 +2230,9 @@ int CvDealAI::GetOpenBordersValue(bool bFromMe, PlayerTypes eOtherPlayer, bool b
 	else
 	{
 		// Proximity is very important
+#ifdef AUI_DEALAI_TWEAKED_OPEN_BORDERS_VALUE
+		iItemValue = int(pow(3.0, GetPlayer()->GetProximityToPlayer(eOtherPlayer)));
+#else
 		switch(GetPlayer()->GetProximityToPlayer(eOtherPlayer))
 		{
 		case PLAYER_PROXIMITY_DISTANT:
@@ -1629,9 +2252,31 @@ int CvDealAI::GetOpenBordersValue(bool bFromMe, PlayerTypes eOtherPlayer, bool b
 			iItemValue = 0;
 			break;
 		}
+#endif
 
+#ifdef AUI_DEALAI_TWEAKED_OPEN_BORDERS_VALUE
+		CvCity* pLoopCity;
+		int iCityLoop;
+		CvCity* pLoopTheirCity;
+		int iTheirCityLoop;
+		bool bHaveCitiesInSameArea = false;
+		for (pLoopTheirCity = kOtherPlayer.firstCity(&iTheirCityLoop); pLoopTheirCity != NULL; pLoopTheirCity = kOtherPlayer.nextCity(&iTheirCityLoop))
+		{
+			for (pLoopCity = m_pPlayer->firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iCityLoop))
+			{
+				if (pLoopTheirCity->getArea() == pLoopCity->getArea())
+				{
+					bHaveCitiesInSameArea = true;
+					goto EndLoop;
+				}
+			}
+		}
+	EndLoop:
+		if (!bHaveCitiesInSameArea)
+#else
 		// Reduce value by half if the other guy only has a single City
 		if(GET_PLAYER(eOtherPlayer).getNumCities() == 1)
+#endif
 		{
 			iItemValue *= 50;
 			iItemValue /= 100;
@@ -1694,6 +2339,67 @@ int CvDealAI::GetDefensivePactValue(bool bFromMe, PlayerTypes eOtherPlayer, bool
 	int iItemValue;
 
 	// What is a Defensive Pact with eOtherPlayer worth to US?
+#ifdef AUI_DEALAI_TWEAKED_DEFENSIVE_PACT_VALUE
+	int iTheirRelativeStrength = 100;
+	// How strong are they compared to us?
+	switch (GetPlayer()->GetDiplomacyAI()->GetPlayerMilitaryStrengthComparedToUs(eOtherPlayer))
+	{
+	case STRENGTH_PATHETIC:
+		iTheirRelativeStrength = (GC.getMILITARY_STRENGTH_WEAK_THRESHOLD() - GC.getMILITARY_STRENGTH_POOR_THRESHOLD()) / 2;
+		break;
+	case STRENGTH_WEAK:
+		iTheirRelativeStrength = (GC.getMILITARY_STRENGTH_POOR_THRESHOLD() + GC.getMILITARY_STRENGTH_WEAK_THRESHOLD()) / 2;
+		break;
+	case STRENGTH_POOR:
+		iTheirRelativeStrength = (GC.getMILITARY_STRENGTH_AVERAGE_THRESHOLD() + GC.getMILITARY_STRENGTH_POOR_THRESHOLD()) / 2;
+		break;
+	case STRENGTH_AVERAGE:
+		iTheirRelativeStrength = (GC.getMILITARY_STRENGTH_STRONG_THRESHOLD() + GC.getMILITARY_STRENGTH_AVERAGE_THRESHOLD()) / 2;
+		break;
+	case STRENGTH_STRONG:
+		iTheirRelativeStrength = (GC.getMILITARY_STRENGTH_POWERFUL_THRESHOLD() + GC.getMILITARY_STRENGTH_STRONG_THRESHOLD()) / 2;
+		break;
+	case STRENGTH_POWERFUL:
+		iTheirRelativeStrength = (GC.getMILITARY_STRENGTH_IMMENSE_THRESHOLD() + GC.getMILITARY_STRENGTH_POWERFUL_THRESHOLD()) / 2;
+		break;
+	case STRENGTH_IMMENSE:
+		iTheirRelativeStrength = (GC.getMILITARY_STRENGTH_IMMENSE_THRESHOLD() + GC.getMILITARY_STRENGTH_IMMENSE_THRESHOLD() + GC.getMILITARY_STRENGTH_POWERFUL_THRESHOLD()) / 2;
+		break;
+	default:
+		CvAssertMsg(false, "DEAL_AI: AI player has no valid MilitaryStrengthComparedToUs for Defensive Pact valuation.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.")
+		break;
+	}
+
+	// Opinion also matters
+	switch(GetPlayer()->GetDiplomacyAI()->GetMajorCivOpinion(eOtherPlayer))
+	{
+	case MAJOR_CIV_OPINION_ALLY:
+		iItemValue = 100;
+		break;
+	case MAJOR_CIV_OPINION_FRIEND:
+		iItemValue = int(100 * sqrt((double)iTheirRelativeStrength / 100) + 0.5);
+		break;
+	case MAJOR_CIV_OPINION_FAVORABLE:
+		iItemValue = 100 * iTheirRelativeStrength / 100;
+		break;
+	case MAJOR_CIV_OPINION_NEUTRAL:
+		iItemValue = int(100 * pow((double)iTheirRelativeStrength / 100, 2.0) + 0.5);
+		break;
+	case MAJOR_CIV_OPINION_COMPETITOR:
+		iItemValue = int(100 * pow((double)iTheirRelativeStrength / 100, 4.0) + 0.5);
+		break;
+	case MAJOR_CIV_OPINION_ENEMY:
+		iItemValue = int(1000 * pow((double)iTheirRelativeStrength / 100, 4.0) + 0.5);
+		break;
+	case MAJOR_CIV_OPINION_UNFORGIVABLE:
+		iItemValue = int(10000 * pow((double)iTheirRelativeStrength / 100, 4.0) + 0.5);
+		break;
+	default:
+		CvAssertMsg(false, "DEAL_AI: AI player has no valid Opinion for Defensive Pact valuation.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.")
+			iItemValue = 100000;
+		break;
+	}
+#else
 	if(!bFromMe)
 	{
 		iItemValue = 100;
@@ -1785,6 +2491,7 @@ int CvDealAI::GetDefensivePactValue(bool bFromMe, PlayerTypes eOtherPlayer, bool
 		//}
 		//iItemValue /= 100;
 	}
+#endif
 
 	// Are we trying to find the middle point between what we think this item is worth and what another player thinks it's worth?
 	if(bUseEvenValue)
@@ -1804,14 +2511,68 @@ int CvDealAI::GetResearchAgreementValue(bool bFromMe, PlayerTypes eOtherPlayer, 
 
 	int iItemValue = 100;
 
+#ifdef AUI_DEALAI_TWEAKED_RESEARCH_AGREEMENT_VALUE
+	CvPlayer &kOtherPlayer = GET_PLAYER(eOtherPlayer);
+#else
 	if(bFromMe)
+#endif
 	{
+#ifdef AUI_DEALAI_TWEAKED_RESEARCH_AGREEMENT_VALUE
+		if (kOtherPlayer.GetMedianTechPercentage() > 0)
+		{
+			PolicyBranchTypes eRationalismBranch = (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_RATIONALISM", true /*bHideAssert*/);
+			int iTheirRationalismPolicies = 1;
+			if (eRationalismBranch != NO_POLICY_BRANCH_TYPE)
+			{
+				iTheirRationalismPolicies = kOtherPlayer.GetPlayerPolicies()->GetNumPoliciesOwnedInBranch(eRationalismBranch);
+				// From here on, iTheirRationalismPolicies will be used as a bonus divider
+				if (iTheirRationalismPolicies > 5 || iTheirRationalismPolicies < 4)
+					// If there are 6 or more policies, the research agreement booster will always be unlocked; if there are 3 or less, it will never be unlocked
+					iTheirRationalismPolicies = 1;
+				else if (iTheirRationalismPolicies == 4)
+					// If there are 4 unlocked, there are three possible combinations, only one of which has the research agreement booster unlocked
+					iTheirRationalismPolicies = 3;
+				else
+					// If there are 5 unlocked, there are two possible combinations, only one of which has the research agreement booster unlocked
+					iTheirRationalismPolicies = 2;
+			}
+			if ((kOtherPlayer.GetMedianTechPercentage() - (50 * iTheirRationalismPolicies - 50) / iTheirRationalismPolicies) > GetPlayer()->GetMedianTechPercentage())
+			{
+				iItemValue *= ((kOtherPlayer.GetMedianTechPercentage() - (50 * iTheirRationalismPolicies - 50) / iTheirRationalismPolicies) + 100) /
+					(GetPlayer()->GetMedianTechPercentage() + 100);
+			}
+		}
+		int iGoldCost = GC.getGame().GetResearchAgreementCost(GetPlayer()->GetID(), eOtherPlayer);
+		int iBeakersBonus = FASTMIN(GetPlayer()->GetScienceTimes100(), kOtherPlayer.GetScienceTimes100()) * GC.getGame().GetDealDuration() / 100;
+		iBeakersBonus /= GC.getRESEARCH_AGREEMENT_BOOST_DIVISOR(); //one (third) of minimum contribution
+		int iMyBeakerGain = (iBeakersBonus * GetPlayer()->GetMedianTechPercentage()) / 100;
+		if (int(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain + 0.5) > iGoldCost * GetPlayer()->GetScienceTimes100())
+		{
+#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
+			iItemValue = int(iItemValue / pow(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain / FASTMAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1),
+				1.0 + (double)GetPlayer()->GetGrandStrategyAI()->ScienceFlavorBoost() / AUI_GS_SCIENCE_FLAVOR_BOOST) + 0.5);
+#else
+#ifdef AUI_GS_PRIORITY_RATIO
+			iItemValue = int(iItemValue / pow(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain / FASTMAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1),
+				1.0 + (double)GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP")) / AUI_GS_SCIENCE_FLAVOR_BOOST) + 0.5);
+#else
+			if (GetPlayer()->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"))
+				iItemValue = int(iItemValue / pow(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain 
+				/ FASTMAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1), 2.0) + 0.5);
+			else
+				iItemValue = int(iItemValue / GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain / 
+				FASTMAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1) + 0.5);
+#endif
+#endif
+		}
+#else
 		// if they are ahead of me in tech by one or more eras ratchet up the value since they are more likely to get a good tech than I am
 		EraTypes eMyEra = GET_TEAM(GetPlayer()->getTeam()).GetCurrentEra();
 		EraTypes eTheirEra = GET_TEAM(GET_PLAYER(eOtherPlayer).getTeam()).GetCurrentEra();
 
 		int iAdditionalValue = iItemValue * max(0,(int)(eTheirEra-eMyEra));
 		iItemValue += iAdditionalValue;
+#endif
 
 		// Approach is important
 		switch(GetPlayer()->GetDiplomacyAI()->GetMajorCivApproach(eOtherPlayer, /*bHideTrueFeelings*/ true))
@@ -1820,7 +2581,11 @@ int CvDealAI::GetResearchAgreementValue(bool bFromMe, PlayerTypes eOtherPlayer, 
 			iItemValue *= 1000;
 			break;
 		case MAJOR_CIV_APPROACH_GUARDED:
+#ifdef AUI_DEALAI_TWEAKED_RESEARCH_AGREEMENT_VALUE
+			iItemValue *= 150;
+#else
 			iItemValue *= 100;
+#endif
 			break;
 		case MAJOR_CIV_APPROACH_AFRAID:
 			iItemValue *= 80;
@@ -2063,7 +2828,11 @@ int CvDealAI::GetThirdPartyPeaceValue(bool bFromMe, PlayerTypes eOtherPlayer, Te
 }
 
 /// What is the value of war with eWithPlayer?
+#ifdef AUI_DEALAI_TWEAKED_THIRDPARTY_WAR_VALUE
+int CvDealAI::GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, TeamTypes eWithTeam, bool bCountDefensivePacts)
+#else
 int CvDealAI::GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, TeamTypes eWithTeam)
+#endif
 {
 	CvAssertMsg(GetPlayer()->GetID() != eOtherPlayer, "DEAL_AI: Trying to check value of a Third Party War with oneself. Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 
@@ -2071,10 +2840,12 @@ int CvDealAI::GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, Team
 
 	CvDiplomacyAI* pDiploAI = GetPlayer()->GetDiplomacyAI();
 
+#ifndef AUI_DEALAI_TWEAKED_THIRDPARTY_WAR_VALUE
 	// How much does this AI like to go to war? If it's a 3 or less, never accept
 	int iWarApproachWeight = pDiploAI->GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_WAR);
 	if(bFromMe && iWarApproachWeight < 4)
 		return 100000;
+#endif
 
 
 	PlayerTypes eWithPlayer = NO_PLAYER;
@@ -2090,16 +2861,70 @@ int CvDealAI::GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, Team
 	}
 	WarProjectionTypes eWarProjection = pDiploAI->GetWarProjection(eWithPlayer);
 
+#ifdef AUI_DEALAI_TWEAKED_THIRDPARTY_WAR_VALUE
+	CvPlayer &kOtherPlayer = GET_PLAYER(eOtherPlayer);
+	CvPlayer &kWithPlayer = GET_PLAYER(eWithPlayer);
+	MajorCivOpinionTypes eOpinionTowardsAskingPlayer = pDiploAI->GetMajorCivOpinion(eOtherPlayer);
+	int iCollateralWarValues = 0;
+#else
 	EraTypes eOurEra = GET_TEAM(GetPlayer()->getTeam()).GetCurrentEra();
 
 	MajorCivOpinionTypes eOpinionTowardsAskingPlayer = pDiploAI->GetMajorCivOpinion(eOtherPlayer);
 	MajorCivOpinionTypes eOpinionTowardsWarPlayer = NO_MAJOR_CIV_OPINION_TYPE;
 	MinorCivApproachTypes eMinorApproachTowardsWarPlayer = NO_MINOR_CIV_APPROACH;
+#endif
 
 	bool bMinor = false;
 
 	// Minor
-	if(GET_PLAYER(eWithPlayer).isMinorCiv())
+	if (GET_PLAYER(eWithPlayer).isMinorCiv())
+#ifdef AUI_DEALAI_TWEAKED_THIRDPARTY_WAR_VALUE
+	{
+		bMinor = true;
+		PlayerTypes eAlly = kWithPlayer.GetMinorCivAI()->GetAlly();
+		if (kWithPlayer.GetMinorCivAI()->IsProtectedByAnyMajor() && (!bFromMe || !kWithPlayer.GetMinorCivAI()->IsProtectedByMajor(GetPlayer()->GetID())))
+		{
+			FFastVector<PlayerTypes, true, c_eCiv5GameplayDLL> vePossibleFuturePlayersForWar;
+			for (uint ui = 0; ui < MAX_CIV_PLAYERS; ui++)
+			{
+				if ((PlayerTypes)ui != (bFromMe ? GetPlayer()->GetID() : eOtherPlayer) && (PlayerTypes)ui != eAlly && kWithPlayer.GetMinorCivAI()->IsProtectedByMajor((PlayerTypes)ui) &&
+					(bFromMe ? pDiploAI->GetWarState((PlayerTypes)ui) == NO_WAR_STATE_TYPE : kOtherPlayer.GetDiplomacyAI()->GetWarState((PlayerTypes)ui) == NO_WAR_STATE_TYPE))
+				{
+					vePossibleFuturePlayersForWar.push_back((PlayerTypes)ui);
+				}
+			}
+			if (vePossibleFuturePlayersForWar.size() > 0)
+			{
+				for (FFastVector<PlayerTypes, true, c_eCiv5GameplayDLL>::iterator it = vePossibleFuturePlayersForWar.begin(); it != vePossibleFuturePlayersForWar.end(); ++it)
+				{
+					iCollateralWarValues += GetThirdPartyWarValue(bFromMe, eOtherPlayer, GET_PLAYER(*it).getTeam(), false);
+				}
+				// To rough out the fact that they might not declare war for attacking the CS
+				iCollateralWarValues = int(iCollateralWarValues / sqrt((double)vePossibleFuturePlayersForWar.size()) + 0.5);
+			}
+		}
+		if (eAlly != NO_PLAYER && eAlly != (bFromMe ? GetPlayer()->GetID() : eOtherPlayer))
+		{
+			iCollateralWarValues += GetThirdPartyWarValue(bFromMe, eOtherPlayer, GET_PLAYER(eAlly).getTeam(), false);
+		}
+	}
+	else if (bCountDefensivePacts)
+	{
+		FFastVector<TeamTypes, true, c_eCiv5GameplayDLL> vePossibleFutureTeamsForWar;
+		for (uint ui = 0; ui < MAX_TEAMS; ui++)
+		{
+			if ((TeamTypes)ui != eWithTeam && (TeamTypes)ui != (bFromMe ? GetPlayer()->getTeam() : kOtherPlayer.getTeam()) && GET_TEAM((TeamTypes)ui).isAlive() &&
+				!GET_TEAM((TeamTypes)ui).isAtWar((bFromMe ? GetPlayer()->getTeam() : kOtherPlayer.getTeam())))
+			{
+				if (GET_TEAM(eWithTeam).IsHasDefensivePact((TeamTypes)ui))
+				{
+					iCollateralWarValues += GetThirdPartyWarValue(bFromMe, eOtherPlayer, (TeamTypes)ui, false);
+				}
+			}
+		}
+		
+	}
+#else
 	{
 		bMinor = true;
 		eMinorApproachTowardsWarPlayer = pDiploAI->GetMinorCivApproach(eWithPlayer);
@@ -2107,7 +2932,129 @@ int CvDealAI::GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, Team
 	// Major
 	else
 		eOpinionTowardsWarPlayer = pDiploAI->GetMajorCivOpinion(eWithPlayer);
+#endif
 
+#ifdef AUI_DEALAI_TWEAKED_THIRDPARTY_WAR_VALUE
+	// I declare war on 3rd player
+	if(bFromMe)
+	{
+		iItemValue = int(1000 * FASTMAX(pow(2.0, WAR_PROJECTION_UNKNOWN - eWarProjection), pow(10.0, WAR_PROJECTION_STALEMATE - eWarProjection)) + 0.5);
+
+		// Minor
+		if (bMinor)
+		{
+			switch (pDiploAI->GetMinorCivApproach(eWithPlayer))
+			{
+			case MINOR_CIV_APPROACH_FRIENDLY:
+				iItemValue *= 1000;
+				break;
+			case MINOR_CIV_APPROACH_PROTECTIVE:
+				iItemValue *= 100;
+				break;
+			case MINOR_CIV_APPROACH_IGNORE:
+				iItemValue *= 10;
+				break;
+			case MINOR_CIV_APPROACH_CONQUEST:
+				iItemValue /= 2;
+				break;
+			}
+		}
+		// Major
+		else
+		{
+			// Approach is important (we prefer to be bribed to go to war with someone who we already want to go to war with)
+			switch (GetPlayer()->GetDiplomacyAI()->GetMajorCivApproach(eWithPlayer, /*bHideTrueFeelings*/ true))
+			{
+			case MAJOR_CIV_APPROACH_HOSTILE:
+				iItemValue /= 2;
+				break;
+			case MAJOR_CIV_APPROACH_AFRAID:
+				iItemValue *= 1000;
+				break;
+			case MAJOR_CIV_APPROACH_FRIENDLY:
+				iItemValue *= 100;
+				break;
+			case MAJOR_CIV_APPROACH_NEUTRAL:
+				iItemValue *= 10;
+				break;
+			}
+			// Modify for our feelings towards the player we're would go to war with
+			iItemValue = int(iItemValue * FASTMAX(pow(2.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_NEUTRAL), pow(10.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_FAVORABLE)) + 0.5);
+		}
+
+		// Approach is important (we prefer to be bribed by someone we want to be on friendly terms with)
+		switch (GetPlayer()->GetDiplomacyAI()->GetMajorCivApproach(eOtherPlayer, /*bHideTrueFeelings*/ true))
+		{
+		case MAJOR_CIV_APPROACH_HOSTILE:
+			iItemValue *= 100;
+			break;
+		case MAJOR_CIV_APPROACH_GUARDED:
+			iItemValue *= 10;
+			break;
+		case MAJOR_CIV_APPROACH_AFRAID:
+			iItemValue /= 4;
+			break;
+		case MAJOR_CIV_APPROACH_FRIENDLY:
+			iItemValue /= 2;
+			break;
+		}
+
+		// Modify for our feelings towards the asking player
+		iItemValue = int(iItemValue * FASTMAX(pow(2.0, MAJOR_CIV_OPINION_NEUTRAL - eOpinionTowardsAskingPlayer), pow(10.0, MAJOR_CIV_OPINION_COMPETITOR - eOpinionTowardsAskingPlayer)) + 0.5);
+	}
+	// They declare war on 3rd player
+	else
+	{
+		iItemValue = 1000;
+		WarProjectionTypes eOurWarProjection = eWarProjection;
+		eWarProjection = kOtherPlayer.GetDiplomacyAI()->GetWarProjection(eWithPlayer);
+
+		if (bMinor)
+		{
+			switch (pDiploAI->GetMinorCivApproach(eWithPlayer))
+			{
+			// We don't want them attacked
+			case MINOR_CIV_APPROACH_FRIENDLY:
+			case MINOR_CIV_APPROACH_PROTECTIVE:
+				iItemValue = -10000;
+				break;
+			// We want to conquer them
+			case MINOR_CIV_APPROACH_CONQUEST:
+				iItemValue = -10000;
+				break;
+			}
+		}
+		else
+		{
+			// Approach is important (we want to bribe them to go to war with someone we don't like)
+			switch (GetPlayer()->GetDiplomacyAI()->GetMajorCivApproach(eOtherPlayer, /*bHideTrueFeelings*/ false))
+			{
+			case MAJOR_CIV_APPROACH_HOSTILE:
+				iItemValue /= 4;
+				break;
+			case MAJOR_CIV_APPROACH_GUARDED:
+				iItemValue /= 2;
+				break;
+			case MAJOR_CIV_APPROACH_DECEPTIVE:
+				iItemValue /= 4;
+				break;
+			case MAJOR_CIV_APPROACH_AFRAID:
+				iItemValue /= 4;
+				break;
+			case MAJOR_CIV_APPROACH_FRIENDLY:
+				iItemValue *= 100;
+				break;
+			}
+			// Modify for our feelings towards the player we're would go to war with
+			iItemValue = int(iItemValue * FASTMAX(pow(2.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_NEUTRAL), pow(10.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_FAVORABLE)) + 0.5);
+		}
+
+		// If we dislike the person we are asking, we want them to lose, so the opinion multiplier is inverted if the war projection is lower than average (ie. instead of bad opinion increasing value, it decreases value)
+		iItemValue = int(iItemValue * pow(FASTMAX(pow(2.0, MAJOR_CIV_OPINION_NEUTRAL - eOpinionTowardsAskingPlayer),
+			pow(10.0, MAJOR_CIV_OPINION_COMPETITOR - eOpinionTowardsAskingPlayer)), eWarProjection - (NUM_WAR_PROJECTION_TYPES - 1) / 2.0) + 0.5);
+	}
+	iItemValue += iCollateralWarValues;
+#else
 	// From me
 	if(bFromMe)
 	{
@@ -2203,6 +3150,7 @@ int CvDealAI::GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, Team
 				iItemValue = -100000;
 		}
 	}
+#endif
 
 	return iItemValue;
 }
@@ -2384,7 +3332,11 @@ void CvDealAI::DoAddVoteCommitmentToThem(CvDeal* pDeal, PlayerTypes eThem, bool 
 
 					if (iProposalID != -1 && pDeal->IsPossibleToTradeItem(eThem, eMyPlayer, TRADE_ITEM_VOTE_COMMITMENT, iProposalID, iVoteChoice, iNumVotes, bRepeal))
 					{
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+						int iItemValue = GetTradeItemValue(TRADE_ITEM_VOTE_COMMITMENT, /*bFromMe*/ false, eThem, iProposalID, iVoteChoice, iNumVotes, bRepeal, -1, bUseEvenValue, pDeal);
+#else
 						int iItemValue = GetTradeItemValue(TRADE_ITEM_VOTE_COMMITMENT, /*bFromMe*/ false, eThem, iProposalID, iVoteChoice, iNumVotes, bRepeal, -1, bUseEvenValue);
+#endif
 
 						// If adding this to the deal doesn't take it over the limit, do it
 						if(iItemValue + iTotalValue <= iAmountOverWeWillRequest)
@@ -2425,7 +3377,11 @@ void CvDealAI::DoAddVoteCommitmentToUs(CvDeal* pDeal, PlayerTypes eThem, bool bD
 
 					if (iProposalID != -1 && pDeal->IsPossibleToTradeItem(eMyPlayer, eThem, TRADE_ITEM_VOTE_COMMITMENT, iProposalID, iVoteChoice, iNumVotes, bRepeal))
 					{
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+						int iItemValue = GetTradeItemValue(TRADE_ITEM_VOTE_COMMITMENT, /*bFromMe*/ true, eThem, iProposalID, iVoteChoice, iNumVotes, bRepeal, -1, bUseEvenValue, pDeal);
+#else
 						int iItemValue = GetTradeItemValue(TRADE_ITEM_VOTE_COMMITMENT, /*bFromMe*/ true, eThem, iProposalID, iVoteChoice, iNumVotes, bRepeal, -1, bUseEvenValue);
+#endif
 
 						// If adding this to the deal doesn't take it under the min limit, do it
 						if(-iItemValue + iTotalValue >= iAmountUnderWeWillOffer)
@@ -2484,7 +3440,11 @@ void CvDealAI::DoAddResourceToThem(CvDeal* pDeal, PlayerTypes eThem, bool bDontC
 				// See if they can actually trade it to us
 				if(pDeal->IsPossibleToTradeItem(eThem, eMyPlayer, TRADE_ITEM_RESOURCES, eResource, iResourceQuantity))
 				{
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+					iItemValue = GetTradeItemValue(TRADE_ITEM_RESOURCES, /*bFromMe*/ false, eThem, eResource, iResourceQuantity, -1, /*bFlag1*/false, iDealDuration, bUseEvenValue, pDeal);
+#else
 					iItemValue = GetTradeItemValue(TRADE_ITEM_RESOURCES, /*bFromMe*/ false, eThem, eResource, iResourceQuantity, -1, /*bFlag1*/false, iDealDuration, bUseEvenValue);
+#endif
 
 					// If adding this to the deal doesn't take it over the limit, do it
 					if(iItemValue + iTotalValue <= iAmountOverWeWillRequest)
@@ -2520,7 +3480,11 @@ void CvDealAI::DoAddResourceToThem(CvDeal* pDeal, PlayerTypes eThem, bool bDontC
 				// See if they can actually trade it to us
 				if(pDeal->IsPossibleToTradeItem(eThem, eMyPlayer, TRADE_ITEM_RESOURCES, eResource, iResourceQuantity))
 				{
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+					iItemValue = GetTradeItemValue(TRADE_ITEM_RESOURCES, /*bFromMe*/ false, eThem, eResource, iResourceQuantity, -1, /*bFlag1*/false, iDealDuration, bUseEvenValue, pDeal);
+#else
 					iItemValue = GetTradeItemValue(TRADE_ITEM_RESOURCES, /*bFromMe*/ false, eThem, eResource, iResourceQuantity, -1, /*bFlag1*/false, iDealDuration, bUseEvenValue);
+#endif
 
 					// If adding this to the deal doesn't take it over the limit, do it
 					if(iItemValue + iTotalValue <= iAmountOverWeWillRequest)
@@ -2587,7 +3551,11 @@ void CvDealAI::DoAddResourceToUs(CvDeal* pDeal, PlayerTypes eThem, bool bDontCha
 				// See if we can actually trade it to them
 				if(pDeal->IsPossibleToTradeItem(eMyPlayer, eThem, TRADE_ITEM_RESOURCES, eResource, iResourceQuantity))
 				{
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+					iItemValue = GetTradeItemValue(TRADE_ITEM_RESOURCES, /*bFromMe*/ true, eThem, eResource, iResourceQuantity, -1, /*bFlag1*/false, iDealDuration, bUseEvenValue, pDeal);
+#else
 					iItemValue = GetTradeItemValue(TRADE_ITEM_RESOURCES, /*bFromMe*/ true, eThem, eResource, iResourceQuantity, -1, /*bFlag1*/false, iDealDuration, bUseEvenValue);
+#endif
 
 					// If adding this to the deal doesn't take it under the min limit, do it
 					if(-iItemValue + iTotalValue >= iAmountUnderWeWillOffer)
@@ -2624,7 +3592,11 @@ void CvDealAI::DoAddEmbassyToThem(CvDeal* pDeal, PlayerTypes eThem, bool bDontCh
 				// See if they can actually trade it to us
 				if(pDeal->IsPossibleToTradeItem(eThem, eMyPlayer, TRADE_ITEM_ALLOW_EMBASSY))
 				{
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+					int iItemValue = GetTradeItemValue(TRADE_ITEM_ALLOW_EMBASSY, /*bFromMe*/ false, eThem, -1, -1, -1, /*bFlag1*/false, -1, bUseEvenValue, pDeal);
+#else
 					int iItemValue = GetTradeItemValue(TRADE_ITEM_ALLOW_EMBASSY, /*bFromMe*/ false, eThem, -1, -1, -1, /*bFlag1*/false, -1, bUseEvenValue);
+#endif
 
 					// If adding this to the deal doesn't take it over the limit, do it
 					if(iItemValue + iTotalValue <= iAmountOverWeWillRequest)
@@ -2656,7 +3628,11 @@ void CvDealAI::DoAddEmbassyToUs(CvDeal* pDeal, PlayerTypes eThem, bool bDontChan
 				// See if we can actually trade it to them
 				if(pDeal->IsPossibleToTradeItem(eMyPlayer, eThem, TRADE_ITEM_ALLOW_EMBASSY))
 				{
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+					int iItemValue = GetTradeItemValue(TRADE_ITEM_ALLOW_EMBASSY, /*bFromMe*/ true, eThem, -1, -1, -1, /*bFlag1*/false, -1, bUseEvenValue, pDeal);
+#else
 					int iItemValue = GetTradeItemValue(TRADE_ITEM_ALLOW_EMBASSY, /*bFromMe*/ true, eThem, -1, -1, -1, /*bFlag1*/false, -1, bUseEvenValue);
+#endif
 
 					// If adding this to the deal doesn't take it under the min limit, do it
 					if(-iItemValue + iTotalValue >= iAmountUnderWeWillOffer)
@@ -2688,7 +3664,11 @@ void CvDealAI::DoAddOpenBordersToThem(CvDeal* pDeal, PlayerTypes eThem, bool bDo
 				// See if they can actually trade it to us
 				if(pDeal->IsPossibleToTradeItem(eThem, eMyPlayer, TRADE_ITEM_OPEN_BORDERS))
 				{
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+					int iItemValue = GetTradeItemValue(TRADE_ITEM_OPEN_BORDERS, /*bFromMe*/ false, eThem, -1, -1, -1, /*bFlag1*/false, iDealDuration, bUseEvenValue, pDeal);
+#else
 					int iItemValue = GetTradeItemValue(TRADE_ITEM_OPEN_BORDERS, /*bFromMe*/ false, eThem, -1, -1, -1, /*bFlag1*/false, iDealDuration, bUseEvenValue);
+#endif
 
 					// If adding this to the deal doesn't take it over the limit, do it
 					if(iItemValue + iTotalValue <= iAmountOverWeWillRequest)
@@ -2720,7 +3700,11 @@ void CvDealAI::DoAddOpenBordersToUs(CvDeal* pDeal, PlayerTypes eThem, bool bDont
 				// See if we can actually trade it to them
 				if(pDeal->IsPossibleToTradeItem(eMyPlayer, eThem, TRADE_ITEM_OPEN_BORDERS))
 				{
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+					int iItemValue = GetTradeItemValue(TRADE_ITEM_OPEN_BORDERS, /*bFromMe*/ true, eThem, -1, -1, -1, /*bFlag1*/false, iDealDuration, bUseEvenValue, pDeal);
+#else
 					int iItemValue = GetTradeItemValue(TRADE_ITEM_OPEN_BORDERS, /*bFromMe*/ true, eThem, -1, -1, -1, /*bFlag1*/false, iDealDuration, bUseEvenValue);
+#endif
 
 					// If adding this to the deal doesn't take it under the min limit, do it
 					if(-iItemValue + iTotalValue >= iAmountUnderWeWillOffer)

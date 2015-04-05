@@ -212,6 +212,10 @@ CvDeal& CvDeal::operator=(const CvDeal& source)
 void CvDeal::ClearItems()
 {
 	m_TradedItems.clear();
+#ifdef AUI_DEAL_HAPPINESS_VALUES
+	m_iFromPlayerHappinessGain = 0;
+	m_iToPlayerHappinessGain = 0;
+#endif
 
 	m_iFinalTurn = -1;
 	m_iDuration = -1;
