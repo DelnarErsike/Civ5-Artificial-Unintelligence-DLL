@@ -31,6 +31,9 @@
 #endif
 #define PATH_CITY_WEIGHT										(0) // slewis - reduced this to zero because we shouldn't avoid cities any more due to new garrison rules
 #define PATH_DEFENSE_WEIGHT										(10)
+#ifdef AUI_ASTAR_CONSIDER_DAMAGE_WHEN_ATTACKING
+#define PATH_DAMAGE_WEIGHT										(5)
+#endif
 #define PATH_TERRITORY_WEIGHT									(3)
 #define PATH_STEP_WEIGHT										(2)
 #define PATH_STRAIGHT_WEIGHT									(1)
@@ -1276,10 +1279,10 @@ int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 	const UnitPathCacheData* pCacheData = reinterpret_cast<const UnitPathCacheData*>(finder->GetScratchBuffer());
 #endif
 
-	if(pToPlot == NULL || pUnit == NULL)
+	if (pToPlot == NULL || pUnit == NULL)
 		return FALSE;
 
-	if(pUnit->plot() == pToPlot)
+	if (pUnit->plot() == pToPlot)
 	{
 		return TRUE;
 	}
@@ -1291,7 +1294,7 @@ int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 	}
 #endif
 
-	if(pCacheData->IsImmobile())
+	if (pCacheData->IsImmobile())
 	{
 		return FALSE;
 	}
@@ -1311,7 +1314,7 @@ int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 	bAIControl = pCacheData->IsAutomated();
 #endif
 
-	if(bAIControl)
+	if (bAIControl)
 	{
 #ifndef AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_PATH
 		if(!(finder->GetInfo() & MOVE_UNITS_IGNORE_DANGER))
@@ -1330,12 +1333,12 @@ int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 		}
 #endif
 
-		if(pCacheData->getDomainType() == DOMAIN_LAND)
+		if (pCacheData->getDomainType() == DOMAIN_LAND)
 		{
 			int iGroupAreaID = pUnit->area()->GetID();
-			if(pToPlot->getArea() != iGroupAreaID)
+			if (pToPlot->getArea() != iGroupAreaID)
 			{
-				if(!(pToPlot->isAdjacentToArea(iGroupAreaID)) && !pUnit->CanEverEmbark())
+				if (!(pToPlot->isAdjacentToArea(iGroupAreaID)) && !pUnit->CanEverEmbark())
 				{
 					return FALSE;
 				}
@@ -1345,21 +1348,21 @@ int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 
 	TeamTypes eTeam = pCacheData->getTeam();
 	bool bToPlotRevealed = pToPlot->isRevealed(eTeam);
-	if(!bToPlotRevealed)
+	if (!bToPlotRevealed)
 	{
-		if(pCacheData->isNoRevealMap())
+		if (pCacheData->isNoRevealMap())
 		{
 			return FALSE;
 		}
 	}
 
-	if(bToPlotRevealed)
+	if (bToPlotRevealed)
 	{
 		CvCity* pCity = pToPlot->getPlotCity();
-		if(pCity)
+		if (pCity)
 		{
 #ifdef AUI_ASTAR_USE_DELEGATES
-			if(pCacheData->getOwner() != pCity->getOwner() && !GET_TEAM(eTeam).isAtWar(pCity->getTeam()) && !(GetInfo() & MOVE_IGNORE_STACKING))
+			if (pCacheData->getOwner() != pCity->getOwner() && !GET_TEAM(eTeam).isAtWar(pCity->getTeam()) && !(GetInfo() & MOVE_IGNORE_STACKING))
 #else
 			if(pCacheData->getOwner() != pCity->getOwner() && !GET_TEAM(eTeam).isAtWar(pCity->getTeam()) && !(finder->GetInfo() & MOVE_IGNORE_STACKING))
 #endif
@@ -1369,7 +1372,7 @@ int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 		}
 	}
 
-	if(bAIControl || bToPlotRevealed)
+	if (bAIControl || bToPlotRevealed)
 	{
 		// assume that we can change our embarking state
 		byte bMoveFlags = CvUnit::MOVEFLAG_DESTINATION | CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE;
@@ -1648,8 +1651,8 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 
 	if(pUnit->IsCombatUnit())
 	{
-#ifdef AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING
-		bool bToPlotHasEnemy = pToPlot->isVisibleEnemyDefender(pUnit);
+#if defined(AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING) || defined(AUI_ASTAR_CONSIDER_DAMAGE_WHEN_ATTACKING)
+		bool bToPlotHasEnemy = pToPlot->isVisibleEnemyDefender(pUnit) || pToPlot->isEnemyCity(*pUnit);
 		if (iMovesLeft == 0 && !bToPlotHasEnemy)
 #else
 		if(iMovesLeft == 0)
@@ -1674,7 +1677,7 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 #endif
 		}
 
-#ifndef AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING
+#if !defined(AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING) && !defined(AUI_ASTAR_CONSIDER_DAMAGE_WHEN_ATTACKING)
 		if(pCacheData->IsAutomated())
 #endif
 		{
@@ -1686,12 +1689,71 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 				if(finder->IsPathDest(iToPlotX, iToPlotY))
 #endif
 				{
-#ifdef AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING
+#if defined(AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING) || defined(AUI_ASTAR_CONSIDER_DAMAGE_WHEN_ATTACKING)
 					if (bToPlotHasEnemy)
 #else
 					if(pToPlot->isVisibleEnemyDefender(pUnit))
 #endif
 					{
+#ifdef AUI_ASTAR_CONSIDER_DAMAGE_WHEN_ATTACKING
+						int iDealtDamage = 0;
+						int iSelfDamage = 0;
+						CvCity* pCity = pToPlot->getPlotCity();
+						if (pCity)
+						{
+							int iAttackerStrength = pUnit->GetMaxAttackStrength(pFromPlot, pToPlot, NULL);
+							int iDefenderStrength = pCity->getStrengthValue();
+
+							iDealtDamage = pUnit->getCombatDamage(iAttackerStrength, iDefenderStrength, pUnit->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ true);
+							iSelfDamage = pUnit->getCombatDamage(iDefenderStrength, iAttackerStrength, pCity->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ true, /*bDefenderIsCity*/ false);
+
+							// Will both the attacker die, and the city fall? If so, the unit wins
+							if (iDealtDamage + pCity->getDamage() >= pCity->GetMaxHitPoints())
+							{
+								if (pUnit->isNoCapture())
+									iDealtDamage = pCity->GetMaxHitPoints() - pCity->getDamage() - 1;
+								if (iSelfDamage >= pUnit->GetCurrHitPoints())
+									iSelfDamage = pUnit->GetCurrHitPoints() - 1;
+							}
+						}
+						else
+						{
+							CvUnit* pDefender = pToPlot->getVisibleEnemyDefender(pUnit);
+							if (pDefender && pDefender->IsCanDefend())
+							{
+								// handle the Zulu special thrown spear first attack
+								if (pUnit->isRangedSupportFire() && pUnit->canEverRangeStrikeAt(pToPlot, pFromPlot))
+									iDealtDamage = pUnit->GetRangeCombatDamage(pDefender, /*pCity*/ NULL, /*bIncludeRand*/ false, 0, NULL, pFromPlot);
+
+								if (iDealtDamage < pDefender->GetCurrHitPoints())
+								{
+									int iAttackerStrength = pUnit->GetMaxAttackStrength(pFromPlot, pToPlot, pDefender);
+									int iDefenderStrength = pDefender->GetMaxDefenseStrength(pToPlot, pUnit);
+
+									if (pUnit->IsCanHeavyCharge() && !pDefender->CanFallBackFromMelee(*pUnit))
+										iAttackerStrength = (iAttackerStrength * 150) / 100;
+									
+									iSelfDamage = pDefender->getCombatDamage(iDefenderStrength, iAttackerStrength, pDefender->getDamage() + iDealtDamage, /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
+									iDealtDamage = pUnit->getCombatDamage(iAttackerStrength, iDefenderStrength, pUnit->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
+
+									// Will both units be killed by this? :o If so, take drastic corrective measures
+									if (iDealtDamage >= pDefender->GetCurrHitPoints() && iSelfDamage >= pUnit->GetCurrHitPoints())
+									{
+										// He who hath the least amount of damage survives with 1 HP left
+										if (iDealtDamage + pDefender->getDamage() > iSelfDamage + pUnit->getDamage())
+											iSelfDamage = pUnit->GetCurrHitPoints() - 1;
+										else
+											iDealtDamage = pDefender->GetCurrHitPoints() - 1;
+									}
+								}
+							}
+						}
+						if (iSelfDamage > pUnit->GetCurrHitPoints())
+							iSelfDamage = pUnit->GetMaxHitPoints();
+						if (iDealtDamage > GC.getMAX_HIT_POINTS())
+							iDealtDamage = GC.getMAX_HIT_POINTS();
+						iCost += iSelfDamage * PATH_DAMAGE_WEIGHT * pUnit->GetMaxHitPoints() / 100 + (GC.getMAX_HIT_POINTS() - iDealtDamage) * PATH_DAMAGE_WEIGHT / 10;
+#else
 #ifdef AUI_ASTAR_FIX_DEFENSE_PENALTIES_CONSIDERED_FOR_UNITS_WITHOUT_DEFENSE_BONUS
 						int iDefenseBonus = pFromPlot->defenseModifier(eUnitTeam, false);
 						if (iDefenseBonus > 0)
@@ -1726,6 +1788,7 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 								iCost += (PATH_MOVEMENT_WEIGHT * iMovesLeft);
 							}
 						}
+#endif
 					}
 				}
 			}
@@ -2679,8 +2742,8 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 
 	if(pUnit->IsCombatUnit())
 	{
-#ifdef AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING
-		bool bToPlotHasEnemy = pToPlot->isVisibleEnemyDefender(pUnit);
+#if defined(AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING) || defined(AUI_ASTAR_CONSIDER_DAMAGE_WHEN_ATTACKING)
+		bool bToPlotHasEnemy = pToPlot->isVisibleEnemyDefender(pUnit) || pToPlot->isEnemyCity(*pUnit);
 		if (iMovesLeft == 0 && !bToPlotHasEnemy)
 #else
 		if(iMovesLeft == 0)
@@ -2705,7 +2768,7 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 #endif
 		}
 
-#ifndef AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING
+#if !defined(AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING) && !defined(AUI_ASTAR_CONSIDER_DAMAGE_WHEN_ATTACKING)
 		if(pCacheData->IsAutomated())
 #endif
 		{
@@ -2717,12 +2780,71 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 				if(finder->IsPathDest(pToPlot->getX(), pToPlot->getY()))
 #endif
 				{
-#ifdef AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING
+#if defined(AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING) || defined(AUI_ASTAR_CONSIDER_DAMAGE_WHEN_ATTACKING)
 					if (bToPlotHasEnemy)
 #else
 					if(pToPlot->isVisibleEnemyDefender(pUnit))
 #endif
 					{
+#ifdef AUI_ASTAR_CONSIDER_DAMAGE_WHEN_ATTACKING
+						int iDealtDamage = 0;
+						int iSelfDamage = 0;
+						CvCity* pCity = pToPlot->getPlotCity();
+						if (pCity)
+						{
+							int iAttackerStrength = pUnit->GetMaxAttackStrength(pFromPlot, pToPlot, NULL);
+							int iDefenderStrength = pCity->getStrengthValue();
+
+							iDealtDamage = pUnit->getCombatDamage(iAttackerStrength, iDefenderStrength, pUnit->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ true);
+							iSelfDamage = pUnit->getCombatDamage(iDefenderStrength, iAttackerStrength, pCity->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ true, /*bDefenderIsCity*/ false);
+
+							// Will both the attacker die, and the city fall? If so, the unit wins
+							if (iDealtDamage + pCity->getDamage() >= pCity->GetMaxHitPoints())
+							{
+								if (pUnit->isNoCapture())
+									iDealtDamage = pCity->GetMaxHitPoints() - pCity->getDamage() - 1;
+								if (iSelfDamage >= pUnit->GetCurrHitPoints())
+									iSelfDamage = pUnit->GetCurrHitPoints() - 1;
+							}
+						}
+						else
+						{
+							CvUnit* pDefender = pToPlot->getVisibleEnemyDefender(pUnit);
+							if (pDefender && pDefender->IsCanDefend())
+							{
+								// handle the Zulu special thrown spear first attack
+								if (pUnit->isRangedSupportFire() && pUnit->canEverRangeStrikeAt(pToPlot, pFromPlot))
+									iDealtDamage = pUnit->GetRangeCombatDamage(pDefender, /*pCity*/ NULL, /*bIncludeRand*/ false, 0, NULL, pFromPlot);
+
+								if (iDealtDamage < pDefender->GetCurrHitPoints())
+								{
+									int iAttackerStrength = pUnit->GetMaxAttackStrength(pFromPlot, pToPlot, pDefender);
+									int iDefenderStrength = pDefender->GetMaxDefenseStrength(pToPlot, pUnit);
+
+									if (pUnit->IsCanHeavyCharge() && !pDefender->CanFallBackFromMelee(*pUnit))
+										iAttackerStrength = (iAttackerStrength * 150) / 100;
+
+									iSelfDamage = pDefender->getCombatDamage(iDefenderStrength, iAttackerStrength, pDefender->getDamage() + iDealtDamage, /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
+									iDealtDamage = pUnit->getCombatDamage(iAttackerStrength, iDefenderStrength, pUnit->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
+
+									// Will both units be killed by this? :o If so, take drastic corrective measures
+									if (iDealtDamage >= pDefender->GetCurrHitPoints() && iSelfDamage >= pUnit->GetCurrHitPoints())
+									{
+										// He who hath the least amount of damage survives with 1 HP left
+										if (iDealtDamage + pDefender->getDamage() > iSelfDamage + pUnit->getDamage())
+											iSelfDamage = pUnit->GetCurrHitPoints() - 1;
+										else
+											iDealtDamage = pDefender->GetCurrHitPoints() - 1;
+									}
+								}
+							}
+						}
+						if (iSelfDamage > pUnit->GetCurrHitPoints())
+							iSelfDamage = pUnit->GetMaxHitPoints();
+						if (iDealtDamage > GC.getMAX_HIT_POINTS())
+							iDealtDamage = GC.getMAX_HIT_POINTS();
+						iCost += iSelfDamage * PATH_DAMAGE_WEIGHT * pUnit->GetMaxHitPoints() / 100 + (GC.getMAX_HIT_POINTS() - iDealtDamage) * PATH_DAMAGE_WEIGHT / 10;
+#else
 #ifdef AUI_ASTAR_FIX_DEFENSE_PENALTIES_CONSIDERED_FOR_UNITS_WITHOUT_DEFENSE_BONUS
 						int iDefenseBonus = pFromPlot->defenseModifier(eUnitTeam, false);
 						if (iDefenseBonus > 0)
@@ -2757,6 +2879,7 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 								iCost += (PATH_MOVEMENT_WEIGHT * iMovesLeft);
 							}
 						}
+#endif
 					}
 				}
 			}
@@ -5644,7 +5767,7 @@ int GetIncreasedMoveRangeForRoads(const CvUnit* pUnit, int iRange)
 // *** WARNING - The optimization below (so that TurnsToReachTarget() doesn't get called too often breaks down when we get to RR.  We need to address this!
 // ***
 #ifdef AUI_ASTAR_PARADROP
-bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnoreUnits, bool bIgnoreParadrop, int* piTurns /* = NULL */)
+bool CanReachInXTurns(UnitHandle pUnit, const CvPlot* pTarget, int iTurns, bool bIgnoreUnits, bool bIgnoreParadrop, int* piTurns /* = NULL */)
 #else
 bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnoreUnits, int* piTurns /* = NULL */)
 #endif
@@ -5747,7 +5870,7 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 // open the 2nd layer of the pathfinder)
 #ifdef AUI_ASTAR_TURN_LIMITER
 // Delnar: if you're checking if a unit can reach a tile within X turns, set the iTargetTurns parameter to X to speed up the pathfinder
-int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns)
+int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns)
 #else
 int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking)
 #endif
