@@ -261,13 +261,24 @@ public:
 	}
 
 	bool isFriendlyCity(const CvUnit& kUnit, bool bCheckImprovement) const;
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	bool IsFriendlyTerritory(PlayerTypes ePlayer, TeamTypes eAssumeOwner = NO_TEAM) const;
+#else
 	bool IsFriendlyTerritory(PlayerTypes ePlayer) const;
+#endif
 
 	bool isBeingWorked() const;
 
 	bool isUnit() const;
 	bool isVisibleEnemyDefender(const CvUnit* pUnit) const;
+#ifdef AUI_PLOT_GET_VISIBLE_ENEMY_DEFENDER_TO_UNIT
+	CvUnit* getVisibleEnemyDefender(const CvUnit* pUnit) const;
+#endif
+#ifdef AUI_CONSTIFY
+	CvUnit* getVisibleEnemyDefender(PlayerTypes ePlayer) const;
+#else
 	CvUnit* getVisibleEnemyDefender(PlayerTypes ePlayer);
+#endif
 	int getNumDefenders(PlayerTypes ePlayer) const;
 	int getNumVisibleEnemyDefenders(const CvUnit* pUnit) const;
 	int getNumVisiblePotentialEnemyDefenders(const CvUnit* pUnit) const;
@@ -382,8 +393,13 @@ public:
 
 	void setOwner(PlayerTypes eNewValue, int iAcquiringCityID, bool bCheckUnits = true, bool bUpdateResources = true);
 	void ClearCityPurchaseInfo(void);
+#ifdef AUI_CONSTIFY
+	PlayerTypes GetCityPurchaseOwner() const;
+	int GetCityPurchaseID() const;
+#else
 	PlayerTypes GetCityPurchaseOwner(void);
 	int GetCityPurchaseID(void);
+#endif
 	void SetCityPurchaseID(int iAcquiringCityID);
 
 	bool IsHomeFrontForPlayer(PlayerTypes ePlayer) const;

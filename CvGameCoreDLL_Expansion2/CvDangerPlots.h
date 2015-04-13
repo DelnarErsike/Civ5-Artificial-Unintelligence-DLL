@@ -52,8 +52,8 @@ struct CvDangerPlotContents
 		m_apCities.clear();
 	};
 
-	int GetDanger(const CvUnit* pUnit, const CvUnit* pAttackTargetUnit = NULL, const int iAirAction = ACTION_AIR_ATTACK, int iAfterNIntercepts = 0);
-	int GetDanger(CvCity* pCity, const CvUnit* pPretendGarrison = NULL, int iAfterNIntercepts = 0);
+	int GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTarget = NULL, const int iAirAction = ACTION_AIR_ATTACK, int iAfterNIntercepts = 0);
+	int GetDanger(const CvCity* pCity, int iAfterNIntercepts = 0, PlayerTypes ePretendCityOwner = NO_PLAYER, const CvUnit* pPretendGarrison = NULL, int iPretendGarrisonExtraDamage = 0);
 	// Not normally used, primarily a helper tool
 	int GetDanger(const PlayerTypes ePlayer);
 	bool IsUnderImmediateThreat(const CvUnit* pUnit);
@@ -117,13 +117,14 @@ public:
 
 	void UpdateDanger(bool bPretendWarWithAllCivs = false, bool bIgnoreVisibility = false);
 #ifdef AUI_DANGER_PLOTS_REMADE
-	int GetDanger(const CvPlot& pPlot, const CvUnit* pUnit, const CvUnit* pAttackTargetUnit = NULL, const int iAction = ACTION_DEFAULT, int iAfterNIntercepts = 0);
-	int GetDanger(const CvPlot& pPlot, CvCity* pCity, const CvUnit* pPretendGarrison = NULL, int iAfterNIntercepts = 0);
-	int GetDanger(const CvPlot& pPlot, const PlayerTypes ePlayer);
-	bool IsUnderImmediateThreat(const CvPlot& pPlot, const CvUnit* pUnit);
-	bool IsUnderImmediateThreat(const CvPlot& pPlot, const PlayerTypes ePlayer);
-	bool CouldAttackHere(const CvPlot& pPlot, const CvUnit* pAttacker);
-	bool CouldAttackHere(const CvPlot& pPlot, const CvCity* pAttacker);
+	int GetDanger(const CvPlot& kPlot, const CvUnit* pUnit, const CvPlot* pAttackTarget = NULL, const int iAction = ACTION_DEFAULT, int iAfterNIntercepts = 0);
+	int GetDanger(const CvPlot& kPlot, const CvCity* pCity, int iAfterNIntercepts = 0, PlayerTypes ePretendCityOwner = NO_PLAYER, const CvUnit* pPretendGarrison = NULL, int iPretendGarrisonExtraDamage = 0);
+	int GetDanger(const CvPlot& kPlot, const PlayerTypes ePlayer);
+	int GetDangerFromCitadel(const CvPlot& kPlot, const PlayerTypes ePlayer);
+	bool IsUnderImmediateThreat(const CvPlot& kPlot, const CvUnit* pUnit);
+	bool IsUnderImmediateThreat(const CvPlot& kPlot, const PlayerTypes ePlayer);
+	bool CouldAttackHere(const CvPlot& kPlot, const CvUnit* pAttacker);
+	bool CouldAttackHere(const CvPlot& kPlot, const CvCity* pAttacker);
 #else
 	void AddDanger(int iPlotX, int iPlotY, int iValue, bool bWithinOneMove);
 	int GetDanger(const CvPlot& pPlot) const;

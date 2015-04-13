@@ -7030,13 +7030,7 @@ CvArea* CvCity::waterArea() const
 //	--------------------------------------------------------------------------------
 CvUnit* CvCity::GetGarrisonedUnit() const
 {
-#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-	CvUnit* pGarrison = m_hGarrisonOverride.pointer();
-	if (pGarrison != NULL)
-		return pGarrison;
-#else
 	CvUnit* pGarrison = NULL;
-#endif
 
 	CvPlot* pPlot = plot();
 	if(pPlot)
@@ -7050,18 +7044,6 @@ CvUnit* CvCity::GetGarrisonedUnit() const
 
 	return pGarrison;
 }
-
-#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-void CvCity::OverrideGarrison(const CvUnit* pUnit)
-{
-	m_hGarrisonOverride = pUnit;
-}
-
-void CvCity::UnsetGarrisonOverride()
-{
-	m_hGarrisonOverride.removeTarget();
-}
-#endif
 
 //	--------------------------------------------------------------------------------
 CvPlot* CvCity::getRallyPlot() const
@@ -10417,6 +10399,82 @@ void CvCity::changeSpecialistFreeExperience(int iChange)
 }
 
 
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+int CvCity::getUpdatedStrengthValue(PlayerTypes eAssumeOwner, const CvUnit* pAssumeCityGarrison, int iAssumeExtraDamageOnGarrison) const
+{
+	VALIDATE_OBJECT
+	TeamTypes eAssumeTeam = getTeam();
+	if (eAssumeOwner == NO_PLAYER)
+		eAssumeOwner = getOwner();
+	else
+		eAssumeTeam = GET_PLAYER(eAssumeOwner).getTeam();
+
+	// Default Strength
+	int iStrengthValue = /*600*/ GC.getCITY_STRENGTH_DEFAULT();
+
+	// Population mod
+	iStrengthValue += getPopulation() * /*25*/ GC.getCITY_STRENGTH_POPULATION_CHANGE();
+
+	// Building Defense
+	int iBuildingDefense = m_pCityBuildings->GetBuildingDefense();
+
+	iBuildingDefense *= (100 + m_pCityBuildings->GetBuildingDefenseMod());
+	iBuildingDefense /= 100;
+
+	iStrengthValue += iBuildingDefense;
+
+	// Garrisoned Unit
+	const CvUnit* pGarrisonedUnit = GetGarrisonedUnit();
+	if (pAssumeCityGarrison)
+		pGarrisonedUnit = pAssumeCityGarrison;
+	int iStrengthFromUnits = 0;
+	if (pGarrisonedUnit)
+	{
+		int iMaxHits = GC.getMAX_HIT_POINTS();
+		iStrengthFromUnits = pGarrisonedUnit->GetBaseCombatStrength() * 100 * (iMaxHits - pGarrisonedUnit->getDamage() - iAssumeExtraDamageOnGarrison) / iMaxHits;
+	}
+
+	iStrengthValue += ((iStrengthFromUnits * 100) / /*300*/ GC.getCITY_STRENGTH_UNIT_DIVISOR());
+
+	// Tech Progress increases City Strength
+	int iTechProgress = GET_TEAM(eAssumeTeam).GetTeamTechs()->GetNumTechsKnown() * 100 / GC.getNumTechInfos();
+
+	// Want progress to be a value between 0 and 5
+	double fTechProgress = iTechProgress / 100.0 * /*5*/ GC.getCITY_STRENGTH_TECH_BASE();
+	double fTechExponent = /*2.0f*/ GC.getCITY_STRENGTH_TECH_EXPONENT();
+	int iTechMultiplier = /*2*/ GC.getCITY_STRENGTH_TECH_MULTIPLIER();
+
+	// The way all of this adds up...
+	// 25% of the way through the game provides an extra 3.12
+	// 50% of the way through the game provides an extra 12.50
+	// 75% of the way through the game provides an extra 28.12
+	// 100% of the way through the game provides an extra 50.00
+
+	double fTechMod = pow(fTechProgress, fTechExponent);
+	fTechMod *= iTechMultiplier;
+
+	fTechMod *= 100;	// Bring it back into hundreds
+	iStrengthValue += (int)(fTechMod + 0.005);	// Adding a small amount to prevent small fp accuracy differences from generating a different integer result on the Mac and PC. Assuming fTechMod is positive, round to nearest hundredth
+
+	int iStrengthMod = 0;
+
+	// Player-wide strength mod (Policies, etc.)
+	iStrengthMod += GET_PLAYER(eAssumeOwner).GetCityStrengthMod();
+
+	// Apply Mod
+	iStrengthValue *= (100 + iStrengthMod);
+	iStrengthValue /= 100;
+
+	// Terrain mod
+	if (plot()->isHills())
+	{
+		iStrengthValue += /*3*/ GC.getCITY_STRENGTH_HILL_CHANGE();
+	}
+
+	return iStrengthValue;
+}
+#endif
+
 //	--------------------------------------------------------------------------------
 void CvCity::updateStrengthValue()
 {
@@ -10488,13 +10546,21 @@ void CvCity::updateStrengthValue()
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+int CvCity::getStrengthValue(bool bForRangeStrike, PlayerTypes eAssumeOwner, const CvUnit* pAssumeCityGarrison, int iAssumeExtraDamageOnGarrison) const
+#else
 int CvCity::getStrengthValue(bool bForRangeStrike) const
+#endif
 {
 	VALIDATE_OBJECT
 	// Strike strikes are weaker
 	if(bForRangeStrike)
 	{
 		int iValue = m_iStrengthValue;
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+		if (eAssumeOwner != NO_PLAYER || pAssumeCityGarrison || iAssumeExtraDamageOnGarrison != 0)
+			iValue = getUpdatedStrengthValue(eAssumeOwner, pAssumeCityGarrison, iAssumeExtraDamageOnGarrison);
+#endif
 
 		iValue -= m_pCityBuildings->GetBuildingDefense();
 
@@ -10503,9 +10569,20 @@ int CvCity::getStrengthValue(bool bForRangeStrike) const
 		iValue *= /*40*/ GC.getCITY_RANGED_ATTACK_STRENGTH_MULTIPLIER();
 		iValue /= 100;
 
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+		if (GetGarrisonedUnit() || pAssumeCityGarrison)
+#else
 		if(GetGarrisonedUnit())
+#endif
 		{
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+			if (eAssumeOwner != NO_PLAYER)
+				iValue *= (100 + GET_PLAYER(eAssumeOwner).GetGarrisonedCityRangeStrikeModifier());
+			else
+				iValue *= (100 + GET_PLAYER(m_eOwner).GetGarrisonedCityRangeStrikeModifier());
+#else
 			iValue *= (100 + GET_PLAYER(m_eOwner).GetGarrisonedCityRangeStrikeModifier());
+#endif
 			iValue /= 100;
 		}
 
@@ -10534,6 +10611,11 @@ int CvCity::getStrengthValue(bool bForRangeStrike) const
 		return iValue;
 	}
 
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	if (eAssumeOwner != NO_PLAYER || pAssumeCityGarrison || iAssumeExtraDamageOnGarrison != 0)
+		return getUpdatedStrengthValue(eAssumeOwner, pAssumeCityGarrison, iAssumeExtraDamageOnGarrison);
+	else
+#endif
 	return m_iStrengthValue;
 }
 
@@ -14799,7 +14881,7 @@ int CvCity::rangeCombatUnitDefense(const CvUnit* pDefender) const
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-int CvCity::rangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, const CvPlot* pInPlot, const int iDefenderExtraFortifyTurns) const
+int CvCity::rangeCombatDamage(const CvUnit* pDefender, const CvCity* pCity, bool bIncludeRand, const CvPlot* pInPlot, const int iDefenderExtraFortifyTurns) const
 {
 	VALIDATE_OBJECT
 	

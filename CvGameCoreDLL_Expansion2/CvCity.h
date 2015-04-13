@@ -298,10 +298,6 @@ public:
 	CvArea* waterArea() const;
 
 	CvUnit* GetGarrisonedUnit() const;
-#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-	void OverrideGarrison(const CvUnit* pUnit);
-	void UnsetGarrisonOverride();
-#endif
 
 	CvPlot* getRallyPlot() const;
 	void setRallyPlot(CvPlot* pPlot);
@@ -674,8 +670,15 @@ public:
 	int getSpecialistFreeExperience() const;
 	void changeSpecialistFreeExperience(int iChange);
 
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	int getUpdatedStrengthValue(PlayerTypes eAssumeOwner = NO_PLAYER, const CvUnit* pAssumeCityGarrison = NULL, int iAssumeExtraDamageOnGarrison = 0) const;
+#endif
 	void updateStrengthValue();
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	int getStrengthValue(bool bForRangeStrike = false, PlayerTypes eAssumeOwner = NO_PLAYER, const CvUnit* pAssumeCityGarrison = NULL, int iAssumeExtraDamageOnGarrison = 0) const;
+#else
 	int getStrengthValue(bool bForRangeStrike = false) const;
+#endif
 	int GetPower() const;
 
 	int getDamage() const;
@@ -696,7 +699,7 @@ public:
 
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 	int rangeCombatUnitDefense(_In_ const CvUnit* pDefender, const CvPlot* pInPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
-	int rangeCombatDamage(const CvUnit* pDefender, CvCity* pCity = NULL, bool bIncludeRand = true, const CvPlot* pInPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
+	int rangeCombatDamage(const CvUnit* pDefender, const CvCity* pCity = NULL, bool bIncludeRand = true, const CvPlot* pInPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
 #else
 	int rangeCombatUnitDefense(_In_ const CvUnit* pDefender) const;
 	int rangeCombatDamage(const CvUnit* pDefender, CvCity* pCity = NULL, bool bIncludeRand = true) const;
@@ -880,9 +883,6 @@ protected:
 	FAutoVariable<int, CvCity> m_iDamage;
 	FAutoVariable<int, CvCity> m_iThreatValue;
 	FAutoVariable<int, CvCity> m_iGarrisonedUnit;  // unused
-#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-	UnitHandle m_hGarrisonOverride;
-#endif
 	FAutoVariable<int, CvCity> m_iResourceDemanded;
 	FAutoVariable<int, CvCity> m_iWeLoveTheKingDayCounter;
 	FAutoVariable<int, CvCity> m_iLastTurnGarrisonAssigned;

@@ -23859,51 +23859,57 @@ void CvPlayer::ChangeUnitPurchaseCostModifier(int iChange)
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 //	--------------------------------------------------------------------------------
-int CvPlayer::GetPlotDanger(CvPlot& pPlot, const CvUnit* pUnit, const CvUnit* pAttackTargetUnit, const int iAction, int iAfterNIntercepts) const
+int CvPlayer::GetPlotDanger(const CvPlot& kPlot, const CvUnit* pUnit, const CvPlot* pAttackTarget, const int iAction, int iAfterNIntercepts) const
 {
 	if (pUnit)
-		return m_pDangerPlots->GetDanger(pPlot, pUnit, pAttackTargetUnit, iAction, iAfterNIntercepts);
+		return m_pDangerPlots->GetDanger(kPlot, pUnit, pAttackTarget, iAction, iAfterNIntercepts);
 	else
-		return m_pDangerPlots->GetDanger(pPlot, GetID());
+		return m_pDangerPlots->GetDanger(kPlot, GetID());
 }
 
 //	--------------------------------------------------------------------------------
-int CvPlayer::GetPlotDanger(CvPlot& pPlot, CvCity* pCity, const CvUnit* pPretendGarrison, int iAfterNIntercepts) const
+int CvPlayer::GetPlotDanger(const CvPlot& kPlot, const CvCity* pCity, int iAfterNIntercepts, PlayerTypes ePretendCityOwner, const CvUnit* pPretendGarrison, int iPretendGarrisonExtraDamage) const
 {
 	if (pCity)
-		return m_pDangerPlots->GetDanger(pPlot, pCity, pPretendGarrison, iAfterNIntercepts);
+		return m_pDangerPlots->GetDanger(kPlot, pCity, iAfterNIntercepts, ePretendCityOwner, pPretendGarrison, iPretendGarrisonExtraDamage);
 	else
-		return m_pDangerPlots->GetDanger(pPlot, GetID());
+		return m_pDangerPlots->GetDanger(kPlot, GetID());
 }
 
 //	--------------------------------------------------------------------------------
-int CvPlayer::GetPlotDanger(CvPlot& pPlot, const PlayerTypes ePlayer) const
+int CvPlayer::GetPlotDanger(const CvPlot& kPlot, const PlayerTypes ePlayer) const
 {
-	return m_pDangerPlots->GetDanger(pPlot, ePlayer);
+	return m_pDangerPlots->GetDanger(kPlot, ePlayer);
 }
 
 //	--------------------------------------------------------------------------------
-bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, const PlayerTypes ePlayer) const
+int CvPlayer::GetPlotDangerFromCitadel(const CvPlot& kPlot, const PlayerTypes ePlayer) const
 {
-	return m_pDangerPlots->IsUnderImmediateThreat(pPlot, ePlayer);
+	return m_pDangerPlots->GetDangerFromCitadel(kPlot, ePlayer);
 }
 
 //	--------------------------------------------------------------------------------
-bool CvPlayer::IsPlotUnderImmediateThreat(CvPlot& pPlot, const CvUnit* pUnit) const
+bool CvPlayer::IsPlotUnderImmediateThreat(const CvPlot& kPlot, const PlayerTypes ePlayer) const
+{
+	return m_pDangerPlots->IsUnderImmediateThreat(kPlot, ePlayer);
+}
+
+//	--------------------------------------------------------------------------------
+bool CvPlayer::IsPlotUnderImmediateThreat(const CvPlot& kPlot, const CvUnit* pUnit) const
 {
 	if (pUnit)
-		return m_pDangerPlots->IsUnderImmediateThreat(pPlot, pUnit);
+		return m_pDangerPlots->IsUnderImmediateThreat(kPlot, pUnit);
 	else
-		return m_pDangerPlots->IsUnderImmediateThreat(pPlot, GetID());
+		return m_pDangerPlots->IsUnderImmediateThreat(kPlot, GetID());
 }
 
-bool CvPlayer::CouldAttackHere(CvPlot& pPlot, const CvUnit* pUnit) const
+bool CvPlayer::CouldAttackHere(const CvPlot& kPlot, const CvUnit* pUnit) const
 {
-	return m_pDangerPlots->CouldAttackHere(pPlot, pUnit);
+	return m_pDangerPlots->CouldAttackHere(kPlot, pUnit);
 }
-bool CvPlayer::CouldAttackHere(CvPlot& pPlot, const CvCity* pCity) const
+bool CvPlayer::CouldAttackHere(const CvPlot& kPlot, const CvCity* pCity) const
 {
-	return m_pDangerPlots->CouldAttackHere(pPlot, pCity);
+	return m_pDangerPlots->CouldAttackHere(kPlot, pCity);
 }
 #else
 //	--------------------------------------------------------------------------------

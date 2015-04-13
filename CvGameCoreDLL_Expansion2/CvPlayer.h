@@ -1339,13 +1339,14 @@ public:
 	void ChangeUnitPurchaseCostModifier(int iChange);
 
 #ifdef AUI_DANGER_PLOTS_REMADE
-	int GetPlotDanger(CvPlot& Plot, const CvUnit* pUnit, const CvUnit* pAttackTargetUnit = NULL, const int iAction = ACTION_DEFAULT, int iAfterNIntercepts = 0) const;
-	int GetPlotDanger(CvPlot& Plot, CvCity* pCity, const CvUnit* pPretendGarrison = NULL, int iAfterNIntercepts = 0) const;
-	int GetPlotDanger(CvPlot& Plot, const PlayerTypes ePlayer) const;
-	bool IsPlotUnderImmediateThreat(CvPlot& Plot, const CvUnit* pUnit) const;
-	bool IsPlotUnderImmediateThreat(CvPlot& Plot, const PlayerTypes ePlayer) const;
-	bool CouldAttackHere(CvPlot& Plot, const CvUnit* pUnit) const;
-	bool CouldAttackHere(CvPlot& Plot, const CvCity* pCity) const;
+	int GetPlotDanger(const CvPlot& kPlot, const CvUnit* pUnit, const CvPlot* pAttackTarget = NULL, const int iAction = ACTION_DEFAULT, int iAfterNIntercepts = 0) const;
+	int GetPlotDanger(const CvPlot& kPlot, const CvCity* pCity, int iAfterNIntercepts = 0, PlayerTypes ePretendCityOwner = NO_PLAYER, const CvUnit* pPretendGarrison = NULL, int iPretendGarrisonExtraDamage = 0) const;
+	int GetPlotDanger(const CvPlot& kPlot, const PlayerTypes ePlayer) const;
+	int GetPlotDangerFromCitadel(const CvPlot& kPlot, const PlayerTypes ePlayer) const;
+	bool IsPlotUnderImmediateThreat(const CvPlot& kPlot, const CvUnit* pUnit) const;
+	bool IsPlotUnderImmediateThreat(const CvPlot& kPlot, const PlayerTypes ePlayer) const;
+	bool CouldAttackHere(const CvPlot& kPlot, const CvUnit* pUnit) const;
+	bool CouldAttackHere(const CvPlot& kPlot, const CvCity* pCity) const;
 #else
 	int GetPlotDanger(CvPlot& Plot) const;
 	bool IsPlotUnderImmediateThreat(CvPlot& Plot) const;

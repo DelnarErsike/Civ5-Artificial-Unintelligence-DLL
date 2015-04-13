@@ -497,10 +497,10 @@ public:
 
 	int GetBaseRangedCombatStrength() const;
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-	int GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
+	int GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL, const int iDefenderExtraFortifyTurns = 0, PlayerTypes eAssumeCityOwner = NO_PLAYER) const;
 
-	int GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
-	int GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL, const int iDefenderExtraFortifyTurns = 0) const;
+	int GetAirCombatDamage(const CvUnit* pDefender, const CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL, const int iDefenderExtraFortifyTurns = 0, PlayerTypes eAssumeCityOwner = NO_PLAYER, const CvUnit* pAssumeCityGarrison = NULL, int iAssumeExtraDamageOnCityGarrison = 0) const;
+	int GetRangeCombatDamage(const CvUnit* pDefender, const CvCity* pCity, bool bIncludeRand, int iAssumeExtraDamage = 0, const CvPlot* pTargetPlot = NULL, const CvPlot* pFromPlot = NULL, const int iDefenderExtraFortifyTurns = 0, PlayerTypes eAssumeCityOwner = NO_PLAYER, const CvUnit* pAssumeCityGarrison = NULL, int iAssumeExtraDamageOnCityGarrison = 0) const;
 #else
 	int GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack) const;
 
@@ -627,7 +627,7 @@ public:
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 	int GetNumEnemyUnitsAdjacent(const CvUnit* pUnitToExclude = NULL, const CvPlot* pAtPlot = NULL) const;
 	bool IsEnemyCityAdjacent(const CvPlot* pAtPlot = NULL) const;
-	bool IsEnemyCityAdjacent(const CvCity* pSpecifyCity, const CvPlot* pAtPlot = NULL) const;
+	bool IsEnemyCityAdjacent(const CvCity* pSpecifyCity, const CvPlot* pAtPlot = NULL, PlayerTypes eAssumeOwner = NO_PLAYER) const;
 	int GetNumSpecificEnemyUnitsAdjacent(const CvUnit* pUnitToExclude = NULL, const CvUnit* pUnitCompare = NULL, const CvPlot* pAtPlot = NULL) const;
 	bool IsFriendlyUnitAdjacent(bool bCombatUnit, const CvPlot* pAtPlot = NULL) const;
 #else
@@ -981,8 +981,13 @@ public:
 
 	bool IsSapper() const;
 	void ChangeSapperCount(int iChange);
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	bool IsSappingCity(const CvCity* pTargetCity, const CvPlot* pAtPlot = NULL, PlayerTypes eAssumeOwner = NO_PLAYER) const;
+	bool IsNearSapper(const CvCity* pTargetCity, const CvPlot* pAtPlot = NULL, PlayerTypes eAssumeOwner = NO_PLAYER) const;
+#else
 	bool IsSappingCity(const CvCity* pTargetCity) const;
 	bool IsNearSapper(const CvCity* pTargetCity) const;
+#endif
 
 	bool IsCanHeavyCharge() const;
 	void ChangeCanHeavyChargeCount(int iChange);
@@ -1321,7 +1326,7 @@ public:
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 	bool canMoveAndRangedStrike(int iX, int iY) const;
 	bool canMoveAndRangedStrike(const CvPlot* pTargetPlot) const;
-	bool GetMovablePlotListOpt(BaseVector<CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bExitOnFound = false, int iWithinTurns = 0, const CvPlot* pFromPlot = NULL) const;
+	bool GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bExitOnFound = false, int iWithinTurns = 0, const CvPlot* pFromPlot = NULL, BaseVector<const CvPlot*, true>* pExcludePlotList = NULL, int iMovementLeftInExclude = 1) const;
 #endif
 #ifdef AUI_UNIT_DO_AITYPE_FLIP
 	bool DoSingleUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert = false, bool bForceOff = false);
@@ -1346,6 +1351,19 @@ public:
 
 	std::string debugDump(const FAutoVariableBase&) const;
 	std::string stackTraceRemark(const FAutoVariableBase&) const;
+
+#ifdef AUI_SCOPE_FIXES
+	bool CanWithdrawFromMelee(CvUnit& pAttacker);
+	bool DoWithdrawFromMelee(CvUnit& pAttacker);
+
+	// these are do to a unit using Heavy Charge against you
+#ifdef AUI_CONSTIFY
+	bool CanFallBackFromMelee(const CvUnit& pAttacker) const;
+#else
+	bool CanFallBackFromMelee(CvUnit& pAttacker);
+#endif
+	bool DoFallBackFromMelee(CvUnit& pAttacker);
+#endif
 
 protected:
 	const MissionQueueNode* HeadMissionQueueNode() const;
@@ -1595,12 +1613,18 @@ protected:
 
 	CvUnit* airStrikeTarget(CvPlot& pPlot, bool bNoncombatAllowed) const;
 
+#ifndef AUI_SCOPE_FIXES
 	bool CanWithdrawFromMelee(CvUnit& pAttacker);
 	bool DoWithdrawFromMelee(CvUnit& pAttacker);
 
 	// these are do to a unit using Heavy Charge against you
+#ifdef AUI_CONSTIFY
+	bool CanFallBackFromMelee(const CvUnit& pAttacker) const;
+#else
 	bool CanFallBackFromMelee(CvUnit& pAttacker);
+#endif
 	bool DoFallBackFromMelee(CvUnit& pAttacker);
+#endif
 
 private:
 

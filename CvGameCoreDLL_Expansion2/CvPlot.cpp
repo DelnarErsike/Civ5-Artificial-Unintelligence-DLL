@@ -3513,7 +3513,11 @@ bool CvPlot::isFriendlyCity(const CvUnit& kUnit, bool) const
 
 //	--------------------------------------------------------------------------------
 /// Is this a plot that's friendly to our team? (owned by us or someone we have Open Borders with)
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+bool CvPlot::IsFriendlyTerritory(PlayerTypes ePlayer, TeamTypes eAssumeOwner) const
+#else
 bool CvPlot::IsFriendlyTerritory(PlayerTypes ePlayer) const
+#endif
 {
 	// No friendly territory for barbs!
 	if(GET_PLAYER(ePlayer).isBarbarian())
@@ -3523,6 +3527,10 @@ bool CvPlot::IsFriendlyTerritory(PlayerTypes ePlayer) const
 
 	TeamTypes eTeam = GET_PLAYER(ePlayer).getTeam();
 	TeamTypes ePlotOwner = getTeam();
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+	if (eAssumeOwner != NO_TEAM)
+		ePlotOwner = eAssumeOwner;
+#endif
 
 	// Nobody owns this plot
 	if(ePlotOwner == NO_TEAM)
@@ -3645,8 +3653,43 @@ bool CvPlot::isVisibleEnemyDefender(const CvUnit* pUnit) const
 	return false;
 }
 
+#ifdef AUI_PLOT_GET_VISIBLE_ENEMY_DEFENDER_TO_UNIT
 //	-----------------------------------------------------------------------------------------------
+CvUnit* CvPlot::getVisibleEnemyDefender(const CvUnit* pUnit) const
+{
+	CvAssertMsg(pUnit, "Source unit must be valid");
+	const IDInfo* pUnitNode = m_units.head();
+	if (pUnitNode)
+	{
+		TeamTypes eTeam = GET_PLAYER(pUnit->getOwner()).getTeam();
+		bool bAlwaysHostile = pUnit->isAlwaysHostile(*this);
+
+		do
+		{
+			const CvUnit* pLoopUnit = GetPlayerUnit(*pUnitNode);
+			pUnitNode = m_units.next(pUnitNode);
+
+			if (pLoopUnit && !pLoopUnit->isInvisible(eTeam, false))
+			{
+				if (pLoopUnit->IsCanDefend() && isEnemy(pLoopUnit, eTeam, bAlwaysHostile))
+				{
+					return const_cast<CvUnit*>(pLoopUnit);
+				}
+			}
+		}
+		while (pUnitNode != NULL);
+	}
+
+	return NULL;
+}
+#endif
+
+//	-----------------------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+CvUnit* CvPlot::getVisibleEnemyDefender(PlayerTypes ePlayer) const
+#else
 CvUnit* CvPlot::getVisibleEnemyDefender(PlayerTypes ePlayer)
+#endif
 {
 	const IDInfo* pUnitNode = m_units.head();
 	if(pUnitNode)
@@ -5260,13 +5303,21 @@ void CvPlot::ClearCityPurchaseInfo(void)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+PlayerTypes CvPlot::GetCityPurchaseOwner() const
+#else
 PlayerTypes CvPlot::GetCityPurchaseOwner(void)
+#endif
 {
 	return m_purchaseCity.eOwner;
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+int CvPlot::GetCityPurchaseID() const
+#else
 int CvPlot::GetCityPurchaseID(void)
+#endif
 {
 	return m_purchaseCity.iID;
 }
