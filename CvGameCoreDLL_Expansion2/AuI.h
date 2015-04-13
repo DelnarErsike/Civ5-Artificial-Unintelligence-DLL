@@ -24,6 +24,10 @@
 #define AUI_GUID
 /// OpenMP is used to help with multithreading computationally expensive loops
 #define AUI_USE_OPENMP
+/// Enables const for functions, variables, and parameters that both allow it and are intended to be const
+#define AUI_CONSTIFY
+/// Changes the scopes of certain functions to fall in line with other functions of the same type (eg. CvUnit::CanFallBackFromMelee() is public instead of protected)
+#define AUI_SCOPE_FIXES
 /// Civilizations that are marked as coastal get the same coastal bias as maritime city-states
 #define AUI_STARTPOSITIONER_COASTAL_CIV_WATER_BIAS
 /// When calculating the founding value of a tile, tailor the SiteEvaluation function to the current player instead of the first one
@@ -120,6 +124,8 @@
 #define AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT (1)
 /// Pointers to the plot representing each A* node are stored in the A* node in question
 #define AUI_ASTAR_CACHE_PLOTS_AT_NODES
+/// Implements the missing getter for the enemy defender based on the unit in question (rather than the player); this is important for hidden nationality units
+#define AUI_PLOT_GET_VISIBLE_ENEMY_DEFENDER_TO_UNIT
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code
@@ -174,8 +180,14 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_ASTAR_FIX_PATH_VALID_PATH_PEAKS_FOR_NONHUMAN
 /// Mountain tiles are no longer automatically marked as invalid steps
 #define AUI_ASTAR_FIX_STEP_VALID_CONSIDERS_MOUNTAINS
+#ifdef AUI_PLOT_GET_VISIBLE_ENEMY_DEFENDER_TO_UNIT
+/// When a unit will attack onto a plot, it will try to minimize the damage it would receive from each plot candidate. If it will always die, it will instead maximize dealt damage.
+#define AUI_ASTAR_CONSIDER_DAMAGE_WHEN_ATTACKING
+#endif
+#ifndef AUI_ASTAR_CONSIDER_DAMAGE_WHEN_ATTACKING // Already handled by the other algorithm
 /// When a unit will attack onto a plot, river crossings are avoided whenever possible
 #define AUI_ASTAR_AVOID_RIVER_CROSSING_WHEN_ATTACKING
+#endif
 /// Units without a defense bonus still consider a tile's defense penalties when pathfinding
 #define AUI_ASTAR_FIX_DEFENSE_PENALTIES_CONSIDERED_FOR_UNITS_WITHOUT_DEFENSE_BONUS
 
@@ -823,8 +835,6 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 /// Tweaks capture/damage city moves so that ranged attacks aren't wasted on cities with 1 HP (originally from Ninakoru's Smart AI)
 #define AUI_TACTICAL_TWEAKED_CAPTURE_DAMAGE_CITY_MOVES
-/// Uses Boldness to determine whether long sieges are worth it instead of a set 8 turns
-#define AUI_TACTICAL_TWEAKED_DAMAGE_CITY_MOVE_USE_BOLDNESS
 /// Sets a different threshold for the amount of damage an enemy unit is required to take before the AI is willing to send its units on suicide attacks
 #define AUI_TACTICAL_TWEAKED_DESTROY_UNIT_MOVE_SUICIDE_THRESHOLD (50)
 /// Tweaks the algorithm for Plot Heal Moves to keep March promotions in mind and make sure we don't overheal if we're under threat
@@ -849,7 +859,17 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TACTICAL_EXECUTE_ATTACK_PARTHIAN_TACTICS
 /// Postpones the MoveToEmptySpaceNearTarget() parts of the code until after ranged attacks have processed so ranged units can move into range and fire
 #define AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK_POSTPONE_MELEE_MOVE
+/// Changes the way precomputed damage works
+#define AUI_TACTICAL_TWEAKED_COMPUTE_EXPECTED_DAMAGE
 #endif
+#endif
+#ifndef AUI_TACTICAL_TWEAKED_COMPUTE_EXPECTED_DAMAGE
+/// Uses Boldness to determine whether long sieges are worth it instead of a set 8 turns
+#define AUI_TACTICAL_TWEAKED_DAMAGE_CITY_MOVE_USE_BOLDNESS
+/// When calculating the expected damage on a target from a melee unit, the AI will now use pFromPlot and pDefender parameters when appropriate (instead of having them as NULL)
+#define AUI_TACTICAL_FIX_COMPUTE_EXPECTED_DAMAGE_MELEE
+/// Air units will now properly factor in possible interceptions made at the tile
+#define AUI_TACTICAL_FIX_COMPUTE_EXPECTED_DAMAGE_AIR_UNITS
 #endif
 #ifdef AUI_UNIT_EXTRA_ATTACKS_GETTER
 /// Fix for units that can attack multiple times per turn so they can now participate in the same ExecuteAttackMove()
@@ -862,11 +882,17 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_HIGH_DANGER_EMBARK
 /// Sets a lower danger value for city tiles depending on the health of the city
 #define AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_LOW_DANGER_CITY
-/// When calculating the amount of nearby queued attacks, use attackers' plots instead of target plots
-#define AUI_TACTICAL_FIX_NEAR_X_QUEUED_ATTACKS_USE_ATTACKERS
 #ifdef AUI_TACTICAL_TWEAKED_ACCEPTABLE_DANGER
 /// Considers units of the same type when executing move to safety (important if health is a factor in selecting units for this movetype)
 #define AUI_TACTICAL_TWEAKED_MOVE_TO_SAFETY_CONSIDER_SAME_UNIT_TYPE
+#endif
+#endif
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
+/// When calculating the amount of nearby queued attacks, use attackers' plots instead of target plots
+#define AUI_TACTICAL_FIX_NEAR_X_QUEUED_ATTACKS_USE_ATTACKERS
+#ifdef AUI_TACTICAL_FIX_NEAR_X_QUEUED_ATTACKS_USE_ATTACKERS
+/// When scoring plots for great generals, units that cannot receive the specific Great General's combat bonus are not counted
+#define AUI_TACTICAL_FIX_NEAR_X_QUEUED_ATTACKS_CHECK_DOMAINS
 #endif
 #endif
 /// Immediately skips some heavy computation if the function is not looking for ranged units and unit being checked is a ranged unit (originally from Ninakoru's Smart AI)
@@ -879,10 +905,6 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TACTICAL_FIX_FIND_PARATROOPER_WITHIN_STRIKING_DISTANCE_MELEE_STRENGTH
 /// Adds possible air sweeps to the Find Units within Striking Distance function (originally from Ninakoru's Smart AI)
 #define AUI_TACTICAL_FIND_UNITS_WITHIN_STRIKING_DISTANCE_AIR_SWEEPS
-/// When calculating the expected damage on a target from a melee unit, the AI will now use pFromPlot and pDefender parameters when appropriate (instead of having them as NULL)
-#define AUI_TACTICAL_FIX_COMPUTE_EXPECTED_DAMAGE_MELEE
-/// Air units will now properly factor in possible interceptions made at the tile
-#define AUI_TACTICAL_FIX_COMPUTE_EXPECTED_DAMAGE_AIR_UNITS
 /// Checks all of the medium priority list for closer units than the high priority list item instead of just the first one in the medium priority list
 #define AUI_TACTICAL_FIX_EXECUTE_MOVE_TO_TARGET_ALL_MEDIUM_PRIORITY_CHECKED
 /// Adds a new function that will order a unit to pillage its tile when appropriate (eg. in enemy territory, don't need to attack or move)
@@ -1011,6 +1033,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TACTICAL_FIX_EXECUTE_MOVES_TO_SAFEST_PLOT_USE_GAME_MOVEMENT_RANGE
 /// When scoring tiles based on distance to a Great General's operation's Center of Mass, pathfinding is used instead of raw distance
 #define AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_USE_PATHFINDER_FOR_COM_DISTANCE
+/// When moving a blocking unit, radii greater than 1 are also checked
+#define AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_GREATER_RADIUS_POSSIBLE
+/// Great Admirals and units that give healing bonuses are now also commandeered by the Tactical AI (instead of just Great Generals)
+#define AUI_TACTICAL_FIX_COMMANDEER_UNITS_CONSIDER_GREAT_ADMIRALS_AND_MEDICS
 
 // Tactical Analysis Map Stuff
 /// Enables a minor adjustment for ranged units to account for possibly being able to move and shoot at a tile
