@@ -1525,10 +1525,7 @@ static bool SortThemingBonus(const CvGreatWorkBuildingInMyEmpire& kEntry1, const
 static bool SortGreatWorksPlayerFirst(const CvGreatWorkInMyEmpire& kEntry1, const CvGreatWorkInMyEmpire& kEntry2)
 {
 	if (kEntry1.m_iNumWorksOfSamePlayer >= kEntry2.m_iNumWorksOfSamePlayer)
-	{
-		if ((kEntry1.m_iNumWorksOfSamePlayer > kEntry2.m_iNumWorksOfSamePlayer) || (kEntry1.m_iNumWorksOfSameEra >= kEntry2.m_iNumWorksOfSameEra))
-			return true;
-	}
+		return (kEntry1.m_iNumWorksOfSamePlayer > kEntry2.m_iNumWorksOfSamePlayer) || (kEntry1.m_iNumWorksOfSameEra >= kEntry2.m_iNumWorksOfSameEra);
 	return false;
 }
 
@@ -1536,10 +1533,7 @@ static bool SortGreatWorksPlayerFirst(const CvGreatWorkInMyEmpire& kEntry1, cons
 static bool SortGreatWorksEraFirst(const CvGreatWorkInMyEmpire& kEntry1, const CvGreatWorkInMyEmpire& kEntry2)
 {
 	if (kEntry1.m_iNumWorksOfSameEra >= kEntry2.m_iNumWorksOfSameEra)
-	{
-		if ((kEntry1.m_iNumWorksOfSameEra > kEntry2.m_iNumWorksOfSameEra) || (kEntry1.m_iNumWorksOfSamePlayer >= kEntry2.m_iNumWorksOfSamePlayer))
-			return true;
-	}
+		return (kEntry1.m_iNumWorksOfSameEra > kEntry2.m_iNumWorksOfSameEra) || (kEntry1.m_iNumWorksOfSamePlayer >= kEntry2.m_iNumWorksOfSamePlayer);
 	return false;
 }
 

@@ -524,6 +524,9 @@ bool CvAIOperation::CheckOnTarget()
 				if(iUnitID != -1)
 				{
 					pCivilian = GET_PLAYER(m_eOwner).getUnit(iUnitID);
+#ifdef AUI_OPERATION_FIX_CHECK_ON_TARGET_POSSIBLE_NULL_POINTER
+					if (pCivilian)
+#endif
 					pCivilianPlot = pCivilian->plot();
 				}
 				if(m_eCurrentState == AI_OPERATION_STATE_MOVING_TO_TARGET && pCivilianPlot == GetTargetPlot())

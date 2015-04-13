@@ -3006,7 +3006,6 @@ int CvDealAI::GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, Team
 	else
 	{
 		iItemValue = 1000;
-		WarProjectionTypes eOurWarProjection = eWarProjection;
 		eWarProjection = kOtherPlayer.GetDiplomacyAI()->GetWarProjection(eWithPlayer);
 
 		if (bMinor)

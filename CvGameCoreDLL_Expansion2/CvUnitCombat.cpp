@@ -501,8 +501,10 @@ void CvUnitCombat::ResolveMeleeCombat(const CvCombatInfo& kCombatInfo, uint uiPa
 				CvUnit::ShowDamageDeltaText(iAttackerDamageDelta, pkAttacker->plot());
 		}
 
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
 		// Report that combat is over in case we want to queue another attack
 		GET_PLAYER(pkAttacker->getOwner()).GetTacticalAI()->CombatResolved(pkAttacker, bDefenderDead);
+#endif
 	}
 }
 
@@ -854,8 +856,10 @@ void CvUnitCombat::ResolveRangedUnitVsCombat(const CvCombatInfo& kCombatInfo, ui
 		pkAttacker->setCombatUnit(NULL);
 		pkAttacker->ClearMissionQueue(GetPostCombatDelay());
 
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
 		// Report that combat is over in case we want to queue another attack
 		GET_PLAYER(pkAttacker->getOwner()).GetTacticalAI()->CombatResolved(pkAttacker, bTargetDied);
+#endif
 	}
 }
 
@@ -952,9 +956,11 @@ void CvUnitCombat::ResolveRangedCityVsUnitCombat(const CvCombatInfo& kCombatInfo
 		}
 	}
 
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
 	// Report that combat is over in case we want to queue another attack
 	if(pkAttacker)
 		GET_PLAYER(pkAttacker->getOwner()).GetTacticalAI()->CombatResolved((void*)pkAttacker, bTargetDied, true);
+#endif
 }
 
 //	---------------------------------------------------------------------------
@@ -1117,8 +1123,10 @@ void CvUnitCombat::ResolveCityMeleeCombat(const CvCombatInfo& kCombatInfo, uint 
 			GC.GetEngineUserInterface()->changeCycleSelectionCounter(1);
 		}
 
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
 		// Report that combat is over in case we want to queue another attack
 		GET_PLAYER(pkAttacker->getOwner()).GetTacticalAI()->CombatResolved(pkAttacker, bCityConquered);
+#endif
 	}
 }
 
@@ -1549,8 +1557,10 @@ void CvUnitCombat::ResolveAirUnitVsCombat(const CvCombatInfo& kCombatInfo, uint 
 			}
 		}
 
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
 		// Report that combat is over in case we want to queue another attack
 		GET_PLAYER(pkAttacker->getOwner()).GetTacticalAI()->CombatResolved(pkAttacker, bTargetDied);
+#endif
 	}
 }
 
@@ -1850,8 +1860,10 @@ void CvUnitCombat::ResolveAirSweep(const CvCombatInfo& kCombatInfo, uint uiParen
 			pkAttacker->finishMoves();
 		}
 
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
 		// Report that combat is over in case we want to queue another attack
 		GET_PLAYER(pkAttacker->getOwner()).GetTacticalAI()->CombatResolved(pkAttacker, bDefenderDead);
+#endif
 	}
 }
 
@@ -2372,8 +2384,10 @@ void CvUnitCombat::ResolveNuclearCombat(const CvCombatInfo& kCombatInfo, uint ui
 			}
 		}
 
+#ifndef AUI_QUEUED_ATTACKS_REMOVED
 		// Report that combat is over in case we want to queue another attack
 		GET_PLAYER(pkAttacker->getOwner()).GetTacticalAI()->CombatResolved(pkAttacker, true);
+#endif
 	}
 }
 
