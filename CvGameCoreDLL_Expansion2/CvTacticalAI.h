@@ -161,6 +161,14 @@ public:
 	{
 		return (GetAttackPriority() > unit.GetAttackPriority());
 	}
+#ifdef AUI_TACTICAL_HELPERS_POSITIONING_AND_ORDER
+	static bool isMoreDamageOutput(const CvTacticalUnit& unit1, const CvTacticalUnit& unit2)
+	{
+		if (unit1.GetExpectedTargetDamage() >= unit2.GetExpectedTargetDamage())
+			return ((unit1.GetExpectedTargetDamage() > unit2.GetExpectedTargetDamage()) || (unit1.GetExpectedSelfDamage() <= unit2.GetExpectedSelfDamage()));
+		return false;
+	}
+#endif
 
 	// Accessors
 	void SetID(int iID)
@@ -231,16 +239,6 @@ public:
 		return m_eOwner;
 	};
 #endif
-#ifdef AUI_TACTICAL_HELPERS_AIR_SWEEP
-	void SetInterceptor(CvUnit* pInterceptor)
-	{
-		m_pInterceptor = pInterceptor;
-	}
-	CvUnit* GetInterceptor() const
-	{
-		return m_pInterceptor;
-	};
-#endif
 
 	// Derived
 	int GetAttackPriority() const
@@ -257,9 +255,6 @@ private:
 	int m_iExpectedSelfDamage;
 #ifdef AUI_TACTICAL_FIX_TACTICAL_UNIT_HEALTH_STRENGTH_MOD
 	PlayerTypes m_eOwner;
-#endif
-#ifdef AUI_TACTICAL_HELPERS_AIR_SWEEP
-	CvUnit* m_pInterceptor;
 #endif
 };
 
@@ -338,7 +333,11 @@ public:
 	{
 		return (m_iAuxData > target.m_iAuxData);
 	};
+#ifdef AUI_CONSTIFY
+	inline AITacticalTargetType GetTargetType() const
+#else
 	inline AITacticalTargetType GetTargetType()
+#endif
 	{
 		return m_eTargetType;
 	}
@@ -346,7 +345,11 @@ public:
 	{
 		m_eTargetType = eTargetType;
 	}
+#ifdef AUI_CONSTIFY
+	inline int GetTargetX() const
+#else
 	inline int GetTargetX()
+#endif
 	{
 		return m_iTargetX;
 	}
@@ -354,7 +357,11 @@ public:
 	{
 		m_iTargetX = iValue;
 	}
+#ifdef AUI_CONSTIFY
+	inline int GetTargetY() const
+#else
 	inline int GetTargetY()
+#endif
 	{
 		return m_iTargetY;
 	}
@@ -362,7 +369,11 @@ public:
 	{
 		m_iTargetY = iValue;
 	}
+#ifdef AUI_CONSTIFY
+	inline PlayerTypes GetTargetPlayer() const
+#else
 	inline PlayerTypes GetTargetPlayer()
+#endif
 	{
 		return m_eTargetPlayer;
 	}
@@ -370,6 +381,7 @@ public:
 	{
 		m_eTargetPlayer = eValue;
 	}
+
 	inline int GetDominanceZone() const
 	{
 		return m_iDominanceZoneID;
@@ -383,7 +395,11 @@ public:
 
 	// AuxData is used for a pointer to the actual target object (CvUnit, CvCity, etc.)
 	//    (for improvements & barbarian camps this is set to the plot).
+#ifdef AUI_CONSTIFY
+	inline void* GetAuxData() const
+#else
 	inline void* GetAuxData()
+#endif
 	{
 		return m_pAuxData;
 	}
@@ -396,7 +412,11 @@ public:
 	// For defensive items used to SORT targets in priority order
 	//    Set to the weight for defensive bastions
 	//    Set to the danger for cities to be garrisoned
+#ifdef AUI_CONSTIFY
+	inline int GetAuxIntData() const
+#else
 	inline int GetAuxIntData()
+#endif
 	{
 		return m_iAuxData;
 	}
@@ -815,20 +835,26 @@ public:
 	bool QueueAttack(void* pAttacker, CvTacticalTarget* pTarget, bool bRanged, bool bCityAttack);
 #endif
 #ifdef AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK
-	void LaunchAttack(void* pAttacker, CvPlot* pTarget, bool bFirstAttack, bool bRanged, bool bCityAttack);
+	void LaunchAttack(void* pAttacker, const CvPlot* pTarget, bool bFirstAttack, bool bRanged, bool bCityAttack);
 #else
 	void LaunchAttack(void* pAttacker, CvTacticalTarget* pTarget, bool bFirstAttack, bool bRanged, bool bCityAttack);
 #endif
+#ifdef AUI_QUEUED_ATTACKS_REMOVED
+#ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_NO_OVERLAP
+	int NearXQueuedAttacks(const UnitHandle pUnit, const CvPlot* pPlot, const int iRange, BaseVector<const CvPlot*, true>* pvpAttackPlotList = NULL);
+#else
+	int NearXQueuedAttacks(const CvPlot* pPlot, const int iRange, bool bForOffense = false);
+#endif
+#else
 	void CombatResolved(void* pAttacker, bool bVictorious, bool bCityAttack=false);
-#ifndef AUI_QUEUED_ATTACKS_REMOVED
 	int PlotAlreadyTargeted(CvPlot* pPlot);
 	bool IsInQueuedAttack(const CvUnit* pAttacker);
 	bool IsCityInQueuedAttack(const CvCity* pAttackCity);
-#endif
 #ifdef AUI_TACTICAL_FIX_SCORE_GREAT_GENERAL_PLOT_NO_OVERLAP
 	int NearXQueuedAttacks(const UnitHandle pUnit, const CvPlot* pPlot, const int iRange);
 #else
 	int NearXQueuedAttacks(const CvPlot* pPlot, const int iRange);
+#endif
 #endif
 
 	// Public logging
@@ -921,8 +947,14 @@ private:
 	void ExecutePlunderTradeUnit(CvPlot* pTargetPlot);
 	void ExecuteParadropPillage(CvPlot* pTargetPlot);
 #ifdef AUI_TACTICAL_TWEAKED_EXECUTE_ATTACK
-	void ExecuteAttack(CvCity* pTargetCity, bool bInflictWhatWeTake = false, bool bMustSurviveAttack = true);
-	void ExecuteAttack(CvUnit* pTargetUnit, bool bInflictWhatWeTake = false, bool bMustSurviveAttack = true);
+	typedef FStaticVector<std::pair<const CvPlot*, CvUnit*>, NUM_DIRECTION_TYPES, true, c_eCiv5GameplayDLL> PlotAllocationList;
+	void FinishOffTarget(CvCity* pTargetCity);
+	void FinishOffTarget(CvUnit* pTargetUnit);
+	void ExecuteAttack(CvCity* pTargetCity, bool bInflictWhatWeTake = true, bool bMustSurviveAttack = true);
+	void ExecuteAttack(CvUnit* pTargetUnit, bool bMustSurviveAttack = true);
+	bool ExecuteSingleRangedAttack(UnitHandle hUnit, const CvPlot* pTargetPlot, bool& bFirstAttack, int& iDamageRemaining, int iStopAtDamageRemaining = 0, bool bMustSurviveAttack = true, BaseVector<const CvPlot*, true>* pAllocatedPlotList = NULL);
+	bool ExecuteSingleMeleeAttack(UnitHandle hUnit, const CvPlot* pAttackPlot, const CvPlot* pTargetPlot, bool& bFirstAttack, int& iDamageRemaining, int iStopAtDamageRemaining = 0, bool bMustSurviveAttack = true, bool bInflictWhatWeTake = true);
+	void PerformMeleePlotAllocations(PlotAllocationList& vpPlotAllocationList, FFastVector<const CvPlot*, true, c_eCiv5GameplayDLL>& vpAllocatedPlotsList, const CvPlot* pTargetPlot, bool bMustSurviveAttack = true, bool bInflictWhatWeTake = true) const;
 #else
 	void ExecuteAttack(CvTacticalTarget* target, CvPlot* pTargetPlot, bool bInflictWhatWeTake=false, bool bMustSurviveAttack=true);
 #endif
@@ -939,9 +971,9 @@ private:
 #endif
 #ifdef AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_USES_SWAP
 #ifdef AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY
-	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit, UnitHandle pRequestingUnit, bool bPrioritizeZeroMove = false);
+	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit, UnitHandle pRequestingUnit, bool bPrioritizeZeroMove = false, bool bSwapOnly = false);
 #else
-	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit, UnitHandle pRequestingUnit);
+	bool ExecuteMoveOfBlockingUnit(UnitHandle pUnit, UnitHandle pRequestingUnit, bool bSwapOnly = false);
 #endif
 #else
 #ifdef AUI_TACTICAL_EXECUTE_MOVE_BLOCKING_UNIT_ALLOW_ZERO_MOVE_PRIORITY
@@ -980,9 +1012,20 @@ private:
 	bool FindClosestUnit(CvPlot* pTargetPlot, int iNumTurnsAway, bool bMustHaveHalfHP, bool bMustBeRangedUnit=false, int iRangeRequired=2, bool bNeedsIgnoreLOS=false, bool bMustBeMeleeUnit=false, bool bIgnoreUnits=false, CvPlot* pRangedAttackTarget=NULL);
 	bool FindClosestOperationUnit(CvPlot* pTargetPlot, bool bSafeForRanged, bool bMustBeRangedUnit);
 	bool FindClosestNavalOperationUnit(CvPlot* pTargetPlot, bool bEscortedUnits);
+#ifdef AUI_TACTICAL_TWEAKED_COMPUTE_EXPECTED_DAMAGE
+	int ComputeTotalExpectedDamage(const CvPlot* pTargetPlot, bool bInflictWhatWeTake = true, bool bMustSurviveAttack = true);
+#else
 	int ComputeTotalExpectedDamage(CvTacticalTarget* target, CvPlot* pTargetPlot);
+#endif
+#ifdef AUI_TACTICAL_TWEAKED_COMPUTE_EXPECTED_DAMAGE
+	int ComputeExpectedDamage(const CvUnit* pAttacker, const CvPlot* pTargetPlot, const CvPlot* pFromPlot = NULL, int* piSelfDamage = NULL, const bool bIsAirSweep = false, int* piInterceptionChance = NULL /* Out of 10000 */, int* piDamageIfIntercepted = NULL, int* piSelfDamageIfIntercepted = NULL, int iAfterNIntercepts = 0) const;
+#endif
 	int ComputeTotalExpectedBombardDamage(UnitHandle pTarget);
+#ifdef AUI_CONSTIFY
+	bool IsExpectedToDamageWithRangedAttack(UnitHandle pAttacker, CvPlot* pTarget) const;
+#else
 	bool IsExpectedToDamageWithRangedAttack(UnitHandle pAttacker, CvPlot* pTarget);
+#endif
 	bool MoveToEmptySpaceNearTarget(UnitHandle pUnit, CvPlot* pTargetPlot, bool bLand=true);
 	bool MoveToEmptySpaceTwoFromTarget(UnitHandle pUnit, CvPlot* pTargetPlot, bool bLand=true);
 #ifdef AUI_TACTICAL_FIX_MOVE_TO_USING_SAFE_EMBARK_SINGLE_PATHFINDER_CALL
@@ -1013,7 +1056,11 @@ private:
 	bool AssignFlankingUnits(int iNumUnitsRequiredToFlank);
 	bool AssignDeployingUnits(int iNumUnitsRequiredToDeploy);
 	void PerformChosenMoves(int iFallbackMoveRange = 1);
+#ifdef AUI_QUEUED_ATTACKS_REMOVED
+	void MoveGreatGeneral(CvArmyAI* pArmyAI = NULL, BaseVector<const CvPlot*, true>* pvpAttackPlotList = NULL);
+#else
 	void MoveGreatGeneral(CvArmyAI* pArmyAI = NULL);
+#endif
 	bool HaveDuplicateUnit();
 	void RemoveChosenUnits(int iStartIndex = 0);
 	int NumUniqueUnitsLeft();
@@ -1022,7 +1069,11 @@ private:
 	int ScoreAssignments(bool bCanLeaveOpenings);
 	int ScoreCloseOnPlots(CvPlot* pTarget, bool bLandOnly);
 	void ScoreHedgehogPlots(CvPlot* pTarget);
+#ifdef AUI_QUEUED_ATTACKS_REMOVED
+	int ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, CvArmyAI* pArmyAI, BaseVector<const CvPlot*, true>* pvpAttackPlotList = NULL);
+#else
 	int ScoreGreatGeneralPlot(UnitHandle pGeneral, CvPlot* pTarget, CvArmyAI* pArmyAI);
+#endif
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 	void ProcessAirUnitsInAttack(CvPlot *pTargetPlot);
@@ -1036,8 +1087,9 @@ private:
 #endif
 #endif
 #ifdef AUI_TACTICAL_HELPERS_POSITIONING_AND_ORDER
-	CvPlot* GetBestRepositionPlot(UnitHandle unitH, CvPlot* plotTarget, int iWithinTurns = 0);
-	void SortCurrentMoveUnits(bool bSortBySelfDamage = false);
+	const CvPlot* GetBestRepositionPlot(UnitHandle hUnit, const CvPlot* pTarget, int iWithinTurns = 0, bool bMustSurviveAttack = false, BaseVector<const CvPlot*, true>* pExcludePlotList = NULL) const;
+	bool CanAttackMoreThanOneTarget(UnitHandle hUnit) const;
+	bool CanWithdrawToSurvive(UnitHandle hUnit) const;
 #endif
 #ifdef AUI_TACTICAL_EXECUTE_SWAP_TO_PLOT
 	bool ExecuteSwapToPlot(UnitHandle pUnit, UnitHandle pTargetUnit, bool bSaveMoves, bool bWantMovesLeft);
