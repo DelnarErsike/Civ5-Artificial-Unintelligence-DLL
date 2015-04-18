@@ -13186,7 +13186,7 @@ int CvTacticalAI::ComputeExpectedDamage(const CvUnit* pAttacker, const CvPlot* p
 							iAttackerStrength = (iAttackerStrength * 150) / 100;
 						}
 						int iDefenderStrength = pDefender->GetMaxDefenseStrength(pTargetPlot, pAttacker);
-						CvUnit* pFireSupportUnit = CvUnitCombat::GetFireSupportUnit(pCity->getOwner(), pTargetPlot->getX(), pTargetPlot->getY(), pFromPlot->getX(), pFromPlot->getY());
+						CvUnit* pFireSupportUnit = CvUnitCombat::GetFireSupportUnit(pDefender->getOwner(), pTargetPlot->getX(), pTargetPlot->getY(), pFromPlot->getX(), pFromPlot->getY());
 						int iDefenderFireSupportCombatDamage = 0;
 						if (pFireSupportUnit != NULL)
 						{
