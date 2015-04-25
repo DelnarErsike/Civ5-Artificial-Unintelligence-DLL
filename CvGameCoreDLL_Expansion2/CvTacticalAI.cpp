@@ -9861,7 +9861,7 @@ void CvTacticalAI::ExecuteMoveToTarget(CvPlot* pTarget)
 		int iIMoves = it->GetMovesToTarget();
 		if (pUnit->getDropRange() > 0)
 		{
-			if (pUnit->canParadropAt(pTarget, pTarget->getX(), pTarget->getY()))
+			if (pUnit->canParadropAt(pUnit->plot(), pTarget->getX(), pTarget->getY()))
 			{
 #ifdef AUI_FAST_COMP
 				iIMoves = FASTMIN(iIMoves, 1);
@@ -9877,7 +9877,7 @@ void CvTacticalAI::ExecuteMoveToTarget(CvPlot* pTarget)
 					pAdjacentPlot = plotDirection(pTarget->getX(), pTarget->getY(), ((DirectionTypes)jJ));
 					if (pAdjacentPlot != NULL)
 					{
-						if (pUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY()))
+						if (pUnit->canParadropAt(pUnit->plot(), pAdjacentPlot->getX(), pAdjacentPlot->getY()))
 						{
 #ifdef AUI_FAST_COMP
 							iIMoves = FASTMIN(iIMoves, 2);
@@ -9904,7 +9904,7 @@ void CvTacticalAI::ExecuteMoveToTarget(CvPlot* pTarget)
 				UnitHandle pJUnit = m_pPlayer->getUnit(jt->GetID());
 				if (pJUnit->getDropRange() > 0)
 				{
-					if (pJUnit->canParadropAt(pTarget, pTarget->getX(), pTarget->getY()))
+					if (pJUnit->canParadropAt(pJUnit->plot(), pTarget->getX(), pTarget->getY()))
 					{
 #ifdef AUI_FAST_COMP
 						iJMoves = FASTMIN(iJMoves, 1);
@@ -9920,7 +9920,7 @@ void CvTacticalAI::ExecuteMoveToTarget(CvPlot* pTarget)
 							pAdjacentPlot = plotDirection(pTarget->getX(), pTarget->getY(), ((DirectionTypes)jJ));
 							if (pAdjacentPlot != NULL)
 							{
-								if (pJUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY()))
+								if (pJUnit->canParadropAt(pJUnit->plot(), pAdjacentPlot->getX(), pAdjacentPlot->getY()))
 								{
 #ifdef AUI_FAST_COMP
 									iJMoves = FASTMIN(iJMoves, 2);
@@ -11751,7 +11751,7 @@ bool CvTacticalAI::FindUnitsForThisMove(TacticalAIMoveTypes eMove, CvPlot* pTarg
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 					if (pLoopUnit->getDropRange() > 0)
 					{
-						if (pLoopUnit->canParadropAt(pTarget, pTarget->getX(), pTarget->getY()))
+						if (pLoopUnit->canParadropAt(pLoopUnit->plot(), pTarget->getX(), pTarget->getY()))
 						{
 							iLeastTurns = 0;
 						}
@@ -11763,7 +11763,7 @@ bool CvTacticalAI::FindUnitsForThisMove(TacticalAIMoveTypes eMove, CvPlot* pTarg
 								pAdjacentPlot = plotDirection(pTarget->getX(), pTarget->getY(), ((DirectionTypes)jJ));
 								if (pAdjacentPlot != NULL)
 								{
-									if (pLoopUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY()))
+									if (pLoopUnit->canParadropAt(pLoopUnit->plot(), pAdjacentPlot->getX(), pAdjacentPlot->getY()))
 									{
 #ifdef AUI_FAST_COMP
 										iLeastTurns = FASTMIN(1, iLeastTurns);
@@ -12260,7 +12260,7 @@ bool CvTacticalAI::FindClosestUnit(CvPlot* pTarget, int iNumTurnsAway, bool bMus
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
 			if (pLoopUnit->getDropRange() > 0)
 			{
-				if (pLoopUnit->canParadropAt(pTarget, pTarget->getX(), pTarget->getY(), bIgnoreUnits))
+				if (pLoopUnit->canParadropAt(pLoopUnit->plot(), pTarget->getX(), pTarget->getY(), bIgnoreUnits))
 				{
 					iDistance = 0;
 				}
@@ -12272,7 +12272,7 @@ bool CvTacticalAI::FindClosestUnit(CvPlot* pTarget, int iNumTurnsAway, bool bMus
 						pAdjacentPlot = plotDirection(pTarget->getX(), pTarget->getY(), ((DirectionTypes)jJ));
 						if (pAdjacentPlot != NULL)
 						{
-							if (pLoopUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY(), bIgnoreUnits))
+							if (pLoopUnit->canParadropAt(pLoopUnit->plot(), pAdjacentPlot->getX(), pAdjacentPlot->getY(), bIgnoreUnits))
 							{
 #ifdef AUI_FAST_COMP
 								iDistance = FASTMIN(1, iDistance);
@@ -12306,7 +12306,7 @@ bool CvTacticalAI::FindClosestUnit(CvPlot* pTarget, int iNumTurnsAway, bool bMus
 				bool bWillParadrop = false;
 				if (pLoopUnit->getDropRange() > 0)
 				{
-					if (pLoopUnit->canParadropAt(pTarget, pTarget->getX(), pTarget->getY(), bIgnoreUnits) && iTurns > 1)
+					if (pLoopUnit->canParadropAt(pLoopUnit->plot(), pTarget->getX(), pTarget->getY(), bIgnoreUnits) && iTurns > 1)
 					{
 #ifdef AUI_FAST_COMP
 						iTurns = FASTMIN(iTurns, 1);
@@ -12323,7 +12323,7 @@ bool CvTacticalAI::FindClosestUnit(CvPlot* pTarget, int iNumTurnsAway, bool bMus
 							pAdjacentPlot = plotDirection(pTarget->getX(), pTarget->getY(), ((DirectionTypes)jJ));
 							if (pAdjacentPlot != NULL)
 							{
-								if (pLoopUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY(), bIgnoreUnits) && iTurns > 2)
+								if (pLoopUnit->canParadropAt(pLoopUnit->plot(), pAdjacentPlot->getX(), pAdjacentPlot->getY(), bIgnoreUnits) && iTurns > 2)
 								{
 #ifdef AUI_FAST_COMP
 									iTurns = FASTMIN(iTurns, 2);
@@ -12420,7 +12420,7 @@ bool CvTacticalAI::FindClosestOperationUnit(CvPlot* pTarget, bool bSafeForRanged
 					bool bWillParadrop = false;
 					if (pLoopUnit->getDropRange() > 0)
 					{
-						if (pLoopUnit->canParadropAt(pTarget, pTarget->getX(), pTarget->getY()) && iTurns > 1)
+						if (pLoopUnit->canParadropAt(pLoopUnit->plot(), pTarget->getX(), pTarget->getY()) && iTurns > 1)
 						{
 							iTurns = 1;
 							bWillParadrop = true;
@@ -12433,7 +12433,7 @@ bool CvTacticalAI::FindClosestOperationUnit(CvPlot* pTarget, bool bSafeForRanged
 								pAdjacentPlot = plotDirection(pTarget->getX(), pTarget->getY(), ((DirectionTypes)jJ));
 								if (pAdjacentPlot != NULL)
 								{
-									if (pLoopUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY()) && iTurns > 2)
+									if (pLoopUnit->canParadropAt(pLoopUnit->plot(), pAdjacentPlot->getX(), pAdjacentPlot->getY()) && iTurns > 2)
 									{
 										iTurns = 2;
 										bWillParadrop = true;
@@ -12510,7 +12510,7 @@ bool CvTacticalAI::FindClosestNavalOperationUnit(CvPlot* pTarget, bool bEscorted
 					bool bWillParadrop = false;
 					if (pLoopUnit->getDropRange() > 0)
 					{
-						if (pLoopUnit->canParadropAt(pTarget, pTarget->getX(), pTarget->getY()) && iTurns > 1)
+						if (pLoopUnit->canParadropAt(pLoopUnit->plot(), pTarget->getX(), pTarget->getY()) && iTurns > 1)
 						{
 							iTurns = 1;
 							bWillParadrop = true;
@@ -12523,7 +12523,7 @@ bool CvTacticalAI::FindClosestNavalOperationUnit(CvPlot* pTarget, bool bEscorted
 								pAdjacentPlot = plotDirection(pTarget->getX(), pTarget->getY(), ((DirectionTypes)jJ));
 								if (pAdjacentPlot != NULL)
 								{
-									if (pLoopUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY()) && iTurns > 2)
+									if (pLoopUnit->canParadropAt(pLoopUnit->plot(), pAdjacentPlot->getX(), pAdjacentPlot->getY()) && iTurns > 2)
 									{
 										iTurns = 2;
 										bWillParadrop = true;
@@ -12803,7 +12803,7 @@ bool CvTacticalAI::CheckAndExecuteParadrop(UnitHandle pUnit, CvPlot* pTarget, in
 	}
 	if (pUnit->getDropRange() > 0 && iDistance > 1 && plotDistance(pUnit->getX(), pUnit->getY(), pTarget->getX(), pTarget->getY()) <= pUnit->getDropRange())
 	{
-		if (pUnit->canParadropAt(pTarget, pTarget->getX(), pTarget->getY()))
+		if (pUnit->canParadropAt(pUnit->plot(), pTarget->getX(), pTarget->getY()))
 		{
 			pUnit->PushMission(CvTypes::getMISSION_PARADROP(), pTarget->getX(), pTarget->getY());
 			bAtTargetPlot = true;
@@ -12825,7 +12825,7 @@ bool CvTacticalAI::CheckAndExecuteParadrop(UnitHandle pUnit, CvPlot* pTarget, in
 				pAdjacentPlot = plotDirection(pTarget->getX(), pTarget->getY(), ((DirectionTypes)jJ));
 				if (pAdjacentPlot != NULL)
 				{
-					if (pUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY()))
+					if (pUnit->canParadropAt(pUnit->plot(), pAdjacentPlot->getX(), pAdjacentPlot->getY()))
 					{
 						pUnit->PushMission(CvTypes::getMISSION_PARADROP(), pAdjacentPlot->getX(), pAdjacentPlot->getY());
 
