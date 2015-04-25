@@ -1578,15 +1578,17 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveScientist(CvUnit* /*pGreatScie
 	}
 
 #ifdef AUI_PLAYERAI_TWEAKED_GREAT_SCIENTIST_DIRECTIVE
-	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && AUI_PLAYERAI_TWEAKED_GREAT_SCIENTIST_DIRECTIVE * GC.getGame().getGameTurn() <= GC.getGame().getEstimateEndTurn())
+	if (eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && 4 * GC.getGame().getGameTurn() <= 3 * GC.getGame().getEstimateEndTurn())
 #else
 	if(eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE && GC.getGame().getGameTurn() <= ((GC.getGame().getEstimateEndTurn() * 1) / 4))
 #endif
 	{
+#ifndef AUI_PLAYERAI_TWEAKED_GREAT_SCIENTIST_DIRECTIVE
 #ifdef AUI_GS_PRIORITY_RATIO
 		if (GetGrandStrategyAI()->IsGrandStrategySignificant((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP")))
 #else
 		if(GetDiplomacyAI()->IsGoingForSpaceshipVictory())
+#endif
 #endif
 		{
 			eDirective = GREAT_PEOPLE_DIRECTIVE_CONSTRUCT_IMPROVEMENT;
