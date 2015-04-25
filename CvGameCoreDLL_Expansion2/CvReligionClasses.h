@@ -524,9 +524,17 @@ private:
 	int ScoreBeliefForPlayer(CvBeliefEntry* pEntry);
 #endif
 
+#ifdef AUI_RELIGION_TWEAKED_MISSIONARY_INQUISITOR_SCORING
+	int ScoreCityForMissionary(CvCity* pCity, UnitHandle pUnit, const CvPlot* pUnitPlot = NULL, int iMissionaryMoves = 2, int iMissionaryStrength = 0) const;
+	int ScoreCityForInquisitor(CvCity* pCity, UnitHandle pUnit) const;
+#else
 	int ScoreCityForMissionary(CvCity* pCity, UnitHandle pUnit);
 	int ScoreCityForInquisitor(CvCity* pCity, UnitHandle pUnit);
+#endif
 
+#ifdef AUI_RELIGION_TWEAKED_MISSIONARY_INQUISITOR_SCORING
+	bool IsPressureLeader(CvCity* pCity, ReligionTypes eReligion, int iExtraPressure = 0) const;
+#endif
 	bool ShouldBecomeNewMajority(CvCity* pCity, ReligionTypes eReligion, int iNewPressure) const;
 	bool AreAllOurCitiesConverted(ReligionTypes eReligion, bool bIncludePuppets) const;
 	bool AreAllOurCitiesHaveFaithBuilding(ReligionTypes eReligion, bool bIncludePuppets) const;
