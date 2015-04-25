@@ -96,7 +96,7 @@
 #define AUI_ASTAR_MINOR_OPTIMIZATION
 /// New parameters added to various functions that can simulate damage modifiers in other plots (also fixes miscellaneous bugs)
 #define AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-/// Pathfinders now have a built-in turn limiter that invalidates too long paths they are being built instead of after the best path has been calculated
+/// Pathfinders now have a built-in turn limiter that invalidates too long paths they are being built instead of after the best path has been calculated (also enables calculating turns to a target from a plot other than the unit's current plot)
 #define AUI_ASTAR_TURN_LIMITER
 /// Caches a player's unique improvements at startup
 #define AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
@@ -628,7 +628,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Uses different logic to check when a player is venice
 #define AUI_PLAYERAI_GREAT_MERCHANT_DIRECTIVE_TWEAKED_VENICE_CHECK
 /// Slight tweak to logic to make the function's mathematics more accurate; value is simply a boost from if it's still the first quarter of the game to if it's still the first half of the game
-#define AUI_PLAYERAI_TWEAKED_GREAT_SCIENTIST_DIRECTIVE (2)
+#define AUI_PLAYERAI_TWEAKED_GREAT_SCIENTIST_DIRECTIVE
 /// Makes the number of cities Venice desires a function of various parameters instead of just a set constant (same parameters as Early Expansion economic strategy)
 #define AUI_PLAYERAI_TWEAKED_VENICE_CITY_TARGET
 /// Disables Reuse Paths for pathfinding functions
@@ -701,16 +701,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_RELIGION_SCORE_BELIEF_SCALE_PLOTS_WITH_DISTANCE (4)
 /// Tweaks the amount a pantheon belief's score is divided (to compensate for higher scoring of certain plots)
 #define AUI_RELIGION_SCORE_BELIEF_TWEAK_PANTHEON_DIVIDER (6.0)
-/// Weighs different yield types differently depending on flavor and citizen value
-#define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_FLAVOR_YIELDS
-/// When adding the terrain yield change of a belief, only do so if the current feature on the plot is additive (so eg. Dance with the Aurora won't be overvalued)
-#define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_SCORE_TERRAIN_CONSIDER_FEATURE
-/// Reduces the score given to a tile from a feature if it has a resource on it, as chance are the resource will require the feature to be removed
-#define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REDUCE_FEATURE_SCORE_IF_WILL_BE_CHOPPED
-/// When scoring beliefs, the AI will only consider resources that it can see
-#define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_RESOURCE_OMNISCIENCE
-/// When scoring beliefs, increased yields from improvements no longer get double their normal rating
-#define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_NO_DOUBLE_IMPROVEMENT_YIELD_VALUE
+/// Applies a myriad of tweaks to the ScoreBeliefAtPlot() function (consolidation of lots of small, but important, changes)
+#define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REMADE
 /// Weighs different yield types differently depending on flavor and citizen value
 #define AUI_RELIGION_SCORE_BELIEF_AT_CITY_FLAVOR_YIELDS
 /// Happiness need and multiplier have been tweaked to use more flavors
@@ -743,14 +735,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_RELIGION_FIX_SCORE_BELIEF_FOR_PLAYER_UNLOCKS_UNITS_DISREGARD_OLD_ERAS
 /// Missionaries will no longer target hostile cities
 #define AUI_RELIGION_FIX_SCORE_CITY_FOR_MISSIONARY_NO_WAR_TARGETTING
-/// Divides a city's targetting score for missionaries by this value if passive pressure is enough to eventually convert the city
-#define AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_DIVIDER_IF_PASSIVE_PRESSURE_ENOUGH (10)
-/// Subtracts twice the distance to target squared (instead of subtracting just the distance)
-#define AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_SUBTRACT_DISTANCE_SQUARED
-/// Pathfinder used instead of raw distance, parameter dictates whether we're reusing paths and ignoring units (fast but rough) or not (slow but accurate)
-#define AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_USE_PATHFINDER_FOR_DISTANCE (true)
-/// When targetting an enemy holy city, takes the square root of the current score if it's lower than halving it
-#define AUI_RELIGION_SCORE_CITY_FOR_MISSIONARY_HOLY_CITY_TAKE_SQRT_SCORE_IF_RESULT_IS_LOWER
+/// Consolidated tweaks to scoring a city for missionaries (eg. no targetting cities that would convert passively, no targetting holy cities)
+#define AUI_RELIGION_TWEAKED_MISSIONARY_INQUISITOR_SCORING
 /// When finding a nearby conversion target, cities that will convert to the AI's religion passively are ignored
 #define AUI_RELIGION_HAVE_NEARBY_CONVERSION_TARGET_IGNORE_TARGET_THAT_WILL_CONVERT_PASSIVELY
 /// Tweaks the base number of inquisitors needed (default is 1)
@@ -775,6 +761,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_RELIGION_DO_FAITH_PURCHASES_PRIORITIZE_OTHER_RELIGION_HAPPINESS_BUILDINGS
 /// The AI will now hurry units and buildings with faith that are in their current production queue
 #define AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH
+/// Altered targetting a city for prophet conversion to be much less aggressive, so AI settles prophets more
+#define AUI_RELIGION_CHOOSE_PROPHET_CONVERSION_CITY_TWEAKED
 
 // Site Evaluation Stuff
 /// Tweaks the multiplier given to the happiness score luxury resources that the player does not have (multiplier is applied once for importing, twice and times 2 for don't have at all)
