@@ -45,15 +45,19 @@
 				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				WholeProgramOptimization="false"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)CvWorldBuilderMap\include\&quot;;&quot;$(SolutionDir)CvGameCoreDLLUtil\include\&quot;;&quot;$(SolutionDir)CvLocalization\include\&quot;;&quot;$(SolutionDir)CvGameDatabase\include\&quot;;&quot;$(SolutionDir)FirePlace\include\&quot;;&quot;$(SolutionDir)FirePlace\include\FireWorks\&quot;;&quot;$(SolutionDir)ThirdPartyLibs\Lua51\include\&quot;"
 				PreprocessorDefinitions="FXS_IS_DLL;WIN32;NDEBUG;_WINDOWS;_USRDLL;CVGAMECOREDLL_EXPORTS;FINAL_RELEASE;_CRT_SECURE_NO_WARNINGS"
+				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
-				FloatingPointModel="1"
+				EnableEnhancedInstructionSet="2"
+				FloatingPointModel="2"
+				OpenMP="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="CvGameCoreDLLPCH.h"
 				WarningLevel="3"
@@ -74,7 +78,7 @@
 				AdditionalDependencies="CvWorldBuilderMapWin32.lib CvGameCoreDLLUtilWin32.lib CvLocalizationWin32.lib CvGameDatabaseWin32.lib FireWorksWin32.lib FLuaWin32.lib lua51_Win32.lib winmm.lib"
 				OutputFile="$(OutDir)\$(ProjectName)$(PlatformName)$(ConfigurationName).dll"
 				LinkIncremental="1"
-				SuppressStartupBanner="false"
+				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)\CvWorldBuilderMap\lib\&quot;;&quot;$(SolutionDir)\CvGameCoreDLLUtil\lib\&quot;;&quot;$(SolutionDir)\CvLocalization\lib\&quot;;&quot;$(SolutionDir)\CvGameDatabase\lib\&quot;;&quot;$(SolutionDir)FirePlace\lib\&quot;;&quot;$(SolutionDir)ThirdPartyLibs\Lua51\lib\&quot;"
 				ModuleDefinitionFile="$(ProjectDir)CvGameCoreDLL.def"
 				GenerateDebugInformation="true"
@@ -83,6 +87,7 @@
 				LargeAddressAware="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				LinkTimeCodeGeneration="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				ImportLibrary="$(OutDir)/$(TargetName).lib"
@@ -509,6 +514,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\AuI.h"
+				>
+			</File>
 			<File
 				RelativePath=".\banned.h"
 				>
