@@ -5780,28 +5780,50 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 	}
 
 #ifdef AUI_ASTAR_PARADROP
-	bool bCanParadropAdjacent = false;
-	if (!bIgnoreParadrop && pUnit->getDropRange() > 0)
+	int iTurnsAwayAfterParadrop = MAX_INT;
+	if (pUnit->getDropRange() > 0 && (!bIgnoreParadrop || pUnit->isBlitz() || pUnit->getNumAttacks() > 1))
 	{
-		if (pUnit->canParadropAt(pTarget, pTarget->getX(), pTarget->getY(), bIgnoreUnits))
+		if (pUnit->canParadropAt(pUnit->plot(), pTarget->getX(), pTarget->getY(), bIgnoreUnits))
 		{
-			int iTurnsCalculated = 0;
 			if (piTurns)
-				*piTurns = iTurnsCalculated;
-			return (iTurnsCalculated <= iTurns);
+				*piTurns = 0;
+			return (0 <= iTurns);
 		}
 		else
 		{
-			CvPlot* pAdjacentPlot;
-			for (int jJ = 0; jJ < NUM_DIRECTION_TYPES; jJ++)
+			int iTempTurns = MAX_INT;
+			CvPlot* pLoopPlot;			
+			int iRange = FASTMIN((pUnit->getMoves() + GC.getMOVE_DENOMINATOR() - 1) / GC.getMOVE_DENOMINATOR(), pUnit->baseMoves());
+			if (iTurns > 1)
+				iRange += pUnit->baseMoves() * (iTurns - 1);
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+			IncreaseMoveRangeForRoads(pUnit.pointer(), iRange);
+#endif
+			for (int iDY = -iRange; iDY <= iRange; iDY++)
 			{
-				pAdjacentPlot = plotDirection(pTarget->getX(), pTarget->getY(), ((DirectionTypes)jJ));
-				if (pAdjacentPlot != NULL)
+#ifdef AUI_FAST_COMP
+				int iMaxDX = iRange - FASTMAX(0, iDY);
+				for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+				iMaxDX = iRange - MAX(0, iDY);
+				for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif
 				{
-					if (pUnit->canParadropAt(pAdjacentPlot, pAdjacentPlot->getX(), pAdjacentPlot->getY(), bIgnoreUnits))
+
+					pLoopPlot = plotXY(pTarget->getX(), pTarget->getY(), iDX, iDY);
+					if (pLoopPlot && pUnit->canParadropAt(pUnit->plot(), pLoopPlot->getX(), pLoopPlot->getY(), bIgnoreUnits))
 					{
-						bCanParadropAdjacent = true;
-						break;
+						iTempTurns = TurnsToReachTargetFromPlot(pUnit, pTarget, pLoopPlot, true /*bReusePaths*/, bIgnoreUnits, false, iTurnsAwayAfterParadrop);
+						if (iTempTurns < iTurnsAwayAfterParadrop)
+						{
+							iTurnsAwayAfterParadrop = iTempTurns;
+							if (iTurnsAwayAfterParadrop == 0)
+							{
+								if (piTurns)
+									*piTurns = 0;
+								return (0 <= iTurns);
+							}
+						}
 					}
 				}
 			}
@@ -5831,32 +5853,26 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 #endif
 	{
 #ifdef AUI_ASTAR_PARADROP
-		if (bCanParadropAdjacent)
-		{
-			int iTurnsCalculated = 1;
-			if (piTurns)
-				*piTurns = iTurnsCalculated;
-			return (iTurnsCalculated <= iTurns);
-		}
-#endif
+		int iTurnsCalculated = iTurnsAwayAfterParadrop;
+		if (piTurns)
+			*piTurns = iTurnsCalculated;
+		return (iTurnsCalculated <= iTurns);
+#else
 		return false;
+#endif
 	}
 
 	// Distance not too far, now use pathfinder
 	else
 	{
 #ifdef AUI_ASTAR_TURN_LIMITER
-		int iTurnsCalculated = TurnsToReachTarget(pUnit, pTarget, false /*bReusePaths*/, bIgnoreUnits, false, iTurns);
+		int iTurnsCalculated = TurnsToReachTarget(pUnit, pTarget, true /*bReusePaths*/, bIgnoreUnits, false, iTurns);
 #else
 		int iTurnsCalculated = TurnsToReachTarget(pUnit, pTarget, false /*bReusePaths*/, bIgnoreUnits);
 #endif
 #ifdef AUI_ASTAR_PARADROP
-		if (bCanParadropAdjacent)
-#ifdef AUI_FAST_COMP
-			iTurnsCalculated = FASTMIN(1, iTurnsCalculated);
-#else
-			iTurnsCalculated = MIN(1, iTurnsCalculated);
-#endif
+		if (iTurnsCalculated > iTurnsAwayAfterParadrop)
+			iTurnsCalculated = iTurnsAwayAfterParadrop;
 #endif
 		if (piTurns)
 			*piTurns = iTurnsCalculated;
@@ -5864,13 +5880,21 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 	}
 }
 
+#ifdef AUI_ASTAR_TURN_LIMITER
+// Delnar: if you're checking if a unit can reach a tile within X turns, set the iTargetTurns parameter to X to speed up the pathfinder
+int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns)
+{
+	return TurnsToReachTargetFromPlot(pUnit, pTarget, NULL, bReusePaths, bIgnoreUnits, bIgnoreStacking, iTargetTurns);
+}
+#endif
+
 //	--------------------------------------------------------------------------------
 /// How many turns will it take a unit to get to a target plot (returns MAX_INT if can't reach at all; returns 0 if makes it in 1 turn and has movement left)
 // Should call it with bIgnoreStacking true if want foolproof way to see if can make it in 0 turns (since that way doesn't open
 // open the 2nd layer of the pathfinder)
 #ifdef AUI_ASTAR_TURN_LIMITER
 // Delnar: if you're checking if a unit can reach a tile within X turns, set the iTargetTurns parameter to X to speed up the pathfinder
-int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns)
+int TurnsToReachTargetFromPlot(UnitHandle pUnit, const CvPlot* pTarget, const CvPlot* pFromPlot, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns)
 #else
 int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking)
 #endif
@@ -5907,11 +5931,13 @@ int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool
 			pPathfinder = &GC.getIgnoreUnitsPathFinder();
 
 #ifdef AUI_ASTAR_TURN_LIMITER
+		if (!pFromPlot)
+			pFromPlot = pUnit->plot();
 		pPathfinder->SetData(pUnit.pointer(), iTargetTurns);
 #else
 		pPathfinder->SetData(pUnit.pointer());
 #endif
-		if (pPathfinder->GeneratePath(pUnit->getX(), pUnit->getY(), pTarget->getX(), pTarget->getY(), iFlags, bReusePaths))
+		if (pPathfinder->GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pTarget->getX(), pTarget->getY(), iFlags, bReusePaths))
 		{
 			pNode = pPathfinder->GetLastNode();
 		}
@@ -5919,11 +5945,14 @@ int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool
 		if(bIgnoreUnits)
 		{
 #ifdef AUI_ASTAR_TURN_LIMITER
+			if (!pFromPlot)
+				pFromPlot = pUnit->plot();
 			GC.getIgnoreUnitsPathFinder().SetData(pUnit.pointer(), iTargetTurns);
+			if (GC.getIgnoreUnitsPathFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pTarget->getX(), pTarget->getY(), 0, bReusePaths))
 #else
 			GC.getIgnoreUnitsPathFinder().SetData(pUnit.pointer());
-#endif
 			if (GC.getIgnoreUnitsPathFinder().GeneratePath(pUnit->getX(), pUnit->getY(), pTarget->getX(), pTarget->getY(), 0, bReusePaths))
+#endif
 			{
 				pNode = GC.getIgnoreUnitsPathFinder().GetLastNode();
 			}
@@ -5945,11 +5974,14 @@ int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool
 			bool bSuccess;
 
 #ifdef AUI_ASTAR_TURN_LIMITER
+			if (!pFromPlot)
+				pFromPlot = pUnit->plot();
 			GC.GetTacticalAnalysisMapFinder().SetData(pUnit.pointer(), iTargetTurns);
+			bSuccess = GC.GetTacticalAnalysisMapFinder().GeneratePath(pFromPlot->getX(), pFromPlot->getY(), pTarget->getX(), pTarget->getY(), iFlags, bReusePaths);
 #else
 			GC.GetTacticalAnalysisMapFinder().SetData(pUnit.pointer());
-#endif
 			bSuccess = GC.GetTacticalAnalysisMapFinder().GeneratePath(pUnit->getX(), pUnit->getY(), pTarget->getX(), pTarget->getY(), iFlags, bReusePaths);
+#endif
 			if(bSuccess)
 			{
 				pNode = GC.GetTacticalAnalysisMapFinder().GetLastNode();
