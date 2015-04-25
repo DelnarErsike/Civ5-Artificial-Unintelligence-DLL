@@ -7805,7 +7805,7 @@ void CvTacticalAI::ExecuteAttack(CvCity* pTargetCity, bool bInflictWhatWeTake, b
 					// Find the best plot from where we can move and attack the target next turn
 					const CvPlot* pRepositionPlot = GetBestRepositionPlot(pUnit, pTargetPlot, 1);
 
-					if (pRepositionPlot != NULL)
+					if (pRepositionPlot != NULL && pRepositionPlot != pUnit->plot())
 					{
 						if (GC.getLogging() && GC.getAILogging())
 						{
@@ -8168,7 +8168,7 @@ void CvTacticalAI::ExecuteAttack(CvUnit* pTargetUnit, bool bMustSurviveAttack)
 					// Find the best plot from where we can move and attack the target next turn
 					const CvPlot* pRepositionPlot = GetBestRepositionPlot(pUnit, pTargetPlot, 1);
 
-					if (pRepositionPlot != NULL)
+					if (pRepositionPlot != NULL && pRepositionPlot != pUnit->plot())
 					{
 						if (GC.getLogging() && GC.getAILogging())
 						{
@@ -8498,7 +8498,7 @@ void CvTacticalAI::ExecuteAttack(CvTacticalTarget* pTarget, CvPlot* pTargetPlot,
 				// Find the best plot from where we can move and attack the target next turn
 				CvPlot*	repositionPlot = GetBestRepositionPlot(pUnit, pTargetPlot, 1);
 
-				if (repositionPlot != NULL)
+				if (repositionPlot != NULL && repositionPlot != pUnit->plot())
 				{
 					if (GC.getLogging() && GC.getAILogging())
 					{
