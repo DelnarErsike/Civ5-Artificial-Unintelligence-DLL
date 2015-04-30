@@ -66,6 +66,10 @@
 #include "cvStopWatch.h"
 #endif
 
+#ifdef AUI_UNIT_PROMOTION_REMADE
+#include "CvGrandStrategyAI.h"
+#endif
+
 namespace FSerialization
 {
 std::set<CvUnit*> unitsToCheck;
@@ -5485,7 +5489,11 @@ int CvUnit::healRate(const CvPlot* pPlot) const
 	int iBaseHealMod = GET_PLAYER(getOwner()).getUnitBaseHealModifier();
 	if(iBaseHealMod != 0)
 	{
+#ifdef AUI_UNIT_FIX_BASE_HEAL_MOD
+		iBaseHeal = ((100 + iBaseHealMod) * iBaseHeal) / 100;
+#else
 		iBaseHeal = ((100 + iBaseHealMod) / 100) * iBaseHeal;
+#endif
 	}
 	CvAssertMsg(iBaseHeal >= 0, "Base healing rate not expected to be negative!");
 
@@ -11638,7 +11646,7 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 			iModifier += iTempModifier;
 
 			// Founder Belief bonus
-			CvCity* pPlotCity = pTargetPlot->getWorkingCity();
+			CvCity* pPlotCity = pMyPlot->getWorkingCity();
 			if (pPlotCity)
 			{
 				ReligionTypes eReligion = pPlotCity->GetCityReligions()->GetReligiousMajority();
@@ -11661,7 +11669,7 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 			iModifier += iTempModifier;
 
 			// Founder Belief bonus (this must be a city controlled by an enemy)
-			CvCity* pPlotCity = pTargetPlot->getWorkingCity();
+			CvCity* pPlotCity = pMyPlot->getWorkingCity();
 			if (pPlotCity)
 			{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
@@ -11983,6 +11991,9 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 	{
 		// Ranged Defense Mod (this was under the known unit bit, which is stupid)
 		iModifier += rangedDefenseModifier();
+		// Hills
+		if (pMyPlot->isHills())
+			iModifier += hillsDefenseModifier();
 	}
 #endif
 
@@ -11990,10 +12001,20 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 	if(bAttacking)
 	{
 		iModifier += getAttackModifier();
+#ifdef AUI_UNIT_FIX_BAD_BONUS_STACKS
+		// Hills
+		if (pMyPlot && pMyPlot->isHills())
+			iModifier += hillsAttackModifier();
+#endif
 	}
 	// This Unit on defense
 	else
 	{
+#ifdef AUI_UNIT_FIX_BAD_BONUS_STACKS
+		// Hills
+		if (pMyPlot && pMyPlot->isHills())
+			iModifier += hillsDefenseModifier();
+#endif
 		// No TERRAIN bonuses for this Unit?
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 		iTempModifier = pMyPlot->defenseModifier(getTeam(), false);
@@ -16979,7 +17000,7 @@ void CvUnit::changeExtraRoughDefensePercent(int iChange)
 
 #ifdef AUI_UNIT_EXTRA_ATTACKS_GETTER
 //	--------------------------------------------------------------------------------
-int CvUnit::getNumAttacks()
+int CvUnit::getNumAttacks() const
 {
 	VALIDATE_OBJECT
 		return m_iNumAttacks;
@@ -18842,7 +18863,11 @@ void CvUnit::changeUnitClassModifier(UnitClassTypes eIndex, int iChange)
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_UNIT_PROMOTION_REMADE
+bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion, PromotionTypes eAssumeHavePromotion) const
+#else
 bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion) const
+#endif
 {
 	VALIDATE_OBJECT
 	CvAssertMsg(ePromotion >= 0, "ePromotion is expected to be non-negative (invalid Index)");
@@ -18860,7 +18885,11 @@ bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion) const
 	}
 
 	// AND prereq
+#ifdef AUI_UNIT_PROMOTION_REMADE
+	if (pkPromotionInfo->GetPrereqPromotion() != NO_PROMOTION && pkPromotionInfo->GetPrereqPromotion() != eAssumeHavePromotion)
+#else
 	if(pkPromotionInfo->GetPrereqPromotion() != NO_PROMOTION)
+#endif
 	{
 		if(!isHasPromotion((PromotionTypes)(pkPromotionInfo->GetPrereqPromotion())))
 		{
@@ -18872,7 +18901,11 @@ bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion) const
 	bool bLacksOrPrereq = false;
 
 	PromotionTypes ePromotion1 = (PromotionTypes) pkPromotionInfo->GetPrereqOrPromotion1();
+#ifdef AUI_UNIT_PROMOTION_REMADE
+	if (ePromotion1 != NO_PROMOTION && ePromotion1 != eAssumeHavePromotion)
+#else
 	if(ePromotion1 != NO_PROMOTION)
+#endif
 	{
 		if(!isHasPromotion(ePromotion1))
 			bLacksOrPrereq = true;
@@ -18884,7 +18917,11 @@ bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion) const
 		PromotionTypes ePromotion2 = (PromotionTypes) pkPromotionInfo->GetPrereqOrPromotion2();
 		if(ePromotion2 != NO_PROMOTION)
 		{
+#ifdef AUI_UNIT_PROMOTION_REMADE
+			if (ePromotion2 == eAssumeHavePromotion || isHasPromotion(ePromotion2))
+#else
 			if(isHasPromotion(ePromotion2))
+#endif
 				bLacksOrPrereq = false;
 		}
 	}
@@ -18895,7 +18932,11 @@ bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion) const
 		PromotionTypes ePromotion3 = (PromotionTypes) pkPromotionInfo->GetPrereqOrPromotion3();
 		if(ePromotion3 != NO_PROMOTION)
 		{
+#ifdef AUI_UNIT_PROMOTION_REMADE
+			if (ePromotion3 == eAssumeHavePromotion || isHasPromotion(ePromotion3))
+#else
 			if(isHasPromotion(ePromotion3))
+#endif
 				bLacksOrPrereq = false;
 		}
 	}
@@ -18906,7 +18947,11 @@ bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion) const
 		PromotionTypes ePromotion4 = (PromotionTypes) pkPromotionInfo->GetPrereqOrPromotion4();
 		if(ePromotion4 != NO_PROMOTION)
 		{
+#ifdef AUI_UNIT_PROMOTION_REMADE
+			if (ePromotion4 == eAssumeHavePromotion || isHasPromotion(ePromotion4))
+#else
 			if(isHasPromotion(ePromotion4))
+#endif
 				bLacksOrPrereq = false;
 		}
 	}
@@ -18917,7 +18962,11 @@ bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion) const
 		PromotionTypes ePromotion5 = (PromotionTypes) pkPromotionInfo->GetPrereqOrPromotion5();
 		if(ePromotion5 != NO_PROMOTION)
 		{
+#ifdef AUI_UNIT_PROMOTION_REMADE
+			if (ePromotion5 == eAssumeHavePromotion || isHasPromotion(ePromotion5))
+#else
 			if(isHasPromotion(ePromotion5))
+#endif
 				bLacksOrPrereq = false;
 		}
 	}
@@ -18928,7 +18977,11 @@ bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion) const
 		PromotionTypes ePromotion6 = (PromotionTypes) pkPromotionInfo->GetPrereqOrPromotion6();
 		if(ePromotion6 != NO_PROMOTION)
 		{
+#ifdef AUI_UNIT_PROMOTION_REMADE
+			if (ePromotion6 == eAssumeHavePromotion || isHasPromotion(ePromotion6))
+#else
 			if(isHasPromotion(ePromotion6))
+#endif
 				bLacksOrPrereq = false;
 		}
 	}
@@ -18939,7 +18992,11 @@ bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion) const
 		PromotionTypes ePromotion7 = (PromotionTypes) pkPromotionInfo->GetPrereqOrPromotion7();
 		if(ePromotion7 != NO_PROMOTION)
 		{
+#ifdef AUI_UNIT_PROMOTION_REMADE
+			if (ePromotion7 == eAssumeHavePromotion || isHasPromotion(ePromotion7))
+#else
 			if(isHasPromotion(ePromotion7))
+#endif
 				bLacksOrPrereq = false;
 		}
 	}
@@ -18950,7 +19007,11 @@ bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion) const
 		PromotionTypes ePromotion8 = (PromotionTypes) pkPromotionInfo->GetPrereqOrPromotion8();
 		if(ePromotion8 != NO_PROMOTION)
 		{
+#ifdef AUI_UNIT_PROMOTION_REMADE
+			if (ePromotion8 == eAssumeHavePromotion || isHasPromotion(ePromotion8))
+#else
 			if(isHasPromotion(ePromotion8))
+#endif
 				bLacksOrPrereq = false;
 		}
 	}
@@ -18961,7 +19022,11 @@ bool CvUnit::canAcquirePromotion(PromotionTypes ePromotion) const
 		PromotionTypes ePromotion9 = (PromotionTypes) pkPromotionInfo->GetPrereqOrPromotion9();
 		if(ePromotion9 != NO_PROMOTION)
 		{
+#ifdef AUI_UNIT_PROMOTION_REMADE
+			if (ePromotion9 == eAssumeHavePromotion || isHasPromotion(ePromotion9))
+#else
 			if(isHasPromotion(ePromotion9))
+#endif
 				bLacksOrPrereq = false;
 		}
 	}
@@ -22696,23 +22761,33 @@ void CvUnit::AI_promote()
 
 //	--------------------------------------------------------------------------------
 // XXX make sure we include any new UnitAITypes...
+#ifdef AUI_UNIT_PROMOTION_REMADE
+int CvUnit::AI_promotionValue(PromotionTypes ePromotion) const
+#else
 int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
+#endif
 {
 	VALIDATE_OBJECT
 
-	CvPromotionEntry* pkPromotionInfo = GC.getPromotionInfo(ePromotion);
-	if(pkPromotionInfo == NULL)
+		CvPromotionEntry* pkPromotionInfo = GC.getPromotionInfo(ePromotion);
+	if (pkPromotionInfo == NULL)
 	{
 		//This function really really really should not be called with an invalid promotion type.
 		CvAssert(pkPromotionInfo);
 		return 0;
 	}
 
-#ifdef AUI_UNIT_PROMOTION_USE_DOUBLES
+#ifdef AUI_UNIT_PROMOTION_REMADE
+	bool bNavalMap = GC.getMap().GetAIMapHint() & 1;
+
 	double dValue = 0;
 	double dTemp;
-	int iExtra;
+	double dExtra;
+	double dDivisor;
 	int iI;
+#ifdef AUI_DANGER_PLOTS_REMADE
+	int iCurrentDanger = GET_PLAYER(getOwner()).GetPlotDanger(*plot(), this);
+#endif
 
 	// Get flavor info we can use
 	CvFlavorManager* pFlavorMgr = GET_PLAYER(m_eOwner).GetFlavorManager();
@@ -22720,466 +22795,835 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	int iFlavorDefense = pFlavorMgr->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DEFENSE"));
 	int iFlavorRanged = pFlavorMgr->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RANGED"));
 	int iFlavorRecon = pFlavorMgr->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RECON"));
-	int iFlavorMobile = pFlavorMgr->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_MOBILE"));
-	int iFlavorNaval = pFlavorMgr->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_NAVAL"));
-	int iFlavorAir = pFlavorMgr->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_AIR"));
+	// int iFlavorMobile = pFlavorMgr->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_MOBILE"));
 
-	// If we are damaged, insta heal is the way to go
-	if(pkPromotionInfo->IsInstaHeal())
+	// Insta heal if needed
+	if (pkPromotionInfo->IsInstaHeal())
 	{
-#ifdef AUI_UNIT_PROMOTION_FIX_INSTAHEAL_ONLY_UNDER_THREAT
+		int iHitPointsAfterHeal = GetCurrHitPoints() + GetMaxHitPoints() / 2;
+		if (iHitPointsAfterHeal > GetMaxHitPoints())
+			iHitPointsAfterHeal = GetMaxHitPoints();
 		// Less than half health and under threat?
 #ifdef AUI_DANGER_PLOTS_REMADE
-		if (2 * getDamage() >= GetMaxHitPoints() && GET_PLAYER(getOwner()).GetPlotDanger(*plot(), this) >= GetCurrHitPoints())
+		if (iCurrentDanger >= GetCurrHitPoints() && (iCurrentDanger < iHitPointsAfterHeal || (2 * getDamage() >= GetMaxHitPoints() && iCurrentDanger < MAX_INT)))
 #else
 		if (2 * getDamage() > GetMaxHitPoints() && GET_PLAYER(getOwner()).IsPlotUnderImmediateThreat(*plot()))
 #endif
-#else
-		// Less than half health?
-		if (getDamage() > (GetMaxHitPoints() / 2))
-#endif
 		{
-			dValue += 1000;   // Enough to lock this one up
+			dValue += MAX_INT;   // Enough to lock this one up
 		}
 	}
 
-	dTemp = (double)pkPromotionInfo->GetOpenAttackPercent();
-	if(dTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetOpenAttackPercent(); // Shock
+	if (dTemp != 0)
 	{
-		iExtra = getExtraOpenAttackPercent();
-		dTemp *= (100 + iExtra * 2);
-		dTemp /= 100.0;
-		if(noDefensiveBonus())
+		dTemp += getExtraOpenAttackPercent() * 2;
+		dExtra = 0;
+		dDivisor = 0;
+		for (iI = 0; iI < GC.getNumFeatureInfos(); iI++)
 		{
-			dTemp *= 2;
+			const FeatureTypes eFeature = static_cast<FeatureTypes>(iI);
+			CvFeatureInfo* pkFeatureInfo = GC.getFeatureInfo(eFeature);
+			if (pkFeatureInfo && !pkFeatureInfo->IsRough())
+			{
+				dExtra += getExtraFeatureAttackPercent(eFeature) + pkPromotionInfo->GetFeatureAttackPercent(iI);
+				dDivisor += 1;
+			}
 		}
+		if (dDivisor > 0)
+			dTemp += dExtra / dDivisor;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp *= 2;
 		dValue += dTemp + iFlavorOffense * 2;
 	}
 
-	dTemp = (double)pkPromotionInfo->GetOpenDefensePercent();
-	if(dTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetOpenDefensePercent(); // Shock
+	if (dTemp != 0)
 	{
-		iExtra = getExtraOpenDefensePercent() * 2;
-		dTemp *= (100 + iExtra);
-		dTemp /= 100.0;
-		if(noDefensiveBonus())
+		dTemp += getExtraOpenDefensePercent() * 2;
+		dExtra = 0;
+		dDivisor = 0;
+		for (iI = 0; iI < GC.getNumFeatureInfos(); iI++)
 		{
-			dTemp *= 2;
+			const FeatureTypes eFeature = static_cast<FeatureTypes>(iI);
+			CvFeatureInfo* pkFeatureInfo = GC.getFeatureInfo(eFeature);
+			if (pkFeatureInfo && !pkFeatureInfo->IsRough())
+			{
+				dExtra += getExtraFeatureDefensePercent(eFeature) + pkPromotionInfo->GetFeatureDefensePercent(iI);
+				dDivisor += 1;
+			}
 		}
+		if (dDivisor > 0)
+			dTemp += dExtra / dDivisor;
+		if (!bNavalMap)
+			dTemp *= 2.0;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp /= 2;
 		dValue += dTemp + iFlavorDefense * 2;
 	}
 
-	dTemp = (double)pkPromotionInfo->GetRoughAttackPercent();
-	if(dTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetRoughAttackPercent(); // Drill
+	if (dTemp != 0)
 	{
-		iExtra = getExtraRoughAttackPercent();
-		dTemp *= (100 + iExtra * 2);
-		dTemp /= 100.0;
-		if(!noDefensiveBonus())
+		dTemp += getExtraRoughAttackPercent() * 2 + getExtraHillsAttackPercent() + pkPromotionInfo->GetHillsAttackPercent();
+		dExtra = 0;
+		dDivisor = 0;
+		for (iI = 0; iI < GC.getNumFeatureInfos(); iI++)
 		{
-			dTemp *= 2;
+			const FeatureTypes eFeature = static_cast<FeatureTypes>(iI);
+			CvFeatureInfo* pkFeatureInfo = GC.getFeatureInfo(eFeature);
+			if (pkFeatureInfo && pkFeatureInfo->IsRough())
+			{
+				dExtra += getExtraFeatureAttackPercent(eFeature) + pkPromotionInfo->GetFeatureAttackPercent(iI);
+				dDivisor += 1;
+			}
 		}
+		if (dDivisor > 0)
+			dTemp += dExtra / dDivisor;
+		if (!noDefensiveBonus())
+			dTemp *= 2;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp *= 2;
 		dValue += dTemp + iFlavorOffense * 2;
 	}
 
-	dTemp = (double)pkPromotionInfo->GetRoughDefensePercent();
-	if(dTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetRoughDefensePercent(); // Drill
+	if (dTemp != 0)
 	{
-		iExtra = getExtraRoughDefensePercent() * 2;
-		dTemp *= (100 + iExtra);
-		dTemp /= 100.0;
-		if(!noDefensiveBonus())
+		dTemp += getExtraRoughDefensePercent() * 2 + getExtraHillsDefensePercent() + pkPromotionInfo->GetHillsDefensePercent();
+		dExtra = 0;
+		dDivisor = 0;
+		for (iI = 0; iI < GC.getNumFeatureInfos(); iI++)
 		{
-			dTemp *= 2;
+			const FeatureTypes eFeature = static_cast<FeatureTypes>(iI);
+			CvFeatureInfo* pkFeatureInfo = GC.getFeatureInfo(eFeature);
+			if (pkFeatureInfo && pkFeatureInfo->IsRough())
+			{
+				dExtra += getExtraFeatureDefensePercent(eFeature) + pkPromotionInfo->GetFeatureDefensePercent(iI);
+				dDivisor += 1;
+			}
 		}
+		if (dDivisor > 0)
+			dTemp += dExtra / dDivisor;
+		if (!noDefensiveBonus() && !bNavalMap)
+			dTemp *= 2;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp /= 2;
 		dValue += dTemp + iFlavorDefense * 2;
 	}
 
-	dTemp = (double)pkPromotionInfo->GetOpenRangedAttackMod();
-	if(dTemp != 0 && isRanged())
+	dTemp = (double)pkPromotionInfo->GetOpenRangedAttackMod(); // Accuracy
+	if (dTemp != 0 && IsCanAttackRanged())
 	{
-		iExtra = getExtraOpenRangedAttackMod();
-		dTemp *= (100 + iExtra * 2);
-		dTemp /= 100.0;
-		if(noDefensiveBonus())
+		dTemp += getExtraOpenRangedAttackMod() * 2;
+		dExtra = 0;
+		dDivisor = 0;
+		for (iI = 0; iI < GC.getNumFeatureInfos(); iI++)
 		{
-			dTemp *= 2;
+			const FeatureTypes eFeature = static_cast<FeatureTypes>(iI);
+			CvFeatureInfo* pkFeatureInfo = GC.getFeatureInfo(eFeature);
+			if (pkFeatureInfo && !pkFeatureInfo->IsRough())
+			{
+				dExtra += getExtraFeatureAttackPercent(eFeature) + pkPromotionInfo->GetFeatureAttackPercent(iI);
+				dDivisor += 1;
+			}
 		}
-		dValue += dTemp + iFlavorRanged * 2;
-	}
-
-	dTemp = (double)pkPromotionInfo->GetRoughRangedAttackMod();
-	if(dTemp != 0 && isRanged())
-	{
-		iExtra = getExtraRoughRangedAttackMod() * 2;
-		dTemp *= (100 + iExtra);
-		dTemp /= 100.0;
-		if(!noDefensiveBonus())
-		{
+		if (dDivisor > 0)
+			dTemp += dExtra / dDivisor;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
 			dTemp *= 2;
-		}
-		dValue += dTemp + iFlavorRanged * 2;
-	}
-
-	dTemp = (double)pkPromotionInfo->GetVisibilityChange();
-	if((AI_getUnitAIType() == UNITAI_EXPLORE_SEA) ||
-			(AI_getUnitAIType() == UNITAI_EXPLORE))
-	{
-		dValue += dTemp * (50 + iFlavorRecon * 3);
-	}
-	else
-	{
-		dValue += dTemp * (10 + iFlavorRecon * 2);
-	}
-
-	dTemp = (double)pkPromotionInfo->GetCityAttackPercent();
-	if(dTemp != 0)
-	{
-		iExtra = getExtraCityAttackPercent();
-		dTemp *= (100 + iExtra * 2);
-		dTemp /= 100.0;
 		dValue += dTemp + iFlavorOffense * 2;
-		if(isRanged())
-		{
-			dValue += iFlavorRanged * 2;
-		}
 	}
 
-	dTemp = (double)pkPromotionInfo->GetCityDefensePercent();
-	if(dTemp != 0)
+	dTemp = (double)pkPromotionInfo->GetRoughRangedAttackMod(); // Barrage
+	if (dTemp != 0 && IsCanAttackRanged())
 	{
-		iExtra = getExtraCityDefensePercent();
-		dTemp *= (100 + iExtra * 2);
-		dTemp /= 100.0;
+		dTemp += getExtraRoughRangedAttackMod() * 2 + getExtraHillsAttackPercent() + pkPromotionInfo->GetHillsAttackPercent();
+		dExtra = 0;
+		dDivisor = 0;
+		for (iI = 0; iI < GC.getNumFeatureInfos(); iI++)
+		{
+			const FeatureTypes eFeature = static_cast<FeatureTypes>(iI);
+			CvFeatureInfo* pkFeatureInfo = GC.getFeatureInfo(eFeature);
+			if (pkFeatureInfo && pkFeatureInfo->IsRough())
+			{
+				dExtra += getExtraFeatureAttackPercent(eFeature) + pkPromotionInfo->GetFeatureAttackPercent(iI);
+				dDivisor += 1;
+			}
+		}
+		if (dDivisor > 0)
+			dTemp += dExtra / dDivisor;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp *= 2;
+		dValue += dTemp + iFlavorOffense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetVisibilityChange(); // Scouting, Sentry
+	if (dTemp != 0)
+	{
+		dTemp += getExtraVisibilityRange();
+		dTemp *= 10 * dTemp / (dTemp + m_pUnitInfo->GetBaseSightRange());
 		dValue += dTemp + iFlavorDefense * 2;
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_CITY_DEFENSE
-		if (isRanged())
+		if (m_pUnitInfo->GetDefaultUnitAIType() == UNITAI_EXPLORE_SEA || m_pUnitInfo->GetDefaultUnitAIType() == UNITAI_EXPLORE)
+			dValue += dTemp + iFlavorRecon * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetExtraWithdrawal(); // Survivalism III
+	if (dTemp != 0)
+	{
+		dTemp += getExtraWithdrawal();
+	}
+
+	dTemp = (double)pkPromotionInfo->GetCityAttackPercent(); // Siege, Volley, Coastal Raider, Plunder (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0)
+	{
+		dTemp += getExtraCityAttackPercent() * 2;
+		if (IsSapper())
+			dTemp += GC.getSAPPED_CITY_ATTACK_MODIFIER() * 2;
+		if (!IsCanAttackRanged())
+			dTemp /= 2;
+		if ((DomainTypes)m_pUnitInfo->GetDomainType() == DOMAIN_SEA && !bNavalMap)
+			dTemp /= 2;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp *= 2;
+		dValue += dTemp + iFlavorOffense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetCityDefensePercent(); // Not used in Civ5 because cities can be captured without defeating the garrisoned unit
+	if (GC.getMAX_CITY_HIT_POINTS() <= 0 && dTemp != 0)
+	{
+		dTemp += getExtraCityDefensePercent() * 2;
+		if (!IsCanAttackRanged())
+			dTemp /= 2;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp /= 2;
+		dValue += dTemp + iFlavorDefense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetAttackFortifiedMod(); // Volley
+	if (dTemp != 0)
+	{
+		dTemp += getExtraAttackFortifiedMod() * 2;
+		if (!IsCanAttackRanged())
+			dTemp /= 2;
+		dValue += dTemp + iFlavorOffense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetCapitalDefenseModifier(); // Guard (Bloublou's Promotion Expansion Pack)
+	dExtra = (double)pkPromotionInfo->GetCapitalDefenseFalloff();
+	if (dTemp != 0 || dExtra != 0)
+	{
+		dTemp += GetCapitalDefenseModifier();
+		dExtra += GetCapitalDefenseFalloff();
+		iI = int(dTemp / -dExtra);
+		for (int iJ = 1; iJ < iI; iJ++)
 		{
-			dValue += iFlavorRanged * 2;
+			dTemp += iJ * NUM_DIRECTION_TYPES * (pkPromotionInfo->GetCapitalDefenseModifier() + GetCapitalDefenseModifier() + iJ * dExtra);
 		}
+		dTemp /= 2; // Average strength boost
+		if (getExtraCityAttackPercent() + pkPromotionInfo->GetCityAttackPercent() > 0 || GetCityAttackPlunderModifier() + pkPromotionInfo->GetCityAttackPlunderModifier() > 0)
+			dTemp /= 2;
+		if (getOutsideFriendlyLandsModifier() + pkPromotionInfo->GetOutsideFriendlyLandsModifier() > 0)
+			dTemp /= 2;
+		if (getFriendlyLandsModifier() + pkPromotionInfo->GetFriendlyLandsModifier() + getFriendlyLandsAttackModifier() + pkPromotionInfo->GetFriendlyLandsAttackModifier() > 0)
+			dTemp *= 2;
+		dTemp *= 1 + NUM_DIRECTION_TYPES * (iI + 1) * iI / 2; // The amount of tiles strength boost is applied to
+		AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
+		if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY &&
+#ifdef AUI_GS_PRIORITY_RATIO
+			GET_PLAYER(getOwner()).GetGrandStrategyAI()->IsGrandStrategySignificant(eConquestGrandStrategy))
 #else
-		if((AI_getUnitAIType() == UNITAI_DEFENSE) ||
-				(AI_getUnitAIType() == UNITAI_COUNTER))
-		{
-			dValue *= 2;
-		}
+			GET_PLAYER(getOwner()).GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy)
 #endif
+			dTemp /= GC.getMap().numPlots();
+		else
+			dTemp /= GET_PLAYER(getOwner()).GetNumPlots();
+		dValue += dTemp + iFlavorDefense * 4 - iFlavorOffense * 2;
 	}
 
-	dTemp = (double)pkPromotionInfo->GetAttackFortifiedMod();
-	if(dTemp != 0 && isRanged())
+	dTemp = (double)pkPromotionInfo->GetCityAttackPlunderModifier(); // Plunder (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0)
 	{
-		iExtra = getExtraAttackFortifiedMod() * 2;
-		dTemp *= (100 + iExtra);
-		dTemp /= 100.0;
-		dValue += dTemp + (iFlavorOffense * iFlavorRanged) * 2;
+		dTemp += GetCityAttackPlunderModifier();
+		dTemp /= 100.0; // Amount of gold earned from each point of damage dealt to a city
+		dExtra = cityAttackModifier() + pkPromotionInfo->GetCityAttackPercent();
+		if (IsSapper())
+			dExtra += GC.getSAPPED_CITY_ATTACK_MODIFIER();
+		dTemp *= GC.getMAX_CITY_HIT_POINTS() * (100.0 + dExtra) / 1000.0;
+		if (!IsCanAttackRanged())
+			dTemp /= 2;
+		if ((DomainTypes)m_pUnitInfo->GetDomainType() == DOMAIN_SEA && !bNavalMap)
+			dTemp /= 2;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp *= 2;
+		dTemp /= pow(2.0 + GET_PLAYER(getOwner()).GetTreasury()->GetGold() / 100.0, GET_PLAYER(getOwner()).GetTreasury()->CalculateBaseNetGold() / 100.0);
+		dValue += dTemp + iFlavorOffense * 2;
 	}
 
-	dTemp = (double)pkPromotionInfo->GetEnemyHealChange();
-	if((AI_getUnitAIType() == UNITAI_PARADROP) ||
-			(AI_getUnitAIType() == UNITAI_PIRATE_SEA))
+	dTemp = (double)pkPromotionInfo->GetEnemyHealChange(); // Supply, Survivalism, Medic II
+	if (dTemp != 0)
 	{
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
-		dValue += dTemp * (50 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
-#else
-		fValue += fTemp * (50 + iFlavorOffense * 2);
-#endif
-	}
-	else
-	{
-		dValue += dTemp * (10 + iFlavorOffense * 2);
+		dTemp += getExtraEnemyHeal() * 2;
+		dTemp *= dTemp / (dTemp + GC.getENEMY_HEAL_RATE());
+		dTemp += iFlavorOffense * 2;
+		if (isAlwaysHeal() || pkPromotionInfo->IsAlwaysHeal())
+			dTemp *= 2;
+		dValue += dTemp;
 	}
 
-	dTemp = (double)pkPromotionInfo->GetNeutralHealChange();
-	if((AI_getUnitAIType() == UNITAI_EXPLORE) ||
-			(AI_getUnitAIType() == UNITAI_EXPLORE_SEA))
+	dTemp = (double)pkPromotionInfo->GetNeutralHealChange(); // Supply, Survivalism, Medic II
+	if (dTemp != 0)
 	{
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
-		dValue += dTemp * (40 + iFlavorRecon * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
-#else
-		dValue += dTemp * (40 + iFlavorRecon * 2);
-#endif
-	}
-	else
-	{
-		dValue += dTemp * (10 + iFlavorRecon * 2);
+		dTemp += getExtraNeutralHeal() * 2;
+		dTemp *= dTemp / (dTemp + GC.getNEUTRAL_HEAL_RATE());
+		dTemp += iFlavorDefense * 2;
+		if (m_pUnitInfo->GetDefaultUnitAIType() == UNITAI_EXPLORE_SEA || m_pUnitInfo->GetDefaultUnitAIType() == UNITAI_EXPLORE)
+			dTemp += dTemp + iFlavorRecon * 2;
+		if (isAlwaysHeal() || pkPromotionInfo->IsAlwaysHeal())
+			dTemp *= 2;
+		dValue += dTemp;
 	}
 
 	dTemp = (double)pkPromotionInfo->GetFriendlyHealChange();
-	if((AI_getUnitAIType() == UNITAI_DEFENSE) ||
-			(AI_getUnitAIType() == UNITAI_COUNTER))
+	if (dTemp != 0)
 	{
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
-		dValue += dTemp * (20 + iFlavorDefense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
-#else
-		dValue += dTemp * (20 + iFlavorDefense * 2);
-#endif
-	}
-	else
-	{
-		dValue += dTemp * (10 + iFlavorDefense * 2);
+		dTemp += getExtraFriendlyHeal() * 2;
+		dTemp *= dTemp / (dTemp + GC.getFRIENDLY_HEAL_RATE());
+		dTemp += iFlavorDefense * 2;
+		if (isAlwaysHeal() || pkPromotionInfo->IsAlwaysHeal())
+			dTemp *= 2;
+		dValue += dTemp;
 	}
 
-	dTemp = (double)pkPromotionInfo->GetAdjacentTileHealChange();
-	if((AI_getUnitAIType() == UNITAI_DEFENSE) ||
-			(AI_getUnitAIType() == UNITAI_COUNTER))
+	dTemp = (double)pkPromotionInfo->GetAdjacentTileHealChange(); // Medic
+	if (dTemp != 0)
 	{
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_HEALRATE
-		dValue += dTemp * (20 + iFlavorDefense * AUI_UNIT_PROMOTION_TWEAKED_HEALRATE);
-#else
-		fValue += fTemp * (40 + iFlavorDefense * 2);
-#endif
-	}
-	else
-	{
-		dValue += dTemp * (10 + iFlavorDefense * 2);
-	}
-
-	if(pkPromotionInfo->IsAmphib())
-	{
-		if((AI_getUnitAIType() == UNITAI_FAST_ATTACK) ||
-				(AI_getUnitAIType() == UNITAI_ATTACK))
-		{
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS
-			dValue += 40 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS;
-#else
-			fValue += 40 + iFlavorOffense * 2;
-#endif
-		}
-		else
-		{
-			dValue += 10 + iFlavorOffense * 2;
-		}
+		dTemp += getAdjacentTileHeal();
+		int iBaseHeal = FASTMIN(GC.getENEMY_HEAL_RATE() + getExtraEnemyHeal() + pkPromotionInfo->GetEnemyHealChange(), 
+			FASTMIN(GC.getNEUTRAL_HEAL_RATE() + getExtraNeutralHeal() + pkPromotionInfo->GetNeutralHealChange(), 
+			GC.getFRIENDLY_HEAL_RATE() + getExtraFriendlyHeal() + pkPromotionInfo->GetFriendlyHealChange()));
+		dTemp *= 2 * dTemp / (dTemp + iBaseHeal);
+		if (!IsCombatUnit() || GC.getPLOT_UNIT_LIMIT() > 1)
+			dTemp *= 8;
+		if (isAlwaysHeal() || pkPromotionInfo->IsAlwaysHeal())
+			dTemp *= 2;
+		dValue += dTemp + iFlavorDefense * 2;
 	}
 
-	if(pkPromotionInfo->IsRiver())
+	dTemp = (double)pkPromotionInfo->GetHPHealedIfDefeatEnemy(); // Victory (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0)
 	{
-		if((AI_getUnitAIType() == UNITAI_FAST_ATTACK) ||
-				(AI_getUnitAIType() == UNITAI_ATTACK))
-		{
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS
-			dValue += 40 + iFlavorOffense * AUI_UNIT_PROMOTION_TWEAKED_AMPHIBIOUS;
-#else
-			fValue += 40 + iFlavorOffense * 2;
-#endif
-		}
-		else
-		{
-			dValue += 10 + iFlavorOffense * 2;
-		}
+		dTemp += getHPHealedIfDefeatEnemy();
+		if (pkPromotionInfo->GetHPHealedIfDefeatEnemy() + getHPHealedIfDefeatEnemy() > GetMaxHitPoints())
+			dTemp = GetMaxHitPoints();
+		dTemp *= pow(4.0, dTemp / GetMaxHitPoints());
+		if (IsCanAttackRanged())
+			dTemp *= 4;
+		else if (noDefensiveBonus())
+			dTemp *= 2;
+		dTemp *= 1 + 3.0 * (getExtraAttackWoundedMod() + pkPromotionInfo->GetAttackWoundedMod()) / 100.0;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp *= 2;
+		if ((!IsHealIfDefeatExcludeBarbarians() || !pkPromotionInfo->IsHealIfDefeatExcludeBarbarians()) && GC.getGame().getEstimateEndTurn() >= 4 * GC.getGame().getElapsedGameTurns())
+			dTemp *= 2;
+		dValue += dTemp + iFlavorDefense + iFlavorOffense;
 	}
 
-	dTemp = (double)pkPromotionInfo->GetRangedDefenseMod();
-	if(dTemp != 0)
+	if (pkPromotionInfo->IsAmphib()) // No attack penalty from attacking while embarked (Amphibious)
 	{
-		iExtra = getExtraRangedDefenseModifier() * 2;
-		dTemp *= (100 + iExtra);
-		dTemp /= 100.0;
-		// likely not a ranged unit
-		if((AI_getUnitAIType() == UNITAI_DEFENSE) || (AI_getUnitAIType() == UNITAI_COUNTER) || (AI_getUnitAIType() == UNITAI_ATTACK))
+		dTemp = 5 * (baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange()) + iFlavorOffense * 2;
+		if (bNavalMap)
+			dTemp *= 2;
+		if (GetEmbarkDefensiveModifier() != 0)
+			dTemp *= (100.0 + GetEmbarkDefensiveModifier()) / 100.0;
+		dValue += dTemp;
+	}
+
+	if (pkPromotionInfo->IsRiver()) // No river attack penalty (Amphibious)
+	{
+		dTemp = baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange();
+		if (!IsIgnoreZOC())
+			dTemp *= NUM_DIRECTION_TYPES;
+		if (bNavalMap)
+			dTemp /= 2;
+		dTemp += iFlavorOffense * 3 - iFlavorDefense;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetRangedDefenseMod(); // Cover
+	if (dTemp != 0)
+	{
+		dTemp += getExtraRangedDefenseModifier() * 2;
+		// melee units suffer more ranged attacks
+		if (!IsCanAttackRanged())
+		{
+			if (!canMoveAfterAttacking() && !pkPromotionInfo->IsCanMoveAfterAttacking())
+				dTemp *= 16;
+			else
+				dTemp *= 4;
+		}
+		if (!noDefensiveBonus())
+			dTemp *= 2;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp /= 2;
+		// slower units benefit more
+		dTemp *= pow(2.0, 3.0 - baseMoves(getDomainType()) - pkPromotionInfo->GetMovesChange());
+		dValue += dTemp + iFlavorDefense * 2;
+	}
+
+	if (pkPromotionInfo->IsRangeAttackIgnoreLOS() && IsCanAttackRanged() && GetRange() > 1)
+	{
+		dValue += 5 * (GetRange() - 1) + iFlavorRanged * 2;
+		if (m_pUnitInfo->GetBaseSightRange() + getExtraVisibilityRange() + pkPromotionInfo->GetVisibilityChange() < GetRange() + pkPromotionInfo->GetRangeChange())
+			dValue += 20 * (GetRange() + pkPromotionInfo->GetRangeChange() - m_pUnitInfo->GetBaseSightRange() - getExtraVisibilityRange() - pkPromotionInfo->GetVisibilityChange());
+	}
+
+	dTemp = (double)pkPromotionInfo->GetAttackWoundedMod(); // Charge
+	if (dTemp != 0)
+	{
+		dTemp += getExtraAttackWoundedMod() * 2;
+		if (!IsCanAttackRanged())
 		{
 			dTemp *= 2;
+			if (baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange() > 2)
+				dTemp *= baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange() - 2;
 		}
-		// a slow unit
-		if (maxMoves() / GC.getMOVE_DENOMINATOR() <= 2)
-		{
+		if (isBlitz() || getNumAttacks() > 1 || pkPromotionInfo->IsBlitz() || pkPromotionInfo->GetExtraAttacks() > 0)
 			dTemp *= 2;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp *= 2;
+		dValue += dTemp + iFlavorOffense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetFlankAttackModifier(); // Flanking (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0)
+	{
+		dTemp += GetFlankAttackModifier() * 2;
+		dValue += (2 * iFlavorOffense * (baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange()) * dTemp / 100.0);
+	}
+
+	if (pkPromotionInfo->IsHealOutsideFriendly() && getDomainType() == DOMAIN_SEA)
+	{
+		dValue += FASTMIN(GC.getENEMY_HEAL_RATE() + pkPromotionInfo->GetEnemyHealChange() + getExtraEnemyHeal(), GC.getNEUTRAL_HEAL_RATE() + pkPromotionInfo->GetNeutralHealChange() + getExtraNeutralHeal()) * 5 / 2 + iFlavorDefense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetMovesChange(); // Mobility
+	if (dTemp != 0)
+	{
+		dTemp += getMustSetUpToRangedAttackCount();
+		dTemp *= 2 * dTemp / (dTemp + baseMoves(getDomainType()));
+		if (!noDefensiveBonus())
+			dTemp *= 2;
+		if (isBlitz() || getNumAttacks() > 1 || canMoveAfterAttacking() || pkPromotionInfo->IsBlitz() || pkPromotionInfo->GetExtraAttacks() > 0 || pkPromotionInfo->IsCanMoveAfterAttacking())
+			dTemp *= 2;
+		dValue += dTemp * (10 + iFlavorOffense + iFlavorDefense);
+	}
+
+	if (pkPromotionInfo->IsAlwaysHeal()) // March, Air Repair, Repair, Survivalism III
+	{
+		if (getDomainType() == DOMAIN_AIR)
+			dTemp = GC.getFRIENDLY_HEAL_RATE() * 0xfff;
+		else
+			dTemp = FASTMIN(GC.getENEMY_HEAL_RATE() + getExtraEnemyHeal(), FASTMIN(GC.getNEUTRAL_HEAL_RATE() + getExtraNeutralHeal(), GC.getFRIENDLY_HEAL_RATE() + getExtraFriendlyHeal()));
+		if (IsCanAttackRanged())
+			dTemp *= 4;
+		if (isBlitz() || getNumAttacks() > 1 || canMoveAfterAttacking() || pkPromotionInfo->IsBlitz() || pkPromotionInfo->GetExtraAttacks() > 0 || pkPromotionInfo->IsCanMoveAfterAttacking())
+			dTemp *= 4;
+		dValue += dTemp;
+	}
+
+	if (pkPromotionInfo->IsBlitz() && getNumAttacks() < baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange() && !isBlitz())
+	{
+		dTemp = baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange();
+		dTemp *= 2 * dTemp / (dTemp + getNumAttacks());
+		if (IsCanAttackRanged())
+			dTemp *= 16;
+		else if (getDomainType() == DOMAIN_SEA && !isHealOutsideFriendly() && !pkPromotionInfo->IsHealOutsideFriendly() && isNeverInvisible() && pkPromotionInfo->GetInvisibleType() == NO_INVISIBLE)
+			dTemp /= 2;
+		if (getExtraAttackWoundedMod() > 0 || pkPromotionInfo->GetAttackWoundedMod() > 0)
+			dTemp *= 2;
+		if (isAlwaysHeal() || pkPromotionInfo->IsAlwaysHeal())
+			dTemp *= 4;
+		if (getDropRange() + pkPromotionInfo->GetDropRange() > 0)
+			dTemp *= dTemp;
+		dValue += dTemp * 16 + iFlavorOffense * 2 + iFlavorDefense;
+	}
+
+	if (pkPromotionInfo->IsCanMoveAfterAttacking()) // Blitz, Logistics
+	{
+		dTemp = baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange() - getNumAttacks() - pkPromotionInfo->GetExtraAttacks();
+		if (dTemp < 1 || isBlitz() || pkPromotionInfo->IsBlitz())
+			dTemp = 1;
+		dTemp *= 10;
+		if (IsCanAttackRanged())
+			dTemp *= 2;
+		else if (noDefensiveBonus() || getDomainType() == DOMAIN_SEA)
+			dTemp *= 16;
+		if (isAlwaysHeal() || pkPromotionInfo->IsAlwaysHeal())
+			dTemp *= 4;
+		if (getDropRange() + pkPromotionInfo->GetDropRange() > 0)
+			dTemp *= dTemp;
+		dValue += dTemp + iFlavorDefense * 2 + iFlavorOffense;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetExtraAttacks(); // Blitz, Logistics
+	if (dTemp != 0 && !isBlitz() && !pkPromotionInfo->IsBlitz() && getNumAttacks() < baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange())
+	{
+		dTemp *= 20 * dTemp / (dTemp + getNumAttacks());
+		if (IsCanAttackRanged())
+			dTemp *= 16;
+		else if (getDomainType() == DOMAIN_SEA && !isHealOutsideFriendly() && !pkPromotionInfo->IsHealOutsideFriendly() && isNeverInvisible() && pkPromotionInfo->GetInvisibleType() == NO_INVISIBLE)
+			dTemp /= 2;
+		if (getExtraAttackWoundedMod() > 0 || pkPromotionInfo->GetAttackWoundedMod() > 0)
+			dTemp *= 2;
+		if (isAlwaysHeal() || pkPromotionInfo->IsAlwaysHeal())
+			dTemp *= 4;
+		if (getDropRange() + pkPromotionInfo->GetDropRange() > 0)
+			dTemp *= dTemp;
+		dValue += dTemp * 16 + iFlavorOffense * 2 + iFlavorDefense;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetRangeChange(); // Range
+	if (dTemp != 0 && IsCanAttackRanged())
+	{
+		dTemp *= 30 * dTemp / (dTemp + GetRange()) * (getNumAttacks() + pkPromotionInfo->GetExtraAttacks());
+		dValue += dTemp * 256 + iFlavorOffense + iFlavorDefense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetDropRange();
+	if (dTemp != 0)
+	{
+		dTemp *= 2 * dTemp / (dTemp + getDropRange());
+		if (isBlitz() || getNumAttacks() > 1 || canMoveAfterAttacking() || pkPromotionInfo->IsBlitz() || pkPromotionInfo->GetExtraAttacks() > 0 || pkPromotionInfo->IsCanMoveAfterAttacking())
+			dTemp *= 4;
+		dValue += dTemp + iFlavorOffense * 2;
+	}
+
+	if (pkPromotionInfo->IsEnemyRoute() && !isEnemyRoute() && !flatMovementCost() && !pkPromotionInfo->IsFlatMovementCost()) // Invasion (Bloublou's Promotion Expansion Pack)
+	{
+		RouteTypes eBestRoute = GET_PLAYER(getOwner()).getBestRoute();
+		CvRouteInfo* pBestRouteInfo = GC.getRouteInfo(eBestRoute);
+		if (pBestRouteInfo)
+		{
+			dTemp = pBestRouteInfo->getMovementCost();
+			if (dTemp > pBestRouteInfo->getFlatMovementCost() * (baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange()))
+				dTemp = pBestRouteInfo->getFlatMovementCost() * (baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange());
+			dTemp = double(baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange()) * GC.getMOVE_DENOMINATOR() / dTemp; // amount of moves gained from enemy roads
+
+			dTemp *= 2 * dTemp / (dTemp + baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange());
+			for (iI = 0; iI < GC.getNumRouteInfos(); iI++)
+			{
+				pBestRouteInfo = GC.getRouteInfo((RouteTypes)iI);
+				if (pBestRouteInfo && pBestRouteInfo->GetGoldMaintenance() <= 0)
+					goto FreeRoadExists;
+			}
+			dTemp /= 4; // If there are no free roads, roads in general will be much scarcer
+		FreeRoadExists:
+			if (!noDefensiveBonus())
+				dTemp *= 2;
+			if (canMoveAfterAttacking() || pkPromotionInfo->IsCanMoveAfterAttacking())
+				dTemp *= 2;
+			if (hasFreePillageMove() || pkPromotionInfo->IsFreePillageMoves())
+				dTemp /= 2;
+			dValue += dTemp * (1 + 2 * iFlavorOffense);
+		}
+	}
+
+	if (pkPromotionInfo->IsFreePillageMoves() && !hasFreePillageMove()) // Pillage (Bloublou's Promotion Expansion Pack)
+	{
+		dTemp = 1 + (baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange()) / 4.0; // Average amount of moves saved from free pillaging
+		dTemp *= 2 * dTemp / (dTemp + baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange());
+		if (!noDefensiveBonus())
+			dTemp *= 2;
+		if (canMoveAfterAttacking() || pkPromotionInfo->IsCanMoveAfterAttacking())
+			dTemp *= 2;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp *= 2;
+		if (hasHealOnPillage())
+			dTemp *= 4;
+		else
+			dTemp *= 1 + (double)GC.getPILLAGE_HEAL_AMOUNT() / (double)GetMaxHitPoints();
+		dValue += dTemp * (1 + 3 * iFlavorOffense - iFlavorDefense);
+	}
+
+	if (pkPromotionInfo->IsCaptureDefeatedEnemy() && !IsCaptureDefeatedEnemy()) // Bribe (Bloublou's Promotion Expansion Pack)
+	{
+		dTemp = 10 * (getNumAttacks() + pkPromotionInfo->GetExtraAttacks());
+		if (IsCanAttackRanged())
+			dTemp *= 4;
+		dTemp *= 1 + 3.0 * (getExtraAttackWoundedMod() + pkPromotionInfo->GetAttackWoundedMod()) / 100.0;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp *= 2;
+
+		dExtra = GC.getCOMBAT_CAPTURE_MIN_CHANCE() + GC.getCOMBAT_CAPTURE_RATIO_MULTIPLIER() * 
+			int((double)getUnitInfo().GetPower() / (double)GET_PLAYER(getOwner()).GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(getDomainType()));
+		if (dExtra > GC.getCOMBAT_CAPTURE_MAX_CHANCE())
+			dExtra = GC.getCOMBAT_CAPTURE_MAX_CHANCE();
+
+		dTemp *= pow(16.0, dExtra / GC.getCOMBAT_CAPTURE_MAX_CHANCE());
+		dValue += dTemp + iFlavorOffense * 3 - iFlavorDefense;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetExperiencePercent(); // Levels (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0)
+	{
+		dTemp += 100 + getExperiencePercent();
+		if (dTemp > 0)
+		{
+			dTemp *= (100.0 + GET_PLAYER(getOwner()).getLevelExperienceModifier()) / 10000.0; // Actual XP percent bonus
+			if (getExperiencePercent() < 0 && dTemp < 1.0 && pkPromotionInfo->GetExperiencePercent() > 0)
+				dTemp = 1.0 / dTemp; // Much higher priority if we're counteracting a negative
+			dTemp *= GC.getEXPERIENCE_PER_LEVEL() + GC.getEXPERIENCE_PER_LEVEL() * 2.0 / double(getLevel() + 1.0);
+			if (isAlwaysHeal() || pkPromotionInfo->IsAlwaysHeal() || canMoveAfterAttacking() || pkPromotionInfo->IsCanMoveAfterAttacking()) // Higher chance of survival
+				dTemp *= 4;
+			else if (!noDefensiveBonus())  // Higher chance of survival
+				dTemp *= 2;
+			if (IsCanAttackRanged() && !isMustSetUpToRangedAttack()) // Higher chance of survival
+				dTemp *= 2;
+			if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE) // Higher chance of survival
+				dTemp *= 2;
+
+			if (pkPromotionInfo->GetExperiencePercent() > 0)
+				dValue += dTemp + iFlavorOffense + iFlavorDefense;
+			else
+				dValue -= dTemp + iFlavorOffense + iFlavorDefense;
+		}
+	}
+
+	dTemp = (double)pkPromotionInfo->GetGreatGeneralModifier(); // Leadership (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0 && getDomainType() == DOMAIN_LAND)
+	{
+		dTemp += getGreatGeneralModifier();
+		dTemp *= (NUM_DIRECTION_TYPES + 1.0) / (1.0 + GET_PLAYER(getOwner()).GetNumUnitsWithUnitAI(UNITAI_GENERAL));
+		if (bNavalMap)
+			dTemp /= 4.0;
+		else
+		{
+			AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
+			if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
+			{
+#ifdef AUI_GS_PRIORITY_RATIO
+				dTemp *= pow(2.0, 2.0 * GET_PLAYER(getOwner()).GetGrandStrategyAI()->GetGrandStrategyPriority(eConquestGrandStrategy) - 2.0);
+#else
+				dTemp *= (GET_PLAYER(getOwner()).GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy ? 1.0 : 0.25);
+#endif
+			}
+		}
+		dTemp *= GC.getMap().numPlots() / (80.0 * 52.0);
+		dValue += dTemp + iFlavorOffense + iFlavorDefense;
+#ifdef AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
+		if (GET_PLAYER(getOwner()).GetUniqueGreatPersons() & UNIQUE_GP_GENERAL)
+			dValue += dTemp + iFlavorOffense + iFlavorDefense;
+#endif
+	}
+
+	dTemp = (double)pkPromotionInfo->GetExtraWithdrawal(); // Survivalism III, Escape (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0)
+	{
+		dTemp += getExtraWithdrawal() * 2;
+		if (!isRanged() || GetBaseRangedCombatStrength() <= GetBaseCombatStrength(true))
+			dTemp /= 2;
+		if (IsGreatGeneralReceivesMovement() || pkPromotionInfo->IsGreatGeneralReceivesMovement())
+			dTemp /= 16;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp /= 2;
+		dTemp *= pow(4.0, (double)GET_PLAYER(getOwner()).GetMilitaryAI()->GetPowerOfStrongestBuildableUnit(getDomainType()) / (double)getUnitInfo().GetPower() - 1.0);
+		dValue += dTemp + iFlavorDefense * 3 - iFlavorOffense;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetNearbyEnemyCombatMod(); // Reputation (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0 && getNearbyEnemyCombatRange() + pkPromotionInfo->GetNearbyEnemyCombatRange() > 0)
+	{
+		dTemp += getNearbyEnemyCombatMod();
+		if (IsCanAttackRanged())
+			dTemp *= getNearbyEnemyCombatRange() + pkPromotionInfo->GetNearbyEnemyCombatRange() + 1 - GetRange();
+		else
+			dTemp *= getNearbyEnemyCombatRange() + pkPromotionInfo->GetNearbyEnemyCombatRange();
+		dValue += -dTemp + iFlavorOffense * 2; // -dTemp because combat mod is negative when enemies are weaked
+	}
+
+	dTemp = (double)pkPromotionInfo->GetNearbyEnemyCombatRange(); // Reputation (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0 && getNearbyEnemyCombatMod() + pkPromotionInfo->GetNearbyEnemyCombatMod() > 0)
+	{
+		dTemp *= 2 * -(getNearbyEnemyCombatMod() + pkPromotionInfo->GetNearbyEnemyCombatMod());
+		dTemp *= dTemp / (dTemp + getNearbyEnemyCombatRange() + (IsCanAttackRanged() ? GetRange() - 1 : 0));
+		dValue += dTemp + iFlavorOffense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetOutsideFriendlyLandsModifier(); // Guerilla (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0)
+	{
+		dTemp += getOutsideFriendlyLandsModifier();
+		if (getExtraCityAttackPercent() + pkPromotionInfo->GetCityAttackPercent() > 0 || GetCityAttackPlunderModifier() + pkPromotionInfo->GetCityAttackPlunderModifier() > 0)
+			dTemp *= 2;
+		if ((double)getFriendlyLandsModifier() > dTemp || GetCapitalDefenseFalloff() + pkPromotionInfo->GetCapitalDefenseFalloff() < 0)
+			dTemp /= 2;
+		AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
+		if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			dTemp *= pow(2.0, 4.0 * GET_PLAYER(getOwner()).GetGrandStrategyAI()->GetGrandStrategyPriority(eConquestGrandStrategy) - 2.0);
+#else
+			dTemp *= (GET_PLAYER(getOwner()).GetGrandStrategyAI()->GetActiveGrandStrategy() == eConquestGrandStrategy ? 4.0 : 0.25);
+#endif
+		}
+		dValue += dTemp + iFlavorOffense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetFriendlyLandsModifier(); // Militia (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0)
+	{
+		dTemp += getFriendlyLandsModifier() + (getFriendlyLandsAttackModifier() + pkPromotionInfo->GetFriendlyLandsAttackModifier()) / 2.0;
+		if (getExtraCityAttackPercent() + pkPromotionInfo->GetCityAttackPercent() <= 0 && GetCityAttackPlunderModifier() + pkPromotionInfo->GetCityAttackPlunderModifier() <= 0)
+			dTemp *= 2;
+		if ((double)getOutsideFriendlyLandsModifier() > dTemp || GetCapitalDefenseFalloff() + pkPromotionInfo->GetCapitalDefenseFalloff() > 0)
+			dTemp /= 2;
+		AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
+		if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			dTemp *= pow(2.0, 2.0 - 4.0 * GET_PLAYER(getOwner()).GetGrandStrategyAI()->GetGrandStrategyPriority(eConquestGrandStrategy));
+#else
+			dTemp *= (GET_PLAYER(getOwner()).GetGrandStrategyAI()->GetActiveGrandStrategy() != eConquestGrandStrategy ? 4.0 : 0.25);
+#endif
 		}
 		dValue += dTemp + iFlavorDefense * 2;
 	}
 
-	if(pkPromotionInfo->IsRangeAttackIgnoreLOS() && isRanged())
+	dTemp = (double)pkPromotionInfo->GetFriendlyLandsAttackModifier();
+	if (dTemp != 0)
 	{
-		dValue += 75 + iFlavorRanged * 2;
-	}
-
-	dTemp = (double)pkPromotionInfo->GetAttackWoundedMod();
-	if(dTemp != 0 && isRanged())
-	{
-		iExtra = getExtraAttackWoundedMod() * 2;
-		dTemp *= (100 + iExtra);
-		dTemp /= 100.0;
-		dValue += dTemp + (iFlavorOffense * iFlavorRanged) * 2;
-	}
-
-	dTemp = (double)pkPromotionInfo->GetFlankAttackModifier();
-	if(dTemp > 0)
-	{
-		dValue += ((2 * iFlavorOffense + iFlavorMobile) * maxMoves() / (double)GC.getMOVE_DENOMINATOR() * dTemp / 100.0);
-	}
-
-	if(GC.getPromotionInfo(ePromotion)->IsHealOutsideFriendly() && getDomainType() == DOMAIN_SEA)
-	{
-		dValue += 50 + iFlavorNaval * 2;
-	}
-
-	dTemp = (double)pkPromotionInfo->GetMovesChange();
-	if((AI_getUnitAIType() == UNITAI_ATTACK_SEA) ||
-			(AI_getUnitAIType() == UNITAI_PIRATE_SEA) ||
-			(AI_getUnitAIType() == UNITAI_RESERVE_SEA) ||
-			(AI_getUnitAIType() == UNITAI_ESCORT_SEA) ||
-			(AI_getUnitAIType() == UNITAI_EXPLORE_SEA) ||
-			(AI_getUnitAIType() == UNITAI_ASSAULT_SEA) ||
-			(AI_getUnitAIType() == UNITAI_SETTLER_SEA) ||
-			(AI_getUnitAIType() == UNITAI_FAST_ATTACK) ||
-			(AI_getUnitAIType() == UNITAI_ATTACK) ||
-			(AI_getUnitAIType() == UNITAI_PARADROP))
-	{
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_MOVECHANGE
-		dValue += dTemp * (50 + iFlavorMobile * AUI_UNIT_PROMOTION_TWEAKED_MOVECHANGE);
-#else
-		dValue += dTemp * (50 + iFlavorMobile * 2);
-#endif
-	}
-	else
-	{
-		dValue += dTemp * (30 + iFlavorMobile * 2);
-	}
-
-	if(pkPromotionInfo->IsAlwaysHeal())
-	{
-		if((AI_getUnitAIType() == UNITAI_ATTACK) ||
-				(AI_getUnitAIType() == UNITAI_CITY_BOMBARD) ||
-				(AI_getUnitAIType() == UNITAI_FAST_ATTACK) ||
-				(AI_getUnitAIType() == UNITAI_COUNTER) ||
-				(AI_getUnitAIType() == UNITAI_ATTACK_SEA) ||
-				(AI_getUnitAIType() == UNITAI_PIRATE_SEA) ||
-				(AI_getUnitAIType() == UNITAI_ESCORT_SEA) ||
-				(AI_getUnitAIType() == UNITAI_PARADROP))
+		dTemp += getFriendlyLandsAttackModifier() + (getFriendlyLandsModifier() + pkPromotionInfo->GetFriendlyLandsModifier()) / 2.0;
+		if (getExtraCityAttackPercent() + pkPromotionInfo->GetCityAttackPercent() <= 0 && GetCityAttackPlunderModifier() + pkPromotionInfo->GetCityAttackPlunderModifier() <= 0)
+			dTemp *= 2;
+		if ((double)getOutsideFriendlyLandsModifier() > dTemp || GetCapitalDefenseFalloff() + pkPromotionInfo->GetCapitalDefenseFalloff() > 0)
+			dTemp /= 2;
+		AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
+		if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
 		{
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_MARCH
-#ifdef AUI_FAST_COMP
-			dValue += 50 + (iFlavorMobile + iFlavorDefense + FASTMAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_MARCH;
+#ifdef AUI_GS_PRIORITY_RATIO
+			dTemp *= pow(2.0, 1.0 - 3.0 * GET_PLAYER(getOwner()).GetGrandStrategyAI()->GetGrandStrategyPriority(eConquestGrandStrategy));
 #else
-			dValue += 50 + (iFlavorMobile + iFlavorDefense + MAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_MARCH;
+			dTemp *= (GET_PLAYER(getOwner()).GetGrandStrategyAI()->GetActiveGrandStrategy() != eConquestGrandStrategy ? 2.0 : 0.25);
 #endif
 		}
+		dValue += dTemp + iFlavorOffense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetInterceptionCombatModifier(); // Interception
+	if (dTemp != 0 && canAirPatrol(NULL))
+	{
+		dTemp += GetInterceptionCombatModifier() * 2.0;
+		dTemp *= maxInterceptionProbability() / 100.0;
+		if (getDomainType() != DOMAIN_AIR)
+			dTemp *= 2;
+		dTemp *= 2.0 - pow(1.5, 1 - GetRange() - pkPromotionInfo->GetRangeChange());
+		dValue += dTemp + iFlavorDefense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetAirSweepCombatModifier(); // Dogfighting
+	if (dTemp != 0 && canAirSweep())
+	{
+		dTemp += GetAirSweepCombatModifier() * 2;
+		dValue += dTemp + iFlavorOffense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetNumInterceptionChange(); // Sortie
+	if (dTemp != 0)
+	{
+		dTemp *= 2 * dTemp / (dTemp + GetNumInterceptions());
+		dValue += (dTemp * 256);
+	}
+
+	dTemp = (double)pkPromotionInfo->GetInterceptionDefenseDamageModifier(); // Evasion
+	if (dTemp != 0 && getDomainType() == DOMAIN_AIR && evasionProbability() < 100)
+	{
+		dTemp += GetInterceptionDefenseDamageModifier() * 2.0;
+		if (canAirSweep())
+			dTemp *= 2;
 		else
+			dTemp *= (100.0 - evasionProbability()) / 100.0;
+		dValue += dTemp + iFlavorDefense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetCargoChange(); // Flight Deck
+	if (dTemp != 0)
+	{
+		dTemp += cargoSpace();
+		if (cargoSpace() > cargoSpaceAvailable())
+			dTemp += 2 * (cargoSpace() - cargoSpaceAvailable());
+		dTemp *= 8;
+		if (!IsCanAttackRanged())
 		{
-#ifdef AUI_FAST_COMP
-			dValue += 30 + (iFlavorMobile + iFlavorDefense + FASTMAX(iFlavorDefense, iFlavorOffense)) * 2;
-#else
-			dValue += 30 + (iFlavorMobile + iFlavorDefense + MAX(iFlavorDefense, iFlavorOffense)) * 2;
-#endif
-#else
-			dValue += 50 + iFlavorMobile * 2;
+			dTemp *= 2;
+			if (isOnlyDefensive())
+				dTemp *= 2;
 		}
-		else
+		dValue += dTemp + iFlavorOffense + iFlavorDefense;
+		if (cargoSpace() == cargoSpaceAvailable())
+			dValue += iFlavorOffense + iFlavorDefense;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetAttackMod(); // Wolfpack, Levels (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0)
+	{
+		dTemp += getAttackModifier() * 2;
+		dExtra = 0;
+		for (iI = 0; iI < GC.getNumTerrainInfos(); iI++)
 		{
-			dValue += 30 + iFlavorMobile * 2;
-#endif
+			const TerrainTypes eTerrain = static_cast<TerrainTypes>(iI);
+			CvTerrainInfo* pkTerrainInfo = GC.getTerrainInfo(eTerrain);
+			if (pkTerrainInfo)
+				dExtra += getExtraTerrainAttackPercent(eTerrain) + pkPromotionInfo->GetTerrainAttackPercent(iI);
 		}
-	}
-
-	if(pkPromotionInfo->IsBlitz())
-	{
-		if((AI_getUnitAIType() == UNITAI_ATTACK) ||
-				(AI_getUnitAIType() == UNITAI_CITY_BOMBARD) ||
-				(AI_getUnitAIType() == UNITAI_FAST_ATTACK) ||
-				(AI_getUnitAIType() == UNITAI_COUNTER) ||
-				(AI_getUnitAIType() == UNITAI_ATTACK_SEA) ||
-				(AI_getUnitAIType() == UNITAI_PIRATE_SEA) ||
-				(AI_getUnitAIType() == UNITAI_ESCORT_SEA) ||
-				(AI_getUnitAIType() == UNITAI_PARADROP))
+		if (GC.getNumTerrainInfos() > 0)
+			dTemp += dExtra / (double)GC.getNumTerrainInfos();
+		dExtra = 0;
+		for (iI = 0; iI < GC.getNumFeatureInfos(); iI++)
 		{
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_BLITZ
-#ifdef AUI_FAST_COMP
-			dValue += 50 + (iFlavorMobile + iFlavorOffense + FASTMAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_BLITZ;
-#else
-			dValue += 50 + (iFlavorMobile + iFlavorOffense + MAX(iFlavorDefense, iFlavorOffense)) * AUI_UNIT_PROMOTION_TWEAKED_BLITZ;
-#endif
+			const FeatureTypes eFeature = static_cast<FeatureTypes>(iI);
+			CvFeatureInfo* pkFeatureInfo = GC.getFeatureInfo(eFeature);
+			if (pkFeatureInfo)
+				dExtra += getExtraFeatureAttackPercent(eFeature) + pkPromotionInfo->GetFeatureAttackPercent(iI);
 		}
-		else
+		if (GC.getNumFeatureInfos() > 0)
+			dTemp += dExtra / (double)GC.getNumFeatureInfos();
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp *= 2;
+		dValue += dTemp + iFlavorOffense * 2;
+	}
+
+	dTemp = (double)pkPromotionInfo->GetDefenseMod(); // Armor Plating, Survivalism, Levels (Bloublou's Promotion Expansion Pack)
+	if (dTemp != 0)
+	{
+		dTemp += getDefenseModifier() * 2 + getExtraOpenDefensePercent() + pkPromotionInfo->GetOpenDefensePercent() + getExtraRoughDefensePercent() + pkPromotionInfo->GetRoughDefensePercent();
+		dExtra = 0;
+		for (iI = 0; iI < GC.getNumTerrainInfos(); iI++)
 		{
-#ifdef AUI_FAST_COMP
-			dValue += 20 + (iFlavorMobile + iFlavorOffense + FASTMAX(iFlavorDefense, iFlavorOffense)) * 2;
-#else
-			dValue += 20 + (iFlavorMobile + iFlavorOffense + MAX(iFlavorDefense, iFlavorOffense)) * 2;
-#endif
-#else
-			dValue += 50 + iFlavorMobile * 2;
+			const TerrainTypes eTerrain = static_cast<TerrainTypes>(iI);
+			CvTerrainInfo* pkTerrainInfo = GC.getTerrainInfo(eTerrain);
+			if (pkTerrainInfo)
+				dExtra += getExtraTerrainDefensePercent(eTerrain) + pkPromotionInfo->GetTerrainDefensePercent(iI);
 		}
-		else
+		if (GC.getNumTerrainInfos() > 0)
+			dTemp += dExtra / (double)GC.getNumTerrainInfos();
+		dExtra = 0;
+		for (iI = 0; iI < GC.getNumFeatureInfos(); iI++)
 		{
-			dValue += 20 + iFlavorMobile * 2;
-#endif
+			const FeatureTypes eFeature = static_cast<FeatureTypes>(iI);
+			CvFeatureInfo* pkFeatureInfo = GC.getFeatureInfo(eFeature);
+			if (pkFeatureInfo)
+				dExtra += getExtraFeatureDefensePercent(eFeature) + pkPromotionInfo->GetFeatureDefensePercent(iI);
 		}
-	}
-
-	if(pkPromotionInfo->IsCanMoveAfterAttacking())
-	{
-		if((AI_getUnitAIType() == UNITAI_ATTACK) ||
-				(AI_getUnitAIType() == UNITAI_CITY_BOMBARD) ||
-				(AI_getUnitAIType() == UNITAI_FAST_ATTACK) ||
-				(AI_getUnitAIType() == UNITAI_COUNTER) ||
-				(AI_getUnitAIType() == UNITAI_ATTACK_SEA) ||
-				(AI_getUnitAIType() == UNITAI_PIRATE_SEA) ||
-				(AI_getUnitAIType() == UNITAI_ESCORT_SEA) ||
-				(AI_getUnitAIType() == UNITAI_PARADROP))
+		if (GC.getNumFeatureInfos() > 0)
+			dTemp += dExtra / (double)GC.getNumFeatureInfos();
+		if (!IsCanAttackRanged())
 		{
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_MOVE_AFTER_ATTACK
-			dValue += 30 + (iFlavorMobile + iFlavorOffense) * AUI_UNIT_PROMOTION_TWEAKED_MOVE_AFTER_ATTACK;
-#else
-			dValue += 30 + (iFlavorMobile + iFlavorOffense) * 2;
-#endif
+			dTemp *= 2;
+			if (isOnlyDefensive())
+				dTemp *= 2;
 		}
-		else
-		{
-			dValue += 10 + (iFlavorMobile + iFlavorOffense) * 2;
-		}
-	}
-
-	dTemp = (double)pkPromotionInfo->GetExtraAttacks();
-	if(dTemp != 0)
-	{
-		dValue += (dTemp * 200);
-	}
-
-	dTemp = (double)pkPromotionInfo->GetRangeChange();
-	if(isRanged())
-	{
-		dValue += (dTemp * 200);
-	}
-
-	dTemp = (double)pkPromotionInfo->GetInterceptionCombatModifier();
-	if(dTemp != 0 && canAirPatrol(NULL))
-	{
-		iExtra = GetInterceptionCombatModifier() * 2;
-		dTemp *= (100 + iExtra);
-		dTemp /= 100.0;
-		dValue += dTemp + iFlavorAir * 2;
-	}
-
-	dTemp = (double)pkPromotionInfo->GetAirSweepCombatModifier();
-	if(dTemp != 0 && canAirSweep())
-	{
-		iExtra = GetAirSweepCombatModifier() * 2;
-		dTemp *= (100 + iExtra);
-		dTemp /= 100.0;
-		dValue += dTemp + iFlavorAir * 2;
-	}
-
-	dTemp = (double)pkPromotionInfo->GetNumInterceptionChange();
-	if(dTemp != 0)
-	{
-		dValue += (dTemp * 200);
-	}
-
-	dTemp = (double)pkPromotionInfo->GetInterceptionDefenseDamageModifier();
-	if(dTemp != 0 && getDomainType() == DOMAIN_AIR)
-	{
-		iExtra = GetInterceptionDefenseDamageModifier() * 2;
-		dTemp *= (100 + iExtra);
-		dTemp /= 100.0;
-		dValue += dTemp + iFlavorAir * 2;
-	}
-
-	dTemp = (double)pkPromotionInfo->GetDefenseMod();
-	if(dTemp != 0)
-	{
-		iExtra = getDefenseModifier() * 2;
-		dTemp *= (100 + iExtra);
-		dTemp /= 100.0;
+		if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+			dTemp /= 2;
 		dValue += dTemp + iFlavorDefense * 2;
 	}
 
@@ -23187,261 +23631,304 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	{
 		const TerrainTypes eTerrain = static_cast<TerrainTypes>(iI);
 		CvTerrainInfo* pkTerrainInfo = GC.getTerrainInfo(eTerrain);
-		if(pkTerrainInfo)
+		if (pkTerrainInfo)
 		{
 			dTemp = (double)pkPromotionInfo->GetTerrainAttackPercent(iI);
-			if(dTemp != 0)
+			if (dTemp != 0)
 			{
-				iExtra = getExtraTerrainAttackPercent(eTerrain);
-				dTemp *= (100 + iExtra * 2);
-				dTemp /= 100.0;
-#ifdef AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
-				if((AI_getUnitAIType() == UNITAI_ATTACK) ||
-						(AI_getUnitAIType() == UNITAI_FAST_ATTACK))
-				{
-					dValue += dTemp * 2 + iFlavorOffense * 4;
-				}
-				else
-				{
-					dValue += dTemp + iFlavorOffense * 2;
-				}
-#else
+				dTemp += getExtraTerrainAttackPercent(eTerrain);
+				if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+					dTemp *= 2;
 				dValue += dTemp + iFlavorOffense * 2;
-				if ((AI_getUnitAIType() == UNITAI_ATTACK) ||
-					(AI_getUnitAIType() == UNITAI_FAST_ATTACK))
-				{
-					dValue *= 2;
-				}
-#endif
 			}
 
 			dTemp = (double)pkPromotionInfo->GetTerrainDefensePercent(iI);
-			if(dTemp != 0)
+			if (dTemp != 0)
 			{
-				iExtra =  getExtraTerrainDefensePercent(eTerrain);
-				dTemp *= (100 + iExtra);
-				dTemp /= 100.0;
-#ifdef AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
-				if((AI_getUnitAIType() == UNITAI_DEFENSE) ||
-						(AI_getUnitAIType() == UNITAI_COUNTER))
-				{
-					dValue += dTemp * 2 + iFlavorDefense * 4;
-				}
-				else
-				{
-					dValue += dTemp + iFlavorDefense * 2;
-				}
-#else
-				fValue += fTemp + iFlavorDefense * 2;
-				if ((AI_getUnitAIType() == UNITAI_DEFENSE) ||
-					(AI_getUnitAIType() == UNITAI_COUNTER))
-				{
-					fValue *= 2;
-				}
-#endif
+				dTemp += getExtraTerrainDefensePercent(eTerrain);
+				if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+					dTemp /= 2;
+				dValue += dTemp + iFlavorDefense * 2;
 			}
 
-			if(pkPromotionInfo->GetTerrainDoubleMove(iI))
+			if (pkPromotionInfo->GetTerrainDoubleMove(iI) && !isTerrainDoubleMove(eTerrain) && !flatMovementCost() && !pkPromotionInfo->IsFlatMovementCost())
 			{
-				if(AI_getUnitAIType() == UNITAI_EXPLORE)
-				{
-					dValue += 5 * (iFlavorRecon + iFlavorMobile);
-				}
-				else if((AI_getUnitAIType() == UNITAI_ATTACK) || (AI_getUnitAIType() == UNITAI_FAST_ATTACK))
-				{
-					dValue += 3 * (iFlavorOffense + iFlavorMobile);
-				}
-				else
-				{
-					dValue += 3 * iFlavorMobile;
-				}
+				dTemp = pkTerrainInfo->getMovementCost() - getExtraMoveDiscount() - pkPromotionInfo->GetMoveDiscountChange();
+				if (dTemp < 1 || ignoreTerrainCost())
+					dTemp = 1;
+				dTemp = double(baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange()) / dTemp; // amount of moves gained from having double move
+				
+				dTemp *= 2 * dTemp / (dTemp + baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange());
+				if (!noDefensiveBonus())
+					dTemp *= 2;
+				if (canMoveAfterAttacking() || pkPromotionInfo->IsCanMoveAfterAttacking())
+					dTemp *= 2;
+				dValue += dTemp * (1 + iFlavorOffense + iFlavorDefense);
+				if (m_pUnitInfo->GetDefaultUnitAIType() == UNITAI_EXPLORE_SEA || m_pUnitInfo->GetDefaultUnitAIType() == UNITAI_EXPLORE)
+					dValue += dTemp * iFlavorRecon;
 			}
 		}
 	}
 
-	for(iI = 0; iI < GC.getNumFeatureInfos(); iI++)
+	// Hills are no longer a TerrainType, so their bonuses need to be counted separately
+	{ // Hillmen (Bloublou's Promotion Expansion Pack)
+		dTemp = (double)pkPromotionInfo->GetHillsAttackPercent();
+		if (dTemp != 0)
+		{
+			dTemp += getExtraHillsAttackPercent();
+			if (IsCanAttackRanged())
+				dTemp += getExtraRoughAttackPercent() + pkPromotionInfo->GetRoughAttackPercent();
+			else
+				dTemp += getExtraRoughRangedAttackMod() + pkPromotionInfo->GetRoughRangedAttackMod();
+			if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+				dTemp *= 2;
+			dValue += dTemp + iFlavorOffense * 2;
+		}
+
+		dTemp = (double)pkPromotionInfo->GetHillsDefensePercent();
+		if (dTemp != 0)
+		{
+			dTemp += getExtraHillsDefensePercent() + getExtraRoughDefensePercent() + pkPromotionInfo->GetRoughDefensePercent();
+			if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+				dTemp /= 2;
+			dValue += dTemp + iFlavorDefense * 2;
+		}
+
+		if (pkPromotionInfo->IsHillsDoubleMove() && !isHillsDoubleMove() && !flatMovementCost() && !pkPromotionInfo->IsFlatMovementCost())
+		{
+			dTemp = 1 + GC.getHILLS_EXTRA_MOVEMENT() - getExtraMoveDiscount() - pkPromotionInfo->GetMoveDiscountChange();
+			if (dTemp < 1 || ignoreTerrainCost())
+				dTemp = 1;
+			dTemp = double(baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange()) / dTemp; // amount of moves gained from having double move
+
+			dTemp *= 2 * dTemp / (dTemp + baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange());
+			if (!noDefensiveBonus())
+				dTemp *= 2;
+			if (canMoveAfterAttacking() || pkPromotionInfo->IsCanMoveAfterAttacking())
+				dTemp *= 2;
+			dValue += dTemp * (1 + iFlavorOffense + iFlavorDefense);
+			if (m_pUnitInfo->GetDefaultUnitAIType() == UNITAI_EXPLORE_SEA || m_pUnitInfo->GetDefaultUnitAIType() == UNITAI_EXPLORE)
+				dValue += dTemp * iFlavorRecon;
+		}
+	}
+
+	for(iI = 0; iI < GC.getNumFeatureInfos(); iI++) // Woodsman
 	{
 		const FeatureTypes eFeature = static_cast<FeatureTypes>(iI);
 		CvFeatureInfo* pkFeatureInfo = GC.getFeatureInfo(eFeature);
-		if(pkFeatureInfo)
+		if (pkFeatureInfo)
 		{
 			dTemp = (double)pkPromotionInfo->GetFeatureAttackPercent(iI);
-			if(dTemp != 0)
+			if (dTemp != 0)
 			{
-				iExtra = getExtraFeatureAttackPercent(eFeature);
-				dTemp *= (100 + iExtra * 2);
-				dTemp /= 100.0;
-#ifdef AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
-				if((AI_getUnitAIType() == UNITAI_ATTACK) ||
-						(AI_getUnitAIType() == UNITAI_FAST_ATTACK))
+				dTemp += getExtraFeatureAttackPercent(eFeature);
+				if (IsCanAttackRanged())
 				{
-					dValue += dTemp * 2 + iFlavorOffense * 4;
+					if (pkFeatureInfo->IsRough())
+						dTemp += getExtraRoughAttackPercent() + pkPromotionInfo->GetRoughAttackPercent();
+					else
+						dTemp += getExtraOpenAttackPercent() + pkPromotionInfo->GetOpenAttackPercent();
 				}
 				else
 				{
-					dValue += dTemp + iFlavorOffense * 2;
+					if (pkFeatureInfo->IsRough())
+						dTemp += getExtraRoughRangedAttackMod() + pkPromotionInfo->GetRoughRangedAttackMod();
+					else
+						dTemp += getExtraOpenRangedAttackMod() + pkPromotionInfo->GetOpenRangedAttackMod();
 				}
-#else
-				fValue += fTemp + iFlavorOffense * 2;
-				if ((AI_getUnitAIType() == UNITAI_ATTACK) ||
-					(AI_getUnitAIType() == UNITAI_FAST_ATTACK))
-				{
-					fValue *= 2;
-				}
-#endif
+				if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+					dTemp *= 2;
+				dValue += dTemp + iFlavorOffense * 2;
 			}
 
-			dTemp = (double)pkPromotionInfo->GetFeatureDefensePercent(iI);;
-			if(dTemp != 0)
+			dTemp = (double)pkPromotionInfo->GetFeatureDefensePercent(iI);
+			if (dTemp != 0)
 			{
-				iExtra = getExtraFeatureDefensePercent(eFeature);
-				dTemp *= (100 + iExtra * 2);
-				dTemp /= 100.0;
-#ifdef AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
-				if((AI_getUnitAIType() == UNITAI_DEFENSE) ||
-						(AI_getUnitAIType() == UNITAI_COUNTER))
-				{
-					dValue += dTemp * 2 + iFlavorDefense * 4;
-				}
+				dTemp += getExtraFeatureDefensePercent(eFeature);
+				if (pkFeatureInfo->IsRough())
+					dTemp += getExtraRoughDefensePercent() + pkPromotionInfo->GetRoughDefensePercent();
 				else
-				{
-					dValue += dTemp + iFlavorDefense * 2;
-				}
-#else
-				fValue += fTemp + iFlavorDefense * 2;
-				if((AI_getUnitAIType() == UNITAI_DEFENSE) ||
-					(AI_getUnitAIType() == UNITAI_COUNTER))
-				{
-					fValue *= 2;
-				}			
-#endif
+					dTemp += getExtraOpenDefensePercent() + pkPromotionInfo->GetOpenDefensePercent();
+				if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+					dTemp /= 2;
+				dValue += dTemp + iFlavorDefense * 2;
 			}
 
-			if(pkPromotionInfo->GetFeatureDoubleMove(iI))
+			if (pkPromotionInfo->GetFeatureDoubleMove(iI) && !isFeatureDoubleMove(eFeature) && !flatMovementCost() && !pkPromotionInfo->IsFlatMovementCost())
 			{
-				if(AI_getUnitAIType() == UNITAI_EXPLORE)
-				{
-					dValue += 5 * (iFlavorRecon + iFlavorMobile);
-				}
-				else if((AI_getUnitAIType() == UNITAI_ATTACK) || (AI_getUnitAIType() == UNITAI_FAST_ATTACK))
-				{
-					dValue += 3 * (iFlavorOffense + iFlavorMobile);
-				}
-				else
-				{
-					dValue += 3 * iFlavorMobile;
-				}
+				dTemp = pkFeatureInfo->getMovementCost() - getExtraMoveDiscount() - pkPromotionInfo->GetMoveDiscountChange();
+				if (dTemp < 1 || ignoreTerrainCost())
+					dTemp = 1;
+				dTemp = double(baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange()) / dTemp; // amount of moves gained from having double move
+
+				dTemp *= 2 * dTemp / (dTemp + baseMoves(getDomainType()) + pkPromotionInfo->GetMovesChange());
+				if (!noDefensiveBonus())
+					dTemp *= 2;
+				if (canMoveAfterAttacking() || pkPromotionInfo->IsCanMoveAfterAttacking())
+					dTemp *= 2;
+				dValue += dTemp * (1 + iFlavorOffense + iFlavorDefense);
+				if (m_pUnitInfo->GetDefaultUnitAIType() == UNITAI_EXPLORE_SEA || m_pUnitInfo->GetDefaultUnitAIType() == UNITAI_EXPLORE)
+					dValue += dTemp * iFlavorRecon;
 			}
 		}
 	}
 
-	int iOtherCombat = 0;
-	int iSameCombat = 0;
-
-	for(iI = 0; iI < GC.getNumUnitCombatClassInfos(); iI++)
+	CvTeamTechs* pTeamTechs = GET_TEAM(getTeam()).GetTeamTechs();
+	for(iI = 0; iI < GC.getNumUnitCombatClassInfos(); iI++) // Formation, Ambush, Air Ambush
 	{
 		const UnitCombatTypes eUnitCombat = static_cast<UnitCombatTypes>(iI);
 		CvBaseInfo* pkUnitCombatInfo = GC.getUnitCombatClassInfo(eUnitCombat);
-		if(pkUnitCombatInfo)
-		{
-			if(eUnitCombat == getUnitCombatType())
-			{
-				iSameCombat += unitCombatModifier(eUnitCombat);
-			}
-			else
-			{
-				iOtherCombat += unitCombatModifier(eUnitCombat);
-			}
-		}
-	}
-
-	for(iI = 0; iI < GC.getNumUnitCombatClassInfos(); iI++)
-	{
-		const UnitCombatTypes eUnitCombat = static_cast<UnitCombatTypes>(iI);
-		CvBaseInfo* pkUnitCombatInfo = GC.getUnitCombatClassInfo(eUnitCombat);
-		if(pkUnitCombatInfo)
+		if (pkUnitCombatInfo)
 		{
 			dTemp = (double)pkPromotionInfo->GetUnitCombatModifierPercent(iI);
-			int iCombatWeight = 0;
-			//Fighting their own kind
-			if((UnitCombatTypes)iI == getUnitCombatType())
+			if (dTemp != 0)
 			{
-				if(iSameCombat >= iOtherCombat)
+				for (int iJ = 0; iJ < GC.getNumUnitInfos(); iJ++)
 				{
-					iCombatWeight = 70;//"axeman takes formation"
+					CvUnitEntry* pkUnitEntry = GC.getUnitInfo((UnitTypes)iJ);
+					if (pkUnitEntry)
+					{
+						if (pkUnitEntry->GetUnitCombatType() == eUnitCombat && !pTeamTechs->HasTech((TechTypes)pkUnitEntry->GetObsoleteTech()))
+						{
+							for (int iK = 0; iK < MAX_TEAMS; iK++)
+							{
+								CvTeam& kTeam = GET_TEAM((TeamTypes)iK);
+								if (kTeam.isAlive() && kTeam.GetTeamTechs()->HasTech((TechTypes)pkUnitEntry->GetPrereqAndTech()))
+									goto UnitCombatTypeIsRelevant;
+							}
+						}
+					}
 				}
+				continue;
+			UnitCombatTypeIsRelevant: // There is at least one non-obsolete unit of this combat type that someone can build
+				if (GC.getPLOT_UNIT_LIMIT() == 1) // 1UPT means we want to focus on one combat modifier
+				{
+					dTemp += unitCombatModifier(eUnitCombat) * 2;
+				}
+				else // no 1UPT means we want to be better all-round so that we have a bonus against best defenders no matter what
+				{
+					dTemp *= 2 * dTemp / (dTemp + unitCombatModifier(eUnitCombat));
+				}
+				if (IsCanAttackRanged() && (getDomainType() != DOMAIN_AIR || eUnitCombat == getUnitCombatType()))
+					dTemp *= 2;
+				dValue += dTemp;
+				if (!noDefensiveBonus() && (!IsCanAttackRanged() || eUnitCombat == getUnitCombatType()))
+					dValue += iFlavorDefense * 2;
 				else
-				{
-					iCombatWeight = 30;
-				}
-			}
-			else
-			{
-				//fighting other kinds
-				if(unitCombatModifier(eUnitCombat) > 10)
-				{
-					iCombatWeight = 70;//"spearman takes formation"
-				}
-				else
-				{
-					iCombatWeight = 30;
-				}
-			}
-
-			if((AI_getUnitAIType() == UNITAI_COUNTER) || (AI_getUnitAIType() == UNITAI_RANGED))
-			{
-				dValue += (dTemp * iCombatWeight) / 25.0;
-			}
-			else if((AI_getUnitAIType() == UNITAI_ATTACK) ||
-					(AI_getUnitAIType() == UNITAI_DEFENSE))
-			{
-				dValue += (dTemp * iCombatWeight) / 50.0;
-			}
-			else
-			{
-				dValue += (dTemp * iCombatWeight) / 100.0;
+					dValue += iFlavorOffense * 2;
 			}
 		}
 	}
 
-	for(iI = 0; iI < NUM_DOMAIN_TYPES; iI++)
+	for (iI = 0; iI < GC.getNumUnitClassInfos(); iI++) // Sabotage (Bloublou's Promotion Expansion Pack)
+	{
+		const UnitClassTypes eUnitClass = static_cast<UnitClassTypes>(iI);
+		CvUnitClassInfo* pkUnitClassInfo = GC.getUnitClassInfo(eUnitClass);
+		if (pkUnitClassInfo)
+		{
+			CvUnitEntry* pkUnitEntry = GC.getUnitInfo((UnitTypes)pkUnitClassInfo->getDefaultUnitIndex());
+			if (pkUnitEntry)
+			{
+				if (!pTeamTechs->HasTech((TechTypes)pkUnitEntry->GetObsoleteTech()))
+				{
+					for (int iK = 0; iK < MAX_TEAMS; iK++)
+					{
+						CvTeam& kTeam = GET_TEAM((TeamTypes)iK);
+						if (kTeam.isAlive() && kTeam.GetTeamTechs()->HasTech((TechTypes)pkUnitEntry->GetPrereqAndTech()))
+							goto UnitClassIsRelevant;
+					}
+				}
+			}
+			continue;
+		UnitClassIsRelevant:
+			dTemp = (double)pkPromotionInfo->GetUnitClassAttackModifier(eUnitClass);
+			if (dTemp != 0)
+			{
+				if (GC.getPLOT_UNIT_LIMIT() == 1) // 1UPT means we want to focus on one combat modifier
+				{
+					dTemp += unitClassAttackModifier(eUnitClass) * 2 + getUnitClassModifier(eUnitClass) + pkPromotionInfo->GetUnitClassModifierPercent(eUnitClass);
+				}
+				else // no 1UPT means we want to be better all-round so that we have a bonus against best defenders no matter what
+				{
+					dTemp *= 2 * dTemp / (dTemp + unitClassAttackModifier(eUnitClass) + getUnitClassModifier(eUnitClass) + pkPromotionInfo->GetUnitClassModifierPercent(eUnitClass));
+				}
+				if (IsCanAttackRanged() && (getDomainType() != DOMAIN_AIR || pkUnitEntry->GetUnitCombatType() == getUnitCombatType()))
+					dTemp *= 2;
+				if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+					dTemp *= 2;
+				dTemp /= 4;
+				dValue += dTemp + iFlavorOffense;
+			}
+
+			dTemp = (double)pkPromotionInfo->GetUnitClassDefenseModifier(eUnitClass);
+			if (dTemp != 0)
+			{
+				if (GC.getPLOT_UNIT_LIMIT() == 1) // 1UPT means we want to focus on one combat modifier
+				{
+					dTemp += unitClassDefenseModifier(eUnitClass) * 2 + getUnitClassModifier(eUnitClass) + pkPromotionInfo->GetUnitClassModifierPercent(eUnitClass);
+				}
+				else // no 1UPT means we want to be better all-round so that we have a bonus against best defenders no matter what
+				{
+					dTemp *= 2 * dTemp / (dTemp + unitClassDefenseModifier(eUnitClass) + getUnitClassModifier(eUnitClass) + pkPromotionInfo->GetUnitClassModifierPercent(eUnitClass));
+				}
+				if (IsCanAttackRanged() && (getDomainType() != DOMAIN_AIR || pkUnitEntry->GetUnitCombatType() == getUnitCombatType()))
+					dTemp *= 2;
+				if (!isNeverInvisible() || pkPromotionInfo->GetInvisibleType() != NO_INVISIBLE)
+					dTemp /= 2;
+				dTemp /= 4;
+				dValue += dTemp + iFlavorDefense;
+			}
+
+			dTemp = (double)pkPromotionInfo->GetUnitClassModifierPercent(eUnitClass);
+			if (dTemp != 0)
+			{
+				if (GC.getPLOT_UNIT_LIMIT() == 1) // 1UPT means we want to focus on one combat modifier
+				{
+					dTemp += getUnitClassModifier(eUnitClass) * 2 + (unitClassDefenseModifier(eUnitClass) + pkPromotionInfo->GetUnitClassDefenseModifier(eUnitClass) +
+						pkPromotionInfo->GetUnitClassAttackModifier(eUnitClass) + unitClassAttackModifier(eUnitClass)) / 2.0;
+				}
+				else // no 1UPT means we want to be better all-round so that we have a bonus against best defenders no matter what
+				{
+					dTemp *= 2 * dTemp / (dTemp + unitClassDefenseModifier(eUnitClass) + (unitClassDefenseModifier(eUnitClass) + 
+						pkPromotionInfo->GetUnitClassDefenseModifier(eUnitClass) + pkPromotionInfo->GetUnitClassAttackModifier(eUnitClass) + unitClassAttackModifier(eUnitClass)) / 2.0);
+				}
+				if (IsCanAttackRanged() && (getDomainType() != DOMAIN_AIR || pkUnitEntry->GetUnitCombatType() == getUnitCombatType()))
+					dTemp *= 2;
+				dTemp /= 2;
+				dValue += dTemp + iFlavorDefense;
+			}
+		}
+	}
+
+	for(iI = 0; iI < NUM_DOMAIN_TYPES; iI++) // Bombardment, Boarding party, Targetting, Air Targetting
 	{
 		dTemp = (double)pkPromotionInfo->GetDomainModifierPercent(iI);
-		if(AI_getUnitAIType() == UNITAI_COUNTER)
+		if (dTemp != 0)
 		{
-			dValue += (dTemp * 2);
-		}
-		else if((AI_getUnitAIType() == UNITAI_ATTACK) ||
-				(AI_getUnitAIType() == UNITAI_DEFENSE))
-		{
+			dTemp += getExtraDomainModifier((DomainTypes)iI);
+			if ((bNavalMap && (iI == DOMAIN_LAND) && getDomainType() != DOMAIN_LAND) || (!bNavalMap && (iI == DOMAIN_SEA) && getDomainType() != DOMAIN_SEA))
+				dTemp /= 2;
+			if (iI == getDomainType())
+				dTemp *= 2;
 			dValue += dTemp;
 		}
-		else
-		{
-			dValue += (dTemp / 2.0);
-		}
 	}
 
-#ifdef AUI_UNIT_PROMOTION_TWEAKED_RANDOM
-	if(dValue > 0)
+	if (dValue > 0)
 	{
+		dValue += AI_promotionValueAsPrereq(ePromotion);
+
 #ifdef AUI_BINOM_RNG
-		dValue += GC.getGame().getJonRandNumBinom(AUI_UNIT_PROMOTION_TWEAKED_RANDOM, "AI Promote");
+		dValue += GC.getGame().getJonRandNumBinom(17, "AI Promote");
 #else
-		dValue += GC.getGame().getJonRandNum(AUI_UNIT_PROMOTION_TWEAKED_RANDOM, "AI Promote");
-#endif
-	}
-
-	// Randomizer borrowed from CvReligionAI::ScoreBelief()
-	dValue *= (1 + pow((double)GC.getGame().getJonRandNumBinom(257, "Promotion score randomizer.") / 128.0 - 1.0, 3.0));
-#else
-	if(fValue > 0)
-	{
-		fValue += GC.getGame().getJonRandNum(15, "AI Promote");
-	}
+		dValue += GC.getGame().getJonRandNum(17, "AI Promote");
 #endif
 
-	return (int)(dValue + 0.5);
+		// Randomizer borrowed from CvReligionAI::ScoreBelief()
+		dValue *= (1 + pow((double)GC.getGame().getJonRandNumBinom(257, "Promotion score randomizer.") / 128.0 - 1.0, 3.0));
+	}
+
+	return int(dValue + 0.5);
 #else
 	int iValue = 0;
 	int iTemp;
@@ -24161,6 +24648,30 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	return iValue;
 #endif
 }
+
+#ifdef AUI_UNIT_PROMOTION_REMADE
+int CvUnit::AI_promotionValueAsPrereq(PromotionTypes ePromotion) const
+{
+	CvPromotionEntry* pkPromotionInfo = GC.getPromotionInfo(ePromotion);
+	if (pkPromotionInfo == NULL)
+	{
+		CvAssert(pkPromotionInfo);
+		return 0;
+	}
+
+	int iScore = 0;
+	for (int iI = 0; iI < GC.getNumPromotionInfos(); iI++)
+	{
+		const PromotionTypes eLoopPromotion(static_cast<PromotionTypes>(iI));
+		if (!canAcquirePromotion(eLoopPromotion) && canAcquirePromotion(eLoopPromotion, ePromotion))
+		{
+			iScore += AI_promotionValue(eLoopPromotion) / 2;
+		}
+	}
+
+	return iScore;
+}
+#endif
 
 //	--------------------------------------------------------------------------------
 GreatPeopleDirectiveTypes CvUnit::GetGreatPeopleDirective() const

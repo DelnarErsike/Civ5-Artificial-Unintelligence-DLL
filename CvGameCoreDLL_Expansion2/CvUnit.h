@@ -927,7 +927,7 @@ public:
 	void changeExtraRoughDefensePercent(int iChange);
 
 #ifdef AUI_UNIT_EXTRA_ATTACKS_GETTER
-	int getNumAttacks();
+	int getNumAttacks() const;
 #endif
 	void changeExtraAttacks(int iChange);
 
@@ -1152,7 +1152,11 @@ public:
 	int getUnitClassModifier(UnitClassTypes eIndex) const;
 	void changeUnitClassModifier(UnitClassTypes eIndex, int iChange);
 
+#ifdef AUI_UNIT_PROMOTION_REMADE
+	bool canAcquirePromotion(PromotionTypes ePromotion, PromotionTypes eAssumeHavePromotion = NO_PROMOTION) const;
+#else
 	bool canAcquirePromotion(PromotionTypes ePromotion) const;
+#endif
 	bool canAcquirePromotionAny() const;
 	bool isPromotionValid(PromotionTypes ePromotion) const;
 	bool isHasPromotion(PromotionTypes eIndex) const;
@@ -1216,7 +1220,12 @@ public:
 	void AI_promote();
 	UnitAITypes AI_getUnitAIType() const;
 	void AI_setUnitAIType(UnitAITypes eNewValue);
+#ifdef AUI_UNIT_PROMOTION_REMADE
+	int AI_promotionValue(PromotionTypes ePromotion) const;
+	int AI_promotionValueAsPrereq(PromotionTypes ePromotion) const;
+#else
 	int AI_promotionValue(PromotionTypes ePromotion);
+#endif
 
 	GreatPeopleDirectiveTypes GetGreatPeopleDirective() const;
 	void SetGreatPeopleDirective(GreatPeopleDirectiveTypes eDirective);

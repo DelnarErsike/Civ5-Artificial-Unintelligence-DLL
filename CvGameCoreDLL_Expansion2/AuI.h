@@ -126,6 +126,8 @@
 #define AUI_ASTAR_CACHE_PLOTS_AT_NODES
 /// Implements the missing getter for the enemy defender based on the unit in question (rather than the player); this is important for hidden nationality units
 #define AUI_PLOT_GET_VISIBLE_ENEMY_DEFENDER_TO_UNIT
+/// Fixes base heal mod from players not actually increasing base healing
+#define AUI_UNIT_FIX_BASE_HEAL_MOD
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code
@@ -1101,8 +1103,9 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 
 // Promition Stuff (within CvUnit.cpp)
-/// Use double instead of int for most variables (to retain information during division) inside AI_promotionValue()
-#define AUI_UNIT_PROMOTION_USE_DOUBLES
+/// Completely overhauled the promotion choosing system to have the AI aim for the good, high-level promotions (Blitz, Logistics, Air Repair, etc.), be freed from UnitAITypes, and be able to score more promotion effects
+#define AUI_UNIT_PROMOTION_REMADE
+#ifndef AUI_UNIT_PROMOTION_REMADE
 /// Instaheal promotion will only be taken if the unit is under threat in addition to being below 50% HP
 #define AUI_UNIT_PROMOTION_FIX_INSTAHEAL_ONLY_UNDER_THREAT
 /// Ranged units now value this promotion higher depending on ranged flavor, while Counter and Defense (melee) units no longer value this promotion higher than usual
@@ -1123,6 +1126,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_UNIT_PROMOTION_FIX_TERRAIN_BOOST
 /// Uses a different randomization algorithm and also uses the binomial RNG instead of the standard one if it's enabled
 #define AUI_UNIT_PROMOTION_TWEAKED_RANDOM (17)
+#endif
 
 // Voting/League Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
