@@ -5793,7 +5793,7 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 		{
 			int iTempTurns = MAX_INT;
 			CvPlot* pLoopPlot;			
-			int iRange = FASTMIN((pUnit->getMoves() + GC.getMOVE_DENOMINATOR() - 1) / GC.getMOVE_DENOMINATOR(), pUnit->baseMoves());
+			int iRange = FASTMIN((pUnit->getMoves() + GC.getMOVE_DENOMINATOR() - 1 - GC.getMOVE_DENOMINATOR() / 2) / GC.getMOVE_DENOMINATOR(), pUnit->baseMoves());
 			if (iTurns > 1)
 				iRange += pUnit->baseMoves() * (iTurns - 1);
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
