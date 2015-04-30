@@ -304,8 +304,14 @@ public:
 	~CvUnitXMLEntries(void);
 
 	// Accessor functions
+
 	std::vector<CvUnitEntry*>& GetUnitEntries();
+#ifdef AUI_CONSTIFY
+	int GetNumUnits() const;
+#else
 	int GetNumUnits();
+#endif
+
 	_Ret_maybenull_ CvUnitEntry* GetEntry(int index);
 
 	void DeleteArray();

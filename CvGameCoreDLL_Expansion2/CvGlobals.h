@@ -326,13 +326,25 @@ public:
 	std::vector<CvMinorCivInfo*>& getMinorCivInfo();
 	CvMinorCivInfo* getMinorCivInfo(MinorCivTypes eMinorCivNum);
 
+#ifdef AUI_CONSTIFY
+	int getNumLeaderHeadInfos() const;
+#else
 	int getNumLeaderHeadInfos();
+#endif
 	std::vector<CvLeaderHeadInfo*>& getLeaderHeadInfo();
 	_Ret_maybenull_ CvLeaderHeadInfo* getLeaderHeadInfo(LeaderHeadTypes eLeaderHeadNum);
 
+#ifdef AUI_CONSTIFY
+	int getNumUnitInfos() const;
+#else
 	int getNumUnitInfos();
+#endif
 	std::vector<CvUnitEntry*>& getUnitInfo();
+#ifdef AUI_CONSTIFY
+	_Ret_maybenull_ CvUnitEntry* getUnitInfo(UnitTypes eUnitNum) const;
+#else
 	_Ret_maybenull_ CvUnitEntry* getUnitInfo(UnitTypes eUnitNum);
+#endif
 	CvUnitXMLEntries* GetGameUnits() const;
 
 	int getNumSpecialUnitInfos();
@@ -407,9 +419,17 @@ public:
 	_Ret_maybenull_ CvBuildingEntry* getBuildingInfo(BuildingTypes eBuildingNum);
 	CvBuildingXMLEntries* GetGameBuildings() const;
 
+#ifdef AUI_CONSTIFY
+	int getNumUnitClassInfos() const;
+#else
 	int getNumUnitClassInfos();
+#endif
 	std::vector<CvUnitClassInfo*>& getUnitClassInfo();
+#ifdef AUI_CONSTIFY
+	_Ret_maybenull_ CvUnitClassInfo* getUnitClassInfo(UnitClassTypes eUnitClassNum) const;
+#else
 	_Ret_maybenull_ CvUnitClassInfo* getUnitClassInfo(UnitClassTypes eUnitClassNum);
+#endif
 
 	int getNumActionInfos();
 	std::vector<CvActionInfo*>& getActionInfo();

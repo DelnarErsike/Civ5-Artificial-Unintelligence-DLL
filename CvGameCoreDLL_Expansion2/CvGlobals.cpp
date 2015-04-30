@@ -2694,7 +2694,11 @@ CvMinorCivInfo* CvGlobals::getMinorCivInfo(MinorCivTypes eMinorCivNum)
 		return NULL;
 }
 
+#ifdef AUI_CONSTIFY
+int CvGlobals::getNumLeaderHeadInfos() const
+#else
 int CvGlobals::getNumLeaderHeadInfos()
+#endif
 {
 	return (int)m_paLeaderHeadInfo.size();
 }
@@ -2714,7 +2718,11 @@ CvLeaderHeadInfo* CvGlobals::getLeaderHeadInfo(LeaderHeadTypes eLeaderHeadNum)
 		return NULL;
 }
 
+#ifdef AUI_CONSTIFY
+int CvGlobals::getNumUnitInfos() const
+#else
 int CvGlobals::getNumUnitInfos()
+#endif
 {
 	return m_pUnits->GetNumUnits();
 }
@@ -2724,7 +2732,11 @@ std::vector<CvUnitEntry*>& CvGlobals::getUnitInfo()
 	return m_pUnits->GetUnitEntries();
 }
 
+#ifdef AUI_CONSTIFY
+CvUnitEntry* CvGlobals::getUnitInfo(UnitTypes eUnitNum) const
+#else
 CvUnitEntry* CvGlobals::getUnitInfo(UnitTypes eUnitNum)
+#endif
 {
 	CvAssert(eUnitNum > -1);
 	CvAssert(eUnitNum < GC.getNumUnitInfos());
@@ -3098,7 +3110,11 @@ CvBuildingXMLEntries* CvGlobals::GetGameBuildings() const
 	return m_pBuildings;
 }
 
+#ifdef AUI_CONSTIFY
+int CvGlobals::getNumUnitClassInfos() const
+#else
 int CvGlobals::getNumUnitClassInfos()
+#endif
 {
 	return (int)m_paUnitClassInfo.size();
 }
@@ -3108,7 +3124,11 @@ std::vector<CvUnitClassInfo*>& CvGlobals::getUnitClassInfo()
 	return m_paUnitClassInfo;
 }
 
+#ifdef AUI_CONSTIFY
+CvUnitClassInfo* CvGlobals::getUnitClassInfo(UnitClassTypes eUnitClassNum) const
+#else
 CvUnitClassInfo* CvGlobals::getUnitClassInfo(UnitClassTypes eUnitClassNum)
+#endif
 {
 	CvAssert(eUnitClassNum > -1);
 	CvAssert(eUnitClassNum < GC.getNumUnitClassInfos());

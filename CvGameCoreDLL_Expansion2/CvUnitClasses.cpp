@@ -1394,7 +1394,11 @@ std::vector<CvUnitEntry*>& CvUnitXMLEntries::GetUnitEntries()
 }
 
 /// Number of defined policies
+#ifdef AUI_CONSTIFY
+int CvUnitXMLEntries::GetNumUnits() const
+#else
 int CvUnitXMLEntries::GetNumUnits()
+#endif
 {
 	return m_paUnitEntries.size();
 }
