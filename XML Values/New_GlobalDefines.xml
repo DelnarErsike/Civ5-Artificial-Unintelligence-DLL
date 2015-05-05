@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameData>
+	<Defines>
+		<!-- Settle Yield Multipliers are now the same as Citizen Yield values -->
+		<Update>
+			<Set Value="16" />
+			<Where Name="SETTLER_FOOD_MULTIPLIER" />
+		</Update>
+		<Update>
+			<Set Value="12" />
+			<Where Name="SETTLER_PRODUCTION_MULTIPLIER" />
+		</Update>
+		<Update>
+			<Set Value="6" />
+			<Where Name="SETTLER_GOLD_MULTIPLIER" />
+		</Update>
+		<Update>
+			<Set Value="9" />
+			<Where Name="SETTLER_SCIENCE_MULTIPLIER" />
+		</Update>
+		<Update>
+			<Set Value="6" />
+			<Where Name="SETTLER_FAITH_MULTIPLIER" />
+		</Update>
+		<!-- Dll Tweaks mean that the AI will automatically calculate a lower fertility for settling on resource tiles, 
+			 since not settling on one gives the city's base yield plus the extra yield from the improvement on the resource tile -->
+		<Update>
+			<Set Value="0" />
+			<Where Name="BUILD_ON_RESOURCE_PERCENT" />
+		</Update>
+		<!-- Dll Tweaks mean that the AI will automatically increase fertility for settling on a river tile, 
+			 since it enables quite a few buildings and also provides strategic value -->
+		<Update>
+			<Set Value="0" />
+			<Where Name="BUILD_ON_RIVER_PERCENT" />
+		</Update>
+		<!-- Dll Tweaks mean that the AI will automatically increase fertility for settling on a coast tile, 
+			 since it enables all naval buildings and wonders; the 20 remaining is meant to represent unlocked naval units -->
+		<Update>
+			<Set Value="20" />
+			<Where Name="SETTLER_BUILD_ON_COAST_PERCENT" />
+		</Update>
+	</Defines>
+</GameData>

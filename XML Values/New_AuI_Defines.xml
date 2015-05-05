@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameData>
+	<Defines>
+		<Row Name="CITY_RING_0_MULTIPLIER">
+			<Value>6</Value>
+		</Row>
+		<Row Name="START_AREA_CULTURE_MULTIPLIER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_CULTURE_MULTIPLIER">
+			<Value>8</Value>
+		</Row>
+		
+		<Row Name="SETTLER_FOOD_RING_0_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_FOOD_RING_1_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_FOOD_RING_2_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_FOOD_RING_3_DIVIDER">
+			<Value>2</Value>
+		</Row>
+		<Row Name="SETTLER_PRODUCTION_RING_0_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_PRODUCTION_RING_1_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_PRODUCTION_RING_2_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_PRODUCTION_RING_3_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_GOLD_RING_0_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_GOLD_RING_1_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_GOLD_RING_2_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_GOLD_RING_3_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_SCIENCE_RING_0_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_SCIENCE_RING_1_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_SCIENCE_RING_2_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_SCIENCE_RING_3_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_CULTURE_RING_0_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_CULTURE_RING_1_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_CULTURE_RING_2_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_CULTURE_RING_3_DIVIDER">
+			<Value>2</Value>
+		</Row>
+		<Row Name="SETTLER_FAITH_RING_0_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_FAITH_RING_1_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_FAITH_RING_2_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_FAITH_RING_3_DIVIDER">
+			<Value>2</Value>
+		</Row>
+		<Row Name="SETTLER_HAPPINESS_RING_0_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_HAPPINESS_RING_1_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_HAPPINESS_RING_2_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_HAPPINESS_RING_3_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_HAPPINESS_RING_4_DIVIDER">
+			<Value>2</Value>
+		</Row>
+		<Row Name="SETTLER_HAPPINESS_RING_5_DIVIDER">
+			<Value>4</Value>
+		</Row>
+		<Row Name="SETTLER_RESOURCE_RING_0_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_RESOURCE_RING_1_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_RESOURCE_RING_2_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_RESOURCE_RING_3_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_RESOURCE_RING_4_DIVIDER">
+			<Value>2</Value>
+		</Row>
+		<Row Name="SETTLER_RESOURCE_RING_5_DIVIDER">
+			<Value>4</Value>
+		</Row>
+		<Row Name="SETTLER_STRATEGIC_RING_0_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_STRATEGIC_RING_1_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_STRATEGIC_RING_2_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_STRATEGIC_RING_3_DIVIDER">
+			<Value>1</Value>
+		</Row>
+		<Row Name="SETTLER_STRATEGIC_RING_4_DIVIDER">
+			<Value>2</Value>
+		</Row>
+		<Row Name="SETTLER_STRATEGIC_RING_5_DIVIDER">
+			<Value>4</Value>
+		</Row>
+	</Defines>
+</GameData>
