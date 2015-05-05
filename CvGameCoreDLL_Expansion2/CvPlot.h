@@ -557,7 +557,11 @@ public:
 #endif
 	int calculateBestNatureYield(YieldTypes eIndex, TeamTypes eTeam) const;
 	int calculateTotalBestNatureYield(TeamTypes eTeam) const;
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+	int calculateImprovementYieldChange(ImprovementTypes eImprovement, YieldTypes eYield, PlayerTypes ePlayer, bool bOptimal = false, RouteTypes eAssumeThisRoute = NUM_ROUTE_TYPES, bool bAssumeIsCityNeighbor = false, CvCity* pAssumeWorkingCity = NULL) const;
+#else
 	int calculateImprovementYieldChange(ImprovementTypes eImprovement, YieldTypes eYield, PlayerTypes ePlayer, bool bOptimal = false, RouteTypes eAssumeThisRoute = NUM_ROUTE_TYPES) const;
+#endif
 	int calculateYield(YieldTypes eIndex, bool bDisplay = false);
 	bool hasYield() const;
 	void updateYield();
@@ -737,6 +741,10 @@ public:
 	void SetArtifactType(GreatWorkArtifactClass eType);
 	void SetArtifactGreatWork(GreatWorkType eWork);
 	bool HasWrittenArtifact() const;
+
+#ifdef AUI_CITY_IS_VALID_BUILDING_LOCATION_MOVED_TO_PLOT
+	bool isValidBuildingLocation(BuildingTypes eBuilding, bool bNeedsAtLeastOneRequirement = false) const;
+#endif
 
 protected:
 	class PlotBoolField

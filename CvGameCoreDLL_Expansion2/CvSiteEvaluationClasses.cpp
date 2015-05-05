@@ -36,7 +36,7 @@ void CvCitySiteEvaluator::Init()
 {
 	// Set up city ring multipliers
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-	m_iRingModifier[0] = /*2*/ GC.getCITY_RING_3_MULTIPLIER();
+	m_iRingModifier[0] = /*6*/ GC.getCITY_RING_0_MULTIPLIER();
 #else
 	m_iRingModifier[0] = 1;   // Items under city get handled separately
 #endif
@@ -45,18 +45,79 @@ void CvCitySiteEvaluator::Init()
 	m_iRingModifier[3] = /*2*/ GC.getCITY_RING_3_MULTIPLIER();
 	m_iRingModifier[4] = /*1*/ GC.getCITY_RING_4_MULTIPLIER();
 	m_iRingModifier[5] = /*1*/ GC.getCITY_RING_5_MULTIPLIER();
+#ifndef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_LOOP_OPTIMIZED
 	m_iRingModifier[6] = 0;
 	m_iRingModifier[7] = 0;
+#endif
+
+#ifdef AUI_SITE_EVALUATION_YIELD_MULTIPLIER_DISTANCE_DECAY
+	m_iFlavorDividerPerRing[0][YIELD_FOOD] = /*1*/ GC.getSETTLER_FOOD_RING_0_DIVIDER();
+	m_iFlavorDividerPerRing[0][YIELD_PRODUCTION] = /*1*/ GC.getSETTLER_PRODUCTION_RING_0_DIVIDER();
+	m_iFlavorDividerPerRing[0][YIELD_GOLD] = /*1*/ GC.getSETTLER_GOLD_RING_0_DIVIDER();
+	m_iFlavorDividerPerRing[0][YIELD_SCIENCE] = /*1*/ GC.getSETTLER_SCIENCE_RING_0_DIVIDER();
+	m_iFlavorDividerPerRing[0][YIELD_CULTURE] = /*1*/ GC.getSETTLER_CULTURE_RING_0_DIVIDER();
+	m_iFlavorDividerPerRing[0][YIELD_FAITH] = /*1*/ GC.getSETTLER_FAITH_RING_0_DIVIDER();
+	m_iFlavorDividerPerRing[0][SITE_EVALUATION_HAPPINESS] = /*1*/ GC.getSETTLER_HAPPINESS_RING_0_DIVIDER();
+	m_iFlavorDividerPerRing[0][SITE_EVALUATION_RESOURCES] = /*1*/ GC.getSETTLER_RESOURCES_RING_0_DIVIDER();
+	m_iFlavorDividerPerRing[0][SITE_EVALUATION_STRATEGIC] = /*1*/ GC.getSETTLER_STRATEGIC_RING_0_DIVIDER();
+	m_iFlavorDividerPerRing[1][YIELD_FOOD] = /*1*/ GC.getSETTLER_FOOD_RING_1_DIVIDER();
+	m_iFlavorDividerPerRing[1][YIELD_PRODUCTION] = /*1*/ GC.getSETTLER_PRODUCTION_RING_1_DIVIDER();
+	m_iFlavorDividerPerRing[1][YIELD_GOLD] = /*1*/ GC.getSETTLER_GOLD_RING_1_DIVIDER();
+	m_iFlavorDividerPerRing[1][YIELD_SCIENCE] = /*1*/ GC.getSETTLER_SCIENCE_RING_1_DIVIDER();
+	m_iFlavorDividerPerRing[1][YIELD_CULTURE] = /*1*/ GC.getSETTLER_CULTURE_RING_1_DIVIDER();
+	m_iFlavorDividerPerRing[1][YIELD_FAITH] = /*1*/ GC.getSETTLER_FAITH_RING_1_DIVIDER();
+	m_iFlavorDividerPerRing[1][SITE_EVALUATION_HAPPINESS] = /*1*/ GC.getSETTLER_HAPPINESS_RING_1_DIVIDER();
+	m_iFlavorDividerPerRing[1][SITE_EVALUATION_RESOURCES] = /*1*/ GC.getSETTLER_RESOURCES_RING_1_DIVIDER();
+	m_iFlavorDividerPerRing[1][SITE_EVALUATION_STRATEGIC] = /*1*/ GC.getSETTLER_STRATEGIC_RING_1_DIVIDER();
+	m_iFlavorDividerPerRing[2][YIELD_FOOD] = /*1*/ GC.getSETTLER_FOOD_RING_2_DIVIDER();
+	m_iFlavorDividerPerRing[2][YIELD_PRODUCTION] = /*1*/ GC.getSETTLER_PRODUCTION_RING_2_DIVIDER();
+	m_iFlavorDividerPerRing[2][YIELD_GOLD] = /*1*/ GC.getSETTLER_GOLD_RING_2_DIVIDER();
+	m_iFlavorDividerPerRing[2][YIELD_SCIENCE] = /*1*/ GC.getSETTLER_SCIENCE_RING_2_DIVIDER();
+	m_iFlavorDividerPerRing[2][YIELD_CULTURE] = /*1*/ GC.getSETTLER_CULTURE_RING_2_DIVIDER();
+	m_iFlavorDividerPerRing[2][YIELD_FAITH] = /*1*/ GC.getSETTLER_FAITH_RING_2_DIVIDER();
+	m_iFlavorDividerPerRing[2][SITE_EVALUATION_HAPPINESS] = /*1*/ GC.getSETTLER_HAPPINESS_RING_2_DIVIDER();
+	m_iFlavorDividerPerRing[2][SITE_EVALUATION_RESOURCES] = /*1*/ GC.getSETTLER_RESOURCES_RING_2_DIVIDER();
+	m_iFlavorDividerPerRing[2][SITE_EVALUATION_STRATEGIC] = /*1*/ GC.getSETTLER_STRATEGIC_RING_2_DIVIDER();
+	m_iFlavorDividerPerRing[3][YIELD_FOOD] = /*2*/ GC.getSETTLER_FOOD_RING_3_DIVIDER();
+	m_iFlavorDividerPerRing[3][YIELD_PRODUCTION] = /*1*/ GC.getSETTLER_PRODUCTION_RING_3_DIVIDER();
+	m_iFlavorDividerPerRing[3][YIELD_GOLD] = /*1*/ GC.getSETTLER_GOLD_RING_3_DIVIDER();
+	m_iFlavorDividerPerRing[3][YIELD_SCIENCE] = /*1*/ GC.getSETTLER_SCIENCE_RING_3_DIVIDER();
+	m_iFlavorDividerPerRing[3][YIELD_CULTURE] = /*2*/ GC.getSETTLER_CULTURE_RING_3_DIVIDER();
+	m_iFlavorDividerPerRing[3][YIELD_FAITH] = /*2*/ GC.getSETTLER_FAITH_RING_3_DIVIDER();
+	m_iFlavorDividerPerRing[3][SITE_EVALUATION_HAPPINESS] = /*1*/ GC.getSETTLER_HAPPINESS_RING_3_DIVIDER();
+	m_iFlavorDividerPerRing[3][SITE_EVALUATION_RESOURCES] = /*1*/ GC.getSETTLER_RESOURCES_RING_3_DIVIDER();
+	m_iFlavorDividerPerRing[3][SITE_EVALUATION_STRATEGIC] = /*1*/ GC.getSETTLER_STRATEGIC_RING_3_DIVIDER();
+	m_iFlavorDividerPerRing[4][YIELD_FOOD] = MAX_INT;
+	m_iFlavorDividerPerRing[4][YIELD_PRODUCTION] = MAX_INT;
+	m_iFlavorDividerPerRing[4][YIELD_GOLD] = MAX_INT;
+	m_iFlavorDividerPerRing[4][YIELD_SCIENCE] = MAX_INT;
+	m_iFlavorDividerPerRing[4][YIELD_CULTURE] = MAX_INT;
+	m_iFlavorDividerPerRing[4][YIELD_FAITH] = MAX_INT;
+	m_iFlavorDividerPerRing[4][SITE_EVALUATION_HAPPINESS] = /*2*/ GC.getSETTLER_HAPPINESS_RING_4_DIVIDER();
+	m_iFlavorDividerPerRing[4][SITE_EVALUATION_RESOURCES] = /*2*/ GC.getSETTLER_RESOURCES_RING_4_DIVIDER();
+	m_iFlavorDividerPerRing[4][SITE_EVALUATION_STRATEGIC] = /*2*/ GC.getSETTLER_STRATEGIC_RING_4_DIVIDER();
+	m_iFlavorDividerPerRing[5][YIELD_FOOD] = MAX_INT;
+	m_iFlavorDividerPerRing[5][YIELD_PRODUCTION] = MAX_INT;
+	m_iFlavorDividerPerRing[5][YIELD_GOLD] = MAX_INT;
+	m_iFlavorDividerPerRing[5][YIELD_SCIENCE] = MAX_INT;
+	m_iFlavorDividerPerRing[5][YIELD_CULTURE] = MAX_INT;
+	m_iFlavorDividerPerRing[5][YIELD_FAITH] = MAX_INT;
+	m_iFlavorDividerPerRing[5][SITE_EVALUATION_HAPPINESS] = /*4*/ GC.getSETTLER_HAPPINESS_RING_5_DIVIDER();
+	m_iFlavorDividerPerRing[5][SITE_EVALUATION_RESOURCES] = /*4*/ GC.getSETTLER_RESOURCES_RING_5_DIVIDER();
+	m_iFlavorDividerPerRing[5][SITE_EVALUATION_STRATEGIC] = /*4*/ GC.getSETTLER_STRATEGIC_RING_5_DIVIDER();
+#endif
 
 	m_iGrowthIndex = GC.getInfoTypeForString("FLAVOR_GROWTH");
 	m_iExpansionIndex = GC.getInfoTypeForString("FLAVOR_EXPANSION");
 	m_iNavalIndex = GC.getInfoTypeForString("FLAVOR_NAVAL");
 
+#ifndef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 	m_iBrazilMultiplier = 1000;	//fertility boost from jungles
 	m_iSpainMultiplier = 55000;	//fertility boost from natural wonders
 	m_iMorrocoMultiplier = 1000; //fertility boost from desert
 	m_iNetherlandsMultiplier = 2000; //fertility boost from marshes and flood plains
 	m_iIncaMultiplier = 500; //fertility boost for hill tiles surrounded my mountains
+#endif
 }
 
 /// Is it valid for this player to found a city here?
@@ -429,6 +490,18 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 	}
 #endif // This stuff has been taken care of in the plot value part in AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_LOOP_OPTIMIZED
+	int iDX, iMaxDX;
+	for (int iDY = -(NUM_CITY_RINGS + NUM_CITY_RINGS + 1); iDY <= (NUM_CITY_RINGS + NUM_CITY_RINGS + 1); iDY++)
+	{
+#ifdef AUI_FAST_COMP
+		iMaxDX = (NUM_CITY_RINGS + NUM_CITY_RINGS + 1) - FASTMAX(0, iDY);
+		for (iDX = -(NUM_CITY_RINGS + NUM_CITY_RINGS + 1) - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+		iMaxDX = (NUM_CITY_RINGS + NUM_CITY_RINGS + 1) - MAX(0, iDY);
+		for (iDX = -(NUM_CITY_RINGS + NUM_CITY_RINGS + 1) - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif
+#else
 #ifdef AUI_HEXSPACE_DX_LOOPS
 	int iDX, iMaxDX;
 	for (int iDY = -7; iDY <= 7; iDY++)
@@ -445,6 +518,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 	{
 		for (int iDY = -7; iDY <= 7; iDY++)
 #endif
+#endif
 		{
 			CvPlot* pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 
@@ -455,7 +529,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 #else
 				int iDistance = plotDistance(pPlot->getX(), pPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY());
 #endif
-#ifndef AUI_HEXSPACE_DX_LOOPS
+#if !defined(AUI_HEXSPACE_DX_LOOPS) && !defined(AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_LOOP_OPTIMIZED)
 				if (iDistance <= 7)
 #endif
 				{
@@ -471,7 +545,11 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 						}
 
 						// Skip the city plot itself for now
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_LOOP_OPTIMIZED
+						if (iDistance <= (NUM_CITY_RINGS + NUM_CITY_RINGS - 1))
+#else
 						if (iDistance <= 5)
+#endif
 						{
 							int iRingModifier = m_iRingModifier[iDistance];
 
@@ -494,29 +572,29 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 								if (eYield == NO_YIELD || eYield == YIELD_FOOD)
 								{
-									iFoodValue = iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, iDistance == 0) * /*15*/ GC.getSETTLER_FOOD_MULTIPLIER();
+									iFoodValue = iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, iDistance) * /*15*/ GC.getSETTLER_FOOD_MULTIPLIER();
 								}
 								if (eYield == NO_YIELD || eYield == YIELD_PRODUCTION)
 								{
-									iProductionValue = iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, iDistance == 0) * /*3*/ GC.getSETTLER_PRODUCTION_MULTIPLIER();
+									iProductionValue = iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, iDistance) * /*3*/ GC.getSETTLER_PRODUCTION_MULTIPLIER();
 								}
 								if (eYield == NO_YIELD || eYield == YIELD_GOLD)
 								{
-									iGoldValue = iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, iDistance == 0) * /*2*/ GC.getSETTLER_GOLD_MULTIPLIER();
+									iGoldValue = iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, iDistance) * /*3*/ GC.getSETTLER_GOLD_MULTIPLIER();
 								}
 								if (eYield == NO_YIELD || eYield == YIELD_SCIENCE)
 								{
-									iScienceValue = iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSETTLER_SCIENCE_MULTIPLIER();
+									iScienceValue = iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSETTLER_SCIENCE_MULTIPLIER();
 								}
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 								if (eYield == NO_YIELD || eYield == YIELD_CULTURE)
 								{
-									iCultureValue = iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
+									iCultureValue = iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSETTLER_CULTURE_MULTIPLIER();
 								}
 #endif
 								if (eYield == NO_YIELD || eYield == YIELD_FAITH)
 								{
-									iFaithValue = iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
+									iFaithValue = iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
 								}
 #else
 								if (eYield == NO_YIELD || eYield == YIELD_FOOD)
@@ -549,13 +627,30 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							}
 
 							// whether or not we are working these we get the benefit as long as culture can grow to take them
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_LOOP_OPTIMIZED
+							if (pLoopPlot->getOwner() == NO_PLAYER) // there is no benefit if we already own these tiles
+#else
 							if (iDistance <= 5 && pLoopPlot->getOwner() == NO_PLAYER) // there is no benefit if we already own these tiles
+#endif
 							{
 								iHappinessValue = iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer) * /*6*/ GC.getSETTLER_HAPPINESS_MULTIPLIER();
 								iResourceValue = iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSETTLER_RESOURCE_MULTIPLIER();
 								if (iDistance)
 									iStrategicValue = ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSETTLER_STRATEGIC_MULTIPLIER();  // the ring is included in the computation
 							}
+#ifdef AUI_SITE_EVALUATION_YIELD_MULTIPLIER_DISTANCE_DECAY
+							iFoodValue /= m_iFlavorDividerPerRing[iDistance][YIELD_FOOD];
+							iProductionValue /= m_iFlavorDividerPerRing[iDistance][YIELD_PRODUCTION];
+							iGoldValue /= m_iFlavorDividerPerRing[iDistance][YIELD_GOLD];
+							iScienceValue /= m_iFlavorDividerPerRing[iDistance][YIELD_SCIENCE];
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+							iCultureValue /= m_iFlavorDividerPerRing[iDistance][YIELD_CULTURE];
+#endif
+							iFaithValue /= m_iFlavorDividerPerRing[iDistance][YIELD_FAITH];
+							iHappinessValue /= m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_HAPPINESS];
+							iResourceValue /= m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_RESOURCES];
+							iStrategicValue /= m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_STRATEGIC];
+#endif
 
 							iTotalFoodValue += iFoodValue;
 							iTotalHappinessValue += iHappinessValue;
@@ -579,12 +674,14 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							}
 							iPlotValue += iStrategicValue;
 
+#ifndef AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_NATURAL_WONDERS // No longer need flat bonus to natural wonder tiles, the added happiness value is enough
 							// if this tile is a NW boost the value just so that we force the AI to claim them (if we can work it)
 							if (pLoopPlot->IsNaturalWonder() && iDistance > 0 && iDistance <= NUM_CITY_RINGS)
 							{
 								//iPlotValue += iPlotValue * 2 + 10;
 								iPlotValue += iPlotValue * 2 + 500;
 							}
+#endif
 
 							// lower value a lot if we already own this tile
 							if (iPlotValue > 0 && pLoopPlot->getOwner() == pPlayer->GetID())
@@ -608,7 +705,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							if (ePlotFeature == FEATURE_FOREST)
 							{
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-								if (iDistance <= 5 && iDistance != 0)
+								if (iDistance != 0)
 #else
 								if (iDistance <= 5)
 #endif
@@ -698,6 +795,48 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 			}
 		}
 	}
+
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_ENABLED_BUILDINGS
+	if (rtnValue > 0)
+	{
+		CvGrandStrategyAI* pGrandStrategyAI = pPlayer->GetGrandStrategyAI();
+		double dLoopFlavor = 0;
+		double dTotalFlavor = 0;
+		double dTotalBaseFlavor = 0;
+		int iLoopEraDifference;
+		for (int iI = 0; iI < GC.getNumBuildingInfos(); iI++)
+		{
+			const BuildingTypes eBuilding = static_cast<BuildingTypes>(iI);
+			CvBuildingEntry* pkBuilding = GC.getBuildingInfo(eBuilding);
+			iLoopEraDifference = 0;
+			if (pPlot->isValidBuildingLocation(eBuilding, true) && pPlayer->canConstruct(eBuilding, false, false, false, NULL, true, &iLoopEraDifference) && pkBuilding)
+			{
+				const CvBuildingClassInfo* pkBuildingClassInfo = &(pkBuilding->GetBuildingClassInfo());
+				for (int iJ = 0; iJ < GC.getNumFlavorTypes(); iJ++)
+				{
+					dLoopFlavor = pkBuilding->GetFlavorValue(iJ) / double(iLoopEraDifference + 1);
+					if (pkBuildingClassInfo)
+					{
+						if (pkBuildingClassInfo->getDefaultBuildingIndex() != eBuilding)
+							dLoopFlavor *= 2;
+						else if (pkBuildingClassInfo->getMaxGlobalInstances() > 0 || pkBuildingClassInfo->getMaxTeamInstances() > 0 || pkBuildingClassInfo->getMaxPlayerInstances() > 0)
+						{
+							if (pPlayer->getNumCities() > 2)
+								dLoopFlavor /= (double)pPlayer->getNumCities();
+							else
+								dLoopFlavor /= 2;
+						}
+					}
+					dTotalBaseFlavor += pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)iJ);
+					dTotalFlavor += dLoopFlavor * pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)iJ);
+				}
+			}
+		}
+		if (dTotalBaseFlavor == 0)
+			dTotalBaseFlavor = 1;
+		rtnValue += int(dTotalFlavor / dTotalBaseFlavor + 0.5);
+	}
+#endif
 
 	if (pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest())
 	{
@@ -934,6 +1073,16 @@ int CvCitySiteEvaluator::PlotFertilityValue(CvPlot* pPlot)
 
 	if(!pPlot->isWater() && !pPlot->isImpassable() && !pPlot->isMountain())
 	{
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+		rtnValue += ComputeFoodValue(pPlot, NULL, NUM_CITY_RINGS);
+		rtnValue += ComputeProductionValue(pPlot, NULL, NUM_CITY_RINGS);
+		rtnValue += ComputeGoldValue(pPlot, NULL, NUM_CITY_RINGS);
+		rtnValue += ComputeScienceValue(pPlot, NULL, NUM_CITY_RINGS);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+		rtnValue += ComputeCultureValue(pPlot, NULL, NUM_CITY_RINGS);
+		rtnValue += ComputeFaithValue(pPlot, NULL, NUM_CITY_RINGS);
+#endif
+#else
 		rtnValue += ComputeFoodValue(pPlot, NULL);
 		rtnValue += ComputeProductionValue(pPlot, NULL);
 		rtnValue += ComputeGoldValue(pPlot, NULL);
@@ -941,6 +1090,9 @@ int CvCitySiteEvaluator::PlotFertilityValue(CvPlot* pPlot)
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 		rtnValue += ComputeCultureValue(pPlot, NULL);
 		rtnValue += ComputeFaithValue(pPlot, NULL);
+#endif
+#endif
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 		rtnValue += ComputeHappinessValue(pPlot, NULL);
 #endif
 		rtnValue += ComputeTradeableResourceValue(pPlot, NULL);
@@ -963,7 +1115,7 @@ int CvCitySiteEvaluator::BestFoundValueForSpecificYield(CvPlayer* pPlayer, Yield
 
 /// Value of plot for providing food
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
+int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif
@@ -978,41 +1130,11 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
-#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam());
 #endif
 	}
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-	if (bCityPlot)
-	{
-		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_FOOD);
-		if (pYieldInfo)
-		{
-			rtnValue += pYieldInfo->getCityChange();
-#ifdef AUI_FAST_COMP
-			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
-#else
-			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif
-		}
-		if (pPlayer)
-		{
-			rtnValue += pPlayer->GetCityYieldChange(YIELD_FOOD);
-			if (pPlot->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()))
-			{
-				rtnValue += pPlayer->GetCoastalCityYieldChange(YIELD_FOOD);
-			}
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
-			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_FOOD);
-#endif
-		}
-	}
-#endif
 
 	// From resource
 	TeamTypes eTeam = NO_TEAM;
@@ -1029,29 +1151,96 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		if (pImprovement && !bCityPlot)
+		if (pImprovement && iPlotsFromCity != 0)
 #else
 		if(pImprovement)
 #endif
 		{
+#ifdef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_FOOD, pPlayer->GetID(), true, NUM_ROUTE_TYPES, iPlotsFromCity == 1, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_FOOD, pPlayer->GetID(), true, NUM_ROUTE_TYPES, false, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#endif
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_FOOD, pPlayer->GetID(), true);
+#endif
+#else
 			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_FOOD);
+#endif
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#ifndef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
 			if (pPlayer)
 				rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_FOOD);
+#endif
 		}
 		if (pPlayer && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
 		{
 			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_FOOD);
+#ifdef AUI_SITE_EVALUATION_COMPUTE_FOOD_VALUE_CONSIDER_FRESH_WATER_BEFORE_INDUSTRIAL
 		}
 	}
+	else if (pPlayer && pPlayer->GetCurrentEra() < GC.getInfoTypeForString(AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL) && rtnValue > 0)
+	{
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+		if (iPlotsFromCity != 0)
+#endif
+		{
+			if (pPlot->isFreshWater())
+				rtnValue += 1;
+#endif
+#endif
+		}
+	}
+#if !defined(AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT) && defined(AUI_SITE_EVALUATION_COMPUTE_FOOD_VALUE_CONSIDER_FRESH_WATER_BEFORE_INDUSTRIAL)
+	else if (pPlayer && pPlayer->GetCurrentEra() < GC.getInfoTypeForString(AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL) && rtnValue > 0)
+	{
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+		if (!bCityPlot)
+#endif
+		{
+			if (pPlot->isFreshWater())
+				rtnValue += 1;
+		}
+	}
+#endif
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+	if (iPlotsFromCity == 0)
+	{
+		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_FOOD);
+		if (pYieldInfo)
+		{
+			rtnValue += pYieldInfo->getCityChange();
+#ifdef AUI_FAST_COMP
+			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
+#else
+			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
+#endif
+		}
+		if (pPlayer)
+		{
+			rtnValue += pPlayer->GetCityYieldChange(YIELD_FOOD) / 100;
+			if (pPlot->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()))
+			{
+				rtnValue += pPlayer->GetCoastalCityYieldChange(YIELD_FOOD);
+			}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+			rtnValue += pPlayer->GetPlayerTraits()->GetFreeCityYield(YIELD_FOOD);
+#endif
+		}
+	}
+#endif
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+	rtnValue += GC.getGame().getPlotExtraYield(pPlot->getX(), pPlot->getY(), YIELD_FOOD);
 	if (pPlayer && pPlayer->getExtraYieldThreshold(YIELD_FOOD) > 0)
 	{
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_FOOD))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif
 		}
 	}
+#endif
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_FOOD];
 }
@@ -1138,7 +1327,7 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 /// Value of plot for providing hammers
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
+int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif
@@ -1153,17 +1342,59 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		rtnValue += pPlot->calculateNatureYield(YIELD_PRODUCTION, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
-#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_PRODUCTION, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_PRODUCTION, pPlayer->getTeam());
 #endif
 	}
+
+	// From resource
+	TeamTypes eTeam = NO_TEAM;
+	if(pPlayer != NULL)
+	{
+		eTeam = pPlayer->getTeam();
+	}
+
+	ResourceTypes eResource;
+	eResource = pPlot->getResourceType(eTeam);
+	if(eResource != NO_RESOURCE)
+	{
+		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_PRODUCTION);
+
+		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-	if (bCityPlot)
+		if (pImprovement && iPlotsFromCity != 0)
+#else
+		if(pImprovement)
+#endif
+		{
+#ifdef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_PRODUCTION, pPlayer->GetID(), true, NUM_ROUTE_TYPES, iPlotsFromCity == 1, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_PRODUCTION, pPlayer->GetID(), true, NUM_ROUTE_TYPES, false, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#endif
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_PRODUCTION, pPlayer->GetID(), true);
+#endif
+#else
+			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_PRODUCTION);
+#endif
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#ifndef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+			if (pPlayer)
+				rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_PRODUCTION);
+#endif
+		}
+		if (pPlayer && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+		{
+			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_PRODUCTION);
+#endif
+		}
+	}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+	if (iPlotsFromCity == 0)
 	{
 		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_PRODUCTION);
 		if (pYieldInfo)
@@ -1188,52 +1419,23 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 		}
 	}
 #endif
-
-	// From resource
-	TeamTypes eTeam = NO_TEAM;
-	if(pPlayer != NULL)
-	{
-		eTeam = pPlayer->getTeam();
-	}
-
-	ResourceTypes eResource;
-	eResource = pPlot->getResourceType(eTeam);
-	if(eResource != NO_RESOURCE)
-	{
-		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_PRODUCTION);
-
-		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		if (pImprovement && !bCityPlot)
-#else
-		if(pImprovement)
-#endif
-		{
-			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_PRODUCTION);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
-			if (pPlayer)
-				rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_PRODUCTION);
-		}
-		if (pPlayer && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
-		{
-			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_PRODUCTION);
-		}
-	}
+	rtnValue += GC.getGame().getPlotExtraYield(pPlot->getX(), pPlot->getY(), YIELD_PRODUCTION);
 	if (pPlayer && pPlayer->getExtraYieldThreshold(YIELD_PRODUCTION) > 0)
 	{
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_PRODUCTION))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif
 		}
 	}
+#endif
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_PRODUCTION];
 }
 
 /// Value of plot for providing gold
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
+int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif
@@ -1248,17 +1450,59 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		rtnValue += pPlot->calculateNatureYield(YIELD_GOLD, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
-#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_GOLD, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_GOLD, pPlayer->getTeam());
 #endif
 	}
+
+	// From resource
+	TeamTypes eTeam = NO_TEAM;
+	if(pPlayer != NULL)
+	{
+		eTeam = pPlayer->getTeam();
+	}
+
+	ResourceTypes eResource;
+	eResource = pPlot->getResourceType(eTeam);
+	if(eResource != NO_RESOURCE)
+	{
+		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_GOLD);
+
+		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-	if (bCityPlot)
+		if (pImprovement && iPlotsFromCity != 0)
+#else
+		if(pImprovement)
+#endif
+		{
+#ifdef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_GOLD, pPlayer->GetID(), true, NUM_ROUTE_TYPES, iPlotsFromCity == 1, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_GOLD, pPlayer->GetID(), true, NUM_ROUTE_TYPES, false, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#endif
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_GOLD, pPlayer->GetID(), true);
+#endif
+#else
+			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_GOLD);
+#endif
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#ifndef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+			if (pPlayer)
+				rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_GOLD);
+#endif
+		}
+		if (pPlayer && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+		{
+			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_GOLD);
+#endif
+		}
+	}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+	if (iPlotsFromCity == 0)
 	{
 		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_GOLD);
 		if (pYieldInfo)
@@ -1283,52 +1527,23 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		}
 	}
 #endif
-
-	// From resource
-	TeamTypes eTeam = NO_TEAM;
-	if(pPlayer != NULL)
-	{
-		eTeam = pPlayer->getTeam();
-	}
-
-	ResourceTypes eResource;
-	eResource = pPlot->getResourceType(eTeam);
-	if(eResource != NO_RESOURCE)
-	{
-		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_GOLD);
-
-		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		if (pImprovement && !bCityPlot)
-#else
-		if(pImprovement)
-#endif
-		{
-			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_GOLD);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
-			if (pPlayer)
-				rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_GOLD);
-		}
-		if (pPlayer && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
-		{
-			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_GOLD);
-		}
-	}
+	rtnValue += GC.getGame().getPlotExtraYield(pPlot->getX(), pPlot->getY(), YIELD_GOLD);
 	if (pPlayer && pPlayer->getExtraYieldThreshold(YIELD_GOLD) > 0)
 	{
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_GOLD))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif
 		}
 	}
+#endif
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_GOLD];
 }
 
 /// Value of plot for providing science
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
+int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif
@@ -1346,17 +1561,59 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		rtnValue += pPlot->calculateNatureYield(YIELD_SCIENCE, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
-#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_SCIENCE, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_SCIENCE, pPlayer->getTeam());
 #endif
 	}
+
+	// From resource
+	TeamTypes eTeam = NO_TEAM;
+	if(pPlayer != NULL)
+	{
+		eTeam = pPlayer->getTeam();
+	}
+
+	ResourceTypes eResource;
+	eResource = pPlot->getResourceType(eTeam);
+	if(eResource != NO_RESOURCE)
+	{
+		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_SCIENCE);
+
+		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-	if (bCityPlot)
+		if (pImprovement && iPlotsFromCity != 0)
+#else
+		if(pImprovement)
+#endif
+		{
+#ifdef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_SCIENCE, pPlayer->GetID(), true, NUM_ROUTE_TYPES, iPlotsFromCity == 1, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_SCIENCE, pPlayer->GetID(), true, NUM_ROUTE_TYPES, false, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#endif
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_SCIENCE, pPlayer->GetID(), true);
+#endif
+#else
+			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_SCIENCE);
+#endif
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#ifndef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+			if (pPlayer)
+				rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_SCIENCE);
+#endif
+		}
+		if (pPlayer && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+		{
+			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_SCIENCE);
+#endif
+		}
+	}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+	if (iPlotsFromCity == 0)
 	{
 		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_SCIENCE);
 		if (pYieldInfo)
@@ -1381,45 +1638,16 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		}
 	}
 #endif
-
-	// From resource
-	TeamTypes eTeam = NO_TEAM;
-	if(pPlayer != NULL)
-	{
-		eTeam = pPlayer->getTeam();
-	}
-
-	ResourceTypes eResource;
-	eResource = pPlot->getResourceType(eTeam);
-	if(eResource != NO_RESOURCE)
-	{
-		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_SCIENCE);
-
-		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		if (pImprovement && !bCityPlot)
-#else
-		if(pImprovement)
-#endif
-		{
-			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_SCIENCE);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
-			if (pPlayer)
-				rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_SCIENCE);
-		}
-		if (pPlayer && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
-		{
-			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_SCIENCE);
-		}
-	}
+	rtnValue += GC.getGame().getPlotExtraYield(pPlot->getX(), pPlot->getY(), YIELD_SCIENCE);
 	if (pPlayer && pPlayer->getExtraYieldThreshold(YIELD_SCIENCE) > 0)
 	{
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_SCIENCE))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif
 		}
 	}
+#endif
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_SCIENCE];
 }
@@ -1427,7 +1655,7 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 /// Value of plot for providing culture
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
+int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif
@@ -1445,17 +1673,59 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
-#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_CULTURE, pPlayer->getTeam());
 #endif
 	}
+
+	// From resource
+	TeamTypes eTeam = NO_TEAM;
+	if (pPlayer != NULL)
+	{
+		eTeam = pPlayer->getTeam();
+	}
+
+	ResourceTypes eResource;
+	eResource = pPlot->getResourceType(eTeam);
+	if (eResource != NO_RESOURCE)
+	{
+		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_CULTURE);
+
+		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-	if (bCityPlot)
+		if (pImprovement && iPlotsFromCity != 0)
+#else
+		if (pImprovement)
+#endif
+		{
+#ifdef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_CULTURE, pPlayer->GetID(), true, NUM_ROUTE_TYPES, iPlotsFromCity == 1, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_CULTURE, pPlayer->GetID(), true, NUM_ROUTE_TYPES, false, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#endif
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_CULTURE, pPlayer->GetID(), true);
+#endif
+#else
+			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_CULTURE);
+#endif
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#ifndef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+			if (pPlayer)
+				rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_CULTURE);
+#endif
+		}
+		if (pPlayer && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+		{
+			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_CULTURE);
+#endif
+		}
+	}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+	if (iPlotsFromCity == 0)
 	{
 		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_CULTURE);
 		if (pYieldInfo)
@@ -1480,45 +1750,16 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		}
 	}
 #endif
-
-	// From resource
-	TeamTypes eTeam = NO_TEAM;
-	if (pPlayer != NULL)
-	{
-		eTeam = pPlayer->getTeam();
-	}
-
-	ResourceTypes eResource;
-	eResource = pPlot->getResourceType(eTeam);
-	if (eResource != NO_RESOURCE)
-	{
-		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_CULTURE);
-
-		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		if (pImprovement && !bCityPlot)
-#else
-		if (pImprovement)
-#endif
-		{
-			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_CULTURE);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
-			if (pPlayer)
-				rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_CULTURE);
-		}
-		if (pPlayer && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
-		{
-			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_CULTURE);
-		}
-	}
+	rtnValue += GC.getGame().getPlotExtraYield(pPlot->getX(), pPlot->getY(), YIELD_CULTURE);
 	if (pPlayer && pPlayer->getExtraYieldThreshold(YIELD_CULTURE) > 0)
 	{
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_CULTURE))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif
 		}
 	}
+#endif
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_CULTURE];
 }
@@ -1526,7 +1767,7 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 /// Vale of plot for providing faith
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot)
+int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif
@@ -1544,17 +1785,66 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		rtnValue += pPlot->calculateNatureYield(YIELD_FAITH, pPlayer->getTeam(), false, (bCityPlot ? NO_PLAYER : pPlayer->GetID()));
-#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FAITH, pPlayer->getTeam(), false, pPlayer->GetID());
-#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FAITH, pPlayer->getTeam());
 #endif
 	}
+
+	// From resource
+	TeamTypes eTeam = NO_TEAM;
+	if(pPlayer != NULL)
+	{
+		eTeam = pPlayer->getTeam();
+	}
+
+	ResourceTypes eResource;
+	eResource = pPlot->getResourceType(eTeam);
+	if(eResource != NO_RESOURCE)
+	{
+		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_FAITH);
+
+		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-	if (bCityPlot)
+		if (pImprovement && iPlotsFromCity != 0)
+#else
+		if(pImprovement)
+#endif
+		{
+#ifdef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_FAITH, pPlayer->GetID(), true, NUM_ROUTE_TYPES, iPlotsFromCity == 1, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_FAITH, pPlayer->GetID(), true, NUM_ROUTE_TYPES, false, (pPlayer ? pPlayer->getCapitalCity() : NULL));
+#endif
+#else
+			rtnValue += pPlot->calculateImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_FAITH, pPlayer->GetID(), true);
+#endif
+#else
+			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_FAITH);
+#endif
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
+#ifndef AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+			if (pPlayer)
+				rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_FAITH);
+#endif
+		}
+		if (pPlayer && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
+		{
+			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_FAITH);
+		}
+	}
+	if (pPlayer && pPlayer->getExtraYieldThreshold(YIELD_FAITH) > 0)
+	{
+		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_FAITH))
+		{
+			rtnValue += GC.getEXTRA_YIELD();
+#endif
+		}
+	}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+	if (iPlotsFromCity == 0)
 	{
 		CvYieldInfo* pYieldInfo = GC.getYieldInfo(YIELD_FAITH);
 		if (pYieldInfo)
@@ -1579,45 +1869,16 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		}
 	}
 #endif
-
-	// From resource
-	TeamTypes eTeam = NO_TEAM;
-	if(pPlayer != NULL)
-	{
-		eTeam = pPlayer->getTeam();
-	}
-
-	ResourceTypes eResource;
-	eResource = pPlot->getResourceType(eTeam);
-	if(eResource != NO_RESOURCE)
-	{
-		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_FAITH);
-
-		CvImprovementEntry* pImprovement = GC.GetGameImprovements()->GetImprovementForResource(eResource);
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		if (pImprovement && !bCityPlot)
-#else
-		if(pImprovement)
-#endif
-		{
-			rtnValue += pImprovement->GetImprovementResourceYield(eResource, YIELD_FAITH);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_CONSIDER_PLAYER_TRAIT
-			if (pPlayer)
-				rtnValue += pPlayer->GetPlayerTraits()->GetImprovementYieldChange((ImprovementTypes)pImprovement->GetID(), YIELD_FAITH);
-		}
-		if (pPlayer && GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_STRATEGIC)
-		{
-			rtnValue += pPlayer->GetPlayerTraits()->GetYieldChangeStrategicResources(YIELD_FAITH);
-		}
-	}
+	rtnValue += GC.getGame().getPlotExtraYield(pPlot->getX(), pPlot->getY(), YIELD_FAITH);
 	if (pPlayer && pPlayer->getExtraYieldThreshold(YIELD_FAITH) > 0)
 	{
 		if (rtnValue >= pPlayer->getExtraYieldThreshold(YIELD_FAITH))
 		{
 			rtnValue += GC.getEXTRA_YIELD();
-#endif
 		}
 	}
+#endif
 
 	return rtnValue * m_iFlavorMultiplier[YIELD_FAITH];
 }
@@ -1657,6 +1918,17 @@ int CvCitySiteEvaluator::ComputeTradeableResourceValue(CvPlot* pPlot, CvPlayer* 
 
 			if(pPlayer)
 			{
+#ifdef AUI_SITE_EVALUATION_COMPUTE_TRADEABLE_RESOURCE_VALUE_CONSIDER_EXTRA_RESOURCES
+				if (eResourceUsage == RESOURCEUSAGE_STRATEGIC)
+				{
+					if (pPlayer->GetStrategicResourceMod() != 0)
+						rtnValue = (100 + rtnValue * pPlayer->GetStrategicResourceMod()) / 100;
+					if (pPlayer->GetPlayerTraits()->GetStrategicResourceQuantityModifier(pPlot->getTerrainType()) != 0)
+						rtnValue = (100 + rtnValue * pPlayer->GetPlayerTraits()->GetStrategicResourceQuantityModifier(pPlot->getTerrainType())) / 100;
+				}
+				if (pPlayer->GetPlayerTraits()->GetResourceQuantityModifier(eResource) != 0)
+					rtnValue = (100 + rtnValue * pPlayer->GetPlayerTraits()->GetResourceQuantityModifier(eResource)) / 100;
+#endif
 				// If we don't have this resource yet, increase it's value
 				if(pPlayer->getNumResourceTotal(eResource) == 0)
 					rtnValue *= 3;
@@ -1763,9 +2035,15 @@ int CvCitySiteEvaluator::ComputeStrategicValue(CvPlot* pPlot, CvPlayer* pPlayer,
 	if(pPlot->getFeatureType() != NO_FEATURE)
 	{
 		int iWeight = GC.getFeatureInfo(pPlot->getFeatureType())->getStartingLocationWeight();
+#ifdef AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_DECAYING_STARTING_LOCATION_WEIGHT
+		if (iWeight != 0 && iPlotsFromCity <= NUM_CITY_RINGS && iPlotsFromCity != 0)
+		{
+			rtnValue += iWeight / iPlotsFromCity;
+#else
 		if(iWeight != 0 && iPlotsFromCity == 1)
 		{
 			rtnValue += iWeight;
+#endif
 		}
 	}
 
@@ -1907,16 +2185,47 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 			if (iDistance > NUM_CITY_RINGS) continue;
 			int iRingModifier = m_iRingModifier[iDistance];
 
+#ifdef AUI_SITE_EVALUATION_YIELD_MULTIPLIER_DISTANCE_DECAY
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-			rtnValue += iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, iDistance == 0) * /*6*/ GC.getSTART_AREA_FOOD_MULTIPLIER();
-			rtnValue += iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer) * /*12*/ GC.getSTART_AREA_HAPPINESS_MULTIPLIER();
-			rtnValue += iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, iDistance == 0) * /*8*/ GC.getSTART_AREA_PRODUCTION_MULTIPLIER();
-			rtnValue += iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, iDistance == 0) * /*2*/ GC.getSTART_AREA_GOLD_MULTIPLIER();
-			rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, iDistance) * /*6*/ GC.getSTART_AREA_FOOD_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_FOOD];
+			rtnValue += iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer) * /*12*/ GC.getSTART_AREA_HAPPINESS_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_HAPPINESS];
+			rtnValue += iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, iDistance) * /*8*/ GC.getSTART_AREA_PRODUCTION_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_PRODUCTION];
+			rtnValue += iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, iDistance) * /*2*/ GC.getSTART_AREA_GOLD_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_GOLD];
+			rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_SCIENCE];
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
-			rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_CULTURE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_CULTURE];
 #endif
-			rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, iDistance == 0) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_FAITH];
+			rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_RESOURCES];
+			rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_STRATEGIC];
+#else
+			// Skip the city plot itself for now
+			if(iDistance != 0)
+			{
+				rtnValue += iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer) * /*6*/ GC.getSTART_AREA_FOOD_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_FOOD];
+				rtnValue += iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer) * /*12*/ GC.getSTART_AREA_HAPPINESS_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_HAPPINESS];
+				rtnValue += iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer) * /*8*/ GC.getSTART_AREA_PRODUCTION_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_PRODUCTION];
+				rtnValue += iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer) * /*2*/ GC.getSTART_AREA_GOLD_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_GOLD];
+				rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_SCIENCE];
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+				rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_CULTURE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_CULTURE];
+#endif
+				rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_FAITH];
+				rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_RESOURCES];
+				rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_STRATEGIC];
+			}
+#endif
+#else
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+			rtnValue += iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, iDistance) * /*6*/ GC.getSTART_AREA_FOOD_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer) * /*12*/ GC.getSTART_AREA_HAPPINESS_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, iDistance) * /*8*/ GC.getSTART_AREA_PRODUCTION_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, iDistance) * /*2*/ GC.getSTART_AREA_GOLD_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER();
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+			rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
+#endif
+			rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
 			rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER();
 			rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER();
 #else
@@ -1935,6 +2244,7 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 				rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER();
 				rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER();
 			}
+#endif
 #endif
 
 			if (pPlayer)
@@ -1996,7 +2306,43 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 		{
 			rtnValue += iIroquoisForestCount * 10;
 		}
-}
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_ENABLED_BUILDINGS
+		if (rtnValue > 0)
+		{
+			double dLoopFlavor = 0;
+			double dTotalFlavor = 0;
+			double dTotalBaseFlavor = 0;
+			int iLoopEraDifference;
+			CvFlavorManager* pFlavorManager = pPlayer->GetFlavorManager();
+			for (int iI = 0; iI < GC.getNumBuildingInfos(); iI++)
+			{
+				const BuildingTypes eBuilding = static_cast<BuildingTypes>(iI);
+				CvBuildingEntry* pkBuilding = GC.getBuildingInfo(eBuilding);
+				iLoopEraDifference = 0;
+				if (pPlayer->canConstruct(eBuilding, false, false, false, NULL, true, &iLoopEraDifference) && pPlot->isValidBuildingLocation(eBuilding, true) && pkBuilding)
+				{
+					const CvBuildingClassInfo* pkBuildingClassInfo = &(pkBuilding->GetBuildingClassInfo());
+					for (int iJ = 0; iJ < GC.getNumFlavorTypes(); iJ++)
+					{
+						dLoopFlavor = pkBuilding->GetFlavorValue(iJ) / double(iLoopEraDifference + 1);
+						if (pkBuildingClassInfo && (pkBuildingClassInfo->getMaxGlobalInstances() > 0 || pkBuildingClassInfo->getMaxTeamInstances() > 0 || pkBuildingClassInfo->getMaxPlayerInstances() > 0))
+						{
+							if (pPlayer->getNumCities() > 2)
+								dLoopFlavor /= (double)pPlayer->getNumCities();
+							else
+								dLoopFlavor /= 2;
+						}
+						dTotalBaseFlavor += pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iJ);
+						dTotalFlavor += dLoopFlavor * pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iJ);
+					}
+				}
+			}
+			if (dTotalBaseFlavor == 0)
+				dTotalBaseFlavor = 1;
+			rtnValue += int(dTotalFlavor / dTotalBaseFlavor + 0.5);
+		}
+#endif
+	}
 #else
 	if (iCelticForestCount >= 3)
 	{

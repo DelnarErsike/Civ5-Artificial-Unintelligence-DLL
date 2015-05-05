@@ -44,19 +44,19 @@ public:
 protected:
 	// Each of these routines computes a number from 0 (no value) to 100 (best possible value)
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
+	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
 #else
 	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer);
 #endif
 	virtual int ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer);
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
-	virtual int ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
-	virtual int ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
+	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
+	virtual int ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
+	virtual int ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
-	virtual int ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
+	virtual int ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
 #endif
-	virtual int ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bCityPlot = false);
+	virtual int ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
 #else
 	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer);
@@ -70,17 +70,26 @@ protected:
 	virtual int ComputeStrategicValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
 
 	int m_iFlavorMultiplier[NUM_SITE_EVALUATION_FACTORS];  // Extra for tradeable resources and strategic value
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_LOOP_OPTIMIZED
+	int m_iRingModifier[NUM_CITY_RINGS + NUM_CITY_RINGS];
+#else
 	int m_iRingModifier[NUM_CITY_RINGS+NUM_CITY_RINGS+2];
+#endif
+#ifdef AUI_SITE_EVALUATION_YIELD_MULTIPLIER_DISTANCE_DECAY
+	int m_iFlavorDividerPerRing[NUM_CITY_RINGS + NUM_CITY_RINGS - 1][NUM_SITE_EVALUATION_FACTORS];
+#endif
 
 	int m_iExpansionIndex;
 	int m_iGrowthIndex;
 	int m_iNavalIndex;
 
+#ifndef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 	int m_iBrazilMultiplier;
 	int m_iSpainMultiplier;
 	int m_iMorrocoMultiplier;
 	int m_iNetherlandsMultiplier;
 	int m_iIncaMultiplier;
+#endif
 };
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

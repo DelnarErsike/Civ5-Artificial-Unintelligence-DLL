@@ -14355,6 +14355,9 @@ void CvCity::write(FDataStream& kStream) const
 //	--------------------------------------------------------------------------------
 bool CvCity::isValidBuildingLocation(BuildingTypes eBuilding) const
 {
+#ifdef AUI_CITY_IS_VALID_BUILDING_LOCATION_MOVED_TO_PLOT
+	return plot()->isValidBuildingLocation(eBuilding);
+#else
 	VALIDATE_OBJECT
 
 	CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eBuilding);
@@ -14513,6 +14516,7 @@ bool CvCity::isValidBuildingLocation(BuildingTypes eBuilding) const
 	}
 
 	return true;
+#endif
 }
 
 

@@ -2720,6 +2720,10 @@ UnitHandle CvPlot::getBestDefender(PlayerTypes eOwner, PlayerTypes eAttackingPla
 //	--------------------------------------------------------------------------------
 const UnitHandle CvPlot::getBestDefender(PlayerTypes eOwner, PlayerTypes eAttackingPlayer, const CvUnit* pAttacker, bool bTestAtWar, bool bTestPotentialEnemy, bool bTestCanMove, bool bNoncombatAllowed) const
 {
+#ifdef AUI_PLOT_FIX_GET_BEST_DEFENDER_CHECK_PLOT_VISIBILITY
+	if (eAttackingPlayer != NO_PLAYER && !isVisible(GET_PLAYER(eAttackingPlayer).getTeam()))
+		return NULL;
+#endif
 	const IDInfo* pUnitNode;
 	const UnitHandle pLoopUnit;
 	const UnitHandle pBestUnit;
@@ -2735,11 +2739,7 @@ const UnitHandle CvPlot::getBestDefender(PlayerTypes eOwner, PlayerTypes eAttack
 		{
 			if((eOwner ==  NO_PLAYER) || (pLoopUnit->getOwner() == eOwner))
 			{
-#ifdef AUI_PLOT_FIX_GET_BEST_DEFENDER_CHECK_PLOT_VISIBILITY
-				if((eAttackingPlayer == NO_PLAYER) || (!(pLoopUnit->isInvisible(GET_PLAYER(eAttackingPlayer).getTeam(), false)) && (pLoopUnit->getDomainType() == DOMAIN_AIR || isVisible(GET_PLAYER(eAttackingPlayer).getTeam()))))
-#else
 				if((eAttackingPlayer == NO_PLAYER) || !(pLoopUnit->isInvisible(GET_PLAYER(eAttackingPlayer).getTeam(), false)))
-#endif
 				{
 					if(!bTestAtWar || eAttackingPlayer == NO_PLAYER || pLoopUnit->isEnemy(GET_PLAYER(eAttackingPlayer).getTeam(), this) || (NULL != pAttacker && pAttacker->isEnemy(GET_PLAYER(pLoopUnit->getOwner()).getTeam(), this)))
 					{
@@ -4117,6 +4117,15 @@ bool CvPlot::isValidRoute(const CvUnit* pUnit) const
 			return true;
 		}
 	}
+#ifdef AUI_UNIT_MOVEMENT_IROQUOIS_ROAD_TRANSITION_FIX
+	if (pUnit->getOwner() != NO_PLAYER && GET_PLAYER(pUnit->getOwner()).GetPlayerTraits()->IsMoveFriendlyWoodsAsRoad())
+	{
+		if (getOwner() == pUnit->getOwner() && (getFeatureType() == FEATURE_FOREST || getFeatureType() == FEATURE_JUNGLE))
+		{
+			return true;
+		}
+	}
+#endif
 
 	return false;
 }
@@ -7231,7 +7240,11 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 								if (canBuild(eBuild, eOwner, false, false))
 #endif
 				{
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+					iCurrentImprovementYieldChange = calculateImprovementYieldChange(GET_PLAYER(eFutureOwner).GetUniqueImprovement(iI), eYield, eOwner, false, NUM_ROUTE_TYPES, false, pWorkingCity);
+#else
 					iCurrentImprovementYieldChange = calculateImprovementYieldChange(GET_PLAYER(eFutureOwner).GetUniqueImprovement(iI), eYield, eOwner);
+#endif
 					if (GC.getImprovementInfo((GET_PLAYER(eFutureOwner).GetUniqueImprovement(iI)))->IsNoTwoAdjacent())
 					{
 						iCurrentImprovementYieldChange /= 4;
@@ -7356,7 +7369,11 @@ int CvPlot::calculateTotalBestNatureYield(TeamTypes eTeam) const
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+int CvPlot::calculateImprovementYieldChange(ImprovementTypes eImprovement, YieldTypes eYield, PlayerTypes ePlayer, bool bOptimal, RouteTypes eAssumeThisRoute, bool bAssumeIsCityNeighbor, CvCity* pAssumeWorkingCity) const
+#else
 int CvPlot::calculateImprovementYieldChange(ImprovementTypes eImprovement, YieldTypes eYield, PlayerTypes ePlayer, bool bOptimal, RouteTypes eAssumeThisRoute) const
+#endif
 {
 	ResourceTypes eResource;
 	int iBestYield;
@@ -7402,13 +7419,23 @@ int CvPlot::calculateImprovementYieldChange(ImprovementTypes eImprovement, Yield
 	if(pImprovement->GetAdjacentCityYieldChange(eYield) > 0 ||
 	        pImprovement->GetAdjacentMountainYieldChange(eYield) > 0)
 	{
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+		if (bAssumeIsCityNeighbor)
+		{
+			iYield += pImprovement->GetAdjacentCityYieldChange(eYield);
+		}
+#endif
 		for(iI = 0; iI < NUM_DIRECTION_TYPES; ++iI)
 		{
 			CvPlot* pAdjacentPlot = plotDirection(getX(), getY(), ((DirectionTypes)iI));
 
 			if(pAdjacentPlot != NULL)
 			{
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+				if (!bAssumeIsCityNeighbor && pAdjacentPlot->isCity())
+#else
 				if(pAdjacentPlot->isCity())
+#endif
 				{
 					// Is the owner of this Plot (with the Improvement) also the owner of an adjacent City?
 					if(pAdjacentPlot->getPlotCity()->getOwner() == getOwner())
@@ -7521,6 +7548,10 @@ int CvPlot::calculateImprovementYieldChange(ImprovementTypes eImprovement, Yield
 
 	// Working city
 	CvCity* pWorkingCity = getWorkingCity();
+#ifdef AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+	if (pAssumeWorkingCity)
+		pWorkingCity = pAssumeWorkingCity;
+#endif
 	if(pWorkingCity)
 	{
 		ReligionTypes eMajority = pWorkingCity->GetCityReligions()->GetReligiousMajority();
@@ -11204,6 +11235,169 @@ bool CvPlot::HasWrittenArtifact() const
 	}
 	return bRtnValue;
 }
+
+#ifdef AUI_CITY_IS_VALID_BUILDING_LOCATION_MOVED_TO_PLOT
+bool CvPlot::isValidBuildingLocation(BuildingTypes eBuilding, bool bNeedsAtLeastOneRequirement) const
+{
+	VALIDATE_OBJECT
+
+	bool bHasRequirement = false;
+	CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eBuilding);
+	if (pkBuildingInfo == NULL)
+		return false;
+
+	// Requires Coast
+	if (pkBuildingInfo->IsWater())
+	{
+		if (!isCoastalLand(pkBuildingInfo->GetMinAreaSize()))
+			return false;
+		bHasRequirement = true;
+	}
+
+	// Requires River
+	if (pkBuildingInfo->IsRiver())
+	{
+		if (!isRiver())
+			return false;
+		bHasRequirement = true;
+	}
+
+	// Requires Fresh Water
+	if (pkBuildingInfo->IsFreshWater())
+	{
+		if (!isFreshWater())
+			return false;
+		bHasRequirement = true;
+	}
+
+	// Requires adjacent Mountain
+	if (pkBuildingInfo->IsMountain())
+	{
+		bool bFoundMountain = false;
+
+		CvPlot* pAdjacentPlot;
+		for (int iDirectionLoop = 0; iDirectionLoop < NUM_DIRECTION_TYPES; iDirectionLoop++)
+		{
+			pAdjacentPlot = plotDirection(getX(), getY(), ((DirectionTypes)iDirectionLoop));
+
+			if (pAdjacentPlot != NULL)
+			{
+				if (pAdjacentPlot->isMountain())
+				{
+					bFoundMountain = true;
+					break;
+				}
+			}
+		}
+
+		if (!bFoundMountain)
+			return false;
+		bHasRequirement = true;
+	}
+
+	// Requires nearby Mountain (within 2 tiles)
+	if (pkBuildingInfo->IsNearbyMountainRequired())
+	{
+		bool bFoundMountain = false;
+
+		const int iMountainRange = 2;
+		CvPlot* pLoopPlot;
+
+		int iMaxDX, iDX;
+		for (int iDY = -iMountainRange; iDY <= iMountainRange; iDY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iMountainRange - FASTMAX(0, iDY);
+			for (iDX = -iMountainRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iMountainRange - MAX(0, iDY);
+			for (iDX = -iMountainRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif
+			{
+				// No need for range check because loops are set up properly
+				pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
+				if (pLoopPlot)
+				{
+					if (pLoopPlot->isMountain() && !pLoopPlot->IsNaturalWonder() && pLoopPlot->getOwner() == getOwner())
+					{
+						bFoundMountain = true;
+						break;
+					}
+				}
+			}
+
+			if (bFoundMountain == true)
+				break;
+		}
+
+		if (!bFoundMountain)
+			return false;
+		bHasRequirement = true;
+	}
+
+	// Requires Hills
+	if (pkBuildingInfo->IsHill())
+	{
+		if (!isHills())
+			return false;
+		bHasRequirement = true;
+	}
+
+	// Requires Flat
+	if (pkBuildingInfo->IsFlat())
+	{
+		if (isHills())
+			return false;
+		bHasRequirement = true;
+	}
+
+	// Requires plot that is not a certain terrain?
+	TerrainTypes eTerrainProhibited = (TerrainTypes)pkBuildingInfo->GetProhibitedCityTerrain();
+	if (eTerrainProhibited != NO_TERRAIN)
+	{
+		if (getTerrainType() == eTerrainProhibited)
+		{
+			return false;
+		}
+		bHasRequirement = true;
+	}
+
+	// Requires plot to be on or next to a particular terrain type?
+	TerrainTypes eTerrainRequired = (TerrainTypes)pkBuildingInfo->GetNearbyTerrainRequired();
+	if (eTerrainRequired != NO_TERRAIN)
+	{
+		// Check adjacent plots if plot not on the right terrain
+		if (getTerrainType() != eTerrainRequired)
+		{
+			bool bFoundTerrain = false;
+			CvPlot* pAdjacentPlot;
+			for (int iDirectionLoop = 0; iDirectionLoop < NUM_DIRECTION_TYPES; iDirectionLoop++)
+			{
+				pAdjacentPlot = plotDirection(getX(), getY(), ((DirectionTypes)iDirectionLoop));
+
+				if (pAdjacentPlot)
+				{
+					// Plot adjacent to the right terrain?
+					if (pAdjacentPlot->getTerrainType() == eTerrainRequired)
+					{
+						bFoundTerrain = true;
+						break;
+					}
+				}
+			}
+			// Didn't find nearby required terrain
+			if (!bFoundTerrain)
+				return false;
+			bHasRequirement = true;
+		}
+	}
+
+	if (bNeedsAtLeastOneRequirement && !bHasRequirement)
+		return false;
+
+	return true;
+}
+#endif
 
 //	---------------------------------------------------------------------------
 void CvPlot::updateImpassable()

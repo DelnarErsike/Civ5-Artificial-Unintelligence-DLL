@@ -7178,7 +7178,11 @@ bool CvPlayer::canTrain(UnitTypes eUnit, bool bContinue, bool bTestVisible, bool
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
+bool CvPlayer::canConstruct(BuildingTypes eBuilding, bool bContinue, bool bTestVisible, bool bIgnoreCost, CvString* toolTipSink, bool bIgnoreResource, int* piWithinEras) const
+#else
 bool CvPlayer::canConstruct(BuildingTypes eBuilding, bool bContinue, bool bTestVisible, bool bIgnoreCost, CvString* toolTipSink) const
+#endif
 {
 	CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eBuilding);
 	if(pkBuildingInfo == NULL)
@@ -7221,6 +7225,42 @@ bool CvPlayer::canConstruct(BuildingTypes eBuilding, bool bContinue, bool bTestV
 		}
 	}
 
+#ifdef AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
+	if (piWithinEras)
+	{
+		TechTypes ePrereqTech = (TechTypes)pBuildingInfo.GetPrereqAndTech();
+		if (ePrereqTech != NO_TECH)
+		{
+			CvTechEntry* pPrereqTech = GC.getTechInfo(ePrereqTech);
+			if (pPrereqTech)
+			{
+#ifdef AUI_FAST_COMP
+				*piWithinEras = FASTMAX(pPrereqTech->GetEra() - GetCurrentEra(), *piWithinEras);
+#else
+				*piWithinEras = MAX(pPrereqTech->GetEra() - GetCurrentEra(), *piWithinEras);
+#endif
+			}
+		}
+		for (iI = 0; iI < GC.getNUM_BUILDING_AND_TECH_PREREQS(); iI++)
+		{
+			ePrereqTech = (TechTypes)pBuildingInfo.GetPrereqAndTechs(iI);
+			if (ePrereqTech != NO_TECH)
+			{
+				CvTechEntry* pPrereqTech = GC.getTechInfo(ePrereqTech);
+				if (pPrereqTech)
+				{
+#ifdef AUI_FAST_COMP
+					*piWithinEras = FASTMAX(pPrereqTech->GetEra() - GetCurrentEra(), *piWithinEras);
+#else
+					*piWithinEras = MAX(pPrereqTech->GetEra() - GetCurrentEra(), *piWithinEras);
+#endif
+				}
+			}
+		}
+	}
+	else
+	{
+#endif
 	if(!(currentTeam.GetTeamTechs()->HasTech((TechTypes)(pBuildingInfo.GetPrereqAndTech()))))
 	{
 		return false;
@@ -7236,6 +7276,9 @@ bool CvPlayer::canConstruct(BuildingTypes eBuilding, bool bContinue, bool bTestV
 			}
 		}
 	}
+#ifdef AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
+	}
+#endif
 
 	if(currentTeam.isObsoleteBuilding(eBuilding))
 	{
@@ -7336,6 +7379,10 @@ bool CvPlayer::canConstruct(BuildingTypes eBuilding, bool bContinue, bool bTestV
 			}
 		}
 
+#ifdef AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
+		if (!bIgnoreResource)
+		{
+#endif
 		// Resource Requirements
 		for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
 		{
@@ -7358,6 +7405,9 @@ bool CvPlayer::canConstruct(BuildingTypes eBuilding, bool bContinue, bool bTestV
 				}
 			}
 		}
+#ifdef AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
+		}
+#endif
 
 		if(GC.getGame().isBuildingClassMaxedOut(eBuildingClass, (currentTeam.getBuildingClassMaking(eBuildingClass) + ((bContinue) ? -1 : 0))))
 		{

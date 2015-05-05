@@ -128,6 +128,12 @@
 #define AUI_PLOT_GET_VISIBLE_ENEMY_DEFENDER_TO_UNIT
 /// Fixes base heal mod from players not actually increasing base healing
 #define AUI_UNIT_FIX_BASE_HEAL_MOD
+/// IsValidBuildingLocation() has been moved to the plot class so that it no longer needs an existing city to call it (useful for settler site evaluation)
+#define AUI_CITY_IS_VALID_BUILDING_LOCATION_MOVED_TO_PLOT
+/// Two new parameters for CanConstruct() to act as AI helpers
+#define AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
+/// Yeah, this isn't AI related, but it's still a bugfix, and Iroquois needs all the help it can get
+#define AUI_UNIT_MOVEMENT_IROQUOIS_ROAD_TRANSITION_FIX
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code
@@ -647,7 +653,9 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// If we're looking at an unowned plot, assume we're going to build a civ-specific improvement on it
 #define AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 #endif
-/// If a plot is not visible to the attacking player and the unit being considered is not an air unit, disregard the unit
+/// Lets the function to calculate the yield change from an improvement take assumed working city and assumed neighboring city parameters
+#define AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
+/// If a plot is not visible to the attacking player, disregard the defending unit (fixes radaring)
 #define AUI_PLOT_FIX_GET_BEST_DEFENDER_CHECK_PLOT_VISIBILITY
 
 // Policy Stuff
@@ -767,6 +775,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_RELIGION_CHOOSE_PROPHET_CONVERSION_CITY_TWEAKED
 
 // Site Evaluation Stuff
+/// Removes pointless loops from the PlotFoundValue() function (loops that wouldn't actually alter any values)
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_LOOP_OPTIMIZED
 /// Tweaks the multiplier given to the happiness score luxury resources that the player does not have (multiplier is applied once for importing, twice and times 2 for don't have at all)
 #define AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER (4)
 /// Player bonuses from happiness (eg. extra happiness from luxuries, happiness from multiple luxury types) is included in the calculation
@@ -801,6 +811,20 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_START_SITE_EVALUATION_FIX_MISSING_IROQUOIS_FLAVOR
 /// Unhardcodes gigantic forest flavor for Celts and haves it check for resources that would require improvements (in addition to improvements themselves)
 #define AUI_SITE_EVALUATION_FIX_CELTIC_FOREST_COUNT
+/// Ring multipliers for yields now decay over distance
+#define AUI_SITE_EVALUATION_YIELD_MULTIPLIER_DISTANCE_DECAY
+/// Civs that double the amount of strategic resources take this into consideration when computing the value of tradeable resources
+#define AUI_SITE_EVALUATION_COMPUTE_TRADEABLE_RESOURCE_VALUE_CONSIDER_EXTRA_RESOURCES
+#if defined(AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS) && defined(AUI_CITY_IS_VALID_BUILDING_LOCATION_MOVED_TO_PLOT)
+/// Plots with nearby mountain tiles have a slightly higher rating depending on the civ's flavor values
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_ENABLED_BUILDINGS
+#endif
+/// Before Industrial Era, Plots without a resource and with at least one food and access to fresh water are considered to have an additional food if they have access to fresh water
+#define AUI_SITE_EVALUATION_COMPUTE_FOOD_VALUE_CONSIDER_FRESH_WATER_BEFORE_INDUSTRIAL
+/// The extra yields given by the improvement of a resource now use the improvement's total yield change, not just the yield change's resource component
+#define AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
+/// Starting location weight of features now extends to tiles further than 1 distance away at a diminished rate
+#define AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_DECAYING_STARTING_LOCATION_WEIGHT
 
 // Tactical AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
