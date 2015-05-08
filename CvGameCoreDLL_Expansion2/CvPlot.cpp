@@ -2720,13 +2720,14 @@ UnitHandle CvPlot::getBestDefender(PlayerTypes eOwner, PlayerTypes eAttackingPla
 //	--------------------------------------------------------------------------------
 const UnitHandle CvPlot::getBestDefender(PlayerTypes eOwner, PlayerTypes eAttackingPlayer, const CvUnit* pAttacker, bool bTestAtWar, bool bTestPotentialEnemy, bool bTestCanMove, bool bNoncombatAllowed) const
 {
-#ifdef AUI_PLOT_FIX_GET_BEST_DEFENDER_CHECK_PLOT_VISIBILITY
-	if (eAttackingPlayer != NO_PLAYER && !isVisible(GET_PLAYER(eAttackingPlayer).getTeam()))
-		return NULL;
-#endif
 	const IDInfo* pUnitNode;
 	const UnitHandle pLoopUnit;
 	const UnitHandle pBestUnit;
+
+#ifdef AUI_PLOT_FIX_GET_BEST_DEFENDER_CHECK_PLOT_VISIBILITY
+	if (eAttackingPlayer != NO_PLAYER && !isVisible(GET_PLAYER(eAttackingPlayer).getTeam()))
+		return pBestUnit;
+#endif
 
 	pUnitNode = headUnitNode();
 

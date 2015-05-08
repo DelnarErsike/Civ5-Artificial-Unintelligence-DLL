@@ -2162,6 +2162,7 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 		}
 	}
 
+#ifndef AUI_ASTAR_FIX_RADAR
 	if(!bUnitIsCombat && unit_domain_type != DOMAIN_AIR)
 	{
 		const PlayerTypes eUnitPlayer = unit_owner;
@@ -2175,11 +2176,16 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 			}
 		}
 	}
+#endif
 
 	// slewis - Added to catch when the unit is adjacent to an enemy unit while it is stacked with a friendly unit.
 	//          The logic above (with bPreviousNodeHostile) catches this problem with a path that's longer than one step
 	//          but does not catch when the path is only one step.
+#ifdef AUI_ASTAR_FIX_RADAR
+	if (unit_domain_type != DOMAIN_AIR && pUnitPlot->isAdjacent(pToPlot) && kToNodeCacheData.bContainsVisibleEnemy && !(iFinderIgnoreStacking))
+#else
 	if(bUnitIsCombat && unit_domain_type != DOMAIN_AIR && pUnitPlot->isAdjacent(pToPlot) && kToNodeCacheData.bContainsVisibleEnemy && !(iFinderIgnoreStacking))
+#endif
 	{
 		if(kToNodeCacheData.bContainsVisibleEnemyDefender)
 		{
@@ -5455,6 +5461,7 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 		}
 	}
 
+#ifndef AUI_ASTAR_FIX_RADAR
 	if(!bUnitIsCombat && unit_domain_type != DOMAIN_AIR)
 	{
 		const PlayerTypes eUnitPlayer = unit_owner;
@@ -5468,11 +5475,16 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 			}
 		}
 	}
+#endif
 
 	// slewis - Added to catch when the unit is adjacent to an enemy unit while it is stacked with a friendly unit.
 	//          The logic above (with bPreviousNodeHostile) catches this problem with a path that's longer than one step
 	//          but does not catch when the path is only one step.
+#ifdef AUI_ASTAR_FIX_RADAR
+	if (unit_domain_type != DOMAIN_AIR && pUnitPlot->isAdjacent(pToPlot) && kToNodeCacheData.bContainsVisibleEnemy && !(iFinderIgnoreStacking))
+#else
 	if(bUnitIsCombat && unit_domain_type != DOMAIN_AIR && pUnitPlot->isAdjacent(pToPlot) && kToNodeCacheData.bContainsVisibleEnemy && !(iFinderIgnoreStacking))
+#endif
 	{
 		if(kToNodeCacheData.bContainsVisibleEnemyDefender)
 		{
