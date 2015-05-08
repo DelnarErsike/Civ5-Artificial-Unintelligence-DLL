@@ -1092,6 +1092,11 @@ void CvUnit::convert(CvUnit* pUnit, bool bIsUpgrade)
 	CvPlot* pPlot;
 
 	pPlot = plot();
+#ifdef AUI_UNIT_PROMOTION_REFUND_ON_TYPE_UPGRADE
+	int iLevelsRefunded = 0;
+	FFastVector<PromotionTypes, true, c_eCiv5GameplayDLL> aiOldPromotions;
+	aiOldPromotions.reserve(pUnit->getLevel() * 2);
+#endif
 
 	// Transfer Promotions over
 	for(int iI = 0; iI < GC.getNumPromotionInfos(); iI++)
@@ -1105,7 +1110,13 @@ void CvUnit::convert(CvUnit* pUnit, bool bIsUpgrade)
 			// Old unit has the promotion
 			if(pUnit->isHasPromotion(ePromotion) && !pkPromotionInfo->IsLostWithUpgrade())
 			{
-				bGivePromotion = true;
+#ifdef AUI_UNIT_PROMOTION_REFUND_ON_TYPE_UPGRADE
+				if (!pkPromotionInfo->IsCannotBeChosen())
+					aiOldPromotions.push_back(ePromotion);
+				else
+#endif
+				bGivePromotion = true;				
+
 			}
 
 			// New unit gets promotion for free (as per XML)
@@ -1125,6 +1136,18 @@ void CvUnit::convert(CvUnit* pUnit, bool bIsUpgrade)
 		}
 	}
 
+#ifdef AUI_UNIT_PROMOTION_REFUND_ON_TYPE_UPGRADE
+	for (FFastVector<PromotionTypes, true, c_eCiv5GameplayDLL>::iterator it = aiOldPromotions.begin(); it != aiOldPromotions.end(); ++it)
+	{
+		if (isPromotionValid(*it))
+			setHasPromotion(*it, true);
+		else
+			iLevelsRefunded++;
+	}
+	if (iLevelsRefunded >= pUnit->getLevel())
+		iLevelsRefunded = pUnit->getLevel() - 1;
+#endif
+
 	setGameTurnCreated(pUnit->getGameTurnCreated());
 	setLastMoveTurn(pUnit->getLastMoveTurn());
 	setDamage(pUnit->getDamage());
@@ -1139,7 +1162,11 @@ void CvUnit::convert(CvUnit* pUnit, bool bIsUpgrade)
 		setNumExoticGoods(pUnit->getNumExoticGoods());
 	}
 
+#ifdef AUI_UNIT_PROMOTION_REFUND_ON_TYPE_UPGRADE
+	setLevel(pUnit->getLevel() - iLevelsRefunded);
+#else
 	setLevel(pUnit->getLevel());
+#endif
 #ifdef AUI_FAST_COMP
 	int iOldModifier = FASTMAX(1, 100 + GET_PLAYER(pUnit->getOwner()).getLevelExperienceModifier());
 	int iOurModifier = FASTMAX(1, 100 + GET_PLAYER(getOwner()).getLevelExperienceModifier());
