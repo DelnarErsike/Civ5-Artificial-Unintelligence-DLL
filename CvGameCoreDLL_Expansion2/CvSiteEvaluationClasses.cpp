@@ -490,6 +490,28 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 	}
 #endif // This stuff has been taken care of in the plot value part in AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	bool bIsPlotCoast = false;
+	bool bHasCoastal = pPlayer->getCapitalCity() == NULL;
+	if (pPlot->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()))
+	{
+		bIsPlotCoast = true;
+	}
+	else if (!bHasCoastal)
+	{
+		int iCityLoop = 0;
+		CvCity* pLoopCity = NULL;
+		for (pLoopCity = pPlayer->firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = pPlayer->nextCity(&iCityLoop))
+		{
+			if (pLoopCity->isCoastal())
+			{
+				bHasCoastal = true;
+				break;
+			}
+		}
+	}
+#endif
+
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_LOOP_OPTIMIZED
 	int iDX, iMaxDX;
 	for (int iDY = -(NUM_CITY_RINGS + NUM_CITY_RINGS + 1); iDY <= (NUM_CITY_RINGS + NUM_CITY_RINGS + 1); iDY++)
@@ -569,6 +591,63 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 
 							if (iDistance > 0 && iDistance <= NUM_CITY_RINGS)
 							{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+								if (eYield == NO_YIELD || eYield == YIELD_FOOD)
+								{
+									iFoodValue = iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, iDistance, !bHasCoastal && !bIsPlotCoast) * /*15*/ GC.getSETTLER_FOOD_MULTIPLIER();
+								}
+								if (eYield == NO_YIELD || eYield == YIELD_PRODUCTION)
+								{
+									iProductionValue = iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, iDistance, !bHasCoastal && !bIsPlotCoast) * /*3*/ GC.getSETTLER_PRODUCTION_MULTIPLIER();
+								}
+								if (eYield == NO_YIELD || eYield == YIELD_GOLD)
+								{
+									iGoldValue = iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, iDistance, !bHasCoastal && !bIsPlotCoast) * /*3*/ GC.getSETTLER_GOLD_MULTIPLIER();
+								}
+								if (eYield == NO_YIELD || eYield == YIELD_SCIENCE)
+								{
+									iScienceValue = iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, iDistance, !bHasCoastal && !bIsPlotCoast) * /*1*/ GC.getSETTLER_SCIENCE_MULTIPLIER();
+								}
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+								if (eYield == NO_YIELD || eYield == YIELD_CULTURE)
+								{
+									iCultureValue = iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, iDistance, !bHasCoastal && !bIsPlotCoast) * /*1*/ GC.getSETTLER_CULTURE_MULTIPLIER();
+								}
+#endif
+								if (eYield == NO_YIELD || eYield == YIELD_FAITH)
+								{
+									iFaithValue = iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, iDistance, !bHasCoastal && !bIsPlotCoast) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
+								}
+#else
+								if (eYield == NO_YIELD || eYield == YIELD_FOOD)
+								{
+									iFoodValue = iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, !bHasCoastal && !bIsPlotCoast) * /*15*/ GC.getSETTLER_FOOD_MULTIPLIER();
+								}
+								if (eYield == NO_YIELD || eYield == YIELD_PRODUCTION)
+								{
+									iProductionValue = iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, !bHasCoastal && !bIsPlotCoast) * /*3*/ GC.getSETTLER_PRODUCTION_MULTIPLIER();
+								}
+								if (eYield == NO_YIELD || eYield == YIELD_GOLD)
+								{
+									iGoldValue = iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, !bHasCoastal && !bIsPlotCoast) * /*2*/ GC.getSETTLER_GOLD_MULTIPLIER();
+								}
+								if (eYield == NO_YIELD || eYield == YIELD_SCIENCE)
+								{
+									iScienceValue = iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, !bHasCoastal && !bIsPlotCoast) * /*1*/ GC.getSETTLER_SCIENCE_MULTIPLIER();
+								}
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+								if (eYield == NO_YIELD || eYield == YIELD_CULTURE)
+								{
+									iCultureValue = iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, !bHasCoastal && !bIsPlotCoast) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
+								}
+#endif
+								if (eYield == NO_YIELD || eYield == YIELD_FAITH)
+								{
+									iFaithValue = iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, !bHasCoastal && !bIsPlotCoast) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
+								}
+#endif
+#else
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 								if (eYield == NO_YIELD || eYield == YIELD_FOOD)
 								{
@@ -624,6 +703,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 									iFaithValue = iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer) * /*1*/ GC.getSETTLER_FAITH_MULTIPLIER();
 								}
 #endif
+#endif
 							}
 
 							// whether or not we are working these we get the benefit as long as culture can grow to take them
@@ -633,8 +713,13 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							if (iDistance <= 5 && pLoopPlot->getOwner() == NO_PLAYER) // there is no benefit if we already own these tiles
 #endif
 							{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+								iHappinessValue = iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer, !bHasCoastal && !bIsPlotCoast) * /*6*/ GC.getSETTLER_HAPPINESS_MULTIPLIER();
+								iResourceValue = iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer, !bHasCoastal && !bIsPlotCoast) * /*1*/ GC.getSETTLER_RESOURCE_MULTIPLIER();
+#else
 								iHappinessValue = iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer) * /*6*/ GC.getSETTLER_HAPPINESS_MULTIPLIER();
 								iResourceValue = iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSETTLER_RESOURCE_MULTIPLIER();
+#endif
 								if (iDistance)
 									iStrategicValue = ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSETTLER_STRATEGIC_MULTIPLIER();  // the ring is included in the computation
 							}
@@ -928,7 +1013,11 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		rtnValue += (int)rtnValue * /*15*/ GC.getBUILD_ON_RIVER_PERCENT() / 100;
 	}
 
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	if (bIsPlotCoast)
+#else
 	if (pPlot->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()))
+#endif
 	{
 		// okay, coast used to have lots of gold so players settled there "naturally", it doesn't any more, so I am going to give it a nudge in that direction
 		// slewis - removed Brian(?)'s rtnValue adjustment and raised the BUILD_ON_COAST_PERCENT to 40 from 25
@@ -945,6 +1034,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 			rtnValue *= 2;
 		}
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FIRST_COASTAL_CITY_MULTIPLIER
+#ifndef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
 		int iCityLoop = 0;
 		CvCity* pLoopCity = NULL;
 		bool bHasCoastal = false || pPlayer->getCapitalCity() == NULL;
@@ -956,6 +1046,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 				break;
 			}
 		}
+#endif
 		if (!bHasCoastal)
 		{
 			rtnValue *= AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FIRST_COASTAL_CITY_MULTIPLIER;
@@ -1073,6 +1164,31 @@ int CvCitySiteEvaluator::PlotFertilityValue(CvPlot* pPlot)
 
 	if(!pPlot->isWater() && !pPlot->isImpassable() && !pPlot->isMountain())
 	{
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+		rtnValue += ComputeFoodValue(pPlot, NULL, NUM_CITY_RINGS, false);
+		rtnValue += ComputeProductionValue(pPlot, NULL, NUM_CITY_RINGS, false);
+		rtnValue += ComputeGoldValue(pPlot, NULL, NUM_CITY_RINGS, false);
+		rtnValue += ComputeScienceValue(pPlot, NULL, NUM_CITY_RINGS, false);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+		rtnValue += ComputeCultureValue(pPlot, NULL, NUM_CITY_RINGS, false);
+		rtnValue += ComputeFaithValue(pPlot, NULL, NUM_CITY_RINGS, false);
+#endif
+#else
+		rtnValue += ComputeFoodValue(pPlot, NULL, false);
+		rtnValue += ComputeProductionValue(pPlot, NULL, false);
+		rtnValue += ComputeGoldValue(pPlot, NULL, false);
+		rtnValue += ComputeScienceValue(pPlot, NULL, false);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+		rtnValue += ComputeCultureValue(pPlot, NULL, false);
+		rtnValue += ComputeFaithValue(pPlot, NULL, false);
+#endif
+#endif
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+		rtnValue += ComputeHappinessValue(pPlot, NULL, false);
+#endif
+		rtnValue += ComputeTradeableResourceValue(pPlot, NULL, false);
+#else
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 		rtnValue += ComputeFoodValue(pPlot, NULL, NUM_CITY_RINGS);
 		rtnValue += ComputeProductionValue(pPlot, NULL, NUM_CITY_RINGS);
@@ -1096,6 +1212,7 @@ int CvCitySiteEvaluator::PlotFertilityValue(CvPlot* pPlot)
 		rtnValue += ComputeHappinessValue(pPlot, NULL);
 #endif
 		rtnValue += ComputeTradeableResourceValue(pPlot, NULL);
+#endif
 	}
 
 	if(rtnValue < 0) rtnValue = 0;
@@ -1114,10 +1231,18 @@ int CvCitySiteEvaluator::BestFoundValueForSpecificYield(CvPlayer* pPlayer, Yield
 // PROTECTED METHODS (can be overridden in derived classes)
 
 /// Value of plot for providing food
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoast)
+#else
+int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoast)
+#endif
+#else
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
+#endif
 #endif
 {
 	int rtnValue = 0;
@@ -1130,7 +1255,11 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 	else
 	{
 #ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam(), false, bIgnoreCoast && pPlot->isWater() ? NO_PLAYER : pPlayer->GetID());
+#else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam(), false, pPlayer->GetID());
+#endif
 #else
 		rtnValue += pPlot->calculateNatureYield(YIELD_FOOD, pPlayer->getTeam());
 #endif
@@ -1145,7 +1274,11 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 	ResourceTypes eResource;
 	eResource = pPlot->getResourceType(eTeam);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	if (eResource != NO_RESOURCE && (!bIgnoreCoast || !pPlot->isWater()))
+#else
 	if (eResource != NO_RESOURCE)
+#endif
 	{
 		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_FOOD);
 
@@ -1246,7 +1379,11 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 }
 
 /// Value of plot for providing Happiness
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoast)
+#else
 int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
+#endif
 {
 	int rtnValue = 0;
 
@@ -1259,7 +1396,11 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 	ResourceTypes eResource;
 	eResource = pPlot->getResourceType(eTeam);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	if (eResource != NO_RESOURCE && (!bIgnoreCoast || !pPlot->isWater()))
+#else
 	if(eResource != NO_RESOURCE)
+#endif
 	{
 		// Add a bonus if adds Happiness
 		if(!pPlot->isOwned())
@@ -1326,10 +1467,18 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 }
 
 /// Value of plot for providing hammers
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoast)
+#else
+int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoast)
+#endif
+#else
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer)
+#endif
 #endif
 {
 	int rtnValue = 0;
@@ -1357,7 +1506,11 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 
 	ResourceTypes eResource;
 	eResource = pPlot->getResourceType(eTeam);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	if (eResource != NO_RESOURCE && (!bIgnoreCoast || !pPlot->isWater()))
+#else
 	if(eResource != NO_RESOURCE)
+#endif
 	{
 		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_PRODUCTION);
 
@@ -1434,10 +1587,18 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 }
 
 /// Value of plot for providing gold
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoast)
+#else
+int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoast)
+#endif
+#else
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
+#endif
 #endif
 {
 	int rtnValue = 0;
@@ -1465,7 +1626,11 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 	ResourceTypes eResource;
 	eResource = pPlot->getResourceType(eTeam);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	if (eResource != NO_RESOURCE && (!bIgnoreCoast || !pPlot->isWater()))
+#else
 	if(eResource != NO_RESOURCE)
+#endif
 	{
 		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_GOLD);
 
@@ -1542,10 +1707,18 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 }
 
 /// Value of plot for providing science
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoast)
+#else
+int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoast)
+#endif
+#else
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
+#endif
 #endif
 {
 	int rtnValue = 0;
@@ -1576,7 +1749,11 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 	ResourceTypes eResource;
 	eResource = pPlot->getResourceType(eTeam);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	if (eResource != NO_RESOURCE && (!bIgnoreCoast || !pPlot->isWater()))
+#else
 	if(eResource != NO_RESOURCE)
+#endif
 	{
 		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_SCIENCE);
 
@@ -1654,10 +1831,18 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 /// Value of plot for providing culture
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoast)
+#else
+int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoast)
+#endif
+#else
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
+#endif
 #endif
 {
 	int rtnValue = 0;
@@ -1688,7 +1873,11 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 	ResourceTypes eResource;
 	eResource = pPlot->getResourceType(eTeam);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	if (eResource != NO_RESOURCE && (!bIgnoreCoast || !pPlot->isWater()))
+#else
 	if (eResource != NO_RESOURCE)
+#endif
 	{
 		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_CULTURE);
 
@@ -1766,10 +1955,18 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif
 
 /// Vale of plot for providing faith
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoast)
+#else
+int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoast)
+#endif
+#else
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
+#endif
 #endif
 {
 	int rtnValue = 0;
@@ -1800,7 +1997,11 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 	ResourceTypes eResource;
 	eResource = pPlot->getResourceType(eTeam);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	if (eResource != NO_RESOURCE && (!bIgnoreCoast || !pPlot->isWater()))
+#else
 	if(eResource != NO_RESOURCE)
+#endif
 	{
 		rtnValue += GC.getResourceInfo(eResource)->getYieldChange(YIELD_FAITH);
 
@@ -1885,7 +2086,11 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 
 /// Value of plot for providing tradeable resources
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+int CvCitySiteEvaluator::ComputeTradeableResourceValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoast)
+#else
 int CvCitySiteEvaluator::ComputeTradeableResourceValue(CvPlot* pPlot, CvPlayer* pPlayer)
+#endif
 {
 	int rtnValue = 0;
 
@@ -1907,7 +2112,11 @@ int CvCitySiteEvaluator::ComputeTradeableResourceValue(CvPlot* pPlot, CvPlayer* 
 	ResourceTypes eResource;
 	eResource = pPlot->getResourceType(eTeam);
 
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	if (eResource != NO_RESOURCE && (!bIgnoreCoast || !pPlot->isWater()))
+#else
 	if(eResource != NO_RESOURCE)
+#endif
 	{
 		ResourceUsageTypes eResourceUsage = GC.getResourceInfo(eResource)->getResourceUsage();
 
@@ -2168,6 +2377,10 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 		return 0;
 	}
 
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	bool bIsCoastal = pPlot->isCoastalLand();
+#endif
+
 	// We have our own special method of scoring, so don't call the base class for that (like settler version does)
 	for (iI = 0; iI < NUM_CITY_PLOTS; iI++)
 	{
@@ -2185,6 +2398,69 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 			if (iDistance > NUM_CITY_RINGS) continue;
 			int iRingModifier = m_iRingModifier[iDistance];
 
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+#ifdef AUI_SITE_EVALUATION_YIELD_MULTIPLIER_DISTANCE_DECAY
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+			rtnValue += iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*6*/ GC.getSTART_AREA_FOOD_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_FOOD];
+			rtnValue += iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer, !bIsCoastal) * /*12*/ GC.getSTART_AREA_HAPPINESS_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_HAPPINESS];
+			rtnValue += iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*8*/ GC.getSTART_AREA_PRODUCTION_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_PRODUCTION];
+			rtnValue += iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*2*/ GC.getSTART_AREA_GOLD_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_GOLD];
+			rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_SCIENCE];
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+			rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*1*/ GC.getSTART_AREA_CULTURE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_CULTURE];
+#endif
+			rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_FAITH];
+			rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer, !bIsCoastal) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_RESOURCES];
+			rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_STRATEGIC];
+#else
+			// Skip the city plot itself for now
+			if(iDistance != 0)
+			{
+				rtnValue += iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, !bIsCoastal) * /*6*/ GC.getSTART_AREA_FOOD_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_FOOD];
+				rtnValue += iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer, !bIsCoastal) * /*12*/ GC.getSTART_AREA_HAPPINESS_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_HAPPINESS];
+				rtnValue += iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, !bIsCoastal) * /*8*/ GC.getSTART_AREA_PRODUCTION_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_PRODUCTION];
+				rtnValue += iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, !bIsCoastal) * /*2*/ GC.getSTART_AREA_GOLD_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_GOLD];
+				rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, !bIsCoastal) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_SCIENCE];
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+				rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, !bIsCoastal) * /*1*/ GC.getSTART_AREA_CULTURE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_CULTURE];
+#endif
+				rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, !bIsCoastal) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_FAITH];
+				rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer, !bIsCoastal) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_RESOURCES];
+				rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_STRATEGIC];
+			}
+#endif
+#else
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+			rtnValue += iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*6*/ GC.getSTART_AREA_FOOD_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer, !bIsCoastal) * /*12*/ GC.getSTART_AREA_HAPPINESS_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*8*/ GC.getSTART_AREA_PRODUCTION_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*2*/ GC.getSTART_AREA_GOLD_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER();
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+			rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
+#endif
+			rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer, !bIsCoastal) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER();
+			rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER();
+#else
+			// Skip the city plot itself for now
+			if(iDistance != 0)
+			{
+				rtnValue += iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, !bIsCoastal) * /*6*/ GC.getSTART_AREA_FOOD_MULTIPLIER();
+				rtnValue += iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer, !bIsCoastal) * /*12*/ GC.getSTART_AREA_HAPPINESS_MULTIPLIER();
+				rtnValue += iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, !bIsCoastal) * /*8*/ GC.getSTART_AREA_PRODUCTION_MULTIPLIER();
+				rtnValue += iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, !bIsCoastal) * /*2*/ GC.getSTART_AREA_GOLD_MULTIPLIER();
+				rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, !bIsCoastal) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER();
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
+				rtnValue += iRingModifier * ComputeCultureValue(pLoopPlot, pPlayer, !bIsCoastal) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
+#endif
+				rtnValue += iRingModifier * ComputeFaithValue(pLoopPlot, pPlayer, !bIsCoastal) * /*1*/ GC.getSTART_AREA_FAITH_MULTIPLIER();
+				rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer, !bIsCoastal) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER();
+				rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER();
+			}
+#endif
+#endif
+#else
 #ifdef AUI_SITE_EVALUATION_YIELD_MULTIPLIER_DISTANCE_DECAY
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 			rtnValue += iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, iDistance) * /*6*/ GC.getSTART_AREA_FOOD_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_FOOD];
@@ -2244,6 +2520,7 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 				rtnValue += iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer) * /*1*/ GC.getSTART_AREA_RESOURCE_MULTIPLIER();
 				rtnValue += iRingModifier * ComputeStrategicValue(pLoopPlot, pPlayer, iDistance) * /*1*/ GC.getSTART_AREA_STRATEGIC_MULTIPLIER();
 			}
+#endif
 #endif
 #endif
 
@@ -2367,7 +2644,11 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 		rtnValue += rtnValue * GC.getBUILD_ON_RIVER_PERCENT() / 100;
 	}
 
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+	if (bIsCoastal)
+#else
 	if(pPlot->isCoastalLand())
+#endif
 	{
 		rtnValue += rtnValue * GC.getSTART_AREA_BUILD_ON_COAST_PERCENT() / 100;
 	}
