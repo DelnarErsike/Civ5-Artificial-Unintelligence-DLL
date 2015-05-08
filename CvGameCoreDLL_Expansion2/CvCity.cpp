@@ -10852,10 +10852,18 @@ bool CvCity::CanBuyAnyPlot(void)
 CvPlot* CvCity::GetNextBuyablePlot(void)
 {
 	VALIDATE_OBJECT
+#ifdef AUI_CITY_FIX_GET_NEXT_BUYABLE_PLOT_USE_FFASTVECTOR
+	FFastVector<int, true, c_eCiv5GameplayDLL> aiPlotList;
+	aiPlotList.reserve(NUM_DIRECTION_TYPES * GC.getMAXIMUM_ACQUIRE_PLOT_DISTANCE());
+#else
 	std::vector<int> aiPlotList;
 	aiPlotList.resize(20, -1);
+#endif
 	GetBuyablePlotList(aiPlotList);
 
+#ifdef AUI_CITY_FIX_GET_NEXT_BUYABLE_PLOT_USE_FFASTVECTOR
+	int iListLength = aiPlotList.size();
+#else
 	int iListLength = 0;
 	for(uint ui = 0; ui < aiPlotList.size(); ui++)
 	{
@@ -10868,6 +10876,7 @@ CvPlot* CvCity::GetNextBuyablePlot(void)
 			break;
 		}
 	}
+#endif
 
 	CvPlot* pPickedPlot = NULL;
 	if(iListLength > 0)
@@ -10880,11 +10889,17 @@ CvPlot* CvCity::GetNextBuyablePlot(void)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CITY_FIX_GET_NEXT_BUYABLE_PLOT_USE_FFASTVECTOR
+void CvCity::GetBuyablePlotList(BaseVector<int, true>& aiPlotList)
+#else
 void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
+#endif
 {
 	VALIDATE_OBJECT
+#ifndef AUI_CITY_FIX_GET_NEXT_BUYABLE_PLOT_USE_FFASTVECTOR
 	aiPlotList.resize(20, -1);
 	int iResultListIndex = 0;
+#endif
 
 	int iLowestCost = INT_MAX;
 	CvPlot* pLoopPlot = NULL;
@@ -10912,6 +10927,10 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 	int iDX, iDY;
 
 	ImprovementTypes eBarbCamptype = (ImprovementTypes)GC.getBARBARIAN_CAMP_IMPROVEMENT();
+
+#ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_WEIGHTED_YIELDS
+	const int iYieldValueSum = GC.getAI_CITIZEN_VALUE_FOOD() + GC.getAI_CITIZEN_VALUE_PRODUCTION() + GC.getAI_CITIZEN_VALUE_GOLD() + GC.getAI_CITIZEN_VALUE_SCIENCE() + GC.getAI_CITIZEN_VALUE_CULTURE() + GC.getAI_CITIZEN_VALUE_FAITH();
+#endif
 
 #ifdef AUI_HEXSPACE_DX_LOOPS
 	int iMaxDX;
@@ -10970,6 +10989,23 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 					ResourceTypes eResource = pLoopPlot->getResourceType(thisTeam);
 					if (eResource != NO_RESOURCE)
 					{
+#ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_RESOURCE_NW_OSMOSIS
+						if (GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_BONUS)
+						{
+							// undo the bonus - bonus resources only increase yields
+							iInfluenceCost -= iPLOT_INFLUENCE_RESOURCE_COST;
+							if (hexDistance(iDX, iDY) <= NUM_CITY_RINGS)
+							{
+								int* aiYields = GC.getResourceInfo(eResource)->getYieldChangeArray();
+								int iTemp = GC.getAI_CITIZEN_VALUE_FOOD() * aiYields[YIELD_FOOD] + GC.getAI_CITIZEN_VALUE_PRODUCTION() * aiYields[YIELD_PRODUCTION] +
+									GC.getAI_CITIZEN_VALUE_GOLD() * aiYields[YIELD_GOLD] + GC.getAI_CITIZEN_VALUE_SCIENCE() * aiYields[YIELD_SCIENCE] +
+									GC.getAI_CITIZEN_VALUE_CULTURE() * aiYields[YIELD_CULTURE] + GC.getAI_CITIZEN_VALUE_FAITH() * aiYields[YIELD_FAITH];
+								iInfluenceCost += iPLOT_INFLUENCE_YIELD_POINT_COST * iTemp * NUM_YIELD_TYPES / iYieldValueSum;
+							}
+						}
+						else
+							iInfluenceCost += iPLOT_INFLUENCE_RESOURCE_COST;
+#else
 						iInfluenceCost += iPLOT_INFLUENCE_RESOURCE_COST;
 						bool bBonusResource = GC.getResourceInfo(eResource)->getResourceUsage() == RESOURCEUSAGE_BONUS;
 						if (bBonusResource)
@@ -10989,6 +11025,7 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 								++iInfluenceCost;
 							}
 						}
+#endif
 					}
 					else 
 					{
@@ -11008,7 +11045,6 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 						{
 							iInfluenceCost += iPLOT_INFLUENCE_RING_COST;
 						}
-
 					}
 
 					// improved tiles get a slight priority (unless they are barbarian camps!)
@@ -11038,13 +11074,51 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 					}
 
 					// More Yield == more desirable
+#ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_WEIGHTED_YIELDS
+					int iLoopYield = 0;
+					int iYieldTotal = 0;
+					for (iYieldLoop = 0; iYieldLoop < NUM_YIELD_TYPES; iYieldLoop++)
+					{
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+						iLoopYield = iPLOT_INFLUENCE_YIELD_POINT_COST * pLoopPlot->calculateNatureYield((YieldTypes)iYieldLoop, getTeam(), false, getOwner());
+#else
+						iLoopYield = (iPLOT_INFLUENCE_YIELD_POINT_COST * pLoopPlot->getYield((YieldTypes) iYieldLoop));
+#endif
+						switch ((YieldTypes) iYieldLoop)
+						{
+						case YIELD_FOOD:
+							iLoopYield *= GC.getAI_CITIZEN_VALUE_FOOD();
+							break;
+						case YIELD_PRODUCTION:
+							iLoopYield *= GC.getAI_CITIZEN_VALUE_PRODUCTION();
+							break;
+						case YIELD_GOLD:
+							iLoopYield *= GC.getAI_CITIZEN_VALUE_GOLD();
+							break;
+						case YIELD_SCIENCE:
+							iLoopYield *= GC.getAI_CITIZEN_VALUE_SCIENCE();
+							break;
+						case YIELD_CULTURE:
+							iLoopYield *= GC.getAI_CITIZEN_VALUE_CULTURE();
+							break;
+						case YIELD_FAITH:
+							iLoopYield *= GC.getAI_CITIZEN_VALUE_FAITH();
+							break;
+						}
+						iYieldTotal += iLoopYield;
+					}
+					iInfluenceCost += iYieldTotal * NUM_YIELD_TYPES / iYieldValueSum;
+#else
 					for (iYieldLoop = 0; iYieldLoop < NUM_YIELD_TYPES; iYieldLoop++)
 					{
 						iInfluenceCost += (iPLOT_INFLUENCE_YIELD_POINT_COST * pLoopPlot->getYield((YieldTypes) iYieldLoop));
 					}
+#endif
 
 					// all other things being equal move towards unclaimed resources
+#ifndef AUI_CITY_GET_BUYABLE_PLOT_LIST_RESOURCE_NW_OSMOSIS
 					bool bUnownedNaturalWonderAdjacentCount = false;
+#endif
 					for (int iI = 0; iI < NUM_DIRECTION_TYPES; ++iI)
 					{
 						CvPlot* pAdjacentPlot = plotDirection(pLoopPlot->getX(), pLoopPlot->getY(), ((DirectionTypes)iI));
@@ -11054,29 +11128,92 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 							if (pAdjacentPlot->getOwner() == NO_PLAYER)
 							{
 								int iPlotDistance = plotDistance(getX(), getY(), pAdjacentPlot->getX(), pAdjacentPlot->getY());
+#ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_RESOURCE_NW_OSMOSIS
+#ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_WEIGHTED_YIELDS
+								int iLoopYield = 0;
+								int iYieldTotal = 0;
+								for (iYieldLoop = 0; iYieldLoop < NUM_YIELD_TYPES; iYieldLoop++)
+								{
+#ifdef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_FUTURE_OWNER_IF_UNOWNED
+									iLoopYield = iPLOT_INFLUENCE_YIELD_POINT_COST * pAdjacentPlot->calculateNatureYield((YieldTypes)iYieldLoop, getTeam(), false, getOwner());
+#else
+									iLoopYield = (iPLOT_INFLUENCE_YIELD_POINT_COST * pAdjacentPlot->getYield((YieldTypes)iYieldLoop));
+#endif
+									switch ((YieldTypes)iYieldLoop)
+									{
+									case YIELD_FOOD:
+										iLoopYield *= GC.getAI_CITIZEN_VALUE_FOOD();
+										break;
+									case YIELD_PRODUCTION:
+										iLoopYield *= GC.getAI_CITIZEN_VALUE_PRODUCTION();
+										break;
+									case YIELD_GOLD:
+										iLoopYield *= GC.getAI_CITIZEN_VALUE_GOLD();
+										break;
+									case YIELD_SCIENCE:
+										iLoopYield *= GC.getAI_CITIZEN_VALUE_SCIENCE();
+										break;
+									case YIELD_CULTURE:
+										iLoopYield *= GC.getAI_CITIZEN_VALUE_CULTURE();
+										break;
+									case YIELD_FAITH:
+										iLoopYield *= GC.getAI_CITIZEN_VALUE_FAITH();
+										break;
+									}
+									iYieldTotal += iLoopYield;
+								}
+								iInfluenceCost += iYieldTotal * NUM_YIELD_TYPES / (iYieldValueSum * NUM_DIRECTION_TYPES);
+#else
+								for (iYieldLoop = 0; iYieldLoop < NUM_YIELD_TYPES; iYieldLoop++)
+								{
+									iInfluenceCost += (iPLOT_INFLUENCE_YIELD_POINT_COST * pAdjacentPlot->getYield((YieldTypes)iYieldLoop)) / NUM_DIRECTION_TYPES;
+								}
+#endif
+#endif
 								ResourceTypes eAdjacentResource = pAdjacentPlot->getResourceType(thisTeam);
 								if (eAdjacentResource != NO_RESOURCE)
 								{
 									// if we are close enough to work, or this is not a bonus resource
+#ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_RESOURCE_NW_OSMOSIS
+									if (GC.getResourceInfo(eAdjacentResource)->getResourceUsage() != RESOURCEUSAGE_BONUS)
+										iInfluenceCost += (iPLOT_INFLUENCE_RESOURCE_COST - NUM_DIRECTION_TYPES / 2) / (NUM_DIRECTION_TYPES);
+									else if (iPlotDistance <= NUM_CITY_RINGS)
+									{
+										int* aiYields = GC.getResourceInfo(eResource)->getYieldChangeArray();
+										int iTemp = GC.getAI_CITIZEN_VALUE_FOOD() * aiYields[YIELD_FOOD] + GC.getAI_CITIZEN_VALUE_PRODUCTION() * aiYields[YIELD_PRODUCTION] +
+											GC.getAI_CITIZEN_VALUE_GOLD() * aiYields[YIELD_GOLD] + GC.getAI_CITIZEN_VALUE_SCIENCE() * aiYields[YIELD_SCIENCE] +
+											GC.getAI_CITIZEN_VALUE_CULTURE() * aiYields[YIELD_CULTURE] + GC.getAI_CITIZEN_VALUE_FAITH() * aiYields[YIELD_FAITH];
+										iInfluenceCost += iPLOT_INFLUENCE_YIELD_POINT_COST * iTemp * NUM_YIELD_TYPES / (iYieldValueSum * NUM_DIRECTION_TYPES);
+									}
+#else
 									if (iPlotDistance <= NUM_CITY_RINGS || GC.getResourceInfo(eAdjacentResource)->getResourceUsage() != RESOURCEUSAGE_BONUS)
 									{
 										--iInfluenceCost;
 									}
+#endif
 								}
 								if (pAdjacentPlot->IsNaturalWonder())
 								{
 									if (iPlotDistance <= NUM_CITY_RINGS) // grab for this city
+#ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_RESOURCE_NW_OSMOSIS
+										iInfluenceCost += (iPLOT_INFLUENCE_NW_COST - NUM_DIRECTION_TYPES / 2) / (NUM_DIRECTION_TYPES);
+									else
+										--iInfluenceCost;
+#else
 									{
 										bUnownedNaturalWonderAdjacentCount = true;
 									}
 									--iInfluenceCost; // but we will slightly grow towards it for style in any case
+#endif
 								}
 							}
 						}
 					}
 
+#ifndef AUI_CITY_GET_BUYABLE_PLOT_LIST_RESOURCE_NW_OSMOSIS
 					// move towards unclaimed NW
 					iInfluenceCost += bUnownedNaturalWonderAdjacentCount ? -1 : 0;
+#endif
 
 					// Plots not adjacent to another Plot acquired by this City are pretty much impossible to get
 					bFoundAdjacentOwnedByCity = false;
@@ -11102,20 +11239,31 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 					// Are we cheap enough to get picked next?
 					if (iInfluenceCost < iLowestCost)
 					{
+#ifdef AUI_CITY_FIX_GET_NEXT_BUYABLE_PLOT_USE_FFASTVECTOR
+						aiPlotList.clear();
+						aiPlotList.push_back(pLoopPlot->GetPlotIndex());
+#else
 						// clear reset list
 						for(uint ui = 0; ui < aiPlotList.size(); ui++)
 						{
 							aiPlotList[ui] = -1;
 						}
 						iResultListIndex = 0;
+#endif
 						iLowestCost = iInfluenceCost;
 						// this will "fall through" to the next conditional
 					}
 
+#ifdef AUI_CITY_FIX_GET_NEXT_BUYABLE_PLOT_USE_FFASTVECTOR
+					else if (iInfluenceCost == iLowestCost)
+					{
+						aiPlotList.push_back(pLoopPlot->GetPlotIndex());
+#else
 					if (iInfluenceCost == iLowestCost)
 					{
 						aiPlotList[iResultListIndex] = pLoopPlot->GetPlotIndex();
 						iResultListIndex++;
+#endif
 					}
 				}
 			}

@@ -467,6 +467,10 @@ void CvMap::reset(CvMapInitData* pInitInfo)
 		m_bWrapY = pInitInfo->m_bWrapY;
 	}
 
+#ifdef AUI_MAP_FIX_CALCULATE_INFLUENCE_DISTANCE_REUSE_PATHFINDER
+	m_pLastInfluenceSourcePlot = NULL;
+#endif
+
 	int iNumResourceInfos = GC.getNumResourceInfos();
 	if(iNumResourceInfos)
 	{
@@ -1608,7 +1612,11 @@ void CvMap::calculateStrategicValues(bool bForInitialize)
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_MAP_FIX_CALCULATE_INFLUENCE_DISTANCE_REUSE_PATHFINDER
+int CvMap::calculateInfluenceDistance(CvPlot* pSource, CvPlot* pDest, int iMaxRange, bool)
+#else
 int CvMap::calculateInfluenceDistance(CvPlot* pSource, CvPlot* pDest, int iMaxRange, bool bCorrectButSlower)
+#endif
 {
 	CvAStarNode* pNode;
 
@@ -1616,6 +1624,15 @@ int CvMap::calculateInfluenceDistance(CvPlot* pSource, CvPlot* pDest, int iMaxRa
 	{
 		return -1;
 	}
+
+#ifdef AUI_MAP_FIX_CALCULATE_INFLUENCE_DISTANCE_REUSE_PATHFINDER
+	bool bCorrectButSlower = false;
+	if (m_pLastInfluenceSourcePlot != pSource)
+	{
+		m_pLastInfluenceSourcePlot = pSource;
+		bCorrectButSlower = true;
+	}
+#endif
 
 #ifdef AUI_ASTAR_USE_DELEGATES
 	GC.getInfluenceFinder().SetData(iMaxRange);

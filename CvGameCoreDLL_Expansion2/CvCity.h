@@ -718,7 +718,11 @@ public:
 	bool CanBuyPlot(int iPlotX = -1, int iPlotY = -1, bool bIgnoreCost = false);
 	bool CanBuyAnyPlot(void);
 	CvPlot* GetNextBuyablePlot();
+#ifdef AUI_CITY_FIX_GET_NEXT_BUYABLE_PLOT_USE_FFASTVECTOR
+	void GetBuyablePlotList(BaseVector<int, true>& aiPlotList);
+#else
 	void GetBuyablePlotList(std::vector<int>& aiPlotList);
+#endif
 	int GetBuyPlotCost(int iPlotX, int iPlotY) const;
 	void BuyPlot(int iPlotX, int iPlotY);
 	void DoAcquirePlot(int iPlotX, int iPlotY);
