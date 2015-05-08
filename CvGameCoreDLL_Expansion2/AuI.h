@@ -134,6 +134,12 @@
 #define AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
 /// Yeah, this isn't AI related, but it's still a bugfix, and Iroquois needs all the help it can get
 #define AUI_UNIT_MOVEMENT_IROQUOIS_ROAD_TRANSITION_FIX
+/// Fixes the function to only enable the reuse pathfinder flag when it wouldn't result in incorrect data
+#define AUI_MAP_FIX_CALCULATE_INFLUENCE_DISTANCE_REUSE_PATHFINDER
+/// Fixes radar
+#define AUI_ASTAR_FIX_RADAR
+/// When upgrading a unit to another unit with a different unit type (eg. Chariot -> Knight), promotions that the old unit has but the new unit could not receive are refunded
+// #define AUI_UNIT_PROMOTION_REFUND_ON_TYPE_UPGRADE // Disabled for now because this is a fairly significant gameplay change
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code
@@ -288,6 +294,16 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITY_FIX_CREATE_UNIT_EXPLORE_ASSIGNMENT_TO_ECONOMIC
 /// Reenables the purchasing of buildings with gold (originally from Ninakoru's Smart AI, but heavily modified since)
 #define AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD
+
+// City Governor Stuff
+/// Fixes various possible bugs by replacing std::vector with FFastVector as the list type and relying on push_back() and clear() instead of trying to handle the vector as a matrix
+#define AUI_CITY_FIX_GET_NEXT_BUYABLE_PLOT_USE_FFASTVECTOR
+/// Replaces the "lower influence cost by 1 if near NW or resource" code with code that lowers the influence cost of plots that are between resources or natural wonders and the closest owned plot of the city
+#define AUI_CITY_GET_BUYABLE_PLOT_LIST_RESOURCE_NW_OSMOSIS
+/// Weights the yield contribution to a plot's influence cost by the value of the yield to citizen automation.
+#define AUI_CITY_GET_BUYABLE_PLOT_LIST_WEIGHTED_YIELDS
+/// Actually makes passive acquisition of tiles not adjacent to an already owned tile impossible
+#define AUI_CITY_GET_BUYABLE_PLOT_LIST_ACTUALLY_IMPOSSIBLE_IF_NOT_ADJACENT_OWNED
 
 // City Citizens Stuff
 /// Unhardcodes the value assigned to specialists for great person points (flat value is the base multiplier for value of a single GP point before modifications)
@@ -655,7 +671,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 /// Lets the function to calculate the yield change from an improvement take assumed working city and assumed neighboring city parameters
 #define AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
-/// If a plot is not visible to the attacking player, disregard the defending unit (fixes radaring)
+/// If a plot is not visible to the attacking player, disregard the defending unit (fixes radaring #1)
 #define AUI_PLOT_FIX_GET_BEST_DEFENDER_CHECK_PLOT_VISIBILITY
 
 // Policy Stuff
@@ -825,6 +841,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_SITE_EVALUATION_FIX_COMPUTE_YIELD_VALUE_IMPROVEMENT_YIELD_CHANGE
 /// Starting location weight of features now extends to tiles further than 1 distance away at a diminished rate
 #define AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_DECAYING_STARTING_LOCATION_WEIGHT
+/// If the AI player has no coastal cities, non-coastal plots ignore sea resources for fertility (since no city can produce work boats)
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
 
 // Tactical AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
