@@ -7,7 +7,7 @@
 // Used for savegame compatibility
 #define AUI_VERSION 10
 
-// New mathematical constants
+// New mathematical constants (these could be calculated at compile-time instead of needing defines, but I don't trust the VC compiler)
 #define M_E			2.71828182845904523536
 #define fM_E		2.718281828f		//!< e (float)
 #define M_SQRT2		1.41421356237309504880
@@ -22,7 +22,7 @@
 // Non-AI stuff (still used by AI routines, but could be used elsewhere as well)
 /// AUI's new GUID
 #define AUI_GUID
-/// OpenMP is used to help with multithreading computationally expensive loops
+/// OpenMP is used to help with multithreading loops (note: can cause crashes if low on memory, could actually result in slower performance, may not actually be worth it)
 #define AUI_USE_OPENMP
 /// Enables const for functions, variables, and parameters that both allow it and are intended to be const
 #define AUI_CONSTIFY
@@ -108,7 +108,7 @@
 #define AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
 /// Gets the last node before the parent (used for planning melee attacks to know where they'd attack from)
 #define AUI_ASTAR_GET_PENULTIMATE_NODE
-/// Fixes possible null pointers in A*
+/// Fixes possible null pointer dereferences in A*
 #define AUI_ASTAR_FIX_POSSIBLE_NULL_POINTERS
 /// Gets the nth best interceptor on a tile (used for planning danger, when we know the previous n-1 interceptors will be unable to intercept due to air sweeps, other air attacks)
 #define AUI_UNIT_GET_NTH_BEST_INTERCEPTOR
@@ -117,7 +117,7 @@
 /// Fixes the fact that the function to get a great general stacked with the unit does not detect great admirals
 #define AUI_UNIT_FIX_GET_STACKED_GREAT_GENERAL_WORKS_WITH_ADMIRAL
 /// Fixes some misc. warnings/errors generated when code is attempted to be compiled using VC120 (it won't work because link targets are all VC90-compiled, but all other errors/warnings are legitimate)
-#define AUI_WEIRD_SHIT
+#define AUI_VC120_FORMALITIES
 /// Pathfinder has been rewritten to use delegates
 #define AUI_ASTAR_USE_DELEGATES
 /// Human-controlled missionaries and units will still want to avoid undesirable tiles a bit when planning paths, though not to the full extent that an AI-controlled unit would (parameter value is the extra "cost" weight added)
@@ -128,7 +128,7 @@
 #define AUI_PLOT_GET_VISIBLE_ENEMY_DEFENDER_TO_UNIT
 /// Fixes base heal mod from players not actually increasing base healing
 #define AUI_UNIT_FIX_BASE_HEAL_MOD
-/// IsValidBuildingLocation() has been moved to the plot class so that it no longer needs an existing city to call it (useful for settler site evaluation)
+/// IsValidBuildingLocation() has been moved to the plot class so that it no longer needs an existing city to call it (slight performance improvement, also useful for settler site evaluation)
 #define AUI_CITY_IS_VALID_BUILDING_LOCATION_MOVED_TO_PLOT
 /// Two new parameters for CanConstruct() to act as AI helpers
 #define AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
@@ -153,7 +153,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 
 #ifdef AUI_USE_OPENMP
-// OpenMP for multithreading AI loops
+// OpenMP for multithreading loops
 #include <omp.h>
 #endif
 
@@ -163,7 +163,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Queued attacks are dumb because they are constructed based on statistical averages instead of having the AI send out an attack and plan for follow-up attacks based on actual output
 #define AUI_QUEUED_ATTACKS_REMOVED
 /// All the functions related to swapping great works were written extremely poorly, so they have been or are being restructured or remade
-///		Fixes include: AI not prioritizing Great Works at all, AI not swapping Music, AI not able to swap great works owned by other players that were not created by that player, AI not prioritizing great work slots that give unit XP if filled, AI giving inefficient Museum fill the same priority as more efficient fills, AI not willing to swap with more than one player for a given building, AI not able to process equal Art-Artifact case for slots numbers that were multiples of 2 and an odd number
+///		Instead of constantly remaking great works vectors (possibly having 8 at a time), these functions now juggle pointers, vectors of pointers, and pointers to vectors of pointers. It may be a bit more confusing, but it should work significantly faster.
+///		Fixes include: AI not prioritizing Great Works at all, AI not swapping Music if game allows it, AI not able to swap great works owned by other players that were not created by that player, AI not prioritizing great work slots that give unit XP if filled, AI giving inefficient Museum fill the same priority as more efficient fills, AI not willing to swap with more than one player for a given building, AI not able to process equal Art-Artifact case for slots numbers that were multiples of 2 and an odd number
 #define AUI_DO_SWAP_GREAT_WORKS_REMADE
 
 #ifdef AUI_DANGER_PLOTS_REMADE
@@ -218,7 +219,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// If it's available, opts for the binomial RNG for the boldness check's random factor instead of the flat RNG
 #define AUI_OPERATION_FOUND_CITY_TWEAKED_NO_ESCORT_RANDOM_BINOMIAL
 #endif
-/// Fixes a possible null pointer in the function
+/// Fixes a possible null pointer dereference in the function
 #define AUI_OPERATION_FIX_CHECK_ON_TARGET_POSSIBLE_NULL_POINTER
 /// FindBestFitReserveUnit() no longer ignores units that can paradrop
 #define AUI_OPERATION_FIND_BEST_FIT_RESERVE_CONSIDER_PARATROOPERS
@@ -254,7 +255,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_WORKER_SCORE_PLOT_FLAVORS (2.0)
 /// If building an improvement also generates flat hammers, consider the effect as flat +parameter hammer yield
 #define AUI_WORKER_SCORE_PLOT_CHOP (1.0)
-/// Removes the bias to chop forests after optics (since it doesn't actually offer a gameplay improvement
+/// Removes the bias to chop forests after optics (since it doesn't actually offer a gameplay improvement)
 #define AUI_WORKER_NO_CHOP_BIAS
 /// Faith now affects tile evaluation for workers, it pulls from culture multiplier though
 #define AUI_WORKER_EVALUATE_FAITH

@@ -351,25 +351,9 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 		}
 
 #ifdef AUI_WORKER_INCA_HILLS
-		if (!(bIncaBonusActive && pPlot->getTerrainType() == TERRAIN_HILL))
+		if (!bIncaBonusActive || pPlot->getTerrainType() != TERRAIN_HILL)
 		{
-			if (pPlot->getRouteType() == eRoute && !pPlot->IsRoutePillaged())
-			{
-				// if this is already a trade route or someone else built it, we can count is as free
-				if (pPlot->IsTradeRoute(m_pPlayer->GetID()) || pPlot->GetPlayerResponsibleForRoute() != m_pPlayer->GetID())
-				{
-					continue;
-				}
-				iRoadLength++;
-			}
-			else
-			{
-				iRoadLength++;
-				iPlotsNeeded++;
-			}
-		}
-#else
-
+#endif
 		if(pPlot->getRouteType() == eRoute && !pPlot->IsRoutePillaged())
 		{
 			// if this is already a trade route or someone else built it, we can count is as free
@@ -383,6 +367,8 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 		{
 			iRoadLength++;
 			iPlotsNeeded++;
+		}
+#ifdef AUI_WORKER_INCA_HILLS
 		}
 #endif
 	}
@@ -733,6 +719,33 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 		m_aiPlots = m_pPlayer->GetPlots();
 	}
 
+#ifdef AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
+	for (int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+	{
+		CvBuildInfo* pkBuild = GC.getBuildInfo((BuildTypes)iBuildIndex);
+		if (pkBuild)
+		{
+			ImprovementTypes eImprovement = (ImprovementTypes)pkBuild->getImprovement();
+			if (eImprovement != NO_IMPROVEMENT)
+			{
+				CvImprovementEntry* pkImprovement = GC.getImprovementInfo(eImprovement);
+				if (pkImprovement && pkImprovement->IsOnlyCityStateTerritory() && (!pkImprovement->IsSpecificCivRequired() || pkImprovement->GetRequiredCivilization() == m_pPlayer->getCivilizationType()))
+				{
+					for (int iJ = 0; iJ < MAX_CIV_PLAYERS; iJ++)
+					{
+						CvPlayer& kLoopPlayer = GET_PLAYER((PlayerTypes)iJ);
+						if (kLoopPlayer.isAlive() && kLoopPlayer.isMinorCiv() && !GET_TEAM(m_pPlayer->getTeam()).isAtWar(kLoopPlayer.getTeam()))
+						{
+							m_aiPlots.push_back(kLoopPlayer.GetPlots().begin(), kLoopPlayer.GetPlots().size());
+						}
+					}
+					break;
+				}
+			}
+		}
+	}
+#endif
+
 	// go through all the plots the player has under their control
 	for(uint uiPlotIndex = 0; uiPlotIndex < m_aiPlots.size(); uiPlotIndex++)
 	{
@@ -769,6 +782,15 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 			continue;
 		}
 
+#ifdef AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
+		if (pPlot->getOwner() != m_pPlayer->GetID())
+#ifdef AUI_FIX_FFASTVECTOR_CONFLATE
+			if (pPlot->isRevealed(m_pPlayer->getTeam()))
+#endif
+				AddImprovingMinorPlotsDirectives(pUnit, pPlot, iMoveTurnsAway);
+		else
+		{
+#endif
 		UpdateCurrentPlotYields(pPlot);
 
 		//AddRepairDirectives(pUnit, pPlot, iMoveTurnsAway);
@@ -782,6 +804,9 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 		{
 			//AddRemoveUselessRoadDirectives(pUnit, pPlot, iMoveTurnsAway);
 		}
+#ifdef AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
+		}
+#endif
 	}
 
 	// we need to evaluate the tiles outside of our territory to build roads
@@ -830,9 +855,6 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 
 		//AddRepairDirectives(pUnit, pPlot, iMoveTurnsAway);
 		AddRouteDirectives(pUnit, pPlot, iMoveTurnsAway);
-#ifdef AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
-		AddImprovingMinorPlotsDirectives(pUnit, pPlot, iMoveTurnsAway);
-#endif
 	}
 
 	m_aDirectives.StableSortItems();
@@ -2384,7 +2406,7 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 		(pPlot->isMountain() && !pUnit->IsHoveringUnit() && !m_pPlayer->GetPlayerTraits()->IsAbleToCrossMountains())))
 #else
 	if(pPlot->isImpassable() || pPlot->isMountain())
-#endif //AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_FLYING_WORKER_DISREGARDS_PEAKS
+#endif
 	{
 		if(m_bLogging)
 		{

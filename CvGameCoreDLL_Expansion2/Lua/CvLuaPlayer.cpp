@@ -6701,7 +6701,7 @@ int CvLuaPlayer::lGetCurrentEra(lua_State* L)
 //int getTeam();
 int CvLuaPlayer::lGetTeam(lua_State* L)
 {
-#ifdef AUI_WEIRD_SHIT
+#ifdef AUI_VC120_FORMALITIES
 	return BasicLuaMethod<TeamTypes>(L, (&CvPlayerAI::getTeam));
 #else
 	return BasicLuaMethod(L, &CvPlayerAI::getTeam);
