@@ -7151,7 +7151,11 @@ int CvCity::getPopulation() const
 //	Be very careful with setting bReassignPop to false.  This assumes that the caller
 //  is manually adjusting the worker assignments *and* handling the setting of
 //  the CityCitizens unassigned worker value.
+#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+void CvCity::setPopulation(int iNewValue, bool bReassignPop /* = true */, bool bForGrowth)
+#else
 void CvCity::setPopulation(int iNewValue, bool bReassignPop /* = true */)
+#endif
 {
 	VALIDATE_OBJECT
 	int iOldPopulation;
@@ -7211,7 +7215,11 @@ void CvCity::setPopulation(int iNewValue, bool bReassignPop /* = true */)
 				// Need to Add Citizens
 				for(int iNewPopLoop = 0; iNewPopLoop < iPopChange; iNewPopLoop++)
 				{
+#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+					GetCityCitizens()->DoAddBestCitizenFromUnassigned(bForGrowth /*bAfterGrowth*/);
+#else
 					GetCityCitizens()->DoAddBestCitizenFromUnassigned();
+#endif
 				}
 			}
 		}
@@ -7259,10 +7267,18 @@ void CvCity::setPopulation(int iNewValue, bool bReassignPop /* = true */)
 //	Be very careful with setting bReassignPop to false.  This assumes that the caller
 //  is manually adjusting the worker assignments *and* handling the setting of
 //  the CityCitizens unassigned worker value.
+#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+void CvCity::changePopulation(int iChange, bool bReassignPop, bool bForGrowth)
+#else
 void CvCity::changePopulation(int iChange, bool bReassignPop)
+#endif
 {
 	VALIDATE_OBJECT
+#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+	setPopulation(getPopulation() + iChange, bReassignPop, bForGrowth);
+#else
 	setPopulation(getPopulation() + iChange, bReassignPop);
+#endif
 
 	// Update the religious system
 	GetCityReligions()->DoPopulationChange(iChange);
@@ -13405,7 +13421,11 @@ void CvCity::doGrowth()
 		else
 		{
 			changeFood(-(std::max(0, (growthThreshold() - getFoodKept()))));
+#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+			changePopulation(1, true);
+#else
 			changePopulation(1);
+#endif
 
 			// Only show notification if the city is small
 			if(getPopulation() <= 5)

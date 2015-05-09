@@ -316,6 +316,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITIZENS_IS_PLOT_BETTER_THAN_DEFAULT_SPECIALIST
 /// If the empire is unhappy, cities with full or partial food focus get their food focus removed
 #define AUI_CITIZENS_DO_TURN_NO_FOOD_FOCUS_IF_UNHAPPY
+/// When assigning a new citizen after a city has grown, the value of food is set to 0 because food is calculated before citizen growth, all other yields are done after it
+#define AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+/// If a tile would provide enough food to generate excess food, the excess amount has its value halved as if the city was already generating enough food
+#define AUI_CITIZENS_GET_VALUE_SPLIT_EXCESS_FOOD_MUTLIPLIER
 
 // City Strategy Stuff
 /// Scales the GetLastTurnWorkerDisbanded() computation to game speed

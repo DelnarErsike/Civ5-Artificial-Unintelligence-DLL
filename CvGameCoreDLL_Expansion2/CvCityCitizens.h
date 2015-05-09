@@ -37,7 +37,11 @@ public:
 	void DoFoundCity();
 	void DoTurn();
 
+#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth = false);
+#else
 	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag);
+#endif
 
 	// Are this City's Citizens automated? (always true for AI civs)
 	bool IsAutomated() const;
@@ -54,8 +58,13 @@ public:
 
 	// Specialist AI
 	bool IsAIWantSpecialistRightNow();
+#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+	BuildingTypes GetAIBestSpecialistBuilding(int& iSpecialistValue, bool bAfterGrowth = false);
+	int GetSpecialistValue(SpecialistTypes eSpecialist, bool bAfterGrowth = false);
+#else
 	BuildingTypes GetAIBestSpecialistBuilding(int& iSpecialistValue);
 	int GetSpecialistValue(SpecialistTypes eSpecialist);
+#endif
 	bool IsBetterThanDefaultSpecialist(SpecialistTypes eSpecialist);
 
 	// Citizen Assignment
@@ -64,12 +73,20 @@ public:
 	int GetNumCitizensWorkingPlots() const;
 	void ChangeNumCitizensWorkingPlots(int iChange);
 
+#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+	bool DoAddBestCitizenFromUnassigned(bool bAfterGrowth = false);
+#else
 	bool DoAddBestCitizenFromUnassigned();
+#endif
 	bool DoRemoveWorstCitizen(bool bRemoveForcedStatus = false, SpecialistTypes eDontChangeSpecialist = NO_SPECIALIST, int iCurrentCityPopulation = -1);
 
 	void DoReallocateCitizens();
 
+#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+	CvPlot* GetBestCityPlotWithValue(int& iValue, bool bWantBest, bool bWantWorked, bool bAfterGrowth = false);
+#else
 	CvPlot* GetBestCityPlotWithValue(int& iValue, bool bWantBest, bool bWantWorked);
+#endif
 
 	// Worked Plots
 	bool IsWorkingPlot(const CvPlot* pPlot) const;
