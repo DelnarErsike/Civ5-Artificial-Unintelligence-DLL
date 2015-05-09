@@ -1111,7 +1111,7 @@ void CvUnit::convert(CvUnit* pUnit, bool bIsUpgrade)
 			if(pUnit->isHasPromotion(ePromotion) && !pkPromotionInfo->IsLostWithUpgrade())
 			{
 #ifdef AUI_UNIT_PROMOTION_REFUND_ON_TYPE_UPGRADE
-				if (!pkPromotionInfo->IsCannotBeChosen())
+				if (!pkPromotionInfo->IsCannotBeChosen() && pUnit->getUnitCombatType() != NO_UNITCOMBAT)
 					aiOldPromotions.push_back(ePromotion);
 				else
 #endif
@@ -16464,6 +16464,10 @@ void CvUnit::changeExtraIntercept(int iChange)
 {
 	VALIDATE_OBJECT
 	m_iExtraIntercept += iChange;
+#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
+	if (m_iExtraIntercept > GC.getMAX_INTERCEPTION_PROBABILITY())
+		m_iExtraIntercept = GC.getMAX_INTERCEPTION_PROBABILITY();
+#endif
 }
 
 
@@ -16480,6 +16484,10 @@ void CvUnit::changeExtraEvasion(int iChange)
 {
 	VALIDATE_OBJECT
 	m_iExtraEvasion += iChange;
+#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
+	if (m_iExtraEvasion > GC.getMAX_EVASION_PROBABILITY())
+		m_iExtraEvasion = GC.getMAX_EVASION_PROBABILITY();
+#endif
 }
 
 
@@ -19121,28 +19129,44 @@ bool CvUnit::isPromotionValid(PromotionTypes ePromotion) const
 	// Can't acquire interception promotion if unit can't intercept!
 	if(promotionInfo->GetInterceptionCombatModifier() != 0)
 	{
+#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
+		if (!canAirDefend() && promotionInfo->GetInterceptChanceChange() == 0)
+#else
 		if(!canAirDefend())
+#endif
 			return false;
 	}
 
 	// Can't acquire Air Sweep promotion if unit can't air sweep!
 	if(promotionInfo->GetAirSweepCombatModifier() != 0)
 	{
+#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
+		if (!IsAirSweepCapable() && !promotionInfo->IsAirSweepCapable())
+#else
 		if(!IsAirSweepCapable())
+#endif
 			return false;
 	}
 
 	// Max Interception
 	if(promotionInfo->GetInterceptChanceChange() > 0)
 	{
+#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
+		if(maxInterceptionProbability() >= GC.getMAX_INTERCEPTION_PROBABILITY())
+#else
 		if(promotionInfo->GetInterceptChanceChange() + maxInterceptionProbability() > GC.getMAX_INTERCEPTION_PROBABILITY())
+#endif
 			return false;
 	}
 
 	// Max evasion
 	if(promotionInfo->GetEvasionChange() > 0)
 	{
+#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
+		if (evasionProbability() >= GC.getMAX_EVASION_PROBABILITY())
+#else
 		if(promotionInfo->GetEvasionChange() + evasionProbability() > GC.getMAX_EVASION_PROBABILITY())
+#endif
 			return false;
 	}
 

@@ -140,6 +140,8 @@
 #define AUI_ASTAR_FIX_RADAR
 /// When upgrading a unit to another unit with a different unit type (eg. Chariot -> Knight), promotions that the old unit has but the new unit could not receive are refunded
 // #define AUI_UNIT_PROMOTION_REFUND_ON_TYPE_UPGRADE // Disabled for now because this is a fairly significant gameplay change
+/// Max interception and max evasion are now checked and enforced when changing interception or evasion, instead of when a promotion would be valid
+#define AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code
