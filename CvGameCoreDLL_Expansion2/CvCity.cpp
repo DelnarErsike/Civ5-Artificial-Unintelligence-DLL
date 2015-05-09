@@ -10945,6 +10945,9 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 	ImprovementTypes eBarbCamptype = (ImprovementTypes)GC.getBARBARIAN_CAMP_IMPROVEMENT();
 
 #ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_WEIGHTED_YIELDS
+	CityAIFocusTypes eCityFocus = GetCityCitizens()->GetFocusType();
+#endif
+#if defined(AUI_CITY_GET_BUYABLE_PLOT_LIST_RESOURCE_NW_OSMOSIS) || defined(AUI_CITY_GET_BUYABLE_PLOT_LIST_WEIGHTED_YIELDS)
 	const int iYieldValueSum = GC.getAI_CITIZEN_VALUE_FOOD() + GC.getAI_CITIZEN_VALUE_PRODUCTION() + GC.getAI_CITIZEN_VALUE_GOLD() + GC.getAI_CITIZEN_VALUE_SCIENCE() + GC.getAI_CITIZEN_VALUE_CULTURE() + GC.getAI_CITIZEN_VALUE_FAITH();
 #endif
 
@@ -11103,22 +11106,52 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 						switch ((YieldTypes) iYieldLoop)
 						{
 						case YIELD_FOOD:
+						{
 							iLoopYield *= GC.getAI_CITIZEN_VALUE_FOOD();
+							if (eCityFocus == CITY_AI_FOCUS_TYPE_FOOD)
+								iLoopYield *= 3;
+							else if (eCityFocus == CITY_AI_FOCUS_TYPE_PROD_GROWTH || eCityFocus == CITY_AI_FOCUS_TYPE_GOLD_GROWTH)
+								iLoopYield *= 2;
+						}
 							break;
 						case YIELD_PRODUCTION:
+						{
 							iLoopYield *= GC.getAI_CITIZEN_VALUE_PRODUCTION();
+							if (eCityFocus == CITY_AI_FOCUS_TYPE_PRODUCTION)
+								iLoopYield *= 3;
+							else if (eCityFocus == CITY_AI_FOCUS_TYPE_PROD_GROWTH)
+								iLoopYield *= 2;
+						}
 							break;
 						case YIELD_GOLD:
+						{
 							iLoopYield *= GC.getAI_CITIZEN_VALUE_GOLD();
+							if (eCityFocus == CITY_AI_FOCUS_TYPE_GOLD)
+								iLoopYield *= 3;
+							else if (eCityFocus == CITY_AI_FOCUS_TYPE_GOLD_GROWTH)
+								iLoopYield *= 2;
+						}
 							break;
 						case YIELD_SCIENCE:
+						{
 							iLoopYield *= GC.getAI_CITIZEN_VALUE_SCIENCE();
+							if (eCityFocus == CITY_AI_FOCUS_TYPE_SCIENCE)
+								iLoopYield *= 3;
+						}
 							break;
 						case YIELD_CULTURE:
+						{
 							iLoopYield *= GC.getAI_CITIZEN_VALUE_CULTURE();
+							if (eCityFocus == CITY_AI_FOCUS_TYPE_CULTURE)
+								iLoopYield *= 3;
+						}
 							break;
 						case YIELD_FAITH:
+						{
 							iLoopYield *= GC.getAI_CITIZEN_VALUE_FAITH();
+							if (eCityFocus == CITY_AI_FOCUS_TYPE_FAITH)
+								iLoopYield *= 3;
+						}
 							break;
 						}
 						iYieldTotal += iLoopYield;
@@ -11158,23 +11191,53 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 									switch ((YieldTypes)iYieldLoop)
 									{
 									case YIELD_FOOD:
+									{
 										iLoopYield *= GC.getAI_CITIZEN_VALUE_FOOD();
-										break;
+										if (eCityFocus == CITY_AI_FOCUS_TYPE_FOOD)
+											iLoopYield *= 3;
+										else if (eCityFocus == CITY_AI_FOCUS_TYPE_PROD_GROWTH || eCityFocus == CITY_AI_FOCUS_TYPE_GOLD_GROWTH)
+											iLoopYield *= 2;
+									}
+									break;
 									case YIELD_PRODUCTION:
+									{
 										iLoopYield *= GC.getAI_CITIZEN_VALUE_PRODUCTION();
-										break;
+										if (eCityFocus == CITY_AI_FOCUS_TYPE_PRODUCTION)
+											iLoopYield *= 3;
+										else if (eCityFocus == CITY_AI_FOCUS_TYPE_PROD_GROWTH)
+											iLoopYield *= 2;
+									}
+									break;
 									case YIELD_GOLD:
+									{
 										iLoopYield *= GC.getAI_CITIZEN_VALUE_GOLD();
-										break;
+										if (eCityFocus == CITY_AI_FOCUS_TYPE_GOLD)
+											iLoopYield *= 3;
+										else if (eCityFocus == CITY_AI_FOCUS_TYPE_GOLD_GROWTH)
+											iLoopYield *= 2;
+									}
+									break;
 									case YIELD_SCIENCE:
+									{
 										iLoopYield *= GC.getAI_CITIZEN_VALUE_SCIENCE();
-										break;
+										if (eCityFocus == CITY_AI_FOCUS_TYPE_SCIENCE)
+											iLoopYield *= 3;
+									}
+									break;
 									case YIELD_CULTURE:
+									{
 										iLoopYield *= GC.getAI_CITIZEN_VALUE_CULTURE();
-										break;
+										if (eCityFocus == CITY_AI_FOCUS_TYPE_CULTURE)
+											iLoopYield *= 3;
+									}
+									break;
 									case YIELD_FAITH:
+									{
 										iLoopYield *= GC.getAI_CITIZEN_VALUE_FAITH();
-										break;
+										if (eCityFocus == CITY_AI_FOCUS_TYPE_FAITH)
+											iLoopYield *= 3;
+									}
+									break;
 									}
 									iYieldTotal += iLoopYield;
 								}
