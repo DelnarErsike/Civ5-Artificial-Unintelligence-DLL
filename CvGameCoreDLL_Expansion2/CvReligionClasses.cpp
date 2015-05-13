@@ -752,18 +752,30 @@ void CvGameReligions::FoundPantheon(PlayerTypes ePlayer, BeliefTypes eBelief)
 	iIncrement /= 100;
 	SetMinimumFaithNextPantheon(GetMinimumFaithNextPantheon() + iIncrement);
 
+#ifdef AUI_RELIGION_FIX_FOUND_PANTHEON_NULL_POINTER_DEREFERENCE
+	CvCity* pCapitol = GET_PLAYER(ePlayer).getCapitalCity();
+	if (pCapitol)
+	{
+#endif
 	ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
 	if(pkScriptSystem) 
 	{
 		CvLuaArgsHandle args;
 		args->Push(ePlayer);
+#ifdef AUI_RELIGION_FIX_FOUND_PANTHEON_NULL_POINTER_DEREFERENCE
+		args->Push(pCapitol->GetID());
+#else
 		args->Push(GET_PLAYER(ePlayer).getCapitalCity()->GetID());
+#endif
 		args->Push(RELIGION_PANTHEON);
 		args->Push(eBelief);
 
 		bool bResult;
 		LuaSupport::CallHook(pkScriptSystem, "PantheonFounded", args.get(), bResult);
 	}
+#ifdef AUI_RELIGION_FIX_FOUND_PANTHEON_NULL_POINTER_DEREFERENCE
+	}
+#endif
 
 	// Spread the pantheon into each of their cities
 	int iLoop;
@@ -2399,7 +2411,7 @@ bool CvPlayerReligions::CanAffordFaithPurchase() const
 					iCost = pCapital->GetFaithPurchaseCost(eBuilding);
 #else
 					int iCost = pCapital->GetFaithPurchaseCost(eBuilding);
-#endif // #ifdef AUI_RELIGION_FIX_CAN_AFFORD_FAITH_PURCHASE_NON_CAPITAL_RELIGION
+#endif
 					if(iCost != 0 && iFaith > iCost)
 					{
 						return true;
