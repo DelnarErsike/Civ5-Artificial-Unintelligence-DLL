@@ -10244,6 +10244,35 @@ void CvDiplomacyAI::DoFirstContact(PlayerTypes ePlayer)
 		//SetPlayerTargetValue(ePlayer, TARGET_VALUE_AVERAGE);
 
 		// Humans don't say hi to one another through the shadow diplo AI and, uh, don't show up in MP please
+#ifdef AUI_DIPLOMACY_FIX_DO_FIRST_CONTACT_IN_MULTIPLAYER
+		CvPlayer& kTargetPlayer = GET_PLAYER(ePlayer);
+		if(kTargetPlayer.isHuman())
+		{
+			if(!IsAtWar(ePlayer))
+			{
+				if(GC.getGame().isFinalInitialized())
+				{
+					if (!GC.getGame().isNetworkMultiPlayer() && !GetPlayer()->isHuman())
+					{
+						if (std::find(m_aGreetPlayers.begin(), m_aGreetPlayers.end(), ePlayer) == m_aGreetPlayers.end())
+						{
+							// Put in the list of people to greet when their turn comes up.
+							m_aGreetPlayers.push_back(ePlayer);
+						}
+					}
+					else
+					{
+						CvNotifications* pNotifications = kTargetPlayer.GetNotifications();
+						if(pNotifications)
+						{
+							CvString strBuffer = GetLocalizedText("TXT_KEY_NOTIFICATION_SUMMARY_MET_MINOR_CIV", GetPlayer()->getNameKey());
+							pNotifications->Add(NOTIFICATION_GENERIC, strBuffer, strBuffer, -1, -1, GetPlayer()->GetID());
+						}
+					}
+				}
+			}
+		}
+#else
 		if(!GC.getGame().isNetworkMultiPlayer())	// KWG: Candidate for !GC.getGame().IsOption(GAMEOPTION_SIMULTANEOUS_TURNS)
 		{
 			if(!GetPlayer()->isHuman())
@@ -10285,6 +10314,7 @@ void CvDiplomacyAI::DoFirstContact(PlayerTypes ePlayer)
 				}
 			}
 		}
+#endif
 
 		// Catch up on public declarations this player has made
 

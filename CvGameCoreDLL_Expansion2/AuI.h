@@ -138,12 +138,20 @@
 #define AUI_MAP_FIX_CALCULATE_INFLUENCE_DISTANCE_REUSE_PATHFINDER
 /// Fixes radar
 #define AUI_ASTAR_FIX_RADAR
+/// Fixes more rarer cases of radar
+#define AUI_UNIT_FIX_RADAR
+/// Fixes cases of indirect radaring via ZOC.
+#define AUI_UNIT_MOVEMENT_FIX_RADAR_ZOC
 /// When upgrading a unit to another unit with a different unit type (eg. Chariot -> Knight), promotions that the old unit has but the new unit could not receive are refunded
 // #define AUI_UNIT_PROMOTION_REFUND_ON_TYPE_UPGRADE // Disabled for now because this is a fairly significant gameplay change
 /// Max interception and max evasion are now checked and enforced when changing interception or evasion, instead of when a promotion would be valid
 #define AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
 /// Fixes a possible null pointer dereferences in FoundPantheon()
 #define AUI_RELIGION_FIX_FOUND_PANTHEON_NULL_POINTER_DEREFERENCE
+
+// Multiplayer-specific fixes/changes
+/// First Contact notifications now happen properly in multiplayer
+#define AUI_DIPLOMACY_FIX_DO_FIRST_CONTACT_IN_MULTIPLAYER
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code

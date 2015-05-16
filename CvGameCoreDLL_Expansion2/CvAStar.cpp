@@ -1555,7 +1555,7 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 #ifdef AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT
 			else
 			{
-				iCost += AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT;
+				iCost += AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT + PATH_TERRITORY_WEIGHT;
 			}
 #endif
 		}
@@ -1586,7 +1586,7 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 						}
 						else
 						{
-							iCost += AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT;
+							iCost += AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT + PATH_TERRITORY_WEIGHT;
 						}
 #else
 						iCost += PATH_END_TURN_MISSIONARY_OTHER_TERRITORY;
@@ -1639,7 +1639,7 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 		}
 		else
 		{
-			iCost += AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT;
+			iCost += AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT + PATH_TERRITORY_WEIGHT;
 		}
 	}
 #else
@@ -1880,8 +1880,16 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 					kToNodeCacheData.bContainsOtherFriendlyTeamCity = true;
 			}
 			kToNodeCacheData.bContainsEnemyCity = pToPlot->isEnemyCity(*pUnit);
-			kToNodeCacheData.bContainsVisibleEnemy = pToPlot->isVisibleEnemyUnit(pUnit);
-			kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
+			if (kToNodeCacheData.bPlotVisibleToTeam)
+			{
+				kToNodeCacheData.bContainsVisibleEnemy = pToPlot->isVisibleEnemyUnit(pUnit);
+				kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
+			}
+			else
+			{
+				kToNodeCacheData.bContainsVisibleEnemy = false;
+				kToNodeCacheData.bContainsVisibleEnemyDefender = false;
+			}
 #ifdef AUI_DANGER_PLOTS_REMADE
 			if (pCacheData->DoDanger())
 				kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
@@ -1910,8 +1918,16 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 				kToNodeCacheData.bContainsOtherFriendlyTeamCity = true;
 		}
 		kToNodeCacheData.bContainsEnemyCity = pToPlot->isEnemyCity(*pUnit);
-		kToNodeCacheData.bContainsVisibleEnemy = pToPlot->isVisibleEnemyUnit(pUnit);
-		kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
+		if (kToNodeCacheData.bPlotVisibleToTeam)
+		{
+			kToNodeCacheData.bContainsVisibleEnemy = pToPlot->isVisibleEnemyUnit(pUnit);
+			kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
+		}
+		else
+		{
+			kToNodeCacheData.bContainsVisibleEnemy = false;
+			kToNodeCacheData.bContainsVisibleEnemyDefender = false;
+		}
 	}
 #else
 	kToNodeCacheData.bPlotVisibleToTeam = pToPlot->isVisible(eUnitTeam);
@@ -1994,7 +2010,9 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 	// We have determined that this node is not the origin above (parent == NULL)
 	CvAStarNode* pNode = node;
 	bool bPreviousNodeHostile = false;
+#ifndef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 	bool bPreviousVisibleToTeam = kToNodeCacheData.bPlotVisibleToTeam;
+#endif
 #ifndef AUI_ASTAR_USE_DELEGATES
 	int iDestX = finder->GetDestX();
 	int iDestY = finder->GetDestY();
@@ -2068,12 +2086,20 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 			}
 #endif
 			// This plot is of greater distance than previously, so we know the unit is ending its turn here (pNode), or it's trying to attack through a unit (and might end up on this tile if an attack fails to kill the enemy)
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+			if (iNumTurns != iOldNumTurns || bPreviousNodeHostile)
+#else
 			if(iNumTurns != iOldNumTurns || bPreviousNodeHostile || !bPreviousVisibleToTeam)
+#endif
 			{
 				// Don't count origin, or else a unit will block its own movement!
 				if(iNodeX != iUnitX || iNodeY != iUnitY)
 				{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+					if (kNodeCacheData.bIsRevealedToTeam)
+#else
 					if(kNodeCacheData.bPlotVisibleToTeam)
+#endif
 					{
 						// Check to see if any units are present at this full-turn move plot... if the player can see what's there
 						if(kNodeCacheData.iNumFriendlyUnitsOfType >= iUnitPlotLimit && !(iFinderIgnoreStacking))
@@ -2103,10 +2129,12 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 						{
 							return FALSE;
 						}
+#ifndef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 					}
 
 					if(kNodeCacheData.bIsRevealedToTeam)
 					{
+#endif
 						if (kNodeCacheData.bContainsOtherFriendlyTeamCity && !(iFinderIgnoreStacking))
 							return FALSE;
 					}
@@ -2129,7 +2157,9 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 			}
 		}
 
+#ifndef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 		bPreviousVisibleToTeam = kNodeCacheData.bPlotVisibleToTeam;
+#endif
 		// JON - Special case for the original node passed into this function because it's not yet linked to any parent
 		if(pNode == node && bFirstRun)
 		{
@@ -2736,7 +2766,7 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 		}
 		else
 		{
-			iCost += AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT;
+			iCost += AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT + PATH_TERRITORY_WEIGHT;
 		}
 	}
 #else
@@ -5170,8 +5200,16 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 					kToNodeCacheData.bContainsOtherFriendlyTeamCity = true;
 			}
 			kToNodeCacheData.bContainsEnemyCity = pToPlot->isEnemyCity(*pUnit);
-			kToNodeCacheData.bContainsVisibleEnemy = pToPlotCell->GetEnemyMilitaryUnit() != NULL;
-			kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
+			if (kToNodeCacheData.bPlotVisibleToTeam)
+			{
+				kToNodeCacheData.bContainsVisibleEnemy = pToPlotCell->GetEnemyMilitaryUnit() != NULL;
+				kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
+			}
+			else
+			{
+				kToNodeCacheData.bContainsVisibleEnemy = false;
+				kToNodeCacheData.bContainsVisibleEnemyDefender = false;
+			}
 #ifdef AUI_DANGER_PLOTS_REMADE
 			if (pCacheData->DoDanger())
 				kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
@@ -5203,8 +5241,16 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 			}
 		}
 		kToNodeCacheData.bContainsEnemyCity = pToPlotCell->IsEnemyCity();
-		kToNodeCacheData.bContainsVisibleEnemy = pToPlotCell->GetEnemyMilitaryUnit() != NULL;
-		kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
+		if (kToNodeCacheData.bPlotVisibleToTeam)
+		{
+			kToNodeCacheData.bContainsVisibleEnemy = pToPlotCell->GetEnemyMilitaryUnit() != NULL;
+			kToNodeCacheData.bContainsVisibleEnemyDefender = pToPlot->getBestDefender(NO_PLAYER, unit_owner, pUnit).pointer() != NULL;
+		}
+		else
+		{
+			kToNodeCacheData.bContainsVisibleEnemy = false;
+			kToNodeCacheData.bContainsVisibleEnemyDefender = false;
+		}
 	}
 #else
 	kToNodeCacheData.bPlotVisibleToTeam = pToPlotCell->IsVisible();
@@ -5372,7 +5418,11 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 				if(iNodeX != iUnitX || iNodeY != iUnitY)
 				{
 					// PREFETCH_FASTAR_CVPLOT(reinterpret_cast<char*>(pPlot));
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+					if (kNodeCacheData.bIsRevealedToTeam)
+#else
 					if(kNodeCacheData.bPlotVisibleToTeam)
+#endif
 					{
 						// Check to see if any units are present at this full-turn move plot... if the player can see what's there
 						if(kNodeCacheData.iNumFriendlyUnitsOfType >= iUnitPlotLimit && !(iFinderIgnoreStacking))
@@ -5402,10 +5452,12 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 						{
 							return FALSE;
 						}
+#ifndef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 					}
 
 					if(kNodeCacheData.bIsRevealedToTeam)
 					{
+#endif
 						if (kNodeCacheData.bContainsOtherFriendlyTeamCity && !(iFinderIgnoreStacking))
 							return FALSE;
 					}

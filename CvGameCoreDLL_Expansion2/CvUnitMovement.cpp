@@ -319,6 +319,10 @@ bool CvUnitMovement::IsSlowedByZOC(const CvUnit* pUnit, const CvPlot* pFromPlot,
 					}
 				}
 
+#ifdef AUI_UNIT_MOVEMENT_FIX_RADAR_ZOC
+				if (pAdjPlot->isVisible(pUnit->getTeam()))
+				{
+#endif
 				pAdjUnitNode = pAdjPlot->headUnitNode();
 				// Loop through all units to see if there's an enemy unit here
 				while(pAdjUnitNode != NULL)
@@ -393,6 +397,9 @@ bool CvUnitMovement::IsSlowedByZOC(const CvUnit* pUnit, const CvPlot* pFromPlot,
 						}
 					}
 				}
+#ifdef AUI_UNIT_MOVEMENT_FIX_RADAR_ZOC
+				}
+#endif
 			}
 		}
 	}
