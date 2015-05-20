@@ -7,6 +7,9 @@
 // Used for savegame compatibility
 #define AUI_VERSION 10
 
+// Marker marking places that need to be visited in the future
+#define AUI_TODO
+
 // New mathematical constants (these could be calculated at compile-time instead of needing defines, but I don't trust the VC compiler)
 #define M_E			2.71828182845904523536
 #define fM_E		2.718281828f		//!< e (float)
@@ -333,6 +336,18 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
 /// If a tile would provide enough food to generate excess food, the excess amount has its value halved as if the city was already generating enough food
 #define AUI_CITIZENS_GET_VALUE_SPLIT_EXCESS_FOOD_MUTLIPLIER
+/// If a city is using excess food for production, change the value of food yields accordingly (eg. city cannot starve, food is not 1:1 with production)
+#define AUI_CITIZENS_GET_VALUE_ALTER_FOOD_VALUE_IF_FOOD_PRODUCTION
+/// If a city has any modifiers on certain yield incomes, this modification is applied to the value of those yields as well (eg. +25% gold increases gold yield value by 25%)
+#define AUI_CITIZENS_GET_VALUE_CONSIDER_YIELD_RATE_MODIFIERS
+/// The value of excess food is multiplied by the city's growth modifiers
+#define AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+/// The value of food is now properly increased if the city is on food focus with the avoid growth flag set
+#define AUI_CITIZENS_FIX_GET_VALUE_FOOD_YIELD_VALUE_WHEN_STARVATION_WITH_AVOID_GROWTH
+/// Games where happiness is disabled no longer cause the citizen manager to always ignore the avoid growth checkbox
+#define AUI_CITIZENS_FIX_AVOID_GROWTH_FLAG_NOT_IGNORED_IF_NO_HAPPINESS
+/// The citizen manager only forces avoid growth from low happiness when growing in the city would lower the player's happiness
+#define AUI_CITIZENS_FIX_FORCED_AVOID_GROWTH_ONLY_WHEN_GROWING_LOWERS_HAPPINESS
 
 // City Strategy Stuff
 /// Scales the GetLastTurnWorkerDisbanded() computation to game speed

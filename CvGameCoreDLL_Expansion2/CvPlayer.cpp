@@ -11565,7 +11565,11 @@ int CvPlayer::GetUnhappinessFromCapturedCityCount(CvCity* pAssumeCityAnnexed, Cv
 
 //	--------------------------------------------------------------------------------
 /// Unhappiness from City Population
+#ifdef AUI_CITIZENS_FIX_FORCED_AVOID_GROWTH_ONLY_WHEN_GROWING_LOWERS_HAPPINESS
+int CvPlayer::GetUnhappinessFromCityPopulation(CvCity* pAssumeCityAnnexed, CvCity* pAssumeCityPuppeted, const CvCity* pAssumeCityGrows) const
+#else
 int CvPlayer::GetUnhappinessFromCityPopulation(CvCity* pAssumeCityAnnexed, CvCity* pAssumeCityPuppeted) const
+#endif
 {
 	int iUnhappiness = 0;
 	int iUnhappinessFromThisCity;
@@ -11597,6 +11601,10 @@ int CvPlayer::GetUnhappinessFromCityPopulation(CvCity* pAssumeCityAnnexed, CvCit
 		if(bCityValid)
 		{
 			iPopulation = pLoopCity->getPopulation();
+#ifdef AUI_CITIZENS_FIX_FORCED_AVOID_GROWTH_ONLY_WHEN_GROWING_LOWERS_HAPPINESS
+			if (pLoopCity == pAssumeCityGrows)
+				iPopulation++;
+#endif
 
 			// No Unhappiness from Specialist Pop? (Policies, etc.)
 			if(isHalfSpecialistUnhappiness())
@@ -11760,7 +11768,11 @@ int CvPlayer::GetUnhappinessFromCitySpecialists(CvCity* pAssumeCityAnnexed, CvCi
 
 //	--------------------------------------------------------------------------------
 /// Unhappiness from City Population in Occupied Cities
+#ifdef AUI_CITIZENS_FIX_FORCED_AVOID_GROWTH_ONLY_WHEN_GROWING_LOWERS_HAPPINESS
+int CvPlayer::GetUnhappinessFromOccupiedCities(CvCity* pAssumeCityAnnexed, CvCity* pAssumeCityPuppeted, const CvCity* pAssumeCityGrows) const
+#else
 int CvPlayer::GetUnhappinessFromOccupiedCities(CvCity* pAssumeCityAnnexed, CvCity* pAssumeCityPuppeted) const
+#endif
 {
 	int iUnhappiness = 0;
 	int iUnhappinessFromThisCity;
@@ -11792,6 +11804,10 @@ int CvPlayer::GetUnhappinessFromOccupiedCities(CvCity* pAssumeCityAnnexed, CvCit
 		if(bCityValid)
 		{
 			iPopulation = pLoopCity->getPopulation();
+#ifdef AUI_CITIZENS_FIX_FORCED_AVOID_GROWTH_ONLY_WHEN_GROWING_LOWERS_HAPPINESS
+			if (pLoopCity == pAssumeCityGrows)
+				iPopulation++;
+#endif
 
 			// No Unhappiness from Specialist Pop? (Policies, etc.)
 			if(isHalfSpecialistUnhappiness())

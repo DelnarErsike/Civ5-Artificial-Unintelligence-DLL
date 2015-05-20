@@ -6600,19 +6600,36 @@ int CvCity::foodConsumption(bool /*bNoAngry*/, int iExtra) const
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+int CvCity::foodDifference(bool bBottom, bool bValueKnown, int iValueKnown) const
+#else
 int CvCity::foodDifference(bool bBottom) const
+#endif
 {
 	VALIDATE_OBJECT
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	return foodDifferenceTimes100(bBottom, NULL, bValueKnown, iValueKnown * 100) / 100;
+#else
 	return foodDifferenceTimes100(bBottom) / 100;
+#endif
 }
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+int CvCity::foodDifferenceTimes100(bool bBottom, CvString* toolTipSink, bool bValueKnown, int iValueKnown) const
+#else
 int CvCity::foodDifferenceTimes100(bool bBottom, CvString* toolTipSink) const
+#endif
 {
 	VALIDATE_OBJECT
 	int iDifference;
 
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	if (bValueKnown)
+		iDifference = iValueKnown;
+	else
+#endif
 	if(isFoodProduction())
 	{
 		iDifference = std::min(0, GetFoodProduction(getYieldRate(YIELD_FOOD, false) - foodConsumption()) * 100);

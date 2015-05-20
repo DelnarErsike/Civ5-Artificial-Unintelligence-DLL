@@ -387,8 +387,7 @@ void CvCityStrategyAI::FlavorUpdate()
 	for(int iFlavor = 0; iFlavor < GC.getNumFlavorTypes(); iFlavor++)
 	{
 #ifdef AUI_CITYSTRATEGY_FIX_CHOOSE_PRODUCTION_PUPPETS_NULLIFY_BARRACKS
-		if (GetCity()->IsPuppet() && ((FlavorTypes)iFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_MILITARY_TRAINING") ||
-			(FlavorTypes)iFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_NAVAL")))
+		if (GetCity()->IsPuppet() && (FlavorTypes)iFlavor == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_MILITARY_TRAINING"))
 			continue;
 #endif
 		int iFlavorValue = GetLatestFlavorValue((FlavorTypes)iFlavor);// m_piLatestFlavorValues[iFlavor];
