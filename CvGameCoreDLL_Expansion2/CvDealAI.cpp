@@ -305,6 +305,8 @@ DemandResponseTypes CvDealAI::DoHumanDemand(CvDeal* pDeal)
 	if(pDiploAI->IsDemandTooSoon(eFromPlayer))
 		eResponse = DEMAND_RESPONSE_REFUSE_TOO_SOON;
 
+#ifdef AUI_TODO // Odds of giving into demands and the types of things the AI is willing to give up
+#endif
 	// Not too soon for a demand
 	else
 	{

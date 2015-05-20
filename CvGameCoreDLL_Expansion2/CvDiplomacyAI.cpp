@@ -11731,6 +11731,8 @@ void CvDiplomacyAI::DoContactMajorCivs()
 	}
 
 	// Loop through HUMAN Players - if we're not in MP
+#ifdef AUI_TODO // Active AI in MP
+#endif
 	if(!CvPreGame::isNetworkMultiplayerGame())
 	{
 		for(iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
