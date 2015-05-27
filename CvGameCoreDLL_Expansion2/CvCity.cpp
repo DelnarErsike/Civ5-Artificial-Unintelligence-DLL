@@ -11275,7 +11275,7 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 										iInfluenceCost += (iPLOT_INFLUENCE_RESOURCE_COST - NUM_DIRECTION_TYPES / 2) / (NUM_DIRECTION_TYPES);
 									else if (iPlotDistance <= NUM_CITY_RINGS)
 									{
-										int* aiYields = GC.getResourceInfo(eResource)->getYieldChangeArray();
+										int* aiYields = GC.getResourceInfo(eAdjacentResource)->getYieldChangeArray();
 										int iTemp = GC.getAI_CITIZEN_VALUE_FOOD() * aiYields[YIELD_FOOD] + GC.getAI_CITIZEN_VALUE_PRODUCTION() * aiYields[YIELD_PRODUCTION] +
 											GC.getAI_CITIZEN_VALUE_GOLD() * aiYields[YIELD_GOLD] + GC.getAI_CITIZEN_VALUE_SCIENCE() * aiYields[YIELD_SCIENCE] +
 											GC.getAI_CITIZEN_VALUE_CULTURE() * aiYields[YIELD_CULTURE] + GC.getAI_CITIZEN_VALUE_FAITH() * aiYields[YIELD_FAITH];
