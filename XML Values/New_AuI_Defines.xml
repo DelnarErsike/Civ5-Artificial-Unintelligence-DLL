@@ -2,7 +2,7 @@
 <GameData>
 	<Defines>
 		<Row Name="CITY_RING_0_MULTIPLIER">
-			<Value>6</Value>
+			<Value>36</Value>
 		</Row>
 		<Row Name="START_AREA_CULTURE_MULTIPLIER">
 			<Value>1</Value>
@@ -101,22 +101,22 @@
 		<Row Name="SETTLER_HAPPINESS_RING_5_DIVIDER">
 			<Value>4</Value>
 		</Row>
-		<Row Name="SETTLER_RESOURCE_RING_0_DIVIDER">
+		<Row Name="SETTLER_RESOURCES_RING_0_DIVIDER">
 			<Value>1</Value>
 		</Row>
-		<Row Name="SETTLER_RESOURCE_RING_1_DIVIDER">
+		<Row Name="SETTLER_RESOURCES_RING_1_DIVIDER">
 			<Value>1</Value>
 		</Row>
-		<Row Name="SETTLER_RESOURCE_RING_2_DIVIDER">
+		<Row Name="SETTLER_RESOURCES_RING_2_DIVIDER">
 			<Value>1</Value>
 		</Row>
-		<Row Name="SETTLER_RESOURCE_RING_3_DIVIDER">
+		<Row Name="SETTLER_RESOURCES_RING_3_DIVIDER">
 			<Value>1</Value>
 		</Row>
-		<Row Name="SETTLER_RESOURCE_RING_4_DIVIDER">
+		<Row Name="SETTLER_RESOURCES_RING_4_DIVIDER">
 			<Value>2</Value>
 		</Row>
-		<Row Name="SETTLER_RESOURCE_RING_5_DIVIDER">
+		<Row Name="SETTLER_RESOURCES_RING_5_DIVIDER">
 			<Value>4</Value>
 		</Row>
 		<Row Name="SETTLER_STRATEGIC_RING_0_DIVIDER">

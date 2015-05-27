@@ -19,7 +19,7 @@
 			<Where Name="SETTLER_SCIENCE_MULTIPLIER" />
 		</Update>
 		<Update>
-			<Set Value="6" />
+			<Set Value="7" />
 			<Where Name="SETTLER_FAITH_MULTIPLIER" />
 		</Update>
 		<!-- Dll Tweaks mean that the AI will automatically calculate a lower fertility for settling on resource tiles, 
@@ -35,9 +35,9 @@
 			<Where Name="BUILD_ON_RIVER_PERCENT" />
 		</Update>
 		<!-- Dll Tweaks mean that the AI will automatically increase fertility for settling on a coast tile, 
-			 since it enables all naval buildings and wonders; the 20 remaining is meant to represent unlocked naval units -->
+			 since it enables all naval buildings and wonders; the 1 remaining is meant to represent unlocked naval units -->
 		<Update>
-			<Set Value="20" />
+			<Set Value="1" />
 			<Where Name="SETTLER_BUILD_ON_COAST_PERCENT" />
 		</Update>
 	</Defines>

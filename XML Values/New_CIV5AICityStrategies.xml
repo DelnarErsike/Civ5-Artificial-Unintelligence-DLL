@@ -7,7 +7,7 @@
 			<Where Type="AICITYSTRATEGY_WANT_TILE_IMPROVERS" />
 		</Update>
 	</AICityStrategies>
-	<AICityStrategy_Flavor>
+	<AICityStrategy_Flavors>
 		<!-- Old values were all -3, which was slightly too much *just* because a city has a barracks -->
 		<Update>
 			<Set Flavor="-1" />
@@ -37,5 +37,5 @@
 			<FlavorType>FLAVOR_EXPANSION</FlavorType>
 			<Flavor>5</Flavor>
 		</Row>
-	</AICityStrategy_Flavor>
+	</AICityStrategy_Flavors>
 </GameData>

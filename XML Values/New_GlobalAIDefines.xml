@@ -10,9 +10,10 @@
 			<Where Name="AI_ATTEMPT_RUSH_OVER_X_TURNS_TO_BUILD" />
 		</Update>
 		<!-- Compensates for higher branch weights from DLL code -->
-		<Row Name="POLICY_WEIGHT_PERCENT_DROP_NEW_BRANCH">
-			<Value>89</Value>
-		</Row>
+		<Update>
+			<Set Value="89" />
+			<Where Name="POLICY_WEIGHT_PERCENT_DROP_NEW_BRANCH" />
+		</Update>
 		<Update>
 			<!-- 15 is enough to push the AI to max out tech branching just to get its unique; 5 wasn't enough -->
 			<Set Value="15" />
@@ -84,7 +85,7 @@
 		<Update>
 			<!-- Increased to 40000 to account for higher settler yield multipliers -->
 			<Set Value="40000" />
-			<Where Name="AI_STRATEGY_MINIMUM_SETTLE_FERTILITY />
+			<Where Name="AI_STRATEGY_MINIMUM_SETTLE_FERTILITY" />
 		</Update>
 		<Update>
 			<!-- Lowered from 8, since tall > wide in Civ5 early on; however, this number gets reduced on the DLL side -->
@@ -238,7 +239,7 @@
 			<Where Name="AI_CITIZEN_VALUE_CULTURE" />
 		</Update>
 		<Update>
-			<Set Value="6" />
+			<Set Value="7" />
 			<Where Name="AI_CITIZEN_VALUE_FAITH" />
 		</Update>
 		

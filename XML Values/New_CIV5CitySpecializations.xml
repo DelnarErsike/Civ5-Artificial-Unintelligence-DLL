@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Created by ModBuddy on 7/9/2014 12:11:28 AM -->
 <GameData>
-	<CitySpecializations_Flavors>
+	<CitySpecialization_Flavors>
 		<!-- Flavors for growth and production increased for specs that don't have them as primary -->
 		<Update>
 			<Set Flavor="20" />
@@ -28,7 +28,7 @@
 			<Set Flavor="20" />
 			<Where CitySpecializationType="CITYSPECIALIZATION_GENERAL_ECONOMIC" FlavorType="FLAVOR_CULTURE" />
 		</Update>
-	</CitySpecializations_Flavors>
+	</CitySpecialization_Flavors>
 	
 	<CitySpecialization_TargetYields>
 		<!-- Target gold yields all increased by 0.3 per pop, science yields by 0.5 per pop; helps the AI out early,
