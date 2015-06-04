@@ -714,7 +714,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 #endif
 							{
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
-								iHappinessValue = iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer, !bHasCoastal && !bIsPlotCoast) * /*6*/ GC.getSETTLER_HAPPINESS_MULTIPLIER();
+								iHappinessValue = iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer, iDistance, !bHasCoastal && !bIsPlotCoast) * /*6*/ GC.getSETTLER_HAPPINESS_MULTIPLIER();
 								iResourceValue = iRingModifier * ComputeTradeableResourceValue(pLoopPlot, pPlayer, !bHasCoastal && !bIsPlotCoast) * /*1*/ GC.getSETTLER_RESOURCE_MULTIPLIER();
 #else
 								iHappinessValue = iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer) * /*6*/ GC.getSETTLER_HAPPINESS_MULTIPLIER();
@@ -1185,7 +1185,7 @@ int CvCitySiteEvaluator::PlotFertilityValue(CvPlot* pPlot)
 #endif
 #endif
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
-		rtnValue += ComputeHappinessValue(pPlot, NULL, false);
+		rtnValue += ComputeHappinessValue(pPlot, NULL, NUM_CITY_RINGS, false);
 #endif
 		rtnValue += ComputeTradeableResourceValue(pPlot, NULL, false);
 #else
@@ -1380,9 +1380,17 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 
 /// Value of plot for providing Happiness
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoast)
+#else
 int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoast)
+#endif
+#else
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity)
 #else
 int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
+#endif
 #endif
 {
 	int rtnValue = 0;
@@ -1441,6 +1449,10 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif
 #endif
 		}
+#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+		if (iPlotsFromCity == 0)
+			rtnValue *= 2;
+#endif
 	}
 
 #ifdef AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_NATURAL_WONDERS
@@ -1451,14 +1463,15 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		CvFeatureInfo* pFeatureInfo = GC.getFeatureInfo(eFeatureType);
 		if (pFeatureInfo &&  pFeatureInfo->IsNaturalWonder())
 		{
-			rtnValue += pFeatureInfo->getInBorderHappiness();
+			int iNWHappiness = pFeatureInfo->getInBorderHappiness() * 2;
 #ifdef AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER
-			rtnValue *= AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER;
+			iNWHappiness *= AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER;
 #else
-			rtnValue *= 5;
+			iNWHappiness *= 5;
 #endif
 			if (pPlayer && pPlayer->GetPlayerTraits()->GetNaturalWonderHappinessModifier() != 0)
-				rtnValue = rtnValue * (100 + pPlayer->GetPlayerTraits()->GetNaturalWonderHappinessModifier()) / 100;
+				iNWHappiness = iNWHappiness * (100 + pPlayer->GetPlayerTraits()->GetNaturalWonderHappinessModifier()) / 100;
+			rtnValue += iNWHappiness;
 		}
 	}
 #endif
@@ -2402,7 +2415,7 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 #ifdef AUI_SITE_EVALUATION_YIELD_MULTIPLIER_DISTANCE_DECAY
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 			rtnValue += iRingModifier * ComputeFoodValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*6*/ GC.getSTART_AREA_FOOD_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_FOOD];
-			rtnValue += iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer, !bIsCoastal) * /*12*/ GC.getSTART_AREA_HAPPINESS_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_HAPPINESS];
+			rtnValue += iRingModifier * ComputeHappinessValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*12*/ GC.getSTART_AREA_HAPPINESS_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][SITE_EVALUATION_HAPPINESS];
 			rtnValue += iRingModifier * ComputeProductionValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*8*/ GC.getSTART_AREA_PRODUCTION_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_PRODUCTION];
 			rtnValue += iRingModifier * ComputeGoldValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*2*/ GC.getSTART_AREA_GOLD_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_GOLD];
 			rtnValue += iRingModifier * ComputeScienceValue(pLoopPlot, pPlayer, iDistance, !bIsCoastal) * /*1*/ GC.getSTART_AREA_SCIENCE_MULTIPLIER() / m_iFlavorDividerPerRing[iDistance][YIELD_SCIENCE];

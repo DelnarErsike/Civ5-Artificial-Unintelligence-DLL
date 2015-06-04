@@ -2,7 +2,7 @@
 <GameData>
 	<Defines>
 		<Row Name="CITY_RING_0_MULTIPLIER">
-			<Value>36</Value>
+			<Value>18</Value>
 		</Row>
 		<Row Name="START_AREA_CULTURE_MULTIPLIER">
 			<Value>1</Value>
@@ -84,7 +84,7 @@
 			<Value>2</Value>
 		</Row>
 		<Row Name="SETTLER_HAPPINESS_RING_0_DIVIDER">
-			<Value>1</Value>
+			<Value>3</Value>
 		</Row>
 		<Row Name="SETTLER_HAPPINESS_RING_1_DIVIDER">
 			<Value>1</Value>

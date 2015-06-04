@@ -46,11 +46,7 @@ protected:
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoastal);
-#else
-	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoastal);
-#endif
-	virtual int ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoastal);
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+	virtual int ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoastal);
 	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoastal);
 	virtual int ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoastal);
 	virtual int ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoastal);
@@ -59,6 +55,8 @@ protected:
 #endif
 	virtual int ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoastal);
 #else
+	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoastal);
+	virtual int ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoastal);
 	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoastal);
 	virtual int ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoastal);
 	virtual int ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoastal);
@@ -71,11 +69,7 @@ protected:
 #else
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
 	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
-#else
-	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer);
-#endif
-	virtual int ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer);
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
+	virtual int ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
 	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
 	virtual int ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
 	virtual int ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
@@ -84,6 +78,8 @@ protected:
 #endif
 	virtual int ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity);
 #else
+	virtual int ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer);
+	virtual int ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer);
 	virtual int ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer);
