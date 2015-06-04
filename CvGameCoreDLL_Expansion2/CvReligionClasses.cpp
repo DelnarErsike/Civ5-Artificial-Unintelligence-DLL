@@ -3855,6 +3855,7 @@ void CvCityReligions::CityConvertsReligion(ReligionTypes eMajority, ReligionType
 			}
 		}
 
+#ifndef AUI_ACHIEVEMENT_FIX_RELIGION_WE_ARE_FAMILY_WORKING
 		if(m_pCity->isCapital() && pNewReligion->m_eFounder == GC.getGame().getActivePlayer())
 		{
 			//Determine if this is a standard size or larger map.
@@ -3909,6 +3910,7 @@ void CvCityReligions::CityConvertsReligion(ReligionTypes eMajority, ReligionType
 				}
 			}
 		}
+#endif
 
 		// Diplo implications (there must have been religion switch and a responsible party)
 		if(eMajority != eOldMajority && eResponsibleParty != NO_PLAYER)

@@ -352,6 +352,40 @@ void CvPlayerAchievements::StartTurn()
 		}
 		
 	}
+#ifdef AUI_ACHIEVEMENT_FIX_RELIGION_WE_ARE_FAMILY_WORKING
+	ReligionTypes eMyReligion = m_kPlayer.GetReligions()->GetReligionCreatedByPlayer();
+	if (eMyReligion > RELIGION_PANTHEON)
+	{
+		if (GC.getMap().numPlots() >= 80 * 52) // Determine if this is a standard size or larger map.
+		{
+			bool bSpreadToAllCapitals = true;
+			for (int iI = 0; iI < MAX_CIV_PLAYERS; ++iI)
+			{
+				CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iI);
+				if (kPlayer.isAlive() && !kPlayer.isMinorCiv())
+				{
+					CvCity* pCapital = kPlayer.getCapitalCity();
+					if (pCapital != NULL)
+					{
+						CvCityReligions* pCityReligions = pCapital->GetCityReligions();
+						if (pCityReligions != NULL)
+						{
+							if (pCityReligions->GetReligiousMajority() != eMyReligion)
+							{
+								bSpreadToAllCapitals = false;
+								break;
+							}
+						}
+					}
+				}
+			}
+			if (bSpreadToAllCapitals)
+			{
+				gDLL->UnlockAchievement(ACHIEVEMENT_XP1_19);
+			}
+		}
+	}
+#endif
 }
 //------------------------------------------------------------------------------
 void CvPlayerAchievements::EndTurn()
