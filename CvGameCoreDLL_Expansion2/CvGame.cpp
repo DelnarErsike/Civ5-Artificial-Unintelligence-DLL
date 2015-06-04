@@ -8424,7 +8424,11 @@ void CvGame::updateTimers()
 		}
 	}
 
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	if (GC.getGame().isGameMultiPlayer())
+#else
 	if(isHotSeat())
+#endif
 	{
 		// For Hot Seat, all the AIs will get a chance to do diplomacy with the active human player
 		PlayerTypes eActivePlayer = getActivePlayer();

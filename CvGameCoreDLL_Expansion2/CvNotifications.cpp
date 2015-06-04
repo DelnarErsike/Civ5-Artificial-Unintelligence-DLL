@@ -17,6 +17,10 @@
 // Include this after all other headers.
 #include "LintFree.h"
 
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+#include "CvDiplomacyRequests.h"
+#endif
+
 #define MAX_NOTIFICATIONS 100
 
 static uint V1_IndexToHash[] = 
@@ -924,7 +928,20 @@ void CvNotifications::Activate(Notification& notification)
 	break;
 	case NOTIFICATION_PLAYER_DEAL:
 	{
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+		if ((PlayerTypes)notification.m_iX != NO_PLAYER)
+		{
+			if (GET_PLAYER((PlayerTypes)notification.m_iX).isHuman())
+#endif
 		GC.GetEngineUserInterface()->OpenPlayerDealScreen((PlayerTypes) notification.m_iX);
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+			else
+			{
+				GET_PLAYER(m_ePlayer).GetDiplomacyRequests()->SendExistingRequest((uint)notification.m_iY);
+				Dismiss(notification.m_iLookupIndex, /*bUserInvoked*/ false);
+			}
+		}
+#endif
 	}
 	break;
 	case NOTIFICATION_PLAYER_DEAL_RECEIVED:
@@ -1807,7 +1824,9 @@ bool CvNotifications::IsNotificationTypeEndOfTurnExpired(NotificationTypes eNoti
 	case NOTIFICATION_FREE_TECH:
 	case NOTIFICATION_PRODUCTION:
 	case NOTIFICATION_DIPLO_VOTE:
+#ifndef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
 	case NOTIFICATION_PLAYER_DEAL:
+#endif
 	case NOTIFICATION_PLAYER_DEAL_RECEIVED:
 	case NOTIFICATION_FREE_GREAT_PERSON:
 	case NOTIFICATION_FOUND_PANTHEON:
@@ -1824,6 +1843,13 @@ bool CvNotifications::IsNotificationTypeEndOfTurnExpired(NotificationTypes eNoti
 		return false;
 		break;
 
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	// AI proposed deals will expire each turn
+	case NOTIFICATION_PLAYER_DEAL:
+		if ((PlayerTypes)m_aNotifications[iForSpecificEntry].m_iX != NO_PLAYER && GET_PLAYER((PlayerTypes)m_aNotifications[iForSpecificEntry].m_iX).isHuman())
+			return false;
+		break;
+#endif
 	// These multiplayer notifications expire at the end of the next turn.
 	case NOTIFICATION_PLAYER_RECONNECTED:
 	case NOTIFICATION_PLAYER_DISCONNECTED:

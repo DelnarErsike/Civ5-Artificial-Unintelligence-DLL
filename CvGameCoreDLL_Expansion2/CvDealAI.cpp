@@ -721,12 +721,21 @@ bool CvDealAI::DoEqualizeDealWithAI(CvDeal* pDeal, PlayerTypes eOtherPlayer)
 	}
 
 	// If we set this pointer again it clears the data out!
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	if (pDeal != GC.getGame().GetGameDeals()->GetTempDeal(GetPlayer()->GetID(), eOtherPlayer))
+	{
+		GC.getGame().GetGameDeals()->SetTempDeal(pDeal, GetPlayer()->GetID(), eOtherPlayer);
+	}
+
+	CvDeal* pCounterDeal = GC.getGame().GetGameDeals()->GetTempDeal(GetPlayer()->GetID(), eOtherPlayer);
+#else
 	if(pDeal != GC.getGame().GetGameDeals()->GetTempDeal())
 	{
 		GC.getGame().GetGameDeals()->SetTempDeal(pDeal);
 	}
 
 	CvDeal* pCounterDeal = GC.getGame().GetGameDeals()->GetTempDeal();
+#endif
 
 	if(!bMakeOffer)
 	{
@@ -4868,7 +4877,11 @@ void CvDealAI::DoTradeScreenOpened()
 			CvDeal* pkUIDeal = GC.UnwrapDealPointer(pUIDeal.get());
 			pkUIDeal->ClearItems();
 
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+			CvDeal* pDeal = GC.getGame().GetGameDeals()->GetTempDeal(eMyPlayer, eActivePlayer);
+#else
 			CvDeal* pDeal = GC.getGame().GetGameDeals()->GetTempDeal();
+#endif
 			pDeal->ClearItems();
 			pDeal->SetFromPlayer(eActivePlayer);	// The order of these is very important!
 			pDeal->SetToPlayer(eMyPlayer);	// The order of these is very important!

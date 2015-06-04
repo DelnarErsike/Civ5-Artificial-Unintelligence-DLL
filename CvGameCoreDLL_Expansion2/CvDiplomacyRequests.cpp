@@ -130,9 +130,39 @@ void CvDiplomacyRequests::Write(FDataStream& kStream) const
 /// Update - called from within CvPlayer
 void CvDiplomacyRequests::Update(void)
 {
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	if (m_ePlayer == NO_PLAYER || m_aRequests.size() <= 0)
+		return;
+	CvPlayer& kToPlayer = GET_PLAYER(m_ePlayer);
+	if (kToPlayer.isSimultaneousTurns())
+	{
+		CvNotifications* pNotifications = kToPlayer.GetNotifications();
+		if (pNotifications)
+		{
+			Localization::String strSummary = Localization::Lookup("TXT_KEY_DEAL_OFFERED");
+			for (CvDiplomacyRequests::RequestList::iterator itRequest = m_aRequests.begin(); itRequest != m_aRequests.end(); ++itRequest)
+			{
+				// Make sure the player this is from is still alive.
+				if (itRequest->m_eFromPlayer != NO_PLAYER && itRequest->m_bIsValid)
+				{
+					CvPlayer& kFromPlayer = GET_PLAYER(itRequest->m_eFromPlayer);
+					if (kFromPlayer.isAlive())
+					{
+						Localization::String strMessage = Localization::Lookup("TXT_KEY_DEAL_OFFERED_BY_THEM");
+						strMessage << kFromPlayer.getNameKey();
+						pNotifications->Add(NOTIFICATION_PLAYER_DEAL, strMessage.toUTF8(), strSummary.toUTF8(), itRequest->m_eFromPlayer, std::distance(m_aRequests.begin(), itRequest), -1);
+						itRequest->m_bIsValid = false;
+					}
+				}
+			}
+		}
+	}
+	else if (kToPlayer.isTurnActive() && GC.getGame().getActivePlayer() == m_ePlayer)
+#else
 	PlayerTypes eActivePlayer = GC.getGame().getActivePlayer();
 	// If we are active, send out the requests
 	if(m_aRequests.size() && m_ePlayer == eActivePlayer && GET_PLAYER(eActivePlayer).isTurnActive())
+#endif
 	{
 		CvDiplomacyRequests::Request& kRequest = m_aRequests.front();
 
@@ -157,11 +187,18 @@ void CvDiplomacyRequests::BeginTurn(void)
 void CvDiplomacyRequests::EndTurn(void)
 {
 	m_eNextAIPlayer = NO_PLAYER;
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	m_aRequests.clear();
+#endif
 }
 
 //	----------------------------------------------------------------------------
 /// Adds a new notification to the list
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+bool CvDiplomacyRequests::Add(PlayerTypes eFromPlayer, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData /*= -1*/, CvDeal* pDeal)
+#else
 bool CvDiplomacyRequests::Add(PlayerTypes eFromPlayer, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData /*= -1*/)
+#endif
 {
 	// Queue it up
 	m_aRequests.push_back(Request());
@@ -174,13 +211,43 @@ bool CvDiplomacyRequests::Add(PlayerTypes eFromPlayer, DiploUIStateTypes eDiploT
 	newRequest.m_iExtraGameData = iExtraGameData;
 	newRequest.m_eAnimationType = eAnimationType;
 	newRequest.m_iTurn = GC.getGame().getGameTurn();
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	newRequest.m_pDeal = pDeal;
+#endif
 
 	return true;
 }
+
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+void CvDiplomacyRequests::SendExistingRequest(uint uiDistance)
+{
+	if (uiDistance < m_aRequests.size())
+	{
+		CvDiplomacyRequests::RequestList::iterator itRequest = m_aRequests.begin();
+		std::advance(itRequest, uiDistance);
+		// Make sure the player this is from is still alive.
+		if (itRequest->m_eFromPlayer != NO_PLAYER && GET_PLAYER(itRequest->m_eFromPlayer).isAlive())
+		{
+			Send(itRequest->m_eFromPlayer, itRequest->m_eDiploType, itRequest->m_strMessage, itRequest->m_eAnimationType, itRequest->m_iExtraGameData, itRequest->m_pDeal);
+		}
+	}
+}
+#endif
+
 //	----------------------------------------------------------------------------
 //	Send the request immediately
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+void CvDiplomacyRequests::Send(PlayerTypes eFromPlayer, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData, CvDeal* pDeal)
+{
+	if (pDeal)
+	{
+		auto_ptr<ICvDeal1> pIDeal = GC.WrapDealPointer(pDeal);
+		GC.GetEngineUserInterface()->SetScratchDeal(pIDeal.get());
+	}
+#else
 void CvDiplomacyRequests::Send(PlayerTypes eFromPlayer, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData /*= -1*/)
 {
+#endif
 	gDLL->GameplayDiplomacyAILeaderMessage(eFromPlayer, eDiploType, pszMessage, eAnimationType, iExtraGameData);
 	m_bRequestActiveFromPlayer = eFromPlayer;
 	m_bRequestActive = true;
@@ -220,7 +287,11 @@ bool CvDiplomacyRequests::HasActiveRequestFrom(PlayerTypes eFromPlayer) const
 //	If the toPlayer is the active human player, it will be sent right away, else
 //	it will be queued.
 // static
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+void CvDiplomacyRequests::SendRequest(PlayerTypes eFromPlayer, PlayerTypes eToPlayer, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData, CvDeal* pDeal)
+#else
 void CvDiplomacyRequests::SendRequest(PlayerTypes eFromPlayer, PlayerTypes eToPlayer, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData /*= -1*/)
+#endif
 {
 	CvPlayer& kPlayer = GET_PLAYER(eToPlayer);
 	CvDiplomacyRequests* pkDiploRequests = kPlayer.GetDiplomacyRequests();
@@ -229,10 +300,17 @@ void CvDiplomacyRequests::SendRequest(PlayerTypes eFromPlayer, PlayerTypes eToPl
 		if(!CvPreGame::isNetworkMultiplayerGame() && GC.getGame().getActivePlayer() == eToPlayer)
 		{
 			// Target is the active player, just send it right now
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+			pkDiploRequests->Send(eFromPlayer, eDiploType, pszMessage, eAnimationType, iExtraGameData, pDeal);
+		}
+		else
+			pkDiploRequests->Add(eFromPlayer, eDiploType, pszMessage, eAnimationType, iExtraGameData, pDeal);
+#else
 			pkDiploRequests->Send(eFromPlayer, eDiploType, pszMessage, eAnimationType, iExtraGameData);
 		}
 		else
 			pkDiploRequests->Add(eFromPlayer, eDiploType, pszMessage, eAnimationType, iExtraGameData);
+#endif
 	}
 }
 
@@ -241,6 +319,9 @@ void CvDiplomacyRequests::SendRequest(PlayerTypes eFromPlayer, PlayerTypes eToPl
 //static
 void CvDiplomacyRequests::SendDealRequest(PlayerTypes eFromPlayer, PlayerTypes eToPlayer, CvDeal* pkDeal, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType)
 {
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	SendRequest(eFromPlayer, eToPlayer, eDiploType, pszMessage, eAnimationType, -1, pkDeal);
+#else
 	// Deals must currently happen on the active player's turn...
 	if(GC.getGame().getActivePlayer() == eToPlayer)
 	{
@@ -248,6 +329,7 @@ void CvDiplomacyRequests::SendDealRequest(PlayerTypes eFromPlayer, PlayerTypes e
 		GC.GetEngineUserInterface()->SetScratchDeal(pDeal.get());
 		SendRequest(eFromPlayer, eToPlayer, eDiploType, pszMessage, eAnimationType, -1);
 	}
+#endif
 }
 
 //	---------------------------------------------------------------------------

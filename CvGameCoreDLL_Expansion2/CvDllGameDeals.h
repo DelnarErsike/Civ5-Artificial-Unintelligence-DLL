@@ -30,6 +30,10 @@ public:
 
 	ICvDeal1* DLLCALL GetTempDeal();
 	void DLLCALL SetTempDeal(ICvDeal1* pDeal);
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	ICvDeal1* DLLCALL GetTempDeal(PlayerTypes eFromPlayer, PlayerTypes eToPlayer);
+	void DLLCALL SetTempDeal(ICvDeal1* pDeal, PlayerTypes eFromPlayer, PlayerTypes eToPlayer);
+#endif
 
 	PlayerTypes DLLCALL HasMadeProposal(PlayerTypes eFromPlayer);
 	bool DLLCALL ProposedDealExists(PlayerTypes eFromPlayer, PlayerTypes eToPlayer);

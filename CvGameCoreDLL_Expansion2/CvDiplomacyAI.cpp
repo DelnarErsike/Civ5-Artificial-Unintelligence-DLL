@@ -5628,7 +5628,11 @@ void CvDiplomacyAI::MakeWar()
 		for(int iPlayerLoop = 0; iPlayerLoop < MAX_CIV_PLAYERS; iPlayerLoop++)
 		{
 			PlayerTypes eTarget = (PlayerTypes)iPlayerLoop;
+#ifdef AUI_DIPLOMACY_AI_FIX_WAR_DECLARATION_IN_MULTIPLAYER
+			if (IsPlayerValid(eTarget))
+#else
 			if(IsValidUIDiplomacyTarget(eTarget) && IsPlayerValid(eTarget))
+#endif
 			{
 				iWeight = (int)GetWarProjection(eTarget) + 1;
 
@@ -5716,11 +5720,16 @@ void CvDiplomacyAI::DeclareWar(PlayerTypes ePlayer)
 		m_pPlayer->GetCitySpecializationAI()->SetSpecializationsDirty(SPECIALIZATION_UPDATE_NOW_AT_WAR);
 
 		// Show scene to human
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+		const char* strText = GetDiploStringForMessage(DIPLO_MESSAGE_DOW_ROOT, ePlayer);
+		GetPlayer()->GetDiplomacyRequests()->SendRequest(GetPlayer()->GetID(), ePlayer, DIPLO_UI_STATE_AI_DECLARED_WAR, strText, LEADERHEAD_ANIM_DECLARE_WAR);
+#else
 		if(!CvPreGame::isNetworkMultiplayerGame() && GC.getGame().getActivePlayer() == ePlayer)
 		{
 			const char* strText = GetDiploStringForMessage(DIPLO_MESSAGE_DOW_ROOT, ePlayer);
 			gDLL->GameplayDiplomacyAILeaderMessage(GetPlayer()->GetID(), DIPLO_UI_STATE_AI_DECLARED_WAR, strText, LEADERHEAD_ANIM_DECLARE_WAR);
 		}
+#endif
 
 		LogWarDeclaration(ePlayer);
 	}
@@ -11731,9 +11740,9 @@ void CvDiplomacyAI::DoContactMajorCivs()
 	}
 
 	// Loop through HUMAN Players - if we're not in MP
-#ifdef AUI_TODO // Active AI in MP
-#endif
+#ifndef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
 	if(!CvPreGame::isNetworkMultiplayerGame())
+#endif
 	{
 		for(iPlayerLoop = 0; iPlayerLoop < MAX_MAJOR_CIVS; iPlayerLoop++)
 		{
@@ -11761,7 +11770,11 @@ void CvDiplomacyAI::DoContactPlayer(PlayerTypes ePlayer)
 	DiploStatementTypes eStatement;
 
 	// We can use this deal pointer to form a trade offer
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	CvDeal* pDeal = GC.getGame().GetGameDeals()->GetTempDeal(GetPlayer()->GetID(), ePlayer);
+#else
 	CvDeal* pDeal = GC.getGame().GetGameDeals()->GetTempDeal();
+#endif
 
 	// These can be used for info about deal items, e.g. what Minor Civ we're telling the guy to stay away from, etc.
 	int iData1;

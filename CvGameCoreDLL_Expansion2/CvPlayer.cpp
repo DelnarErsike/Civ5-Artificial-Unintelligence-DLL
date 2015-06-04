@@ -4123,7 +4123,11 @@ void CvPlayer::doTurn()
 				GetTrade()->DoTurn();
 				GetMilitaryAI()->ResetCounters();
 				GetGrandStrategyAI()->DoTurn();
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+				if (GC.getGame().isGameMultiPlayer() && !isHuman())
+#else
 				if(GC.getGame().isHotSeat() && !isHuman())
+#endif
 				{
 					// In Hotseat, AIs only do their diplomacy pass for other AIs on their turn
 					// Diplomacy toward a human is done at the beginning of the humans turn.
@@ -4680,15 +4684,24 @@ void CvPlayer::updateCitySight(bool bIncrement)
 //	--------------------------------------------------------------------------------
 void CvPlayer::UpdateNotifications()
 {
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	if (GetDiplomacyRequests())
+	{
+		GetDiplomacyRequests()->Update();
+	}
+#endif
+
 	if(GetNotifications())
 	{
 		GetNotifications()->Update();
 	}
 
+#ifndef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
 	if(GetDiplomacyRequests())
 	{
 		GetDiplomacyRequests()->Update();
 	}
+#endif
 }
 
 //	--------------------------------------------------------------------------------

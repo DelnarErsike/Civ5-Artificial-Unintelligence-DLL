@@ -92,6 +92,29 @@ bool CvDllGameDeals::FinalizeDeal(PlayerTypes eFromPlayer, PlayerTypes eToPlayer
 	return m_pGameDeals->FinalizeDeal(eFromPlayer, eToPlayer, bAccepted);
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+ICvDeal1* CvDllGameDeals::GetTempDeal()
+{
+	return GetTempDeal(NO_PLAYER, NO_PLAYER);
+}
+//------------------------------------------------------------------------------
+void CvDllGameDeals::SetTempDeal(ICvDeal1* pDeal)
+{
+	SetTempDeal(pDeal, NO_PLAYER, NO_PLAYER);
+}
+//------------------------------------------------------------------------------
+ICvDeal1* CvDllGameDeals::GetTempDeal(PlayerTypes eFromPlayer, PlayerTypes eToPlayer)
+{
+	CvDeal* pDeal = m_pGameDeals->GetTempDeal(eFromPlayer, eToPlayer);
+	return (NULL != pDeal)? new CvDllDeal(pDeal) : NULL;
+}
+//------------------------------------------------------------------------------
+void CvDllGameDeals::SetTempDeal(ICvDeal1* pDeal, PlayerTypes eFromPlayer, PlayerTypes eToPlayer)
+{
+	CvDeal* pkDeal = (NULL != pDeal)? static_cast<CvDllDeal*>(pDeal)->GetInstance() : NULL;
+	m_pGameDeals->SetTempDeal(pkDeal, eFromPlayer, eToPlayer);
+}
+#else
 ICvDeal1* CvDllGameDeals::GetTempDeal()
 {
 	CvDeal* pDeal = m_pGameDeals->GetTempDeal();
@@ -103,6 +126,7 @@ void CvDllGameDeals::SetTempDeal(ICvDeal1* pDeal)
 	CvDeal* pkDeal = (NULL != pDeal)? static_cast<CvDllDeal*>(pDeal)->GetInstance() : NULL;
 	m_pGameDeals->SetTempDeal(pkDeal);
 }
+#endif
 //------------------------------------------------------------------------------
 PlayerTypes CvDllGameDeals::HasMadeProposal(PlayerTypes eFromPlayer)
 {

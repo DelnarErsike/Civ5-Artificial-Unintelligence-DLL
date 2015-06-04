@@ -43,7 +43,12 @@ public:
 	void BeginTurn(void);
 	void EndTurn(void);
 
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	bool  Add(PlayerTypes ePlayerID, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData = -1, CvDeal* pDeal = NULL);
+	void SendExistingRequest(uint uiDistance = 0);
+#else
 	bool  Add(PlayerTypes ePlayerID, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData = -1);
+#endif
 	void  ActiveRequestComplete();
 
 	struct Request
@@ -57,13 +62,26 @@ public:
 		int							m_iTurn;			// internal use - which turn this event was created on
 		int							m_iLookupIndex;     // internal use - identifier to keep the connection between the ui and this system
 		int							m_iExtraGameData;
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+		CvDeal*						m_pDeal;
+		bool						m_bIsValid;
+		Request()
+		{
+			m_bIsValid = true;
+			m_pDeal = NULL;
+		}
+#endif
 	};
 
 	void Activate(Request& kRequest);
 
 	static void DoAIDiplomacy(PlayerTypes eTargetPlayer);
 
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	static void SendRequest(PlayerTypes eFromPlayer, PlayerTypes eToPlayer, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData = -1, CvDeal* pDeal = NULL);
+#else
 	static void SendRequest(PlayerTypes eFromPlayer, PlayerTypes eToPlayer, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData = -1);
+#endif
 	static void SendDealRequest(PlayerTypes eFromPlayer, PlayerTypes eToPlayer, CvDeal* pkDeal, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType);
 
 	static bool HasActiveDiploRequestWithHuman(PlayerTypes eSourcePlayer);
@@ -71,7 +89,11 @@ public:
 	//---------------------------------------PROTECTED MEMBER VARIABLES---------------------------------
 protected:
 
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	void Send(PlayerTypes eFromPlayer, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData = -1, CvDeal* pDeal = NULL);
+#else
 	void Send(PlayerTypes eFromPlayer, DiploUIStateTypes eDiploType, const char* pszMessage, LeaderheadAnimationTypes eAnimationType, int iExtraGameData = -1);
+#endif
 
 	PlayerTypes m_ePlayer;
 	PlayerTypes	m_eNextAIPlayer;		/// The next AI player to ask if they want to do diplomacy with us (humans only).

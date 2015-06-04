@@ -2344,6 +2344,25 @@ bool CvGameDeals::FinalizeDeal(PlayerTypes eFromPlayer, PlayerTypes eToPlayer, b
 	return bFoundIt && bValid;
 }
 
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+CvDeal* CvGameDeals::GetTempDeal(PlayerTypes eFromPlayer, PlayerTypes eToPlayer)
+{
+	if (eFromPlayer < 0 || eFromPlayer > MAX_MAJOR_CIVS)
+		eFromPlayer = (PlayerTypes)MAX_MAJOR_CIVS;
+	if (eToPlayer < 0 || eToPlayer > MAX_MAJOR_CIVS)
+		eToPlayer = (PlayerTypes)MAX_MAJOR_CIVS;
+	return &(m_TempDeal[eFromPlayer][eToPlayer]);
+}
+
+void CvGameDeals::SetTempDeal(CvDeal* pDeal, PlayerTypes eFromPlayer, PlayerTypes eToPlayer)
+{
+	if (eFromPlayer < 0 || eFromPlayer > MAX_MAJOR_CIVS)
+		eFromPlayer = (PlayerTypes)MAX_MAJOR_CIVS;
+	if (eToPlayer < 0 || eToPlayer > MAX_MAJOR_CIVS)
+		eToPlayer = (PlayerTypes)MAX_MAJOR_CIVS;
+	m_TempDeal[eFromPlayer][eToPlayer] = *pDeal;
+}
+#else
 CvDeal* CvGameDeals::GetTempDeal()
 {
 	return &m_TempDeal;
@@ -2353,6 +2372,7 @@ void CvGameDeals::SetTempDeal(CvDeal* pDeal)
 {
 	m_TempDeal = *pDeal;
 }
+#endif
 
 /// Update deals for the start of a new turn
 void CvGameDeals::DoTurn()

@@ -251,8 +251,13 @@ public:
 
 	void DoUpdateCurrentDealsList();
 
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	CvDeal* GetTempDeal(PlayerTypes eFromPlayer = NO_PLAYER, PlayerTypes eToPlayer = NO_PLAYER);
+	void SetTempDeal(CvDeal* pDeal, PlayerTypes eFromPlayer = NO_PLAYER, PlayerTypes eToPlayer = NO_PLAYER);
+#else
 	CvDeal* GetTempDeal();
 	void SetTempDeal(CvDeal* pDeal);
+#endif
 
 	PlayerTypes HasMadeProposal(PlayerTypes eFromPlayer);
 	bool ProposedDealExists(PlayerTypes eFromPlayer, PlayerTypes eToPlayer);
@@ -285,7 +290,11 @@ public:
 protected:
 	void LogDealComplete(CvDeal* pDeal);
 
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	CvDeal m_TempDeal[MAX_MAJOR_CIVS + 1][MAX_MAJOR_CIVS + 1];
+#else
 	CvDeal m_TempDeal;
+#endif
 
 	//Programmer Note:
 	//Rather than use the common idiom of using the index of the deal in an array as the public
