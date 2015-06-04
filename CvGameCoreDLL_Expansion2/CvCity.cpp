@@ -11195,6 +11195,18 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 							{
 								int iPlotDistance = plotDistance(getX(), getY(), pAdjacentPlot->getX(), pAdjacentPlot->getY());
 #ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_RESOURCE_NW_OSMOSIS
+								bool bNoExistingAdjacentOwnedPlot = true;
+								for (int iJ = 0; iJ < NUM_DIRECTION_TYPES; ++iJ)
+								{
+									CvPlot* pAdjacentPlot2 = plotDirection(pAdjacentPlot->getX(), pAdjacentPlot->getY(), ((DirectionTypes)iJ));
+									if (pAdjacentPlot2 != NULL && pAdjacentPlot2->getOwner() == getOwner() && pAdjacentPlot2->GetCityPurchaseID() == GetID())
+									{
+										bNoExistingAdjacentOwnedPlot = false;
+										break;
+									}
+								}
+								if (bNoExistingAdjacentOwnedPlot)
+								{
 #ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_WEIGHTED_YIELDS
 								int iLoopYield = 0;
 								int iYieldTotal = 0;
@@ -11302,6 +11314,9 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 									--iInfluenceCost; // but we will slightly grow towards it for style in any case
 #endif
 								}
+#ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_RESOURCE_NW_OSMOSIS
+								}
+#endif
 							}
 						}
 					}
