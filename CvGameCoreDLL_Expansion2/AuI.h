@@ -151,10 +151,16 @@
 #define AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
 /// Fixes a possible null pointer dereferences in FoundPantheon()
 #define AUI_RELIGION_FIX_FOUND_PANTHEON_NULL_POINTER_DEREFERENCE
+/// Changes the code that activates "We are Family" to work properly. Since achievements are disabled for modded games, this only works if the mod is turned into mock DLC
+#define AUI_ACHIEVEMENT_FIX_RELIGION_WE_ARE_FAMILY_WORKING
 
 // Multiplayer-specific fixes/changes
 /// First Contact notifications now happen properly in multiplayer
 #define AUI_DIPLOMACY_FIX_DO_FIRST_CONTACT_IN_MULTIPLAYER
+/// The AI will communicate with players in multiplayer. The difference is that player contact happens through notifications
+#define AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+/// In Hotseat (and now for all multiplayer modes), wars are now declared at the beginning of the AI's turn rather than at the beginning of the human player's turn
+#define AUI_DIPLOMACY_AI_FIX_WAR_DECLARATION_IN_MULTIPLAYER
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code
@@ -348,6 +354,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITIZENS_FIX_AVOID_GROWTH_FLAG_NOT_IGNORED_IF_NO_HAPPINESS
 /// The citizen manager only forces avoid growth from low happiness when growing in the city would lower the player's happiness
 #define AUI_CITIZENS_FIX_FORCED_AVOID_GROWTH_ONLY_WHEN_GROWING_LOWERS_HAPPINESS
+/// If a civ does not have a religion and could still found one, faith value is increased, with the increase diminishing as more religions are founded
+#define AUI_CITIZENS_GET_VALUE_HIGHER_FAITH_VALUE_IF_BEFORE_RELIGION
 
 // City Strategy Stuff
 /// Scales the GetLastTurnWorkerDisbanded() computation to game speed

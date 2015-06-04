@@ -577,7 +577,7 @@ int CvGrandStrategyAI::GetConquestPriority()
 						iTotalLandPlayersMet++;
 						iTotalLandMe++;
 					}
-					else if(!GET_PLAYER(ePlayer).isMinorCiv() && pTeam.isHasMet(GET_PLAYER(ePlayer).getTeam()))
+					else if (ePlayer != NO_PLAYER && !GET_PLAYER(ePlayer).isMinorCiv() && pTeam.isHasMet(GET_PLAYER(ePlayer).getTeam()))
 					{
 						iTotalLandPlayersMet++;
 					}
