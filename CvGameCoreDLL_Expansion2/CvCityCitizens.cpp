@@ -438,6 +438,14 @@ int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag)
 	iFaithYieldValue *= m_pCity->getBaseYieldRateModifier(YIELD_FAITH);
 	iFaithYieldValue /= 100;
 #endif
+#ifdef AUI_CITIZENS_GET_VALUE_HIGHER_FAITH_VALUE_IF_BEFORE_RELIGION
+	int iReligionsToFound = GC.getGame().GetGameReligions()->GetNumReligionsStillToFound();
+	if (iReligionsToFound > 0)
+	{
+		int iMaxReligions = GC.getMap().getWorldInfo().getMaxActiveReligions() + 1;
+		iFaithYieldValue += iFaithYieldValue * iReligionsToFound * iReligionsToFound / (iMaxReligions * iMaxReligions);
+	}
+#endif
 
 	// How much surplus food are we making?
 	int iExcessFoodTimes100 = m_pCity->getYieldRateTimes100(YIELD_FOOD, false) - (m_pCity->foodConsumption() * 100);
@@ -1183,6 +1191,14 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 	iCultureYieldValue /= 100;
 	iFaithYieldValue *= m_pCity->getBaseYieldRateModifier(YIELD_FAITH);
 	iFaithYieldValue /= 100;
+#endif
+#ifdef AUI_CITIZENS_GET_VALUE_HIGHER_FAITH_VALUE_IF_BEFORE_RELIGION
+	int iReligionsToFound = GC.getGame().GetGameReligions()->GetNumReligionsStillToFound();
+	if (iReligionsToFound > 0)
+	{
+		int iMaxReligions = GC.getMap().getWorldInfo().getMaxActiveReligions() + 1;
+		iFaithYieldValue += iFaithYieldValue * iReligionsToFound * iReligionsToFound / (iMaxReligions * iMaxReligions);
+	}
 #endif
 #ifndef AUI_CITIZENS_UNHARDCODE_SPECIALIST_VALUE_GREAT_PERSON_POINTS
 	int iGPPYieldValue = pSpecialistInfo->getGreatPeopleRateChange() * 3; // TODO: un-hardcode this
