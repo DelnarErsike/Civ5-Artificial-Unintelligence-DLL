@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameData>
+	<Defines>
+		<!-- If not 0, AI diplomatic requests in networked multiplayer only happen through notifications for simultaneous mode,
+			 Otherwise, all AI diplomatic requests in networked multiplayer work through notifications. -->
+		<Row Name="MULTIPLAYER_AI_DIPLOMACY_NOTIFICATIONS_ONLY_SIMULTANEOUS">
+			<Value>1</Value>
+		</Row>
+	</Defines>
+</GameData>

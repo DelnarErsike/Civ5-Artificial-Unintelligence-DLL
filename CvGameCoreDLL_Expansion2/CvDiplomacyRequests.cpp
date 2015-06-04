@@ -134,7 +134,7 @@ void CvDiplomacyRequests::Update(void)
 	if (m_ePlayer == NO_PLAYER || m_aRequests.size() <= 0)
 		return;
 	CvPlayer& kToPlayer = GET_PLAYER(m_ePlayer);
-	if (kToPlayer.isSimultaneousTurns())
+	if (GC.getGame().isNetworkMultiPlayer() && !(GC.getMULTIPLAYER_AI_DIPLOMACY_NOTIFICATIONS_ONLY_SIMULTANEOUS() > 0 && kToPlayer.isSimultaneousTurns()))
 	{
 		CvNotifications* pNotifications = kToPlayer.GetNotifications();
 		if (pNotifications)

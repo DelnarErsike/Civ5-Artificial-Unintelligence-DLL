@@ -612,6 +612,10 @@ public:
 	// use very sparingly - this is costly
 	CvString getDefineSTRING(const char* szName, bool bReportErrors = true);
 
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	GD_INT_DEF(MULTIPLAYER_AI_DIPLOMACY_NOTIFICATIONS_ONLY_SIMULTANEOUS);
+#endif
+
 	// -- ints --
 
 	inline int getAI_ATTEMPT_RUSH_OVER_X_TURNS_TO_BUILD()
@@ -7674,6 +7678,11 @@ protected:
 	bool getDefineValue(const char* szName, double& dValue, bool bReportErrors = true);
 #endif
 	bool getDefineValue(const char* szName, CvString& szValue, bool bReportErrors = true);
+
+	// -- Togglable AuI options
+#ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
+	GD_INT_DECL(MULTIPLAYER_AI_DIPLOMACY_NOTIFICATIONS_ONLY_SIMULTANEOUS);
+#endif
 
 	// -- ints --
 
