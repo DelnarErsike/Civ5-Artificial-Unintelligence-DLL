@@ -312,28 +312,108 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 	m_bDirty = false;
 }
 
-#ifndef AUI_DANGER_PLOTS_REMADE
-/// Add an amount of danger to a given tile
-void CvDangerPlots::AddDanger(int iPlotX, int iPlotY, int iValue, bool bWithinOneMove)
+#ifdef AUI_DANGER_PLOTS_REMADE
+/// Updates the danger plots values based on a single plot (called when the AI's information is updated mid-routines
+void CvDangerPlots::UpdateDanger(CvPlot* pPlot, bool bPretendWarWithAllCivs, bool bIgnoreVisibility)
 {
-	const int idx = iPlotX + iPlotY * GC.getMap().getGridWidth();
-	if (iValue > 0)
+	if (!pPlot)
+		return;
+
+	CvPlayer& thisPlayer = GET_PLAYER(m_ePlayer);
+	TeamTypes thisTeam = thisPlayer.getTeam();
+
+	IDInfo* pUnitNode = pPlot->headUnitNode();
+	while (pUnitNode != NULL)
 	{
-		if (bWithinOneMove)
+		CvUnit* pLoopUnit = GetPlayerUnit(*pUnitNode);
+		pUnitNode = pPlot->nextUnitNode(pUnitNode);
+
+		if (pLoopUnit && pLoopUnit->getOwner() != m_ePlayer && (!ShouldIgnorePlayer(pLoopUnit->getOwner()) || bPretendWarWithAllCivs) && !ShouldIgnoreUnit(pLoopUnit, bIgnoreVisibility))
 		{
-			iValue |= 0x1;
-		}
-		else
-		{
-			iValue &= ~0x1;
+			int iRange = pLoopUnit->baseMoves();
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+			IncreaseMoveRangeForRoads(pLoopUnit, iRange);
+#endif
+			if (pLoopUnit->canRangeStrike())
+			{
+				iRange += pLoopUnit->GetRange() - 1;
+			}
+
+			CvPlot* pLoopPlot = NULL;
+			for (int iDY = -iRange; iDY <= iRange; iDY++)
+			{
+#ifdef AUI_FAST_COMP
+				int iMaxDX = iRange - FASTMAX(0, iDY);
+				for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+				iMaxDX = iRange - MAX(0, iDY);
+				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif
+				{
+					// No need for range check because loops are set up properly
+					pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
+					if (pLoopPlot && pLoopPlot != pPlot)
+					{
+						AssignUnitDangerValue(pLoopUnit, pLoopPlot);
+					}
+				}
+			}
 		}
 	}
 
-	m_DangerPlots[idx] += iValue;
-}
-#endif
+	CvCity* pCityInPlot = pPlot->getPlotCity();
+	if (pCityInPlot && pCityInPlot->getOwner() != m_ePlayer && !ShouldIgnoreCity(pCityInPlot, bIgnoreVisibility) && (!ShouldIgnorePlayer(pCityInPlot->getOwner()) || bPretendWarWithAllCivs))
+	{
+		int iRange = GC.getCITY_ATTACK_RANGE();
+		CvPlot* pLoopPlot = NULL;
 
-#ifdef AUI_DANGER_PLOTS_REMADE
+		int iMaxDX, iDX;
+		for (int iDY = -iRange; iDY <= iRange; iDY++)
+		{
+#ifdef AUI_FAST_COMP
+			iMaxDX = iRange - FASTMAX(0, iDY);
+			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#else
+			iMaxDX = iRange - MAX(0, iDY);
+			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+#endif
+			{
+				// No need for range check because loops are set up properly
+				pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
+				if (pLoopPlot && pLoopPlot != pPlot)
+				{
+					AssignCityDangerValue(pCityInPlot, pLoopPlot);
+				}
+			}
+		}
+	}
+
+	int iPlotIndex = GC.getMap().plotNum(pPlot->getX(), pPlot->getY());
+	if (pPlot->isRevealed(thisTeam))
+	{
+		if (pPlot->getFeatureType() != NO_FEATURE)
+		{
+			m_DangerPlots[iPlotIndex].m_iFlatPlotDamage = (GC.getFeatureInfo(pPlot->getFeatureType())->getTurnDamage());
+		}
+		ImprovementTypes eImprovement = pPlot->getRevealedImprovementType(thisTeam);
+		if (eImprovement != NO_IMPROVEMENT && GC.getImprovementInfo(eImprovement)->GetNearbyEnemyDamage() > 0)
+		{
+			if (!ShouldIgnoreCitadel(pPlot, bIgnoreVisibility))
+			{
+				for (int iI = 0; iI < NUM_DIRECTION_TYPES; iI++)
+				{
+					CvPlot* pAdjacentPlot = plotDirection(pPlot->getX(), pPlot->getY(), ((DirectionTypes)iI));
+
+					if (pAdjacentPlot != NULL)
+					{
+						m_DangerPlots[iPlotIndex].m_pCitadel = pPlot;
+					}
+				}
+			}
+		}
+	}
+}
+
 /// Return the maximum amount of damage that could be dealt to a non-specific unit at this plot
 int CvDangerPlots::GetDanger(const CvPlot& kPlot, const PlayerTypes ePlayer)
 {
@@ -355,6 +435,25 @@ int CvDangerPlots::GetDanger(const CvPlot& kPlot, const CvCity* pCity, int iAfte
 /// Return the maximum amount of damage a unit could take at this plot
 int CvDangerPlots::GetDanger(const CvPlot& pPlot, const CvUnit* pUnit, const CvPlot* pAttackTarget, const int iAction, int iAfterNIntercepts)
 #else
+/// Add an amount of danger to a given tile
+void CvDangerPlots::AddDanger(int iPlotX, int iPlotY, int iValue, bool bWithinOneMove)
+{
+	const int idx = iPlotX + iPlotY * GC.getMap().getGridWidth();
+	if (iValue > 0)
+	{
+		if (bWithinOneMove)
+		{
+			iValue |= 0x1;
+		}
+		else
+		{
+			iValue &= ~0x1;
+		}
+	}
+
+	m_DangerPlots[idx] += iValue;
+}
+
 /// Return the danger value of a given plot
 int CvDangerPlots::GetDanger(const CvPlot& pPlot) const
 #endif
@@ -392,7 +491,7 @@ bool CvDangerPlots::IsUnderImmediateThreat(const CvPlot& kPlot, const CvUnit* pU
 	const int idx = kPlot.getX() + kPlot.getY() * GC.getMap().getGridWidth();
 	if (pUnit)
 	{
-		return m_DangerPlots[idx].GetDanger(pUnit);
+		return m_DangerPlots[idx].IsUnderImmediateThreat(pUnit);
 	}
 	return false;
 }
@@ -671,7 +770,11 @@ bool CvDangerPlots::IsDangerByRelationshipZero(PlayerTypes ePlayer, CvPlot* pPlo
 
 
 /// Should this player be ignored when creating the danger plots?
+#ifdef AUI_CONSTIFY
+bool CvDangerPlots::ShouldIgnorePlayer(PlayerTypes ePlayer) const
+#else
 bool CvDangerPlots::ShouldIgnorePlayer(PlayerTypes ePlayer)
+#endif
 {
 	if(GET_PLAYER(m_ePlayer).isMinorCiv() != GET_PLAYER(ePlayer).isMinorCiv() && !GET_PLAYER(ePlayer).isBarbarian() && !GET_PLAYER(m_ePlayer).isBarbarian())
 	{
@@ -710,7 +813,11 @@ bool CvDangerPlots::ShouldIgnorePlayer(PlayerTypes ePlayer)
 }
 
 /// Should this unit be ignored when creating the danger plots?
+#ifdef AUI_CONSTIFY
+bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility) const
+#else
 bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility)
+#endif
 {
 	if(!pUnit->IsCanAttack())
 	{
@@ -787,7 +894,11 @@ bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility)
 }
 
 /// Should this city be ignored when creating the danger plots?
+#ifdef AUI_CONSTIFY
+bool CvDangerPlots::ShouldIgnoreCity(const CvCity* pCity, bool bIgnoreVisibility) const
+#else
 bool CvDangerPlots::ShouldIgnoreCity(CvCity* pCity, bool bIgnoreVisibility)
+#endif
 {
 	// ignore unseen cities
 	if(!pCity->isRevealed(GET_PLAYER(m_ePlayer).getTeam(), false)  && !bIgnoreVisibility)
@@ -799,7 +910,11 @@ bool CvDangerPlots::ShouldIgnoreCity(CvCity* pCity, bool bIgnoreVisibility)
 }
 
 /// Should this city be ignored when creating the danger plots?
+#ifdef AUI_CONSTIFY
+bool CvDangerPlots::ShouldIgnoreCitadel(const CvPlot* pCitadelPlot, bool bIgnoreVisibility) const
+#else
 bool CvDangerPlots::ShouldIgnoreCitadel(CvPlot* pCitadelPlot, bool bIgnoreVisibility)
+#endif
 {
 	// ignore unseen cities
 	if(!pCitadelPlot->isRevealed(GET_PLAYER(m_ePlayer).getTeam())  && !bIgnoreVisibility)
@@ -836,12 +951,36 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot, bool bRe
 	const int iPlotX = pPlot->getX();
 	const int iPlotY = pPlot->getY();
 	const int idx = GC.getMap().plotNum(iPlotX, iPlotY);
+
+	bool bExcludeFromUnitsList = false;
+	for (CvDangerPlotContents::DangerUnitVector::iterator it = m_DangerPlots[idx].m_apUnits.begin(); it != m_DangerPlots[idx].m_apUnits.end(); ++it)
+	{
+		if ((*it) == pUnit)
+		{
+			bExcludeFromUnitsList = true;
+			break;
+		}
+	}
+	bool bExcludeFromMoveOnlyUnitsList = false;
+	for (CvDangerPlotContents::DangerUnitVector::iterator it = m_DangerPlots[idx].m_apMoveOnlyUnits.begin(); it != m_DangerPlots[idx].m_apMoveOnlyUnits.end(); ++it)
+	{
+		if ((*it) == pUnit)
+		{
+			bExcludeFromMoveOnlyUnitsList = true;
+			break;
+		}
+	}
+
+	if (bExcludeFromUnitsList && bExcludeFromMoveOnlyUnitsList)
+		return;
 	
 	// Check to see if we're already in this plot
 	if (pUnit->plot() == pPlot)
 	{
-		m_DangerPlots[idx].m_apUnits.push_back(pUnit);
-		m_DangerPlots[idx].m_apMoveOnlyUnits.push_back(pUnit);
+		if (!bExcludeFromUnitsList)
+			m_DangerPlots[idx].m_apUnits.push_back(pUnit);
+		if (!bExcludeFromMoveOnlyUnitsList)
+			m_DangerPlots[idx].m_apMoveOnlyUnits.push_back(pUnit);
 		return;
 	}
 	// Check to see if another player has already done the pathfinding for us
@@ -853,11 +992,11 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot, bool bRe
 	pPlot->getNumTimesInList(vpUnitDangerPlotMoveOnlyList, true, pbInMoveOnlyList);
 	if (pbInList || pbInMoveOnlyList)
 	{
-		if (pbInList && *pbInList)
+		if (pbInList && *pbInList && !bExcludeFromUnitsList)
 		{
 			m_DangerPlots[idx].m_apUnits.push_back(pUnit);
 		}
-		if (pbInMoveOnlyList && *pbInMoveOnlyList)
+		if (pbInMoveOnlyList && *pbInMoveOnlyList && !bExcludeFromMoveOnlyUnitsList)
 		{
 			m_DangerPlots[idx].m_apMoveOnlyUnits.push_back(pUnit);
 		}
@@ -876,31 +1015,37 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot, bool bRe
 
 	if (pUnit->IsCanAttackRanged())
 	{
-		if (kPathFinder.GeneratePath(pUnit->getX(), pUnit->getY(), iPlotX, iPlotY, MOVE_UNITS_IGNORE_DANGER | MOVE_IGNORE_STACKING, bReuse /*bReuse*/))
+		if (!bExcludeFromMoveOnlyUnitsList)
 		{
-			pNode = kPathFinder.GetLastNode();
-			if (pNode)
+			if (kPathFinder.GeneratePath(pUnit->getX(), pUnit->getY(), iPlotX, iPlotY, MOVE_UNITS_IGNORE_DANGER | MOVE_IGNORE_STACKING, bReuse /*bReuse*/))
 			{
-				iTurnsAway = pNode->m_iData2;
+				pNode = kPathFinder.GetLastNode();
+				if (pNode)
+				{
+					iTurnsAway = pNode->m_iData2;
+				}
+			}
+			if (iTurnsAway <= 1)
+			{
+				m_DangerPlots[idx].m_apMoveOnlyUnits.push_back(pUnit);
+				vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, true));
+			}
+			else
+			{
+				vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, false));
 			}
 		}
-		if (iTurnsAway <= 1)
+		if (!bExcludeFromUnitsList)
 		{
-			m_DangerPlots[idx].m_apMoveOnlyUnits.push_back(pUnit);
-			vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, true));
-		}
-		else
-		{
-			vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, false));
-		}
-		if (pUnit->canMoveAndRangedStrike(pPlot))
-		{
-			m_DangerPlots[idx].m_apUnits.push_back(pUnit);
-			vpUnitDangerPlotList.push_back(std::make_pair(pPlot, true));
-		}
-		else
-		{
-			vpUnitDangerPlotList.push_back(std::make_pair(pPlot, false));
+			if (pUnit->canMoveAndRangedStrike(pPlot))
+			{
+				m_DangerPlots[idx].m_apUnits.push_back(pUnit);
+				vpUnitDangerPlotList.push_back(std::make_pair(pPlot, true));
+			}
+			else
+			{
+				vpUnitDangerPlotList.push_back(std::make_pair(pPlot, false));
+			}
 		}
 	}
 	else
@@ -915,15 +1060,23 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot, bool bRe
 		}
 		if (iTurnsAway <= 1)
 		{
-			m_DangerPlots[idx].m_apUnits.push_back(pUnit);
-			m_DangerPlots[idx].m_apMoveOnlyUnits.push_back(pUnit);
-			vpUnitDangerPlotList.push_back(std::make_pair(pPlot, true));
-			vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, true));
+			if (!bExcludeFromUnitsList)
+			{
+				m_DangerPlots[idx].m_apUnits.push_back(pUnit);
+				vpUnitDangerPlotList.push_back(std::make_pair(pPlot, true));
+			}
+			if (!bExcludeFromMoveOnlyUnitsList)
+			{
+				m_DangerPlots[idx].m_apMoveOnlyUnits.push_back(pUnit);
+				vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, true));
+			}
 		}
 		else
 		{
-			vpUnitDangerPlotList.push_back(std::make_pair(pPlot, false));
-			vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, false));
+			if (!bExcludeFromUnitsList)
+				vpUnitDangerPlotList.push_back(std::make_pair(pPlot, false));
+			if (!bExcludeFromMoveOnlyUnitsList)
+				vpUnitDangerPlotMoveOnlyList.push_back(std::make_pair(pPlot, false));
 		}
 	}
 #else
@@ -1036,6 +1189,11 @@ void CvDangerPlots::AssignCityDangerValue(CvCity* pCity, CvPlot* pPlot)
 {
 #ifdef AUI_DANGER_PLOTS_REMADE
 	const int idx = GC.getMap().plotNum(pPlot->getX(), pPlot->getY());
+	for (CvDangerPlotContents::DangerCityVector::iterator it = m_DangerPlots[idx].m_apCities.begin(); it != m_DangerPlots[idx].m_apCities.end(); ++it)
+	{
+		if ((*it) == pCity)
+			return;
+	}
 	m_DangerPlots[idx].m_apCities.push_back(pCity);
 #else
 	int iCombatValue = pCity->getStrengthValue();
@@ -1462,10 +1620,12 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 
 	int iDamageDealt = 0;
 	int iDamageReceivedFromAttack = 0;
+	int iExtraFortifyTurns = (iAction & ACTION_HEAL) >> 3;
 	const CvUnit* pAttackTargetUnit = NULL;
 	const CvCity* pAttackTargetCity = NULL;
 	if (pAttackTarget)
 	{
+		iExtraFortifyTurns = -pUnit->getFortifyTurns();
 		pAttackTargetCity = pAttackTarget->getPlotCity();
 		if (!pAttackTargetCity)
 			pAttackTargetUnit = pAttackTarget->getVisibleEnemyDefender(pUnit);
@@ -1590,7 +1750,11 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 		iPlotDamage += iDamageReceivedFromAttack;
 	}
 
-	CvPlot* pAttackerPlot = NULL;
+	FFastVector<const CvPlot*, true, c_eCiv5GameplayDLL> vpPossibleAttackPlots;
+	FFastVector<const CvPlot*, true, c_eCiv5GameplayDLL> vpUsedAttackPlots;
+	vpPossibleAttackPlots.reserve(m_apUnits.size());
+	vpUsedAttackPlots.reserve(m_apUnits.size());
+	const CvPlot* pAttackerPlot = NULL;
 	CvUnit* pInterceptor = NULL;
 	// Damage from units
 	// TODO: Implement support for withdrawing
@@ -1622,19 +1786,26 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 						++iAfterNIntercepts;
 					}
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-					iPlotDamage += pCurAttacker->GetAirCombatDamage(pUnit, NULL, false, iInterceptDamage, m_pPlot, NULL, (iAction & ACTION_HEAL) >> 3);
+					iPlotDamage += pCurAttacker->GetAirCombatDamage(pUnit, NULL, false, iInterceptDamage, m_pPlot, NULL, iExtraFortifyTurns);
 #else
 					iPlotDamage += pCurAttacker->GetAirCombatDamage(pUnit, NULL, false, iInterceptDamage);
 #endif
 				}
 				else
 				{
+					vpPossibleAttackPlots.clear();
+					if (pCurAttacker->GetMovablePlotListOpt(vpPossibleAttackPlots, m_pPlot, false, 0, NULL, &vpUsedAttackPlots))
+						pAttackerPlot = pCurAttacker->getBestMovablePlot(vpPossibleAttackPlots, m_pPlot);
+					else
+						continue;
+					vpUsedAttackPlots.push_back(pAttackerPlot);
+
 					if (pCurAttacker == pAttackTargetUnit)
 					{
 						if (iDamageDealt < pCurAttacker->GetCurrHitPoints())
 						{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt, m_pPlot, NULL,(iAction & ACTION_HEAL) >> 3);
+							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt, m_pPlot, pAttackerPlot, iExtraFortifyTurns);
 #else
 							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt);
 #endif
@@ -1643,26 +1814,29 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 					else
 					{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, 0, m_pPlot, NULL, (iAction & ACTION_HEAL) >> 3);
+						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, 0, m_pPlot, pAttackerPlot, iExtraFortifyTurns);
 #else
 						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false);
 #endif
 					}
 				}
 			}
-			else if (iAction & ~ACTION_NO_MELEE)
+			else if (!(iAction & ACTION_NO_MELEE))
 			{
-				if (plotDistance(m_iX, m_iY, pCurAttacker->getX(), pCurAttacker->getY()) == 1)
-				{
-					pAttackerPlot = pCurAttacker->plot();
-				}
+				vpPossibleAttackPlots.clear();
+				if (pCurAttacker->GetMovablePlotListOpt(vpPossibleAttackPlots, m_pPlot, false, 0, NULL, &vpUsedAttackPlots))
+					pAttackerPlot = pCurAttacker->getBestMovablePlot(vpPossibleAttackPlots, m_pPlot);
+				else
+					continue;
+				vpUsedAttackPlots.push_back(pAttackerPlot);
+
 				if (pCurAttacker == pAttackTargetUnit)
 				{
 					if (iDamageDealt < pCurAttacker->GetCurrHitPoints())
 					{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-						iPlotDamage += pCurAttacker->getCombatDamage(pCurAttacker->GetMaxAttackStrength(pAttackerPlot, m_pPlot, pUnit, (iAction & ACTION_HEAL) >> 3),
-							pUnit->GetMaxDefenseStrength(m_pPlot, pCurAttacker, false, (iAction & ACTION_HEAL) >> 3), pCurAttacker->getDamage() + iDamageDealt, false, false, false);
+						iPlotDamage += pCurAttacker->getCombatDamage(pCurAttacker->GetMaxAttackStrength(pAttackerPlot, m_pPlot, pUnit, iExtraFortifyTurns),
+							pUnit->GetMaxDefenseStrength(m_pPlot, pCurAttacker, false, iExtraFortifyTurns), pCurAttacker->getDamage() + iDamageDealt, false, false, false);
 #else
 						iPlotDamage += pCurAttacker->getCombatDamage(pCurAttacker->GetMaxAttackStrength(pAttackerPlot, m_pPlot, pUnit),
 							pUnit->GetMaxDefenseStrength(m_pPlot, pCurAttacker), pCurAttacker->getDamage() + iDamageDealt, false, false, false);
@@ -1670,7 +1844,7 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 						if (pCurAttacker->isRangedSupportFire())
 						{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt, m_pPlot, pAttackerPlot, (iAction & ACTION_HEAL) >> 3);
+							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt, m_pPlot, pAttackerPlot, iExtraFortifyTurns);
 #else
 							iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, iDamageDealt);
 #endif
@@ -1680,8 +1854,8 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 				else
 				{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-					int iAttackerStrength = pCurAttacker->GetMaxAttackStrength(pAttackerPlot, m_pPlot, pUnit, (iAction & ACTION_HEAL) >> 3);
-					int iDefenderStrength = pUnit->GetMaxDefenseStrength(m_pPlot, pCurAttacker, false, (iAction & ACTION_HEAL) >> 3);
+					int iAttackerStrength = pCurAttacker->GetMaxAttackStrength(pAttackerPlot, m_pPlot, pUnit, iExtraFortifyTurns);
+					int iDefenderStrength = pUnit->GetMaxDefenseStrength(m_pPlot, pCurAttacker, false, iExtraFortifyTurns);
 #else
 					int iAttackerStrength = pCurAttacker->GetMaxAttackStrength(pAttackerPlot, m_pPlot, pUnit);
 					int iDefenderStrength = pUnit->GetMaxDefenseStrength(m_pPlot, pCurAttacker, false);
@@ -1694,7 +1868,7 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 					if (pCurAttacker->isRangedSupportFire())
 					{
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, 0, m_pPlot, pAttackerPlot, (iAction & ACTION_HEAL) >> 3);
+						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false, 0, m_pPlot, pAttackerPlot, iExtraFortifyTurns);
 #else
 						iPlotDamage += pCurAttacker->GetRangeCombatDamage(pUnit, NULL, false);
 #endif
@@ -1713,7 +1887,7 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 		}
 
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
-		iPlotDamage += (*it)->rangeCombatDamage(pUnit, NULL, false, m_pPlot, (iAction & ACTION_HEAL) >> 3);
+		iPlotDamage += (*it)->rangeCombatDamage(pUnit, NULL, false, m_pPlot, iExtraFortifyTurns);
 #else
 		iPlotDamage += (*it)->rangeCombatDamage(pUnit, NULL, false);
 #endif

@@ -117,6 +117,7 @@ public:
 
 	void UpdateDanger(bool bPretendWarWithAllCivs = false, bool bIgnoreVisibility = false);
 #ifdef AUI_DANGER_PLOTS_REMADE
+	void UpdateDanger(CvPlot* pPlot, bool bPretendWarWithAllCivs = false, bool bIgnoreVisibility = false);
 	int GetDanger(const CvPlot& kPlot, const CvUnit* pUnit, const CvPlot* pAttackTarget = NULL, const int iAction = ACTION_DEFAULT, int iAfterNIntercepts = 0);
 	int GetDanger(const CvPlot& kPlot, const CvCity* pCity, int iAfterNIntercepts = 0, PlayerTypes ePretendCityOwner = NO_PLAYER, const CvUnit* pPretendGarrison = NULL, int iPretendGarrisonExtraDamage = 0);
 	int GetDanger(const CvPlot& kPlot, const PlayerTypes ePlayer);
@@ -136,10 +137,17 @@ public:
 	int ModifyDangerByRelationship(PlayerTypes ePlayer, CvPlot* pPlot, int iDanger);
 #endif
 
+#ifdef AUI_CONSTIFY
+	bool ShouldIgnorePlayer(PlayerTypes ePlayer) const;
+	bool ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility = false) const;
+	bool ShouldIgnoreCity(const CvCity* pCity, bool bIgnoreVisibility = false) const;
+	bool ShouldIgnoreCitadel(const CvPlot* pCitadelPlot, bool bIgnoreVisibility = false) const;
+#else
 	bool ShouldIgnorePlayer(PlayerTypes ePlayer);
 	bool ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility = false);
 	bool ShouldIgnoreCity(CvCity* pCity, bool bIgnoreVisibility = false);
 	bool ShouldIgnoreCitadel(CvPlot* pCitadelPlot, bool bIgnoreVisibility = false);
+#endif
 #ifdef AUI_DANGER_PLOTS_REMADE
 	void AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot, bool bReuse = true);
 #else

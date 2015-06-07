@@ -1336,6 +1336,7 @@ public:
 	bool canMoveAndRangedStrike(int iX, int iY) const;
 	bool canMoveAndRangedStrike(const CvPlot* pTargetPlot) const;
 	bool GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bExitOnFound = false, int iWithinTurns = 0, const CvPlot* pFromPlot = NULL, BaseVector<const CvPlot*, true>* pExcludePlotList = NULL, int iMovementLeftInExclude = 1) const;
+	const CvPlot* getBestMovablePlot(BaseVector<const CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bIgnoreDanger = true) const;
 #endif
 #ifdef AUI_UNIT_DO_AITYPE_FLIP
 	bool DoSingleUnitAITypeFlip(UnitAITypes eUnitAIType, bool bRevert = false, bool bForceOff = false);

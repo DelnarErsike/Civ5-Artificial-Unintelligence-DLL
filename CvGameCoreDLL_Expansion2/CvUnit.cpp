@@ -20222,7 +20222,7 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, co
 					pLoopPlot = GC.getMap().plot(iDX, iDY);
 					if (pLoopPlot && pLoopPlot != pTargetPlot)
 					{
-						iMovementLeft = getMustSetUpToRangedAttackCount();
+						iMovementLeft = getMustSetUpToRangedAttackCount() * GC.getMOVE_DENOMINATOR();
 						if (pExcludePlotList)
 						{
 							for (BaseVector<const CvPlot*, true>::iterator it = pExcludePlotList->begin(); it != pExcludePlotList->end(); ++it)
@@ -20244,7 +20244,7 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, co
 							if (pPathfinder->GeneratePath(iFromX, iFromY, iDX, iDY, MOVE_UNITS_IGNORE_DANGER, true /*bReuse*/))
 							{
 								pNode = pPathfinder->GetLastNode();
-								if (pNode && pNode->m_iData2 == 1 && pNode->m_iData1 > iMovementLeft * GC.getMOVE_DENOMINATOR())
+								if (pNode && pNode->m_iData2 == 1 && pNode->m_iData1 > iMovementLeft)
 								{
 									if (bExitOnFound)
 										return true;
@@ -20285,14 +20285,17 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, co
 									goto NextTile;
 							}
 						}
+						if (iMovementLeft > 0)
+						{
+							iMovementLeft += FASTMAX(GC.getMOVE_DENOMINATOR(), pTargetPlot->movementCost(this, pLoopPlot));
+						}
 					}
 					// First pathfinder check is just to make sure we can attack, second one is the one whose node is stored
 					if (pPathfinder->GeneratePath(pLoopPlot->getX(), pLoopPlot->getY(), iToX, iToY, MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY, true /*bReuse*/) &&
 						pPathfinder->GeneratePath(iFromX, iFromY, pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, true /*bReuse*/))
 					{
 						pNode = pPathfinder->GetLastNode();
-						if (pNode && pNode->m_iData2 == 1 && pNode->m_iData1 > (iMovementLeft == 0 ? 0 : 
-							(iMovementLeft - 1) * GC.getMOVE_DENOMINATOR() + FASTMAX(GC.getMOVE_DENOMINATOR(), pTargetPlot->movementCost(this, pLoopPlot))))
+						if (pNode && pNode->m_iData2 == 1 && pNode->m_iData1 > iMovementLeft)
 						{
 							if (bExitOnFound)
 								return true;
@@ -20355,6 +20358,96 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, co
 	}
 
 	return plotData.size() > 0;
+}
+
+const CvPlot* CvUnit::getBestMovablePlot(BaseVector<const CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bIgnoreDanger) const
+{
+	const CvPlot* pBestPlot = NULL;
+	int iMinDanger = 0;
+	CvPlayer& kPlayer = GET_PLAYER(getOwner());
+#ifdef AUI_DANGER_PLOTS_REMADE
+	int iMaxAttackSuicidal = 0;
+	if (!bIgnoreDanger)
+		iMinDanger = kPlayer.GetPlotDanger(*plot(), this, pTargetPlot);
+#else
+	if (!bIgnoreDanger)
+		iMinDanger = kPlayer.GetPlotDanger(*plot());
+#endif
+	int iMaxAttack = 0;
+	int iCurrentDanger = 0;
+	int iCurrentAttack = 0;
+	bool bIsRanged = canRangeStrike();
+	CvCity* pTargetCity = pTargetPlot->getPlotCity();
+	CvUnit* pTargetUnit = NULL;
+	if (!pTargetCity)
+		pTargetUnit = pTargetPlot->getBestDefender(NO_PLAYER, kPlayer.GetID()).pointer();
+
+	if (bIsRanged)
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+		iMaxAttack = GetMaxRangedCombatStrength(pTargetUnit, pTargetCity, true, true);
+#else
+		iCurrentAttack = iMaxAttack;
+#endif
+	else
+		iMaxAttack = GetMaxAttackStrength(NULL, pTargetPlot, pTargetUnit);
+
+	for (BaseVector<const CvPlot*, true>::iterator it = plotData.begin(); it != plotData.end(); ++it)
+	{
+		if (!bIgnoreDanger)
+#ifdef AUI_DANGER_PLOTS_REMADE
+			iCurrentDanger = kPlayer.GetPlotDanger(*(*it), this, pTargetPlot);
+#else
+			iCurrentDanger = kPlayer.GetPlotDanger(*(*it));
+#endif
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+		if (bIsRanged)
+			iCurrentAttack = GetMaxRangedCombatStrength(pTargetUnit, pTargetCity, true, true, pTargetPlot, (*it));
+		else
+			iCurrentAttack = GetMaxAttackStrength((*it), pTargetPlot, pTargetUnit);
+#else
+		if (!bIsRanged)
+			iCurrentAttack = GetMaxAttackStrength((*it), pTargetPlot, pTargetUnit);
+#endif
+
+#ifdef AUI_DANGER_PLOTS_REMADE
+		if (iCurrentDanger < GetCurrHitPoints())
+		{
+			if (iCurrentAttack >= iMaxAttack)
+			{
+				if (iCurrentDanger < iMinDanger || iCurrentAttack > iMaxAttack)
+				{
+					pBestPlot = (*it);
+					iMinDanger = iCurrentDanger;
+					iMaxAttack = iCurrentAttack;
+				}
+			}
+		}
+		else if (iMinDanger >= GetCurrHitPoints())
+		{
+			if (iCurrentAttack >= iMaxAttackSuicidal)
+			{
+				if (iCurrentDanger < iMinDanger || iCurrentAttack > iMaxAttackSuicidal)
+				{
+					pBestPlot = (*it);
+					iMinDanger = iCurrentDanger;
+					iMaxAttackSuicidal = iCurrentAttack;
+				}
+			}
+		}
+#else
+		if (iCurrentAttack >= iMaxAttack)
+		{
+			if (iCurrentDanger < iMinDanger || iCurrentAttack > iMaxAttack)
+			{
+				pBestPlot = (*it);
+				iMinDanger = iCurrentDanger;
+				iMaxAttack = iCurrentAttack;
+			}
+		}
+#endif
+	}
+
+	return pBestPlot;
 }
 #endif
 
