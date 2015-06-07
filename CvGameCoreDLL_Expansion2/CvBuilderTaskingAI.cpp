@@ -351,7 +351,7 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 		}
 
 #ifdef AUI_WORKER_INCA_HILLS
-		if (!bIncaBonusActive || pPlot->getTerrainType() != TERRAIN_HILL)
+		if (!bIncaBonusActive || !pPlot->isHills())
 		{
 #endif
 		if(pPlot->getRouteType() == eRoute && !pPlot->IsRoutePillaged())
@@ -397,10 +397,29 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 
 
 	short sValue = -1;
+#ifdef AUI_WORKER_FIX_CONNECT_CITIES_TO_CAPITOL_CONSIDER_MAINTENANCE_MODIFIERS
+#ifdef AUI_WORKER_INCA_HILLS
+	int iTotalMaintenance = (iRoadLength - iFreeIncaRoadLength) * iMaintenancePerTile;
+#else
+	int iTotalMaintenance = iRoadLength * iMaintenancePerTile;
+#endif
+	// Player modifier
+	iTotalMaintenance *= (100 + m_pPlayer->GetRouteGoldMaintenanceMod());
+	iTotalMaintenance /= 100;
+	// Handicap
+	iTotalMaintenance *= m_pPlayer->getHandicapInfo().getRouteCostPercent();
+	iTotalMaintenance /= 100;
+#ifdef AUI_WORKER_INCA_HILLS
+	int iProfit = iGoldForRoute - iTotalMaintenance;
+#else
+	int iProfit = iGoldForRoute - iTotalMaintenance;
+#endif
+#else
 #ifdef AUI_WORKER_INCA_HILLS
 	int iProfit = iGoldForRoute - ((iRoadLength - iFreeIncaRoadLength) * iMaintenancePerTile);
 #else
 	int iProfit = iGoldForRoute - (iRoadLength * iMaintenancePerTile);
+#endif
 #endif
 	if(bIndustrialRoute)
 	{
@@ -429,11 +448,18 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 			return;
 		}
 
+#ifdef AUI_WORKER_FIX_CONNECT_CITIES_TO_CAPITOL_CONSIDER_MAINTENANCE_MODIFIERS
+		int iValue = iGoldForRoute * 100 * iRoadLength;
+		if (iTotalMaintenance + iRoadLength > iFreeIncaRoadLength)
+			iValue /= (iTotalMaintenance + iRoadLength - iFreeIncaRoadLength);
+		iValue /= iPlotsNeeded;
+#else
 		int iValue = (iGoldForRoute * 100) / (iRoadLength * (iMaintenancePerTile + 1));
 #ifdef AUI_WORKER_INCA_HILLS
 		iValue = (iValue * iRoadLength * (1 + iFreeIncaRoadLength * iMaintenancePerTile)) / iPlotsNeeded;
 #else
 		iValue = (iValue * iRoadLength) / iPlotsNeeded;
+#endif
 #endif
 		sValue = min(iValue, MAX_SHORT);
 	}
@@ -693,7 +719,11 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 
 	// check for no brainer bail-outs
 	// if the builder is already building something
+#ifdef AUI_WORKER_EVALUATE_WORKER_RETREAT_AND_BUILD
+	if (pUnit->getBuildType() != NO_BUILD && m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit) < pUnit->GetCurrHitPoints())
+#else
 	if(pUnit->getBuildType() != NO_BUILD)
+#endif
 	{
 		paDirectives[0].m_eDirective = BuilderDirective::BUILD_IMPROVEMENT;
 		paDirectives[0].m_eBuild = pUnit->getBuildType();
