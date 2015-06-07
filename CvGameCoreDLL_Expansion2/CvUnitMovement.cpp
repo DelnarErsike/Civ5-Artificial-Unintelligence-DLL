@@ -302,7 +302,11 @@ bool CvUnitMovement::IsSlowedByZOC(const CvUnit* pUnit, const CvPlot* pFromPlot,
 			if(NULL != pAdjPlot)
 			{
 				// check city zone of control
+#ifdef AUI_UNIT_MOVEMENT_FIX_RADAR_ZOC
+				if (pAdjPlot->isEnemyCity(*pUnit) && (pAdjPlot->isRevealed(pUnit->getTeam()) || pUnit->plot() == pFromPlot))
+#else
 				if(pAdjPlot->isEnemyCity(*pUnit))
+#endif
 				{
 					// Loop through plots adjacent to the enemy city and see if it's the same as our unit's Destination Plot
 					for(int iDirection = 0; iDirection < NUM_DIRECTION_TYPES; iDirection++)
@@ -320,8 +324,8 @@ bool CvUnitMovement::IsSlowedByZOC(const CvUnit* pUnit, const CvPlot* pFromPlot,
 				}
 
 #ifdef AUI_UNIT_MOVEMENT_FIX_RADAR_ZOC
-				if (pAdjPlot->isVisible(pUnit->getTeam()))
-				{
+				if (!pAdjPlot->isVisible(pUnit->getTeam()) && pUnit->plot() != pFromPlot)
+					continue;
 #endif
 				pAdjUnitNode = pAdjPlot->headUnitNode();
 				// Loop through all units to see if there's an enemy unit here
@@ -397,9 +401,6 @@ bool CvUnitMovement::IsSlowedByZOC(const CvUnit* pUnit, const CvPlot* pFromPlot,
 						}
 					}
 				}
-#ifdef AUI_UNIT_MOVEMENT_FIX_RADAR_ZOC
-				}
-#endif
 			}
 		}
 	}
