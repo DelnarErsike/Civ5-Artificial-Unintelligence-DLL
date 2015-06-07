@@ -1925,17 +1925,9 @@ CvPlot* CvPlayerAI::FindBestMerchantTargetPlot(CvUnit* pGreatMerchant, bool bOnl
 					if(bRightOwner && bIsRevealed)
 					{
 #ifdef AUI_ASTAR_TURN_LIMITER
-#ifdef AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
-						iPathTurns = TurnsToReachTarget(pMerchant, pAdjacentPlot, false /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/, false, iMaxTurns);
-#else
 						iPathTurns = TurnsToReachTarget(pMerchant, pAdjacentPlot, true /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/, false, iMaxTurns);
-#endif
-#else
-#ifdef AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
-						iPathTurns = TurnsToReachTarget(pMerchant, pAdjacentPlot, false /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
 #else
 						iPathTurns = TurnsToReachTarget(pMerchant, pAdjacentPlot, true /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
-#endif
 #endif
 #ifdef AUI_PLAYERAI_FIND_BEST_MERCHANT_TARGET_PLOT_VENICE_FILTERS
 						iPathTurns = int(iPathTurns * dTurnsMod + 0.5);
@@ -1945,7 +1937,7 @@ CvPlot* CvPlayerAI::FindBestMerchantTargetPlot(CvUnit* pGreatMerchant, bool bOnl
 							iBestTurnsToReach = iPathTurns;
 #ifdef AUI_ASTAR_TURN_LIMITER
 							iMaxTurns = iPathTurns;
-#endif // #ifdef AUI_ASTAR_TURN_LIMITER
+#endif
 							pBestTargetPlot = pAdjacentPlot;
 						}
 					}
@@ -1996,11 +1988,7 @@ CvPlot* CvPlayerAI::FindBestMusicianTargetPlot(CvUnit* pGreatMusician, bool bOnl
 				bool bIsRevealed = pAdjacentPlot->isRevealed(getTeam());
 				if(bRightOwner && bIsRevealed)
 				{
-#ifdef AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
-					iPathTurns = TurnsToReachTarget(pMusician, pAdjacentPlot, false /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
-#else
 					iPathTurns = TurnsToReachTarget(pMusician, pAdjacentPlot, true /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
-#endif
 					if(iPathTurns < iBestTurnsToReach)
 					{
 						iBestTurnsToReach = iPathTurns;
@@ -2026,11 +2014,7 @@ CvPlot* CvPlayerAI::FindBestMusicianTargetPlot(CvUnit* pGreatMusician, bool bOnl
 				bool bIsRevealed = pLoopPlot->isRevealed(getTeam());
 				if(bRightOwner && bIsRevealed)
 				{
-#ifdef AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
-					iPathTurns = TurnsToReachTarget(pMusician, pLoopPlot, false /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
-#else
 					iPathTurns = TurnsToReachTarget(pMusician, pLoopPlot, true /*bReusePaths*/, !bOnlySafePaths/*bIgnoreUnits*/);
-#endif
 					if(iPathTurns < iBestTurnsToReach)
 					{
 						iBestTurnsToReach = iPathTurns;
