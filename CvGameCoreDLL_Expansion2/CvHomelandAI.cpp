@@ -2967,12 +2967,25 @@ void CvHomelandAI::ExecuteWorkerMoves()
 
 			AI_PERF_FORMAT("Homeland-ExecuteWorkerMoves-perf.csv", ("ExecuteWorkerMoves, Turn %03d, %s, Unit %d, at x=%d, y=%d", GC.getGame().getElapsedGameTurns(), m_pPlayer->getCivilizationShortDescription(), pUnit->GetID(), pUnit->getX(), pUnit->getY()) );
 
+#ifdef AUI_WORKER_EVALUATE_WORKER_RETREAT_AND_BUILD
+			bool bActionPerformed = ExecuteWorkerMove(pUnit.pointer()); // With new DangerPlots and IgnoreUnits pathfinder code, workers in danger should try to retreat from danger and build improvements in the same turn
+			if (bActionPerformed)
+			{
+				continue;
+			}
+#ifdef AUI_HOMELAND_PLOT_WORKER_MOVES_EMPLOYS_AITYPE_FLIP
+			// pops off unneeded legionairres
+			else if (pUnit->DoSingleUnitAITypeFlip(UNITAI_WORKER, true))
+			{
+				continue;
+			}
+#endif
+#endif
 #ifdef AUI_DANGER_PLOTS_REMADE
 			if (pPlot)
 			{
 				UnitHandle hBestDefender = pPlot->getBestDefender(m_pPlayer->GetID());
-				if (m_pPlayer->IsPlotUnderImmediateThreat(*pPlot, pUnit.pointer()) &&
-					(!hBestDefender || m_pPlayer->GetPlotDanger(*pPlot, hBestDefender.pointer()) >= hBestDefender->GetCurrHitPoints()) &&
+				if (m_pPlayer->GetPlotDanger(*pPlot, pUnit.pointer()) >= pUnit->GetCurrHitPoints() &&
 					MoveCivilianToSafety(pUnit.pointer()))
 #else
 			if(pPlot && m_pPlayer->IsPlotUnderImmediateThreat(*pPlot) && !pPlot->getBestDefender(m_pPlayer->GetID()))
@@ -3013,6 +3026,7 @@ void CvHomelandAI::ExecuteWorkerMoves()
 				}
 			}
 
+#ifndef AUI_WORKER_EVALUATE_WORKER_RETREAT_AND_BUILD
 			bool bActionPerformed = ExecuteWorkerMove(pUnit.pointer());
 			if(bActionPerformed)
 			{
@@ -3024,6 +3038,7 @@ void CvHomelandAI::ExecuteWorkerMoves()
 			{
 				continue;
 			}
+#endif
 #endif
 
 			// if there's nothing else to do, move to the safest spot nearby
