@@ -1221,7 +1221,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 		iHappinessYieldValue *= 100;
 		iHappinessYieldValue /= pPlayer->getHandicapInfo().getPopulationUnhappinessMod();
 
-		if (pPlayer->IsEmpireUnhappy())
+		if (pPlayer->GetExcessHappiness() <= 0)
 		{
 			iHappinessYieldValue = int(iHappinessYieldValue * pow(2.0, 1.0 - (double)pPlayer->GetExcessHappiness() / 10.0) + 0.5);
 		}
