@@ -504,12 +504,11 @@ CvAStarNode* CvAStar::GetBest()
 	temp->m_pNext = m_pClosed;
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
 	temp->m_pPrev = NULL;
-#else
+#endif
 	if(m_pClosed != NULL)
 	{
 		m_pClosed->m_pPrev = temp;
 	}
-#endif
 	m_pClosed = temp;
 
 #ifdef AUI_ASTAR_USE_DELEGATES
@@ -591,9 +590,6 @@ void CvAStar::CreateChildren(CvAStarNode* node)
 
 				if (udFunc(udValid, node, check, 0, m_pData))
 				{
-#ifdef AUI_USE_OPENMP
-#pragma omp critical(LinkChild)
-#endif
 					LinkChild(node, check);
 				}
 			}
@@ -1854,6 +1850,7 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 	CvPlot* pToPlot = theMap.plotUnchecked(node->m_iX, node->m_iY);
 #endif
 	PREFETCH_FASTAR_CVPLOT(reinterpret_cast<char*>(pToPlot));
+	CvPathNodeCacheData& kToNodeCacheData = node->m_kCostCacheData;
 #endif
 
 #ifdef AUI_ASTAR_FIX_PARENT_NODE_ALWAYS_VALID_OPTIMIZATION
@@ -1862,7 +1859,6 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 	{
 #ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 		// Cache values for this node that we will use in the loop
-		CvPathNodeCacheData& kToNodeCacheData = node->m_kCostCacheData;
 		if (!kToNodeCacheData.bIsCalculated)
 		{
 			kToNodeCacheData.bIsCalculated = true;
@@ -1901,7 +1897,6 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 #endif
 
 	// Cache values for this node that we will use in the loop
-	CvPathNodeCacheData& kToNodeCacheData = node->m_kCostCacheData;
 #ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
 	if (!kToNodeCacheData.bIsCalculated)
 	{
@@ -1930,6 +1925,7 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 		}
 	}
 #else
+	CvPathNodeCacheData& kToNodeCacheData = node->m_kCostCacheData;
 	kToNodeCacheData.bPlotVisibleToTeam = pToPlot->isVisible(eUnitTeam);
 	kToNodeCacheData.iNumFriendlyUnitsOfType = pToPlot->getNumFriendlyUnitsOfType(pUnit);
 	kToNodeCacheData.bIsMountain = pToPlot->isMountain();
@@ -2268,15 +2264,15 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 	if (pCacheData->DoDanger())
+	{
+		if (parent->m_iData1 == 0)
+		{
+			{
 #else
 	if(bAIControl)
-#endif
 	{
 		if((parent->m_iData2 > 1) || (parent->m_iData1 == 0))
 		{
-#ifdef AUI_DANGER_PLOTS_REMADE
-			{
-#else
 #ifdef AUI_ASTAR_USE_DELEGATES
 			if (!(GetInfo() & MOVE_UNITS_IGNORE_DANGER))
 #else
@@ -2597,7 +2593,11 @@ int IgnoreUnitsDestValid(int iToX, int iToY, const void* pointer, CvAStar* finde
 
 	if(bAIControl || pToPlot->isRevealed(eUnitTeam))
 	{
+#ifdef AUI_ASTAR_FIX_IGNORE_UNITS_PATHFINDER_TERRITORY_CHECK
+		if (!pUnit->canEnterTerrain(*pToPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE) || !pUnit->canEnterTerritory(pToPlot->getTeam(), false, false, pUnit->IsDeclareWar() || (GetInfo() & MOVE_DECLARE_WAR)))
+#else
 		if(!pUnit->canEnterTerrain(*pToPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE) || !pUnit->canEnterTerritory(eUnitTeam))
+#endif
 		{
 			return FALSE;
 		}
@@ -2940,17 +2940,79 @@ int CvAStar::IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data)
 int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
 {
-#ifndef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_ASTAR_USE_DELEGATES
+	const UnitPathCacheData* pCacheData = reinterpret_cast<const UnitPathCacheData*>(GetScratchBuffer());
+	CvUnit* pUnit = ((CvUnit*)m_pData);
+#else
+	const UnitPathCacheData* pCacheData = reinterpret_cast<const UnitPathCacheData*>(finder->GetScratchBuffer());
+	CvUnit* pUnit = ((CvUnit*)pointer);
+#endif
+	TeamTypes eUnitTeam = pCacheData->getTeam();
+#ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
+	CvPlot* pToPlot = node->m_pPlot;
+	if (!pToPlot)
+		return FALSE;
+#else
+	CvPlot* pToPlot = theMap.plotUnchecked(node->m_iX, node->m_iY);
+#endif
+	bool bAIControl = pUnit->IsAutomated();
+	bool bIsHuman = pCacheData->isHuman();
+#else
 	CvUnit* pUnit;
 	CvPlot* pFromPlot;
 	CvPlot* pToPlot;
 	bool bAIControl;
 #endif
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	PlayerTypes unit_owner = pUnit->getOwner();
+	CvPathNodeCacheData& kToNodeCacheData = node->m_kCostCacheData;
+#endif
 
 	if(parent == NULL)
 	{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+		// Cache values for this node that we will use when the node is checked again in the future
+		if (!kToNodeCacheData.bIsCalculated)
+		{
+			kToNodeCacheData.bIsCalculated = true;
+			kToNodeCacheData.bIsWater = (pToPlot->isWater() && !pToPlot->IsAllowsWalkWater());
+			kToNodeCacheData.bIsMountain = true;
+			kToNodeCacheData.bIsRevealedToTeam = true;
+			kToNodeCacheData.bCanEnterTerrain = true;
+#ifdef AUI_DANGER_PLOTS_REMADE
+			if (pCacheData->DoDanger())
+				kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
+#endif
+		}
+#endif
 		return TRUE;
 	}
+
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	// Cache values for this node that we will use when the node is checked again in the future
+	if (!kToNodeCacheData.bIsCalculated)
+	{
+		kToNodeCacheData.bIsCalculated = true;
+		kToNodeCacheData.bIsWater = (pToPlot->isWater() && !pToPlot->IsAllowsWalkWater());
+		// Recycling bIsMountain for Borders check (only for IgnoreUnits Pathfinder!)
+#ifdef AUI_ASTAR_FIX_IGNORE_UNITS_PATHFINDER_TERRITORY_CHECK
+		kToNodeCacheData.bIsMountain = pUnit->canEnterTerritory(pToPlot->getTeam(), false, false, pUnit->IsDeclareWar() || (GetInfo() & MOVE_DECLARE_WAR));
+#else
+		kToNodeCacheData.bIsMountain = pUnit->canEnterTerritory(eUnitTeam);
+#endif
+		kToNodeCacheData.bIsRevealedToTeam = pToPlot->isRevealed(eUnitTeam);
+		if (bAIControl || kToNodeCacheData.bIsRevealedToTeam || !bIsHuman)
+			kToNodeCacheData.bCanEnterTerrain = pUnit->canEnterTerrain(*pToPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE);
+		else
+			kToNodeCacheData.bCanEnterTerrain = true;
+#ifdef AUI_DANGER_PLOTS_REMADE
+		if (pCacheData->DoDanger())
+			kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
+#endif
+	}
+
+#endif
 
 #ifndef AUI_ASTAR_CACHE_PLOTS_AT_NODES
 	CvMap& theMap = GC.getMap();
@@ -2959,19 +3021,12 @@ int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data, const voi
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
 	CvPlot* pFromPlot = parent->m_pPlot;
-	CvPlot* pToPlot = node->m_pPlot;
-	if (!pToPlot || !pFromPlot)
+	if (!pFromPlot)
 		return FALSE;
 #else
 	CvPlot* pFromPlot = theMap.plotUnchecked(parent->m_iX, parent->m_iY);
-	CvPlot* pToPlot = theMap.plotUnchecked(node->m_iX, node->m_iY);
 #endif
-
-#ifdef AUI_ASTAR_USE_DELEGATES
-	CvUnit* pUnit = ((CvUnit*)m_pData);
-#else
-	CvUnit* pUnit = ((CvUnit*)pointer);
-#endif
+	CvPlot* pUnitPlot = pUnit->plot();
 #else
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
 	pFromPlot = parent->m_pPlot;
@@ -2986,7 +3041,6 @@ int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data, const voi
 #else
 	pUnit = ((CvUnit*)pointer);
 #endif
-#endif
 #ifdef AUI_ASTAR_USE_DELEGATES
 	const UnitPathCacheData* pCacheData = reinterpret_cast<const UnitPathCacheData*>(GetScratchBuffer());
 #else
@@ -2995,16 +3049,21 @@ int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data, const voi
 
 	TeamTypes eUnitTeam = pCacheData->getTeam();
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-	CvPlot* pUnitPlot = pUnit->plot();
-#else
 	CvPlot* pUnitPlot = theMap.plotUnchecked(pUnit->getX(), pUnit->getY());
+#endif
+
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	CvPathNodeCacheData& kFromNodeCacheData = parent->m_kCostCacheData;
 #endif
 
 	// slewis - moved this up so units can't move directly into the water. Not 100% sure this is the right solution.
 	if(pCacheData->getDomainType() == DOMAIN_LAND)
 	{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+		if (!kFromNodeCacheData.bIsWater && kToNodeCacheData.bIsWater && kToNodeCacheData.bIsRevealedToTeam && !pUnit->canEmbarkOnto(*pFromPlot, *pToPlot, true))
+#else
 		if(!pFromPlot->isWater() && pToPlot->isWater() && pToPlot->isRevealed(eUnitTeam) && !pUnit->canEmbarkOnto(*pFromPlot, *pToPlot, true))
+#endif
 		{
 			return FALSE;
 		}
@@ -3021,7 +3080,11 @@ int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data, const voi
 	if(finder->GetInfo() & MOVE_TERRITORY_NO_UNEXPLORED)
 #endif
 	{
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+		if (!kFromNodeCacheData.bIsRevealedToTeam)
+#else
 		if(!(pFromPlot->isRevealed(eUnitTeam)))
+#endif
 		{
 			return FALSE;
 		}
@@ -3050,20 +3113,41 @@ int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data, const voi
 		}
 	}
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-	bool bAIControl = pUnit->IsAutomated();
-#else
+#ifndef AUI_ASTAR_MINOR_OPTIMIZATION
 	bAIControl = pUnit->IsAutomated();
 #endif
 
 	// slewis - added AI check and embark check to prevent units from moving into unexplored areas
+#ifdef AUI_ASTAR_FIX_CAN_ENTER_TERRAIN_NO_DUPLICATE_CALLS
+	if (bAIControl || !bIsHuman || kFromNodeCacheData.bIsRevealedToTeam || pCacheData->isEmbarked())
+	{
+		if (!kToNodeCacheData.bCanEnterTerrain || !kToNodeCacheData.bIsMountain) // Recycling bIsMountain for Borders check (only for IgnoreUnits Pathfinder!)
+#else
 	if(bAIControl || (pFromPlot->isRevealed(eUnitTeam) || pCacheData->isEmbarked()) || !pCacheData->isHuman())
 	{
+#ifdef AUI_ASTAR_FIX_IGNORE_UNITS_PATHFINDER_TERRITORY_CHECK
+		if(!pUnit->canEnterTerrain(*pToPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE) || !pUnit->canEnterTerritory(pToPlot->getTeam(), false, false, pUnit->IsDeclareWar() || (GetInfo() & MOVE_DECLARE_WAR)))
+#else
 		if(!pUnit->canEnterTerrain(*pToPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE) || !pUnit->canEnterTerritory(eUnitTeam))
+#endif
+#endif
 		{
 			return FALSE;
 		}
 	}
+
+#ifdef AUI_DANGER_PLOTS_REMADE
+	if (pCacheData->DoDanger())
+	{
+		if (parent->m_iData1 == 0)
+		{
+			if (kToNodeCacheData.iPlotDanger == MAX_INT || (kToNodeCacheData.iPlotDanger >= pUnit->GetCurrHitPoints() && kFromNodeCacheData.iPlotDanger < pUnit->GetCurrHitPoints()))
+			{
+				return FALSE;
+			}
+		}
+	}
+#endif
 
 	return TRUE;
 }
@@ -4000,6 +4084,14 @@ int BuildRouteCost(CvAStarNode* parent, CvAStarNode* node, int data, const void*
 	// if the plot is on a removable feature, it tends to be a good idea to build a road here
 	int iMovementCost = ((pPlot->getFeatureType() == NO_FEATURE) ? GC.getTerrainInfo(pPlot->getTerrainType())->getMovementCost() : GC.getFeatureInfo(pPlot->getFeatureType())->getMovementCost());
 
+#ifdef AUI_ASTAR_FIX_BUILD_ROUTE_COST_CONSIDER_HILLS_MOVEMENT
+	// Hill cost, except for when a City is present here, then it just counts as flat land
+	if ((PlotTypes)pPlot->getPlotType() == PLOT_HILLS && !pPlot->isCity())
+	{
+		iMovementCost += GC.getHILLS_EXTRA_MOVEMENT();
+	}
+#endif
+
 	// calculate the max value based on how much of a movement increase we get
 	if(iMovementCost + 1 != 0)
 	{
@@ -4011,6 +4103,13 @@ int BuildRouteCost(CvAStarNode* parent, CvAStarNode* node, int data, const void*
 	{
 		iMaxValue = (int)(iMaxValue * PATH_BUILD_ROUTE_ALREADY_FLAGGED_DISCOUNT);
 	}
+
+#ifdef AUI_WORKER_INCA_HILLS
+	if (GET_PLAYER(ePlayer).GetPlayerTraits()->IsNoHillsImprovementMaintenance() && pPlot->isHills())
+	{
+		iMaxValue /= 2;
+	}
+#endif
 
 	return iMaxValue;
 }
@@ -5589,15 +5688,15 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 	if (pCacheData->DoDanger())
+	{
+		if (parent->m_iData1 == 0)
+		{
+			{
 #else
 	if(bAIControl)
-#endif
 	{
 		if((parent->m_iData2 > 1) || (parent->m_iData1 == 0))
 		{
-#ifdef AUI_DANGER_PLOTS_REMADE
-			{
-#else
 #ifdef AUI_ASTAR_USE_DELEGATES
 			if(!(GetInfo() & MOVE_UNITS_IGNORE_DANGER))
 #else
