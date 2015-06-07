@@ -226,6 +226,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 /// Units without a defense bonus still consider a tile's defense penalties when pathfinding
 #define AUI_ASTAR_FIX_DEFENSE_PENALTIES_CONSIDERED_FOR_UNITS_WITHOUT_DEFENSE_BONUS
+/// Fixes a nonsense territory check in the Ignore Units pathfinder (can this unit enter territory owned by this unit's team?) by replacing it with one that actually makes sense (can this unit enter territory of the player who owns the target plot?)
+#define AUI_ASTAR_FIX_IGNORE_UNITS_PATHFINDER_TERRITORY_CHECK
+/// In addition to the movement cost from features on a tile, the route recommender will now also consider the movement cost of moving onto a tile with hills
+#define AUI_ASTAR_FIX_BUILD_ROUTE_COST_CONSIDER_HILLS_MOVEMENT
 
 // AI Operations Stuff
 /// If a settler tries and fails the no escort check, keep rerolling each turn
@@ -310,6 +314,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_FLYING_WORKER_DISREGARDS_PEAKS
 /// Added some extra checks for Celts so that 1) they will improve forests when there would still be enough unimproved ones remaining to give the same faith bonnus and 2) they will not improve luxury resources on forests if they do not get any use out of them and would lower faith
 #define AUI_WORKER_FIX_CELTIC_IMPROVE_UNIMPROVED_FORESTS
+/// AI/Automated workers will no longer automatically continue building the improvement they are currently building if the tile they are on is in danger
+#define AUI_WORKER_EVALUATE_WORKER_RETREAT_AND_BUILD
+/// AI/Automated workers will now consider any modifiers the player has to road maintenance when calculating how much profit the road earns
+#define AUI_WORKER_FIX_CONNECT_CITIES_TO_CAPITOL_CONSIDER_MAINTENANCE_MODIFIERS
 
 // City Stuff
 /// Shifts the scout assignment code to EconomicAI
@@ -336,8 +344,12 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITIZENS_FIX_SPECIALIST_VALUE_HALF_FOOD_CONSUMPTION
 /// Replaces the rudimentary specialist-plot check with a plot vs. default citizen value check
 #define AUI_CITIZENS_IS_PLOT_BETTER_THAN_DEFAULT_SPECIALIST
+/// The value of excess food is multiplied by the city's growth modifiers
+#define AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+#ifndef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS // Not needed if growth modifiers are checked, since being unhappy creates a huge negative growth modifier
 /// If the empire is unhappy, cities with full or partial food focus get their food focus removed
 #define AUI_CITIZENS_DO_TURN_NO_FOOD_FOCUS_IF_UNHAPPY
+#endif
 /// When assigning a new citizen after a city has grown, the value of food is set to 0 because food is calculated before citizen growth, all other yields are done after it
 #define AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
 /// If a tile would provide enough food to generate excess food, the excess amount has its value halved as if the city was already generating enough food
@@ -346,8 +358,6 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITIZENS_GET_VALUE_ALTER_FOOD_VALUE_IF_FOOD_PRODUCTION
 /// If a city has any modifiers on certain yield incomes, this modification is applied to the value of those yields as well (eg. +25% gold increases gold yield value by 25%)
 #define AUI_CITIZENS_GET_VALUE_CONSIDER_YIELD_RATE_MODIFIERS
-/// The value of excess food is multiplied by the city's growth modifiers
-#define AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
 /// The value of food is now properly increased if the city is on food focus with the avoid growth flag set
 #define AUI_CITIZENS_FIX_GET_VALUE_FOOD_YIELD_VALUE_WHEN_STARVATION_WITH_AVOID_GROWTH
 /// Games where happiness is disabled no longer cause the citizen manager to always ignore the avoid growth checkbox
@@ -695,8 +705,6 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_PLAYERAI_TWEAKED_GREAT_SCIENTIST_DIRECTIVE
 /// Makes the number of cities Venice desires a function of various parameters instead of just a set constant (same parameters as Early Expansion economic strategy)
 #define AUI_PLAYERAI_TWEAKED_VENICE_CITY_TARGET
-/// Disables Reuse Paths for pathfinding functions
-#define AUI_PLAYERAI_NO_REUSE_PATHS_FOR_TARGET_PLOTS
 /// Additional filters applied for Venice, eg. higher priority if city is coastal, lower priority if city is ally, priority based on distance to nearest ally city instead of path
 #define AUI_PLAYERAI_FIND_BEST_MERCHANT_TARGET_PLOT_VENICE_FILTERS
 /// When updating the settle value of a landmass with a new plot, MAX() is used instead of addition
