@@ -393,6 +393,10 @@ CvPlayer::CvPlayer() :
 	, m_iStrategicResourceMod("CvPlayer::m_iStrategicResourceMod", m_syncArchive)
 	, m_iSpecialistCultureChange("CvPlayer::m_iSpecialistCultureChange", m_syncArchive)
 	, m_iGreatPeopleSpawnCounter("CvPlayer::m_iGreatPeopleSpawnCounter", m_syncArchive)
+#ifdef AUI_ASTAR_GHOSTFINDER
+	, m_eLandGhost(NO_UNIT)
+	, m_eWaterGhost(NO_UNIT)
+#endif
 	, m_iFreeTechCount("CvPlayer::m_iFreeTechCount", m_syncArchive, true)
 	, m_iMedianTechPercentage(50)
 	, m_iNumFreePolicies("CvPlayer::m_iNumFreePolicies", m_syncArchive)
@@ -418,7 +422,9 @@ CvPlayer::CvPlayer() :
 	m_pEconomicAI = FNEW(CvEconomicAI, c_eCiv5GameplayDLL, 0);
 	m_pMilitaryAI = FNEW(CvMilitaryAI, c_eCiv5GameplayDLL, 0);
 	m_pCitySpecializationAI = FNEW(CvCitySpecializationAI, c_eCiv5GameplayDLL, 0);
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 	m_pWonderProductionAI = FNEW(CvWonderProductionAI(this, GC.GetGameBuildings()), c_eCiv5GameplayDLL, 0);
+#endif
 	m_pGrandStrategyAI = FNEW(CvGrandStrategyAI, c_eCiv5GameplayDLL, 0);
 	m_pDiplomacyAI = FNEW(CvDiplomacyAI, c_eCiv5GameplayDLL, 0);
 	m_pReligions = FNEW(CvPlayerReligions, c_eCiv5GameplayDLL, 0);
@@ -466,7 +472,9 @@ CvPlayer::~CvPlayer()
 	delete m_pEconomicAI;
 	delete m_pMilitaryAI;
 	delete m_pCitySpecializationAI;
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 	delete m_pWonderProductionAI;
+#endif
 	delete m_pGrandStrategyAI;
 	delete m_pDiplomacyAI;
 	delete m_pReligions;
@@ -678,7 +686,9 @@ void CvPlayer::uninit()
 	m_pEconomicAI->Uninit();
 	m_pMilitaryAI->Uninit();
 	m_pCitySpecializationAI->Uninit();
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 	m_pWonderProductionAI->Uninit();
+#endif
 	m_pGrandStrategyAI->Uninit();
 	m_pDiplomacyAI->Uninit();
 	m_pReligions->Uninit();
@@ -940,6 +950,10 @@ void CvPlayer::uninit()
 	m_iStrategicResourceMod = 0;
 	m_iSpecialistCultureChange = 0;
 	m_iGreatPeopleSpawnCounter = 0;
+#ifdef AUI_ASTAR_GHOSTFINDER
+	m_eLandGhost = NO_UNIT;
+	m_eWaterGhost = NO_UNIT;
+#endif
 	m_iFreeTechCount = 0;
 	m_iMedianTechPercentage = 50;
 	m_iNumFreePolicies = 0;
@@ -1133,7 +1147,9 @@ void CvPlayer::reset(PlayerTypes eID, bool bConstructorCall)
 		m_pEconomicAI->Init(GC.GetGameEconomicAIStrategies(), this);
 		m_pMilitaryAI->Init(GC.GetGameMilitaryAIStrategies(), this, GetDiplomacyAI());
 		m_pCitySpecializationAI->Init(GC.GetGameCitySpecializations(), this);
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 		m_pWonderProductionAI->Init(GC.GetGameBuildings(), this, false);
+#endif
 		m_pGrandStrategyAI->Init(GC.GetGameAIGrandStrategies(), this);
 		m_pDiplomacyAI->Init(this);
 		m_pReligions->Init(this);
@@ -1176,7 +1192,9 @@ void CvPlayer::reset(PlayerTypes eID, bool bConstructorCall)
 			{
 				m_pFlavorManager->AddFlavorRecipient(m_pPlayerTechs);
 				m_pFlavorManager->AddFlavorRecipient(m_pPlayerPolicies);
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 				m_pFlavorManager->AddFlavorRecipient(m_pWonderProductionAI);
+#endif
 			}
 		}
 
@@ -1216,6 +1234,18 @@ void CvPlayer::reset(PlayerTypes eID, bool bConstructorCall)
 	m_units.RemoveAll();
 
 	m_armyAIs.RemoveAll();
+
+#ifdef AUI_ASTAR_GHOSTFINDER
+	PlayerTypes p = GetID();
+	if (p != NO_PLAYER)
+	{
+		SlotStatus s = CvPreGame::slotStatus(p);
+		if ((s == SS_TAKEN) || (s == SS_COMPUTER))
+		{
+			initGhostfinders();
+		}
+	}
+#endif
 
 	// loop through all entries freeing them up
 	std::map<int , CvAIOperation*>::iterator iter;
@@ -3317,6 +3347,51 @@ CvUnit* CvPlayer::initUnitWithNameOffset(UnitTypes eUnit, int nameOffset, int iX
 
 	return pUnit;
 }
+
+#ifdef AUI_ASTAR_GHOSTFINDER
+void CvPlayer::initGhostfinders()
+{
+	m_eLandGhost = NO_UNIT;
+	m_eWaterGhost = NO_UNIT;
+	for (int iI = 0; iI < GC.getNumUnitClassInfos() && m_eLandGhost == NO_UNIT && m_eWaterGhost == NO_UNIT; iI++)
+	{
+		UnitClassTypes eLoopUnitClass = static_cast<UnitClassTypes>(iI);
+		if (!isWorldUnitClass(eLoopUnitClass))
+		{
+			UnitTypes eLoopUnit = static_cast<UnitTypes>(getCivilizationInfo().getCivilizationUnits(eLoopUnitClass));
+			CvUnitEntry* pLoopUnitEntry = GC.getUnitInfo(eLoopUnit);
+			if (pLoopUnitEntry && pLoopUnitEntry->GetMoves() > 0 && pLoopUnitEntry->GetSpecialUnitType() == NO_SPECIALUNIT)
+			{
+				if (pLoopUnitEntry->GetDomainType() == DOMAIN_SEA && m_eWaterGhost == NO_UNIT)
+					m_eWaterGhost = eLoopUnit;
+				else if (pLoopUnitEntry->GetDomainType() == DOMAIN_LAND && m_eLandGhost == NO_UNIT)
+					m_eLandGhost = eLoopUnit;
+			}
+		}
+	}
+}
+
+CvUnit* CvPlayer::getGhostfinderUnit(bool bIsWater)
+{
+	UnitTypes eUnit = m_eLandGhost;
+	if (bIsWater)
+		eUnit = m_eWaterGhost;
+	
+	if (eUnit == NO_UNIT)
+		return NULL;
+
+	CvUnitEntry* pkUnitDef = GC.getUnitInfo(eUnit);
+	if (pkUnitDef == NULL)
+		return NULL;
+
+	CvUnit* pUnit = addUnit();
+	if (NULL != pUnit)
+	{
+		pUnit->initGhostFinder(pUnit->GetID(), eUnit, GetID());
+	}
+	return pUnit;
+}
+#endif
 
 //	--------------------------------------------------------------------------------
 void CvPlayer::disbandUnit(bool)
@@ -18399,7 +18474,11 @@ void CvPlayer::changeResourceSiphoned(ResourceTypes eIndex, int iChange)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+int CvPlayer::getResourceInOwnedPlots(ResourceTypes eIndex) const
+#else
 int CvPlayer::getResourceInOwnedPlots(ResourceTypes eIndex)
+#endif
 {
 	CvAssertMsg(eIndex >= 0, "eIndex is expected to be non-negative (invalid Index)");
 	CvAssertMsg(eIndex < GC.getNumResourceInfos(), "eIndex is expected to be within maximum bounds (invalid Index)");
@@ -18407,6 +18486,14 @@ int CvPlayer::getResourceInOwnedPlots(ResourceTypes eIndex)
 	int iCount = 0;
 
 	// Loop through all plots
+#ifdef AUI_CONSTIFY
+	for (uint uiPlotIndex = 0; uiPlotIndex < m_aiPlots.size(); uiPlotIndex++)
+	{
+		if (m_aiPlots[uiPlotIndex] == -1)
+			continue;
+
+		CvPlot* pPlot = GC.getMap().plotByIndex(m_aiPlots[uiPlotIndex]);
+#else
 	const CvPlotsVector& aiPlots = GetPlots();
 	for (uint uiPlotIndex = 0; uiPlotIndex < aiPlots.size(); uiPlotIndex++)
 	{
@@ -18414,6 +18501,7 @@ int CvPlayer::getResourceInOwnedPlots(ResourceTypes eIndex)
 			continue;
 
 		CvPlot* pPlot = GC.getMap().plotByIndex(aiPlots[uiPlotIndex]);
+#endif
 		if (pPlot && pPlot->getResourceType(getTeam()) == eIndex)
 		{
 			iCount++;
@@ -18422,6 +18510,74 @@ int CvPlayer::getResourceInOwnedPlots(ResourceTypes eIndex)
 
 	return iCount;
 }
+
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+bool CvPlayer::IsNoNeedForResource(ResourceTypes eResource) const
+{
+	const CvResourceInfo* pkResourceInfo = GC.getResourceInfo(eResource);
+	CvAssert(pkResourceInfo != NULL);
+	if (pkResourceInfo == NULL)
+		return true;
+	ResourceUsageTypes eUsage = pkResourceInfo->getResourceUsage();
+	if (eUsage == RESOURCEUSAGE_LUXURY)
+	{
+		if (GC.getGame().GetGameLeagues()->IsLuxuryHappinessBanned(GetID(), eResource))
+			return true;
+		else
+			return false;
+	}
+	else if (eUsage == RESOURCEUSAGE_STRATEGIC)
+	{
+		int iLoop;
+		for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
+		{
+			const UnitTypes eLoopUnit = static_cast<UnitTypes>(iI);
+			CvUnitEntry* pkUnitInfo = GC.getUnitInfo(eLoopUnit);
+			if (pkUnitInfo && pkUnitInfo->GetResourceQuantityRequirement(eResource) > 0 && canTrain(eLoopUnit, false, true, true))
+			{
+				CvTechEntry* pkPrereqTechInfo = GC.getTechInfo(TechTypes(pkUnitInfo->GetPrereqAndTech()));
+				if (!pkPrereqTechInfo || pkPrereqTechInfo->GetEra() <= GetCurrentEra())
+				{
+					for (const CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
+					{
+						if (pLoopCity->canTrain(eLoopUnit, false, true, true) || (pkUnitInfo->IsPurchaseOnly() && pLoopCity->canTrain(eLoopUnit, false, true, true, true)))
+						{
+							return false;
+						}
+					}
+				}
+			}
+		}
+
+		for (int iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
+		{
+			const BuildingTypes eLoopBuilding = static_cast<BuildingTypes>(iBldgLoop);
+			CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eLoopBuilding);
+			if (pkBuildingInfo && pkBuildingInfo->GetResourceQuantityRequirement(eResource) > 0 && canConstruct(eLoopBuilding, false, true))
+			{
+				BuildingClassTypes eBuildingClassInfo = (BuildingClassTypes)pkBuildingInfo->GetBuildingClassType();
+				CvBuildingClassInfo* pkBuildingClassInfo = GC.getBuildingClassInfo(eBuildingClassInfo);
+				if (pkBuildingClassInfo)
+				{
+					int iMaxBuildingInstances = MAX_INT;
+					if (!pkBuildingClassInfo->isNoLimit())
+						iMaxBuildingInstances = pkBuildingClassInfo->getMaxPlayerInstances() + pkBuildingClassInfo->getExtraPlayerInstances();
+					int iCurBuildingCount = getBuildingClassCount(eBuildingClassInfo);
+					for (const CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL && iCurBuildingCount < iMaxBuildingInstances; pLoopCity = nextCity(&iLoop))
+					{
+						if (pLoopCity->canConstruct(eLoopBuilding, false, true, true))
+						{
+							return false;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return true;
+}
+#endif
 
 //	--------------------------------------------------------------------------------
 int CvPlayer::getTotalImprovementsBuilt() const
@@ -22039,11 +22195,13 @@ CvCitySpecializationAI* CvPlayer::GetCitySpecializationAI() const
 	return m_pCitySpecializationAI;
 }
 
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 //	--------------------------------------------------------------------------------
 CvWonderProductionAI* CvPlayer::GetWonderProductionAI() const
 {
 	return m_pWonderProductionAI;
 }
+#endif
 
 //	--------------------------------------------------------------------------------
 CvGrandStrategyAI* CvPlayer::GetGrandStrategyAI() const
@@ -22456,6 +22614,10 @@ void CvPlayer::Read(FDataStream& kStream)
 	kStream >> m_iStrategicResourceMod;
 	kStream >> m_iSpecialistCultureChange;
 	kStream >> m_iGreatPeopleSpawnCounter;
+#ifdef AUI_ASTAR_GHOSTFINDER
+	kStream >> m_eLandGhost;
+	kStream >> m_eWaterGhost;
+#endif
 	kStream >> m_iFreeTechCount;
 	kStream >> m_iMedianTechPercentage;
 	kStream >> m_iNumFreePolicies;
@@ -22621,7 +22783,9 @@ void CvPlayer::Read(FDataStream& kStream)
 	m_pPlayerPolicies->Read(kStream);
 	m_pEconomicAI->Read(kStream);
 	m_pCitySpecializationAI->Read(kStream);
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 	m_pWonderProductionAI->Read(kStream);
+#endif
 	m_pMilitaryAI->Read(kStream);
 	m_pGrandStrategyAI->Read(kStream);
 	m_pDiplomacyAI->Read(kStream);
@@ -22662,7 +22826,9 @@ void CvPlayer::Read(FDataStream& kStream)
 		{
 			m_pFlavorManager->AddFlavorRecipient(m_pPlayerTechs,        false /*bPropogateFlavors*/);
 			m_pFlavorManager->AddFlavorRecipient(m_pPlayerPolicies,     false /*bPropogateFlavors*/);
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 			m_pFlavorManager->AddFlavorRecipient(m_pWonderProductionAI, false /*bPropogateFlavors*/);
+#endif
 		}
 	}
 
@@ -22974,6 +23140,10 @@ void CvPlayer::Write(FDataStream& kStream) const
 	kStream << m_iStrategicResourceMod;
 	kStream << m_iSpecialistCultureChange;
 	kStream << m_iGreatPeopleSpawnCounter;
+#ifdef AUI_ASTAR_GHOSTFINDER
+	kStream << m_eLandGhost;
+	kStream << m_eWaterGhost;
+#endif
 	kStream << m_iFreeTechCount;
 	kStream << m_iMedianTechPercentage;
 	kStream << m_iNumFreePolicies;
@@ -23073,7 +23243,9 @@ void CvPlayer::Write(FDataStream& kStream) const
 	m_pPlayerPolicies->Write(kStream);
 	m_pEconomicAI->Write(kStream);
 	m_pCitySpecializationAI->Write(kStream);
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 	m_pWonderProductionAI->Write(kStream);
+#endif
 	m_pMilitaryAI->Write(kStream);
 	m_pGrandStrategyAI->Write(kStream);
 	m_pDiplomacyAI->Write(kStream);

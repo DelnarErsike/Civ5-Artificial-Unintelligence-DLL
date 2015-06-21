@@ -99,6 +99,11 @@ public:
 	CvUnit* initUnit(UnitTypes eUnit, int iX, int iY, UnitAITypes eUnitAI = NO_UNITAI, DirectionTypes eFacingDirection = NO_DIRECTION, bool bNoMove=false, bool bSetupGraphical=true, int iMapLayer = 0, int iNumGoodyHutsPopped = 0);
 	CvUnit* initUnitWithNameOffset(UnitTypes eUnit, int nameOffset, int iX, int iY, UnitAITypes eUnitAI = NO_UNITAI, DirectionTypes eFacingDirection = NO_DIRECTION, bool bNoMove = false, bool bSetupGraphical = true, int iMapLayer = 0, int iNumGoodyHutsPopped = 0);
 
+#ifdef AUI_ASTAR_GHOSTFINDER
+	void initGhostfinders();
+	CvUnit* getGhostfinderUnit(bool bIsWater);
+#endif
+
 	void disbandUnit(bool bAnnounce);
 	void killUnits();
 
@@ -1149,7 +1154,15 @@ public:
 	int getResourceSiphoned(ResourceTypes eIndex) const;
 	void changeResourceSiphoned(ResourceTypes eIndex, int iChange);
 
+#ifdef AUI_CONSTIFY
+	int getResourceInOwnedPlots(ResourceTypes eIndex) const;
+#else
 	int getResourceInOwnedPlots(ResourceTypes eIndex);
+#endif
+
+#ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
+	bool IsNoNeedForResource(ResourceTypes eResource) const;
+#endif
 
 	int getTotalImprovementsBuilt() const;
 	void changeTotalImprovementsBuilt(int iChange);
@@ -1469,7 +1482,9 @@ public:
 	CvEconomicAI* GetEconomicAI() const;
 	CvMilitaryAI* GetMilitaryAI() const;
 	CvCitySpecializationAI* GetCitySpecializationAI() const;
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 	CvWonderProductionAI* GetWonderProductionAI() const;
+#endif
 	CvGrandStrategyAI* GetGrandStrategyAI() const;
 	CvDiplomacyAI* GetDiplomacyAI() const;
 	CvPlayerReligions* GetReligions() const;
@@ -1804,6 +1819,11 @@ protected:
 	FAutoVariable<int, CvPlayer> m_iSpecialistCultureChange;
 	FAutoVariable<int, CvPlayer> m_iGreatPeopleSpawnCounter;
 
+#ifdef AUI_ASTAR_GHOSTFINDER
+	UnitTypes m_eLandGhost;
+	UnitTypes m_eWaterGhost;
+#endif
+
 #ifdef AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
 	// bit index = Great Person type; 0/1 value = is it unique?
 	int m_iUniqueGreatPersons;
@@ -1943,7 +1963,9 @@ protected:
 	CvEconomicAI* m_pEconomicAI;
 	CvMilitaryAI* m_pMilitaryAI;
 	CvCitySpecializationAI* m_pCitySpecializationAI;
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 	CvWonderProductionAI* m_pWonderProductionAI;
+#endif
 
 	// AI Grand Strategies
 	CvGrandStrategyAI* m_pGrandStrategyAI;
