@@ -83,8 +83,8 @@
 		
 		<!-- Economic AI Stuff -->
 		<Update>
-			<!-- Increased to 40000 to account for higher settler yield multipliers -->
-			<Set Value="40000" />
+			<!-- Increased to 30000 to account for higher settler yield multipliers -->
+			<Set Value="20000" />
 			<Where Name="AI_STRATEGY_MINIMUM_SETTLE_FERTILITY" />
 		</Update>
 		<Update>
@@ -219,27 +219,27 @@
 		<!-- Citizen Management Stuff -->
 		<!-- Updated yields to for better citizen automation -->
 		<Update>
-			<Set Value="16" /> <!-- Note: Excess food gets reduced by half to 8 if city is not growth focus -->
+			<Set Value="20" /> <!-- Note: Excess food gets reduced by half to 9 if city is not growth focus -->
 			<Where Name="AI_CITIZEN_VALUE_FOOD" /> 
 		</Update>
 		<Update>
-			<Set Value="12" />
+			<Set Value="16" />
 			<Where Name="AI_CITIZEN_VALUE_PRODUCTION" />
 		</Update>
 		<Update>
-			<Set Value="6" />
+			<Set Value="5" />
 			<Where Name="AI_CITIZEN_VALUE_GOLD" />
 		</Update>
 		<Update>
-			<Set Value="9" />
+			<Set Value="11" />
 			<Where Name="AI_CITIZEN_VALUE_SCIENCE" />
 		</Update>
 		<Update>
-			<Set Value="8" />
+			<Set Value="10" />
 			<Where Name="AI_CITIZEN_VALUE_CULTURE" />
 		</Update>
 		<Update>
-			<Set Value="7" />
+			<Set Value="9" />
 			<Where Name="AI_CITIZEN_VALUE_FAITH" />
 		</Update>
 		

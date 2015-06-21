@@ -8,7 +8,7 @@
 			<Where AIGrandStrategyType="AIGRANDSTRATEGY_CONQUEST" />
 		</Update>
 		<Update>
-			<Set Flavor="10" />
+			<Set Flavor="10" FlavorType="FLAVOR_TOURISM" />
 			<Where AIGrandStrategyType="AIGRANDSTRATEGY_CULTURE" />
 		</Update>
 		<Update>
@@ -97,6 +97,11 @@
 			<Set Flavor="2" />
 			<Where AIGrandStrategyType="AIGRANDSTRATEGY_CULTURE" FlavorType="FLAVOR_RELIGION"/>
 		</Update>
+		<Row>
+			<AIGrandStrategyType>AIGRANDSTRATEGY_CULTURE</AIGrandStrategyType>
+			<FlavorType>FLAVOR_TOURISM</FlavorType>
+			<Flavor>2</Flavor>
+		</Row>
 
 		<!-- GS has slightly higher influence on flavors now -->
 		<Update>
@@ -114,10 +119,7 @@
 		<!-- Science is NOT opposed by religion. Science is opposed by knobheads. Learn the difference. 
 			On a more serious note, the -5 flavor was a bit much, especially considering a lot of religious traits actually help 
 			science, eg. God King, Swords to Plowshares, Fertility Rites, happiness-boosting traits combined with Rationalism -->
-		<Update>
-			<Set Flavor="-2" />
-			<Where AIGrandStrategyType="AIGRANDSTRATEGY_SPACESHIP" FlavorType="FLAVOR_RELIGION"/>
-		</Update>
+		<Delete AIGrandStrategyType="AIGRANDSTRATEGY_SPACESHIP" FlavorType="FLAVOR_RELIGION"/>
 		<!-- Great Scientists and Great Engineers help spaceship victory quite a bit, so why not add some flavor? -->
 		<Row>
 			<AIGrandStrategyType>AIGRANDSTRATEGY_SPACESHIP</AIGrandStrategyType>

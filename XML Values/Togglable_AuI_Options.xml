@@ -6,5 +6,20 @@
 		<Row Name="MULTIPLAYER_AI_DIPLOMACY_NOTIFICATIONS_ONLY_SIMULTANEOUS">
 			<Value>1</Value>
 		</Row>
+		
+		<!-- These 4 settings disable the new Lua event system that was added that allows for the increase or decrease of flavors based on Lua scripting.
+			 AuI only uses this system for wonders, so all other Lua event systems are disabled by default for performance reasons. -->
+		<Row Name="DISABLE_UNIT_AI_FLAVOR_LUA_MODDING">
+			<Value>1</Value>
+		</Row>
+		<Row Name="DISABLE_BUILDING_AI_FLAVOR_LUA_MODDING">
+			<Value>0</Value>
+		</Row>
+		<Row Name="DISABLE_PROJECT_AI_FLAVOR_LUA_MODDING">
+			<Value>1</Value>
+		</Row>
+		<Row Name="DISABLE_PROCESS_AI_FLAVOR_LUA_MODDING">
+			<Value>1</Value>
+		</Row>
 	</Defines>
 </GameData>

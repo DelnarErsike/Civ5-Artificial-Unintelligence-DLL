@@ -3,23 +3,23 @@
 	<Defines>
 		<!-- Settle Yield Multipliers are now the same as Citizen Yield values -->
 		<Update>
-			<Set Value="16" />
+			<Set Value="20" />
 			<Where Name="SETTLER_FOOD_MULTIPLIER" />
 		</Update>
 		<Update>
-			<Set Value="12" />
+			<Set Value="16" />
 			<Where Name="SETTLER_PRODUCTION_MULTIPLIER" />
 		</Update>
 		<Update>
-			<Set Value="6" />
+			<Set Value="5" />
 			<Where Name="SETTLER_GOLD_MULTIPLIER" />
 		</Update>
 		<Update>
-			<Set Value="9" />
+			<Set Value="11" />
 			<Where Name="SETTLER_SCIENCE_MULTIPLIER" />
 		</Update>
 		<Update>
-			<Set Value="7" />
+			<Set Value="9" />
 			<Where Name="SETTLER_FAITH_MULTIPLIER" />
 		</Update>
 		<!-- Dll Tweaks mean that the AI will automatically calculate a lower fertility for settling on resource tiles, 

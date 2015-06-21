@@ -8,7 +8,7 @@
 			<Value>1</Value>
 		</Row>
 		<Row Name="SETTLER_CULTURE_MULTIPLIER">
-			<Value>8</Value>
+			<Value>10</Value>
 		</Row>
 		
 		<Row Name="SETTLER_FOOD_RING_0_DIVIDER">
@@ -96,13 +96,13 @@
 			<Value>1</Value>
 		</Row>
 		<Row Name="SETTLER_HAPPINESS_RING_4_DIVIDER">
-			<Value>2</Value>
-		</Row>
-		<Row Name="SETTLER_HAPPINESS_RING_5_DIVIDER">
 			<Value>4</Value>
 		</Row>
+		<Row Name="SETTLER_HAPPINESS_RING_5_DIVIDER">
+			<Value>8</Value>
+		</Row>
 		<Row Name="SETTLER_RESOURCES_RING_0_DIVIDER">
-			<Value>1</Value>
+			<Value>3</Value>
 		</Row>
 		<Row Name="SETTLER_RESOURCES_RING_1_DIVIDER">
 			<Value>1</Value>
@@ -120,7 +120,7 @@
 			<Value>4</Value>
 		</Row>
 		<Row Name="SETTLER_STRATEGIC_RING_0_DIVIDER">
-			<Value>1</Value>
+			<Value>2</Value>
 		</Row>
 		<Row Name="SETTLER_STRATEGIC_RING_1_DIVIDER">
 			<Value>1</Value>
@@ -129,13 +129,13 @@
 			<Value>1</Value>
 		</Row>
 		<Row Name="SETTLER_STRATEGIC_RING_3_DIVIDER">
-			<Value>1</Value>
-		</Row>
-		<Row Name="SETTLER_STRATEGIC_RING_4_DIVIDER">
 			<Value>2</Value>
 		</Row>
-		<Row Name="SETTLER_STRATEGIC_RING_5_DIVIDER">
+		<Row Name="SETTLER_STRATEGIC_RING_4_DIVIDER">
 			<Value>4</Value>
+		</Row>
+		<Row Name="SETTLER_STRATEGIC_RING_5_DIVIDER">
+			<Value>8</Value>
 		</Row>
 	</Defines>
 </GameData>
