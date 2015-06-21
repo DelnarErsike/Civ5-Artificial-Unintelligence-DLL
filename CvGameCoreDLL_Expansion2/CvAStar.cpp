@@ -2378,8 +2378,8 @@ int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 	if(data == ASNC_INITIALADD)
 	{
 		iTurns = 1;
-#ifdef AUI_FAST_COMP
-		iMoves = FASTMIN(iMoves, pUnit->movesLeft());
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+		iMoves = pUnit->movesLeft();
 #else
 		iMoves = std::min(iMoves, pUnit->movesLeft());
 #endif
@@ -2397,13 +2397,26 @@ int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 
 		int iStartMoves = parent->m_iData1;
 		iTurns = parent->m_iData2;
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+		int iBaseMoves = pCacheData->baseMoves(((pToPlot->isWater() && !pToPlot->IsAllowsWalkWater()) || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType());
+#endif
 
 		if(iStartMoves == 0)
 		{
 			iTurns++;
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+			iStartMoves = iBaseMoves * GC.getMOVE_DENOMINATOR();
+#else
 			iStartMoves = pCacheData->baseMoves((pToPlot->isWater() && !pToPlot->IsAllowsWalkWater()) ? DOMAIN_SEA : DOMAIN_LAND) * GC.getMOVE_DENOMINATOR();
+#endif
 		}
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+		// We can just set maxMoves to the maximum integer value and use it for increased portability and no redundant checks, iMoves gets set to 0 anyway if it's negative
+		iMoves = iStartMoves - CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, iBaseMoves, MAX_INT, iStartMoves);
+		if (iMoves < 0)
+			iMoves = 0;
+#else
 		// We can't use maxMoves, because that checks where the unit is currently, and we're plotting a path so we have to see
 		// what the max moves would be like if the unit was already at the desired location.
 		if (CvUnitMovement::ConsumesAllMoves(pUnit, pFromPlot, pToPlot) || CvUnitMovement::IsSlowedByZOC(pUnit, pFromPlot, pToPlot))
@@ -2418,6 +2431,7 @@ int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 			iMoves = std::min(iMoves, std::max(0, iStartMoves - CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves(), iStartMoves)));
 #endif
 		}
+#endif
 	}
 
 	FAssertMsg(iMoves >= 0, "iMoves is expected to be non-negative (invalid Index)");
@@ -3174,8 +3188,8 @@ int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const v
 	if(data == ASNC_INITIALADD)
 	{
 		iTurns = 1;
-#ifdef AUI_FAST_COMP
-		iMoves = FASTMIN(iMoves, pUnit->movesLeft());
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+		iMoves = pUnit->movesLeft();
 #else
 		iMoves = std::min(iMoves, pUnit->movesLeft());
 #endif
@@ -3192,19 +3206,33 @@ int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const v
 
 		int iStartMoves = parent->m_iData1;
 		iTurns = parent->m_iData2;
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+		int iBaseMoves = pCacheData->baseMoves(((pToPlot->isWater() && !pToPlot->IsAllowsWalkWater()) || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType());
+#endif
 
 		if(iStartMoves == 0)
 		{
 			iTurns++;
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+			iStartMoves = iBaseMoves * GC.getMOVE_DENOMINATOR();
+#else
 			iStartMoves = pCacheData->baseMoves((pToPlot->isWater() && !pToPlot->IsAllowsWalkWater()) ? DOMAIN_SEA : DOMAIN_LAND) * GC.getMOVE_DENOMINATOR();
+#endif
 		}
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+		// We can just set maxMoves to the maximum integer value and use it for increased portability and no redundant checks, iMoves gets set to 0 anyway if it's negative
+		iMoves = iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, iBaseMoves, MAX_INT, iStartMoves);
+		if (iMoves < 0)
+			iMoves = 0;
+#else
 		// We can't use maxMoves, because that checks where the unit is currently, and we're plotting a path so we have to see
 		// what the max moves would be like if the unit was already at the desired location.
 #ifdef AUI_FAST_COMP
 		iMoves = FASTMIN(iMoves, FASTMAX(0, iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves())));
 #else
 		iMoves = std::min(iMoves, std::max(0, iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves())));
+#endif
 #endif
 	}
 
@@ -5093,7 +5121,9 @@ int UIPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 {
 	PathAdd(parent, node, data, pointer, finder);
 #endif
+#ifndef AUI_ASTAR_MINOR_OPTIMIZATION
 	if(node)
+#endif
 	{
 		if(node->m_iData2 < 2 /*&& node->m_eCvAStarListType == NO_CVASTARLIST*/)
 		{
@@ -5123,7 +5153,11 @@ int AttackPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* 
 {
 	PathAdd(parent, node, data, pointer, finder);
 #endif
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	if (node->m_iData2 < 2)
+#else
 	if(node && node->m_iData2 < 2)
+#endif
 	{
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
 		CvPlot* pPlot = node->m_pPlot;
@@ -6043,6 +6077,15 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 	}
 }
 
+#ifdef AUI_DANGER_PLOTS_REMADE
+#ifdef AUI_ASTAR_TURN_LIMITER
+// Delnar: if you're checking if a unit can reach a tile within X turns, set the iTargetTurns parameter to X to speed up the pathfinder
+int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns, bool bForDanger)
+{
+	return TurnsToReachTargetFromPlot(pUnit, pTarget, NULL, bReusePaths, bIgnoreUnits, bIgnoreStacking, iTargetTurns, bForDanger);
+}
+#endif
+#else
 #ifdef AUI_ASTAR_TURN_LIMITER
 // Delnar: if you're checking if a unit can reach a tile within X turns, set the iTargetTurns parameter to X to speed up the pathfinder
 int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns)
@@ -6050,16 +6093,26 @@ int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths
 	return TurnsToReachTargetFromPlot(pUnit, pTarget, NULL, bReusePaths, bIgnoreUnits, bIgnoreStacking, iTargetTurns);
 }
 #endif
+#endif
 
 //	--------------------------------------------------------------------------------
 /// How many turns will it take a unit to get to a target plot (returns MAX_INT if can't reach at all; returns 0 if makes it in 1 turn and has movement left)
 // Should call it with bIgnoreStacking true if want foolproof way to see if can make it in 0 turns (since that way doesn't open
 // open the 2nd layer of the pathfinder)
+#ifdef AUI_DANGER_PLOTS_REMADE
+#ifdef AUI_ASTAR_TURN_LIMITER
+// Delnar: if you're checking if a unit can reach a tile within X turns, set the iTargetTurns parameter to X to speed up the pathfinder
+int TurnsToReachTargetFromPlot(UnitHandle pUnit, const CvPlot* pTarget, const CvPlot* pFromPlot, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns, bool bForDanger)
+#else
+int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, bool bForDanger)
+#endif
+#else
 #ifdef AUI_ASTAR_TURN_LIMITER
 // Delnar: if you're checking if a unit can reach a tile within X turns, set the iTargetTurns parameter to X to speed up the pathfinder
 int TurnsToReachTargetFromPlot(UnitHandle pUnit, const CvPlot* pTarget, const CvPlot* pFromPlot, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns)
 #else
 int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking)
+#endif
 #endif
 {
 	int rtnValue = MAX_INT;
@@ -6083,15 +6136,25 @@ int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool
 #endif
 
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-		int iFlags = MOVE_UNITS_IGNORE_DANGER;
-		if(bIgnoreStacking)
+		int iFlags = 0;
+		if (bIgnoreStacking)
 		{
 			iFlags |= MOVE_IGNORE_STACKING;
 		}
 
 		CvAStar* pPathfinder = &GC.GetTacticalAnalysisMapFinder();
 		if (bIgnoreUnits)
+		{
 			pPathfinder = &GC.getIgnoreUnitsPathFinder();
+			iFlags |= MOVE_UNITS_IGNORE_DANGER;
+		}
+#ifdef AUI_DANGER_PLOTS_REMADE
+		if (bForDanger)
+		{
+			pPathfinder = &GC.getDangerPathFinder();
+			iFlags |= MOVE_UNITS_IGNORE_DANGER;
+		}
+#endif
 
 #ifdef AUI_ASTAR_TURN_LIMITER
 		if (!pFromPlot)
@@ -6173,6 +6236,35 @@ int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool
 
 	return rtnValue;
 }
+
+#ifdef AUI_ASTAR_GHOSTFINDER
+int TurnsToGhostfindTarget(PlayerTypes eForPlayer, const CvPlot* pTarget, const CvPlot* pFromPlot, bool bIsWater, bool bIgnoreTerritory)
+{
+	if (eForPlayer == NO_PLAYER || !pTarget || !pFromPlot)
+		return MAX_INT;
+	CvPlayer& kPlayer = GET_PLAYER(eForPlayer);
+
+	CvUnit* pUnit = kPlayer.getGhostfinderUnit(bIsWater);
+	if (!pUnit)
+		return MAX_INT;
+
+	if (bIgnoreTerritory)
+		pUnit->changeRivalTerritoryCount(1);
+
+	if (!pUnit->canEnterTerrain(*pFromPlot))
+		return MAX_INT;
+	
+#ifdef AUI_ASTAR_TURN_LIMITER
+	int iTurns = TurnsToReachTargetFromPlot(pUnit, pTarget, pFromPlot, true, true, true);
+#else
+	pUnit->setXY(pFromPlot->getX(), pFromPlot->getY(), false, false);
+	int iTurns = TurnsToReachTarget(pUnit, pTarget, true, true, true);
+#endif
+
+	kPlayer.deleteUnit(pUnit->GetID());
+	return iTurns;
+}
+#endif
 
 /// slewis's fault
 

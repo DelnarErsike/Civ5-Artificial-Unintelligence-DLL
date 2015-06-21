@@ -689,11 +689,20 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 int FindValidDestinationDest(int iToX, int iToY, const void* pointer, CvAStar* finder);
 int FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 #endif
+#ifdef AUI_DANGER_PLOTS_REMADE
+#ifdef AUI_ASTAR_TURN_LIMITER
+int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, int iTargetTurns = MAX_INT, bool bForDanger = false);
+int TurnsToReachTargetFromPlot(UnitHandle pUnit, const CvPlot* pTarget, const CvPlot* pFromPlot, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, int iTargetTurns = MAX_INT, bool bForDanger = false);
+#else
+int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, bool bForDanger = false);
+#endif
+#else
 #ifdef AUI_ASTAR_TURN_LIMITER
 int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, int iTargetTurns = MAX_INT);
 int TurnsToReachTargetFromPlot(UnitHandle pUnit, const CvPlot* pTarget, const CvPlot* pFromPlot, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, int iTargetTurns = MAX_INT);
 #else
 int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths=false, bool bIgnoreUnits=false, bool bIgnoreStacking=false);
+#endif
 #endif
 #ifdef AUI_ASTAR_PARADROP
 bool CanReachInXTurns(UnitHandle pUnit, const CvPlot* pTarget, int iTurns, bool bIgnoreUnits = false, bool bIgnoreParadrop = false, int* piTurns = NULL);
@@ -710,6 +719,10 @@ void UnitPathInitialize(const void* pointer, CvAStar* finder);
 void UnitPathUninitialize(const void* pointer, CvAStar* finder);
 void TradePathInitialize(const void* pointer, CvAStar* finder);
 void TradePathUninitialize(const void* pointer, CvAStar* finder);
+#endif
+
+#ifdef AUI_ASTAR_GHOSTFINDER
+int TurnsToGhostfindTarget(PlayerTypes eForPlayer, const CvPlot* pTarget, const CvPlot* pFromPlot, bool bIsWater, bool bIgnoreTerritory = false);
 #endif
 
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
