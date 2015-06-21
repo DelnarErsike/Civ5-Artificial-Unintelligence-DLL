@@ -2407,7 +2407,7 @@ void CvBuilderTaskingAI::AddScrubFalloutDirectives(CvUnit* pUnit, CvPlot* pPlot,
 #ifdef AUI_WORKER_FIX_FALLOUT
 		// Max values returned from BuildCostWeight and BuildTimeWeight
 		iWeight *= 100;
-		iWeight += 10000;
+		iWeight += 10000 / (iMoveTurnsAway/*iTurnsAway*/ + 1);
 #else
 		iWeight = GetBuildCostWeight(iWeight, pPlot, m_eFalloutRemove);
 		int iBuildTimeWeight = GetBuildTimeWeight(pUnit, pPlot, m_eFalloutRemove, false, iMoveTurnsAway);

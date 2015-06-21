@@ -4307,7 +4307,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 
 /// Score Food TR
 #ifdef AUI_TRADE_SCORE_FOOD_VALUE
-int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* /*pSmallestCity*/)
+int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection)
 #else
 int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSmallestCity)
 #endif
@@ -4689,6 +4689,7 @@ void CvTradeAI::PrioritizeTradeRoutes(TradeConnectionList& aTradeConnectionList)
 	std::vector<TRSortElement> aGoldSortedTR;
 
 	// FOOD FOOD FOOD FOOD
+#ifndef AUI_TRADE_SCORE_FOOD_VALUE
 	if (m_pPlayer->GetHappiness() >= 0)
 	{
 		// - Find smallest city
@@ -4710,12 +4711,17 @@ void CvTradeAI::PrioritizeTradeRoutes(TradeConnectionList& aTradeConnectionList)
 		// if there is a smallest city, score according to that
 		if (pSmallestCity)
 		{
+#endif
 			aFoodSortedTR.clear();
 			for (uint ui = 0; ui < aTradeConnectionList.size(); ui++)
 			{
 				TRSortElement kElement;
 				kElement.m_kTradeConnection = aTradeConnectionList[ui];
+#ifdef AUI_TRADE_SCORE_FOOD_VALUE
+				kElement.m_iScore = ScoreFoodTR(aTradeConnectionList[ui]);
+#else
 				kElement.m_iScore = ScoreFoodTR(aTradeConnectionList[ui], pSmallestCity);
+#endif
 				if (kElement.m_iScore > 0)
 				{
 					aFoodSortedTR.push_back(kElement);
@@ -4723,8 +4729,10 @@ void CvTradeAI::PrioritizeTradeRoutes(TradeConnectionList& aTradeConnectionList)
 			}
 
 			std::stable_sort(aFoodSortedTR.begin(), aFoodSortedTR.end(), SortTR());
+#ifndef AUI_TRADE_SCORE_FOOD_VALUE
 		}
 	}
+#endif
 
 	// PRODUCTION PRODUCTION PRODUCTION PRODUCTION
 	// - Search for wonder city

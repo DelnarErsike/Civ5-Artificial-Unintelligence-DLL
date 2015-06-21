@@ -119,23 +119,33 @@ static bool CanSeeDisplacementPlot_Strict(int startX, int startY, int dx, int dy
 	// traversing the hex grid.
 
 	// Make DX and DY positive and adjust the step constant for the opposite axis.
+#ifdef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
+	int stepY = 1;
+#else
 	int stepY;
+#endif
 	if (dy < 0) 
 	{ 
 		dy = -dy;  
 		stepY = -1; 
 	} 
+#ifdef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
+	int stepX = 1;
+#else
 	else 
-		stepY = 1; 
+		stepY = 1;
 
 	int stepX;
+#endif
 	if (dx < 0) 
 	{ 
 		dx = -dx;  
 		stepX = -1; 
 	} 
+#ifndef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
 	else 
 		stepX = 1;
+#endif
 
 	dy <<= 1;
 	dx <<= 1;
@@ -147,7 +157,11 @@ static bool CanSeeDisplacementPlot_Strict(int startX, int startY, int dx, int dy
 	bool oddQuadrant = stepX != stepY;
 	// Is the line going to go such that it travels through the centers of the hexes?
 	// If so, we don't have to worry about testing to see if we can look around blocked hexes.
+#ifdef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
+	bool straightThrough = dx == 0 || dy == 0 || (dx == dy && oddQuadrant);
+#else
 	bool straightThrough = dx == 0 || dy == 0;
+#endif
 
 	// Start from the next cell after the source plot
 	int lastDX = currentDX;
@@ -350,23 +364,33 @@ static bool CanSeeDisplacementPlot_Loose(int startX, int startY, int dx, int dy,
 	// traversing the hex grid.
 
 	// Make DX and DY positive and adjust the step constant for the opposite axis.
+#ifdef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
+	int stepY = 1;
+#else
 	int stepY;
+#endif
 	if (dy < 0) 
 	{ 
 		dy = -dy;  
 		stepY = -1; 
 	} 
+#ifdef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
+	int stepX = 1;
+#else
 	else 
 		stepY = 1; 
 
 	int stepX;
+#endif
 	if (dx < 0) 
 	{ 
 		dx = -dx;  
 		stepX = -1; 
 	} 
+#ifndef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
 	else 
 		stepX = 1;
+#endif
 
 	dy <<= 1;
 	dx <<= 1;
@@ -379,7 +403,11 @@ static bool CanSeeDisplacementPlot_Loose(int startX, int startY, int dx, int dy,
 	bool oddQuadrant = stepX != stepY;
 	// Is the line going to go such that it travels through the centers of the hexes?
 	// If so, we don't have to worry about testing to see if we can look around blocked hexes.
+#ifdef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
+	bool straightThrough = dx == 0 || dy == 0 || (dx == dy && oddQuadrant);
+#else
 	bool straightThrough = dx == 0 || dy == 0;
+#endif
 
 	// Start from the next cell after the source plot
 	int lastDX = currentDX;

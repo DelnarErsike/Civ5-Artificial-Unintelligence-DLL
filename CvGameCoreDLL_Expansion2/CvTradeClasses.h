@@ -248,7 +248,7 @@ public:
 	void PrioritizeTradeRoutes(TradeConnectionList& aTradeConnectionList);
 	int	ScoreInternationalTR (const TradeConnection& kTradeConnection);
 #ifdef AUI_TRADE_SCORE_FOOD_VALUE
-	int ScoreFoodTR(const TradeConnection& kTradeConnection, CvCity* /*pSmallestCity*/);
+	int ScoreFoodTR(const TradeConnection& kTradeConnection);
 #else
 	int ScoreFoodTR(const TradeConnection& kTradeConnection, CvCity* pSmallestCity);
 #endif
