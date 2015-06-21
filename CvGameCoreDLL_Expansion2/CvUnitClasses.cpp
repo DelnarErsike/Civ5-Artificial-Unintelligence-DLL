@@ -1155,6 +1155,575 @@ int CvUnitEntry::GetPower() const
 /// Update military Power
 void CvUnitEntry::DoUpdatePower()
 {
+#ifdef AUI_UNIT_ENTRY_MORE_ACCURATE_POWER
+	// All relevant stats
+	int iCombat = GetCombat();
+	int iRangedCombat = GetRangedCombat();
+	int iInterceptCombat = iRangedCombat;
+	int iRange = GetRange();
+	int iMoves = GetMoves();
+	int iInterceptRange = GetAirInterceptRange();
+
+	// Nukes are cool
+	if (GetNukeDamageLevel() > 0)
+	{
+		iRangedCombat += GetNukeDamageLevel() * 200;
+	}
+
+	// ***************
+	// Promotion modifiers
+	// ***************
+
+	int iTemp;
+	int iLoop;
+
+	// These promotions' strengths rely on stats that can only be determined after all promotions have been looped through
+
+	int iDropRange = 0;	
+	bool bCanMoveAfterAttack = false;
+	bool bIsBlitz = false;
+	bool bMustSetupForRanged = false;
+	bool bOnlyDefensive = false;
+	int iNumAttacks = 1;
+	int iFlankAttackModifier = 0;
+	bool bHasRangedFirstStrike = false;
+	bool bIsNoDefenseBonus = GetDomainType() == DOMAIN_SEA;
+
+	bool bCanAirSweep = false;
+	int iEvasionChance = 0;
+	int iInterceptDefenseDamageMod = 0;
+	int iNumIntercepts = 1;
+
+	for(int iPromotionLoop = 0; iPromotionLoop < GC.getNumPromotionInfos(); iPromotionLoop++)
+	{
+		CvPromotionEntry* kPromotion = GC.getPromotionInfo((PromotionTypes)iPromotionLoop);
+		if(kPromotion == NULL)
+			continue;
+
+		if(GetFreePromotions(iPromotionLoop))
+		{
+			if (kPromotion->IsRangedSupportFire())
+			{
+				bHasRangedFirstStrike = true;
+			}
+
+			if (kPromotion->IsNoDefensiveBonus())
+			{
+				bIsNoDefenseBonus = true;
+			}
+
+			if(kPromotion->GetCityAttackPercent() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetCityAttackPercent() / 4);
+				iTemp /= 100;
+				iCombat += iTemp;
+				iTemp = (iRangedCombat * kPromotion->GetCityAttackPercent() / 4);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+
+			// Attack - add half of the bonus
+			if(kPromotion->GetAttackMod() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetAttackMod() / 2);
+				iTemp /= 100;
+				iCombat += iTemp;
+				iTemp = (iRangedCombat * kPromotion->GetAttackMod() / 2);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+
+			// Defense - add half of the bonus
+			if(kPromotion->GetDefenseMod() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetDefenseMod() / 2);
+				iTemp /= 100;
+				iCombat += iTemp;
+				iTemp = (iRangedCombat * kPromotion->GetDefenseMod() / 2);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+
+			iMoves += kPromotion->GetMovesChange();
+			iRange += kPromotion->GetRangeChange();
+
+			iDropRange += kPromotion->GetDropRange();
+
+			if(kPromotion->IsBlitz())
+			{
+				bIsBlitz = true;
+			}
+
+			iNumAttacks += kPromotion->GetExtraAttacks();
+			iNumIntercepts += kPromotion->GetNumInterceptionChange();
+
+			if (kPromotion->IsCanMoveAfterAttacking())
+			{
+				bCanMoveAfterAttack = true;
+			}
+
+			if(kPromotion->IsMustSetUpToRangedAttack())
+			{
+				bMustSetupForRanged = true;
+			}
+
+			if (kPromotion->IsOnlyDefensive())
+			{
+				bOnlyDefensive = true;
+			}
+
+			if (kPromotion->GetOpenAttackPercent() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetOpenAttackPercent() / 4);
+				iTemp /= 100;
+				iCombat += iTemp;
+			}
+			if (kPromotion->GetOpenDefensePercent() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetOpenDefensePercent() / 4);
+				iTemp /= 100;
+				iCombat += iTemp;
+			}
+			if (kPromotion->GetRoughAttackPercent() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetRoughAttackPercent() / 4);
+				iTemp /= 100;
+				iCombat += iTemp;
+			}
+			if (kPromotion->GetRoughDefensePercent() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetRoughDefensePercent() / 4);
+				iTemp /= 100;
+				iCombat += iTemp;
+			}
+			if (kPromotion->GetOpenRangedAttackMod() != 0)
+			{
+				iTemp = (iRangedCombat * kPromotion->GetOpenRangedAttackMod() / 4);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+			if (kPromotion->GetRoughRangedAttackMod() != 0)
+			{
+				iTemp = (iRangedCombat * kPromotion->GetRoughRangedAttackMod() / 4);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+			if (kPromotion->GetRangedDefenseMod() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetRangedDefenseMod() / 4);
+				iTemp /= 100;
+				iCombat += iTemp;
+				iTemp = (iRangedCombat * kPromotion->GetRangedDefenseMod() / 4);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+
+			if (kPromotion->GetAttackFortifiedMod() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetAttackFortifiedMod() / 4);
+				iTemp /= 100;
+				iCombat += iTemp;
+				iTemp = (iRangedCombat * kPromotion->GetAttackFortifiedMod() / 4);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+			if (kPromotion->GetAttackWoundedMod() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetAttackWoundedMod() / 4);
+				iTemp /= 100;
+				iCombat += iTemp;
+				iTemp = (iRangedCombat * kPromotion->GetAttackWoundedMod() / 4);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+			iFlankAttackModifier += kPromotion->GetFlankAttackModifier();
+
+			if (kPromotion->GetOutsideFriendlyLandsModifier() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetOutsideFriendlyLandsModifier() / 2);
+				iTemp /= 100;
+				iCombat += iTemp;
+				iTemp = (iRangedCombat * kPromotion->GetOutsideFriendlyLandsModifier() / 2);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+			if (kPromotion->GetFriendlyLandsModifier() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetFriendlyLandsModifier() / 2);
+				iTemp /= 100;
+				iCombat += iTemp;
+				iTemp = (iRangedCombat * kPromotion->GetFriendlyLandsModifier() / 2);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+			if (kPromotion->GetFriendlyLandsAttackModifier() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetFriendlyLandsAttackModifier() / 4);
+				iTemp /= 100;
+				iCombat += iTemp;
+				iTemp = (iRangedCombat * kPromotion->GetFriendlyLandsAttackModifier() / 4);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+
+			if (kPromotion->IsAirSweepCapable())
+			{
+				bCanAirSweep = true;
+			}
+			if (kPromotion->GetAirSweepCombatModifier() != 0)
+			{
+				iTemp = (iInterceptCombat * kPromotion->GetAirSweepCombatModifier() / 2);
+				iTemp /= 100;
+				iInterceptCombat += iTemp;
+			}
+			if (kPromotion->GetInterceptionCombatModifier() != 0)
+			{
+				iTemp = (iInterceptCombat * kPromotion->GetInterceptionCombatModifier());
+				iTemp /= 100;
+				iInterceptCombat += iTemp;
+			}
+			iInterceptDefenseDamageMod += kPromotion->GetInterceptionDefenseDamageModifier();
+
+			for(iLoop = 0; iLoop < GC.getNumTerrainInfos(); iLoop++)
+			{
+				// Terrain Attack - add one quarter of the bonus
+				if(kPromotion->GetTerrainAttackPercent(iLoop) != 0)
+				{
+					iTemp = (iCombat * kPromotion->GetTerrainAttackPercent(iLoop) / 4);
+					iTemp /= 100;
+					iCombat += iTemp;
+					iTemp = (iRangedCombat * kPromotion->GetTerrainAttackPercent(iLoop) / 4);
+					iTemp /= 100;
+					iRangedCombat += iTemp;
+				}
+				// Terrain Defense - add one quarter of the bonus
+				if(kPromotion->GetTerrainDefensePercent(iLoop) != 0)
+				{
+					iTemp = (iCombat * kPromotion->GetTerrainDefensePercent(iLoop) / 4);
+					iTemp /= 100;
+					iCombat += iTemp;
+					iTemp = (iRangedCombat * kPromotion->GetTerrainDefensePercent(iLoop) / 4);
+					iTemp /= 100;
+					iRangedCombat += iTemp;
+				}
+			}
+
+			for(iLoop = 0; iLoop < GC.getNumFeatureInfos(); iLoop++)
+			{
+				// Feature Attack - add one quarter of the bonus
+				if(kPromotion->GetFeatureAttackPercent(iLoop) != 0)
+				{
+					iTemp = (iCombat * kPromotion->GetFeatureAttackPercent(iLoop) / 4);
+					iTemp /= 100;
+					iCombat += iTemp;
+					iTemp = (iRangedCombat * kPromotion->GetFeatureAttackPercent(iLoop) / 4);
+					iTemp /= 100;
+					iRangedCombat += iTemp;
+				}
+				// Feature Defense - add one quarter of the bonus
+				if(kPromotion->GetFeatureDefensePercent(iLoop) != 0)
+				{
+					iTemp = (iCombat * kPromotion->GetFeatureDefensePercent(iLoop) / 4);
+					iTemp /= 100;
+					iCombat += iTemp;
+					iTemp = (iRangedCombat * kPromotion->GetFeatureDefensePercent(iLoop) / 4);
+					iTemp /= 100;
+					iRangedCombat += iTemp;
+				}
+			}
+
+			// Feature Attack - add one quarter of the bonus
+			if (kPromotion->GetHillsAttackPercent() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetHillsAttackPercent() / 4);
+				iTemp /= 100;
+				iCombat += iTemp;
+				iTemp = (iRangedCombat * kPromotion->GetHillsAttackPercent() / 4);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+			// Feature Defense - add one quarter of the bonus
+			if (kPromotion->GetHillsDefensePercent() != 0)
+			{
+				iTemp = (iCombat * kPromotion->GetHillsDefensePercent() / 4);
+				iTemp /= 100;
+				iCombat += iTemp;
+				iTemp = (iRangedCombat * kPromotion->GetHillsDefensePercent() / 4);
+				iTemp /= 100;
+				iRangedCombat += iTemp;
+			}
+
+			for(iLoop = 0; iLoop < GC.getNumUnitCombatClassInfos(); iLoop++)
+			{
+				// Unit Combat Class (e.g. Pikemen) - add one quarter of the bonus
+				if(kPromotion->GetUnitCombatModifierPercent(iLoop) != 0)
+				{
+					// There are less air units in the game, so air-to-air bonuses are doubled and apply to InterceptCombat
+					bool bIsClassAirClass = GetDomainType() == DOMAIN_AIR;
+					if (bIsClassAirClass)
+					{
+						for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
+						{
+							CvUnitEntry* pkUnitEntry = GC.getUnitInfo(static_cast<UnitTypes>(iI));
+							if (pkUnitEntry && pkUnitEntry->GetUnitCombatType() == iLoop && pkUnitEntry->GetDomainType() != DOMAIN_AIR)
+							{
+								bIsClassAirClass = false;
+								break;
+							}
+						}
+					}
+					if (bIsClassAirClass)
+					{
+						iTemp = (iInterceptCombat * kPromotion->GetUnitCombatModifierPercent(iLoop) / 2);
+						iTemp /= 100;
+						iInterceptCombat += iTemp;
+						iTemp = (iRangedCombat * kPromotion->GetUnitCombatModifierPercent(iLoop) / 2);
+						iTemp /= 100;
+						iRangedCombat += iTemp;
+					}
+					else
+					{
+						iTemp = (iCombat * kPromotion->GetUnitCombatModifierPercent(iLoop) / 4);
+						iTemp /= 100;
+						iCombat += iTemp;
+						iTemp = (iRangedCombat * kPromotion->GetUnitCombatModifierPercent(iLoop) / 4);
+						iTemp /= 100;
+						iRangedCombat += iTemp;
+					}
+				}
+			}
+
+			for(iLoop = 0; iLoop < GC.getNumUnitClassInfos(); iLoop++)
+			{
+				// There are less air units in the game, so air-to-air bonuses are doubled and apply to InterceptCombat
+				bool bIsAirClass = GetDomainType() == DOMAIN_AIR;
+				if (bIsAirClass)
+				{
+					bIsAirClass = false;
+					CvUnitClassInfo* pkUnitClass = GC.getUnitClassInfo(static_cast<UnitClassTypes>(iLoop));
+					if (pkUnitClass)
+					{
+						CvUnitEntry* pkDefaultUnit = GC.getUnitInfo(static_cast<UnitTypes>(pkUnitClass->getDefaultUnitIndex()));
+						if (pkDefaultUnit && pkDefaultUnit->GetDomainType() == DOMAIN_AIR)
+							bIsAirClass = true;
+					}
+				}
+				// Unit Class (e.g. bonus ONLY against Galleys) - add one eighth of the bonus
+				// We're assuming here that the bonus against the other Unit is at least going to be somewhat useful - trust the XML! :o
+				if(kPromotion->GetUnitClassModifierPercent(iLoop) != 0)
+				{
+					if (bIsAirClass)
+					{
+						iTemp = (iInterceptCombat * kPromotion->GetUnitClassModifierPercent(iLoop) / 4);
+						iTemp /= 100;
+						iInterceptCombat += iTemp;
+						iTemp = (iRangedCombat * kPromotion->GetUnitClassModifierPercent(iLoop) / 4);
+						iTemp /= 100;
+						iRangedCombat += iTemp;
+					}
+					else
+					{
+						iTemp = (iCombat * kPromotion->GetUnitClassModifierPercent(iLoop) / 8);
+						iTemp /= 100;
+						iCombat += iTemp;
+						iTemp = (iRangedCombat * kPromotion->GetUnitClassModifierPercent(iLoop) / 8);
+						iTemp /= 100;
+						iRangedCombat += iTemp;
+					}
+				}
+				// Unit Class Attack - one sixteenth of the bonus
+				if(kPromotion->GetUnitClassAttackModifier(iLoop) != 0)
+				{
+					if (bIsAirClass)
+					{
+						iTemp = (iInterceptCombat * kPromotion->GetUnitClassAttackModifier(iLoop) / 8);
+						iTemp /= 100;
+						iInterceptCombat += iTemp;
+						iTemp = (iRangedCombat * kPromotion->GetUnitClassAttackModifier(iLoop) / 8);
+						iTemp /= 100;
+						iRangedCombat += iTemp;
+					}
+					else
+					{
+						iTemp = (iCombat * kPromotion->GetUnitClassAttackModifier(iLoop) / 16);
+						iTemp /= 100;
+						iCombat += iTemp;
+						iTemp = (iRangedCombat * kPromotion->GetUnitClassAttackModifier(iLoop) / 16);
+						iTemp /= 100;
+						iRangedCombat += iTemp;
+					}
+				}
+				// Unit Class Defense - one sixteenth of the bonus
+				if(kPromotion->GetUnitClassDefenseModifier(iLoop) != 0)
+				{
+					if (bIsAirClass)
+					{
+						iTemp = (iInterceptCombat * kPromotion->GetUnitClassDefenseModifier(iLoop) / 8);
+						iTemp /= 100;
+						iInterceptCombat += iTemp;
+						iTemp = (iRangedCombat * kPromotion->GetUnitClassDefenseModifier(iLoop) / 8);
+						iTemp /= 100;
+						iRangedCombat += iTemp;
+					}
+					else
+					{
+						iTemp = (iCombat * kPromotion->GetUnitClassDefenseModifier(iLoop) / 16);
+						iTemp /= 100;
+						iCombat += iTemp;
+						iTemp = (iRangedCombat * kPromotion->GetUnitClassDefenseModifier(iLoop) / 16);
+						iTemp /= 100;
+						iRangedCombat += iTemp;
+					}
+				}
+			}
+
+			for(iLoop = 0; iLoop < NUM_DOMAIN_TYPES; iLoop++)
+			{
+				// Domain - add one quarter of the bonus
+				if(kPromotion->GetDomainModifierPercent(iLoop) != 0)
+				{
+					if (iLoop == DOMAIN_AIR)
+					{
+						iTemp = (iInterceptCombat * kPromotion->GetDomainModifierPercent(iLoop) / 4);
+						iTemp /= 100;
+						iInterceptCombat += iTemp;
+					}
+					else
+					{
+						iTemp = (iCombat * kPromotion->GetDomainModifierPercent(iLoop) / 4);
+						iTemp /= 100;
+						iCombat += iTemp;
+						iTemp = (iRangedCombat * kPromotion->GetDomainModifierPercent(iLoop) / 4);
+						iTemp /= 100;
+						iRangedCombat += iTemp;
+					}
+				}
+			}
+		}
+	}
+
+	if (iFlankAttackModifier != 0 && iMoves != 0)
+	{
+		iTemp = iCombat * iFlankAttackModifier;
+		iTemp /= 200 + 200 / iMoves;
+		iCombat += iTemp;
+	}
+
+	if (bMustSetupForRanged)
+	{
+		if (iMoves > 1)
+			iMoves -= 1;
+		else
+		{
+			iRangedCombat /= 2;
+		}
+	}
+
+	if (iNumAttacks > iMoves || bIsBlitz)
+		iNumAttacks = iMoves;
+	if (iNumIntercepts > iMoves)
+		iNumIntercepts = iMoves;
+
+	if (bCanMoveAfterAttack)
+	{
+		iMoves -= iNumAttacks;
+		iMoves *= 3;
+		iMoves /= 2;
+		iMoves += iNumAttacks;
+		iDropRange *= 2;
+	}
+
+	if (bOnlyDefensive && (iRange <= 0 || iRangedCombat <= 0))
+	{
+		iCombat /= 4;
+		iRangedCombat /= 4;
+	}
+
+	if (GetDomainType() == DOMAIN_AIR)
+	{
+		if (iEvasionChance >= 100)
+		{
+			iRangedCombat *= 3;
+			iRangedCombat /= 2;
+		}
+		else if (iInterceptDefenseDamageMod)
+		{
+			iRangedCombat += (iRangedCombat * iInterceptDefenseDamageMod / 4) / 100;
+		}
+	}
+
+	// ***************
+	// Main Factors - Strength & Moves
+	// ***************
+
+	// We want a Unit that has twice the strength to be worth 3x as much with regards to Power
+	double dMeleePower = pow((double)iCombat, log(3.0) / log(2.0));
+	double dRangedPower = pow((double)iRangedCombat, log(3.0) / log(2.0));
+
+	if (bCanAirSweep)
+	{
+		if (iInterceptRange > iRange)
+			iRange = iInterceptRange;
+		if (iNumIntercepts > iNumAttacks)
+			iNumAttacks = iNumIntercepts;
+		if (iInterceptCombat > iRangedCombat)
+			dRangedPower = pow((double)iInterceptCombat, log(3.0) / log(2.0));
+	}
+
+	double dPower = dMeleePower;
+
+	if (iRange > 0)
+	{
+		dRangedPower *= 1.0 + log((double)iRange);
+		if (dRangedPower > dPower)
+			dPower = dRangedPower;
+	}
+	else if (bHasRangedFirstStrike)
+	{
+		dPower += dRangedPower / 4.0;
+	}
+
+	if (iDropRange > 0)
+	{
+		double dParadropMultiplier = pow(((iDropRange / 4.0) + iMoves + 1.0) / (iDropRange / 4.0), iDropRange / 4.0) / 7.5; // 1.96x multiplier for range of 50, 1.25x for range of 16
+		dPower *= dParadropMultiplier;
+	}
+
+	dPower *= 1.0 + log10((double)iNumAttacks);
+
+	if (GetDomainType() == DOMAIN_AIR)
+	{
+		// Tone down the range increase
+		dPower /= 2.0;
+	}
+	else if (iMoves > 0)
+	{
+		// We want Movement rate to be important, but not a dominating factor; a Unit with double the moves of a similarly-strengthed Unit should be ~1.4x as Powerful
+		dPower *= sqrt((double)iMoves);
+	}
+
+	// ***************
+	// Other modifiers
+	// ***************	
+
+	if (bIsNoDefenseBonus)
+	{
+		dPower *= 0.8; // Equivalent to increasing the power of defense-bonus units by 25%
+	}
+
+	// Suicide Units are obviously less useful
+	if (IsSuicide())
+	{
+		dPower /= 4.0;
+	}
+
+	// Debug output
+	//char temp[256];
+	//sprintf(temp, "%s: %i\n", GetDescription(), int(dPower + 0.5));
+	//OutputDebugString(temp);
+
+	m_iCachedPower = int(dPower + 0.5);
+#else
 	int iPower;
 
 // ***************
@@ -1361,6 +1930,7 @@ void CvUnitEntry::DoUpdatePower()
 	//OutputDebugString(temp);
 
 	m_iCachedPower = iPower;
+#endif
 }
 
 UnitMoveRate CvUnitEntry::GetMoveRate(int numHexes) const
