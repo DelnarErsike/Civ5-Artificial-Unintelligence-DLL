@@ -20,7 +20,9 @@
 // must be included after all other headers
 #include "LintFree.h"
 
-
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+#include "CvInternalGameCoreUtils.h"
+#endif
 
 //=====================================
 // CvCitySpecializationXMLEntry
@@ -345,7 +347,24 @@ void CvCitySpecializationAI::DoTurn()
 	// See if need to update assignments
 	if(m_bSpecializationsDirty || (m_iLastTurnEvaluated + GC.getAI_CITY_SPECIALIZATION_REEVALUATION_INTERVAL() > GC.getGame().getGameTurn()))
 	{
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+		CvCity* pLoopCity = NULL;
+		m_iNextWonderWeight = 0;
+		m_eNextWonderDesired = NO_BUILDING;
+		int iLoopBestWonderWeight = 0;
+		BuildingTypes eLoopBestWonder = NO_BUILDING;
+		for(pLoopCity = m_pPlayer->firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iCityLoop))
+		{
+			eLoopBestWonder = pLoopCity->GetCityStrategyAI()->GetWonderProductionAI()->ChooseWonder(false /*bUseAsyncRandom*/, true /*bAdjustForOtherPlayers*/, iLoopBestWonderWeight);
+			if (iLoopBestWonderWeight > m_iNextWonderWeight)
+			{
+				m_iNextWonderWeight = iLoopBestWonderWeight;
+				m_eNextWonderDesired = eLoopBestWonder;
+			}
+		}
+#else
 		m_eNextWonderDesired = m_pPlayer->GetWonderProductionAI()->ChooseWonder(false /*bUseAsyncRandom*/, true /*bAdjustForOtherPlayers*/, m_iNextWonderWeight);
+#endif
 		WeightSpecializations();
 		AssignSpecializations();
 		m_bSpecializationsDirty = false;
@@ -961,7 +980,11 @@ void CvCitySpecializationAI::SelectSpecializations()
 	}
 
 	// Do we have a wonder build in progress that we can't interrupt?
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	if(!m_bInterruptWonders && NULL != pkProductionBuildingInfo && ::isLimitedWonderClass(pkProductionBuildingInfo->GetBuildingClassInfo()))
+#else
 	if(!m_bInterruptWonders && NULL != pkProductionBuildingInfo && m_pPlayer->GetWonderProductionAI()->IsWonder(*pkProductionBuildingInfo))
+#endif
 	{
 		m_SpecializationsNeeded.push_back(GetWonderSpecialization());
 		m_iNumSpecializationsForThisYield[1 + (int)YIELD_PRODUCTION]++;
@@ -1141,7 +1164,11 @@ CvCity* CvCitySpecializationAI::FindBestWonderCity() const
 		pkProductionBuildingInfo = GC.getBuildingInfo(pLoopCity->getProductionBuilding());
 	}
 
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	if (pkProductionBuildingInfo && ::isLimitedWonderClass(pkProductionBuildingInfo->GetBuildingClassInfo()))
+#else
 	if(pkProductionBuildingInfo && m_pPlayer->GetWonderProductionAI()->IsWonder(*pkProductionBuildingInfo))
+#endif
 	{
 		if(!pLoopCity->IsPuppet())
 		{

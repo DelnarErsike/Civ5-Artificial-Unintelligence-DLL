@@ -134,14 +134,39 @@ void CvUnitProductionAI::Write(FDataStream& kStream) const
 /// Establish weights for one flavor; can be called multiple times to layer strategies
 void CvUnitProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 {
+#ifdef AUI_UNIT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
+#endif
 	// Loop through all units
 	for(int iUnit = 0; iUnit < m_pUnits->GetNumUnits(); iUnit++)
 	{
 		CvUnitEntry* entry = m_pUnits->GetEntry(iUnit);
 		if(entry)
 		{
+#if defined(AUI_UNIT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS)
+			int iFlavorValue = entry->GetFlavorValue(eFlavor);
+#endif
+#ifdef AUI_UNIT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+			if (!GC.getDISABLE_UNIT_AI_FLAVOR_LUA_MODDING() && pkScriptSystem)
+			{
+				CvLuaArgsHandle args;
+				args->Push(m_pCity->getOwner());
+				args->Push(m_pCity->GetID());
+				args->Push(iUnit);
+				args->Push(eFlavor);
+
+				int iResult = 0;
+				if (LuaSupport::CallAccumulator(pkScriptSystem, "ExtraUnitFlavor", args.get(), iResult))
+					iFlavorValue += iResult;
+			}
+#endif
 			// Set its weight by looking at unit's weight for this flavor and using iWeight multiplier passed in
+#if defined(AUI_UNIT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS)
+			m_UnitAIWeights.IncreaseWeight(iUnit, iFlavorValue * iWeight);
+#else
 			m_UnitAIWeights.IncreaseWeight(iUnit, entry->GetFlavorValue(eFlavor) * iWeight);
+#endif
+
 		}
 	}
 }

@@ -36,7 +36,11 @@ public:
 
 	int AdvisorInterestInFlavor(AdvisorTypes eAdvisor, FlavorTypes eFlavor);
 	AdvisorTypes FindUnassignedAdvisorForTech(PlayerTypes ePlayer, TechTypes eTech);
+#if defined(AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS)
+	AdvisorTypes FindUnassignedAdvisorForBuildable(const CvCity* pCity, CvCityBuildable& buildable);
+#else
 	AdvisorTypes FindUnassignedAdvisorForBuildable(PlayerTypes ePlayer, CvCityBuildable& buildable);
+#endif
 
 	CvCityBuildable m_aRecommendedBuilds[NUM_ADVISOR_TYPES];
 	TechTypes m_aRecommendedTechs[NUM_ADVISOR_TYPES];

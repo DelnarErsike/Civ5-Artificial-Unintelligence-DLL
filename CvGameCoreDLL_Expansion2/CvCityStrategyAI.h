@@ -176,6 +176,9 @@ public:
 	CvUnitProductionAI* GetUnitProductionAI();
 	CvProjectProductionAI* GetProjectProductionAI();
 	CvProcessProductionAI* GetProcessProductionAI();
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	CvWonderProductionAI* GetWonderProductionAI() const;
+#endif
 	CvString GetLogFileName(CvString& playerName, CvString& cityName) const;
 
 	bool IsYieldDeficient(YieldTypes yieldType);
@@ -231,6 +234,9 @@ private:
 	CvUnitProductionAI* m_pUnitProductionAI;
 	CvProjectProductionAI* m_pProjectProductionAI;
 	CvProcessProductionAI* m_pProcessProductionAI;
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	CvWonderProductionAI* m_pWonderProductionAI;
+#endif
 
 	CvWeightedVector<CvCityBuildable, (SAFE_ESTIMATE_NUM_BUILDINGS + SAFE_ESTIMATE_NUM_UNITS), true> m_Buildables;
 #ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED

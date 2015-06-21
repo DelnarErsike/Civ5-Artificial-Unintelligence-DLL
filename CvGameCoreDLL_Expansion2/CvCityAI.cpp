@@ -26,6 +26,10 @@
 // must be included after all other headers
 #include "LintFree.h"
 
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+#include "CvInternalGameCoreUtils.h"
+#endif
+
 OBJECT_VALIDATE_DEFINITION(CvCityAI)
 
 // Public Functions...
@@ -95,7 +99,11 @@ void CvCityAI::AI_chooseProduction(bool bInterruptWonders)
 		{
 			const BuildingTypes eBuilding = getProductionBuilding();
 			CvBuildingEntry* pkBuilding = (eBuilding != NO_BUILDING)? GC.getBuildingInfo(eBuilding) : NULL;
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+			if (pkBuilding && ::isLimitedWonderClass(pkBuilding->GetBuildingClassInfo()))
+#else
 			if(pkBuilding && kOwner.GetWonderProductionAI()->IsWonder(*pkBuilding))
+#endif
 			{
 				return;  // Stay the course
 			}

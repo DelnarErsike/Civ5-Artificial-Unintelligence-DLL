@@ -73,6 +73,9 @@ void CvProjectProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 {
 	int iProject;
 	CvProjectEntry* entry(NULL);
+#ifdef AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
+#endif
 
 	// Loop through all projects
 	for(iProject = 0; iProject < GC.GetGameProjects()->GetNumProjects(); iProject++)
@@ -80,8 +83,29 @@ void CvProjectProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 		entry = GC.GetGameProjects()->GetEntry(iProject);
 		if(entry)
 		{
+#ifdef AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+			int iFlavorValue = entry->GetFlavorValue(eFlavor);
+#endif
+#ifdef AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+			if (!GC.getDISABLE_PROJECT_AI_FLAVOR_LUA_MODDING() && pkScriptSystem)
+			{
+				CvLuaArgsHandle args;
+				args->Push(m_pCity->getOwner());
+				args->Push(m_pCity->GetID());
+				args->Push(iProject);
+				args->Push(eFlavor);
+
+				int iResult = 0;
+				if (LuaSupport::CallAccumulator(pkScriptSystem, "ExtraProjectFlavor", args.get(), iResult))
+					iFlavorValue += iResult;
+			}
+#endif
 			// Set its weight by looking at project's weight for this flavor and using iWeight multiplier passed in
+#ifdef AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+			m_ProjectAIWeights.IncreaseWeight(iProject, iFlavorValue * iWeight);
+#else
 			m_ProjectAIWeights.IncreaseWeight(iProject, entry->GetFlavorValue(eFlavor) * iWeight);
+#endif
 		}
 	}
 }

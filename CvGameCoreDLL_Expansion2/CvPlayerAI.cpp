@@ -1444,11 +1444,23 @@ GreatPeopleDirectiveTypes CvPlayerAI::GetDirectiveEngineer(CvUnit* pGreatEnginee
 	if(eDirective == NO_GREAT_PEOPLE_DIRECTIVE_TYPE)
 	{
 		int iNextWonderWeight;
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+		int iLoop;
+		for (CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
+		{
+			if (NO_BUILDING != pLoopCity->GetCityStrategyAI()->GetWonderProductionAI()->ChooseWonder(false /*bUseAsyncRandom*/, false /*bAdjustForOtherPlayers*/, iNextWonderWeight))
+			{
+				eDirective = GREAT_PEOPLE_DIRECTIVE_USE_POWER;
+				break;
+			}
+		}
+#else
 		BuildingTypes eNextWonderDesired = GetWonderProductionAI()->ChooseWonder(false /*bUseAsyncRandom*/, false /*bAdjustForOtherPlayers*/, iNextWonderWeight);
 		if(eNextWonderDesired != NO_BUILDING)
 		{
 			eDirective = GREAT_PEOPLE_DIRECTIVE_USE_POWER;
 		}
+#endif
 	}
 
 #ifdef AUI_PLAYERAI_TWEAKED_GREAT_ENGINEER_DIRECTIVE

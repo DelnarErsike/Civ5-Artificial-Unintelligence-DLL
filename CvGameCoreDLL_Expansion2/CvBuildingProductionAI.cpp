@@ -130,6 +130,18 @@ void CvBuildingProductionAI::Write(FDataStream& kStream)
 void CvBuildingProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 {
 	CvBuildingXMLEntries* pkBuildings = m_pCityBuildings->GetBuildings();
+#ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
+	CvPlayer* pPlayer = m_pCity->GetPlayer();
+	CvPlayerPolicies* pPlayerPolicies = NULL;
+	if (pPlayer)
+		pPlayerPolicies = pPlayer->GetPlayerPolicies();
+#endif
+#ifdef AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS
+	const CvReligion* pReligion = GC.getGame().GetGameReligions()->GetReligion(m_pCity->GetCityReligions()->GetReligiousMajority(), m_pCity->getOwner());
+#endif
+#ifdef AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
+#endif
 
 	// Loop through all buildings
 	for(int iBuilding = 0; iBuilding < m_pCityBuildings->GetBuildings()->GetNumBuildings(); iBuilding++)
@@ -138,15 +150,128 @@ void CvBuildingProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 		if(entry)
 		{
 			// Set its weight by looking at building's weight for this flavor and using iWeight multiplier passed in
+#if defined(AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS)
+			int iFlavorValue = entry->GetFlavorValue(eFlavor);
+#endif
+#ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
+			if (pPlayerPolicies)
+			{
+				for (int iI = 0; iI < GC.getNumPolicyInfos(); iI++)
+				{
+					PolicyTypes ePolicy = static_cast<PolicyTypes>(iI);
+					CvPolicyEntry* pPolicy = GC.getPolicyInfo(ePolicy);
+					if (pPolicy && pPlayerPolicies->HasPolicy(ePolicy))
+					{
+						iFlavorValue += pPolicy->GetBuildingClassFlavorChanges(entry->GetBuildingClassType(), eFlavor);
+					}
+				}
+			}
+#endif
+#ifdef AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS
+			if (pReligion)
+			{
+				pReligion->m_Beliefs.GetBuildingClassFlavorChange(static_cast<BuildingClassTypes>(entry->GetBuildingClassType()), eFlavor);
+			}
+#endif
+#ifdef AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+			if (!GC.getDISABLE_BUILDING_AI_FLAVOR_LUA_MODDING() && pkScriptSystem)
+			{
+				CvLuaArgsHandle args;
+				args->Push(m_pCity->getOwner());
+				args->Push(m_pCity->GetID());
+				args->Push(iBuilding);
+				args->Push(eFlavor);
+
+				int iResult = 0;
+				if (LuaSupport::CallAccumulator(pkScriptSystem, "ExtraBuildingFlavor", args.get(), iResult))
+					iFlavorValue += iResult;
+			}
+#endif
+#if defined(AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS)
+			m_BuildingAIWeights.IncreaseWeight(iBuilding, iFlavorValue * iWeight);
+#else
 			m_BuildingAIWeights.IncreaseWeight(iBuilding, entry->GetFlavorValue(eFlavor) * iWeight);
+#endif
 		}
 	}
 }
 
+
+
 /// Retrieve sum of weights on one item
 int CvBuildingProductionAI::GetWeight(BuildingTypes eBuilding)
 {
+#ifdef AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF
+	CvBuildingXMLEntries* pkBuildings = m_pCityBuildings->GetBuildings();
+	int iWeight = m_BuildingAIWeights.GetWeight(eBuilding);
+	CvBuildingEntry* entry = pkBuildings->GetEntry(eBuilding);
+	if (entry)
+	{
+		CvPlayer* pPlayer = m_pCity->GetPlayer();
+		int iLoop = 0;
+
+		BuildingTypes eFreeBuildingThisCity = static_cast<BuildingTypes>(entry->GetFreeBuildingThisCity());
+		if (eFreeBuildingThisCity != NO_BUILDING)
+		{
+			if (m_pCityBuildings->GetNumBuilding(eFreeBuildingThisCity) == 0)
+				iWeight += m_BuildingAIWeights.GetWeight(eFreeBuildingThisCity);
+		}
+
+		BuildingClassTypes eFreeBuildingClassAllCities = static_cast<BuildingClassTypes>(entry->GetFreeBuildingClass());
+		if (eFreeBuildingClassAllCities != NO_BUILDINGCLASS)
+		{
+			BuildingTypes eFreeBuilding = static_cast<BuildingTypes>(m_pCity->getCivilizationInfo().getCivilizationBuildings(eFreeBuildingClassAllCities));
+			for (CvCity* pLoopCity = pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = pPlayer->nextCity(&iLoop))
+			{
+				if (pLoopCity->GetCityBuildings()->GetNumBuilding(eFreeBuilding) == 0)
+					iWeight += pLoopCity->GetCityStrategyAI()->GetBuildingProductionAI()->GetWeight(eFreeBuilding);
+			}
+		}
+
+		for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
+		{
+			int iNumFreeUnits = entry->GetNumFreeUnits(iI);
+			if (iNumFreeUnits > 0)
+			{
+				iWeight += iNumFreeUnits * m_pCity->GetCityStrategyAI()->GetUnitProductionAI()->GetWeight((UnitTypes)iI);
+			}
+		}
+
+		if (entry->GetInstantMilitaryIncrease())
+		{
+			FFastVector<UnitTypes, true, c_eCiv5GameplayDLL> aExtraUnits;
+			for (CvUnit* pLoopUnit = pPlayer->firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = pPlayer->nextUnit(&iLoop))
+			{
+				if (pLoopUnit->getDomainType() == DOMAIN_LAND && pLoopUnit->IsCombatUnit())
+				{
+					UnitTypes eCurrentUnitType = pLoopUnit->getUnitType();
+
+					// check for duplicate unit
+					bool bAddUnit = true;
+					for (uint ui = 0; ui < aExtraUnits.size(); ui++)
+					{
+						if (aExtraUnits[ui] == eCurrentUnitType)
+						{
+							bAddUnit = false;
+							break;
+						}
+					}
+					if (bAddUnit)
+					{
+						aExtraUnits.push_back(eCurrentUnitType);
+					}
+				}
+			}
+			for (uint ui = 0; ui < aExtraUnits.size(); ui++)
+			{
+				iWeight += m_pCity->GetCityStrategyAI()->GetUnitProductionAI()->GetWeight(aExtraUnits[ui]);
+			}
+		}
+	}
+	return iWeight;
+#else
 	return m_BuildingAIWeights.GetWeight(eBuilding);
+#endif
 }
 
 /// Recommend highest-weighted building

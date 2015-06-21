@@ -83,6 +83,9 @@ void CvProcessProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 {
 	int iProcess;
 	CvProcessInfo* entry(NULL);
+#ifdef AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
+#endif
 
 	// Loop through all projects
 	for(iProcess = 0; iProcess < GC.getNumProcessInfos(); iProcess++)
@@ -90,8 +93,29 @@ void CvProcessProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 		entry = GC.getProcessInfo((ProcessTypes)iProcess);
 		if (entry)
 		{
+#ifdef AUI_PROCESS_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+			int iFlavorValue = entry->GetFlavorValue(eFlavor);
+#endif
+#ifdef AUI_PROCESS_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+			if (!GC.getDISABLE_PROCESS_AI_FLAVOR_LUA_MODDING() && pkScriptSystem)
+			{
+				CvLuaArgsHandle args;
+				args->Push(m_pCity->getOwner());
+				args->Push(m_pCity->GetID());
+				args->Push(iProcess);
+				args->Push(eFlavor);
+
+				int iResult = 0;
+				if (LuaSupport::CallAccumulator(pkScriptSystem, "ExtraProcessFlavor", args.get(), iResult))
+					iFlavorValue += iResult;
+			}
+#endif
 			// Set its weight by looking at project's weight for this flavor and using iWeight multiplier passed in
+#ifdef AUI_PROCESS_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+			m_ProcessAIWeights.IncreaseWeight(iProcess, iFlavorValue * iWeight);
+#else
 			m_ProcessAIWeights.IncreaseWeight(iProcess, entry->GetFlavorValue(eFlavor) * iWeight);
+#endif
 		}
 	}
 }

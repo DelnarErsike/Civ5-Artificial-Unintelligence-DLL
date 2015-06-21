@@ -22,6 +22,10 @@
 // must be included after all other headers
 #include "LintFree.h"
 
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+#include "CvWonderProductionAI.h"
+#endif
+
 //=====================================
 // CvAICityStrategyEntry
 //=====================================
@@ -235,6 +239,9 @@ CvCityStrategyAI::CvCityStrategyAI():
 	m_paiTurnCityStrategyAdopted(NULL),
 	m_aiTempFlavors(NULL),
 	m_pBuildingProductionAI(NULL),
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	m_pWonderProductionAI(NULL),
+#endif
 	m_pUnitProductionAI(NULL),
 	m_pProjectProductionAI(NULL),
 	m_pProcessProductionAI(NULL),
@@ -271,6 +278,9 @@ void CvCityStrategyAI::Init(CvAICityStrategies* pAICityStrategies, CvCity* pCity
 
 	// Create AI subobjects
 	m_pBuildingProductionAI = FNEW(CvBuildingProductionAI(pCity, pCity->GetCityBuildings()), c_eCiv5GameplayDLL, 0);
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	m_pWonderProductionAI = FNEW(CvWonderProductionAI(pCity, pCity->GetCityBuildings()->GetBuildings()), c_eCiv5GameplayDLL, 0);
+#endif
 	m_pUnitProductionAI = FNEW(CvUnitProductionAI(pCity, GC.GetGameUnits()), c_eCiv5GameplayDLL, 0);
 	m_pProjectProductionAI = FNEW(CvProjectProductionAI(pCity), c_eCiv5GameplayDLL, 0);
 	m_pProcessProductionAI = FNEW(CvProcessProductionAI(pCity), c_eCiv5GameplayDLL, 0);
@@ -294,6 +304,9 @@ void CvCityStrategyAI::Uninit()
 	SAFE_DELETE_ARRAY(m_paiTurnCityStrategyAdopted);
 	SAFE_DELETE_ARRAY(m_aiTempFlavors);
 	SAFE_DELETE(m_pBuildingProductionAI);
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	SAFE_DELETE(m_pWonderProductionAI);
+#endif
 	SAFE_DELETE(m_pUnitProductionAI);
 	SAFE_DELETE(m_pProjectProductionAI);
 	SAFE_DELETE(m_pProcessProductionAI);
@@ -316,6 +329,9 @@ void CvCityStrategyAI::Reset()
 
 	// Reset sub AI objects
 	m_pBuildingProductionAI->Reset();
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	m_pWonderProductionAI->Reset();
+#endif
 	m_pUnitProductionAI->Reset();
 	m_pProjectProductionAI->Reset();
 	m_pProcessProductionAI->Reset();
@@ -343,6 +359,9 @@ void CvCityStrategyAI::Read(FDataStream& kStream)
 	m_eFocusYield = (YieldTypes)NO_YIELD;	//force yield to default since we don't serialize it.
 
 	m_pBuildingProductionAI->Read(kStream);
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	m_pWonderProductionAI->Read(kStream);
+#endif
 	m_pUnitProductionAI->Read(kStream);
 	m_pProjectProductionAI->Read(kStream);
 	m_pProcessProductionAI->Read(kStream);
@@ -369,6 +388,9 @@ void CvCityStrategyAI::Write(FDataStream& kStream)
 	kStream << m_eDefaultSpecialization;
 
 	m_pBuildingProductionAI->Write(kStream);
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	m_pWonderProductionAI->Write(kStream);
+#endif
 	m_pUnitProductionAI->Write(kStream);
 	m_pProjectProductionAI->Write(kStream);
 	m_pProcessProductionAI->Write(kStream);
@@ -379,6 +401,9 @@ void CvCityStrategyAI::FlavorUpdate()
 {
 	// Reset our sub AI objects
 	m_pBuildingProductionAI->Reset();
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	m_pWonderProductionAI->Reset();
+#endif
 	m_pUnitProductionAI->Reset();
 	m_pProjectProductionAI->Reset();
 	m_pProcessProductionAI->Reset();
@@ -402,6 +427,9 @@ void CvCityStrategyAI::FlavorUpdate()
 #endif
 
 		m_pBuildingProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+		m_pWonderProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
+#endif
 		m_pUnitProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
 		m_pProjectProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
 #ifndef AUI_GS_SCIENCE_FLAVOR_BOOST
@@ -607,6 +635,13 @@ CvProcessProductionAI* CvCityStrategyAI::GetProcessProductionAI()
 {
 	return m_pProcessProductionAI;
 }
+
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+CvWonderProductionAI* CvCityStrategyAI::GetWonderProductionAI() const
+{
+	return m_pWonderProductionAI;
+}
+#endif
 
 /// Build log filename
 CvString CvCityStrategyAI::GetLogFileName(CvString& playerName, CvString& cityName) const

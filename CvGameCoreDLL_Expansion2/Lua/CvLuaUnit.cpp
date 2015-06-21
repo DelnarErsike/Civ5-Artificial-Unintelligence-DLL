@@ -397,6 +397,9 @@ void CvLuaUnit::PushMethods(lua_State* L, int t)
 
 	Method(GetUnitType);
 	Method(GetUnitClassType);
+#ifdef AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	Method(GetUnitFlavor);
+#endif
 	Method(GetLeaderUnitType);
 	Method(SetLeaderUnitType);
 	Method(IsNearGreatGeneral);
@@ -3882,6 +3885,21 @@ int CvLuaUnit::lGetUnitClassType(lua_State* L)
 	lua_pushinteger(L, eResult);
 	return 1;
 }
+#ifdef AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+int CvLuaUnit::lGetUnitFlavor(lua_State* L)
+{
+	CvUnit* pkUnit = GetInstance(L);
+	if (pkUnit)
+	{
+		const int iFlavor = lua_tointeger(L, 2);
+
+		int iResult = pkUnit->getUnitInfo().GetFlavorValue(iFlavor);
+		lua_pushinteger(L, iResult);
+		return 1;
+	}
+	return 0;
+}
+#endif
 //------------------------------------------------------------------------------
 //int /*UnitTypes*/ getLeaderUnitType();
 int CvLuaUnit::lGetLeaderUnitType(lua_State* L)

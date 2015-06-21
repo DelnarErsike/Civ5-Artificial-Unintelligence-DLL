@@ -406,6 +406,9 @@ protected:
 
 	static int lGetUnitType(lua_State* L);
 	static int lGetUnitClassType(lua_State* L);
+#ifdef AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	static int lGetUnitFlavor(lua_State* L);
+#endif
 	static int lGetLeaderUnitType(lua_State* L);
 	static int lSetLeaderUnitType(lua_State* L);
 	static int lIsNearGreatGeneral(lua_State* L);

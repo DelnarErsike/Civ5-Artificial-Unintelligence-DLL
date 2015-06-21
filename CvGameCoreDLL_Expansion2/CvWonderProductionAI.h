@@ -26,9 +26,15 @@
 class CvWonderProductionAI: public CvFlavorRecipient
 {
 public:
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	CvWonderProductionAI(CvCity* pCity, CvBuildingXMLEntries* pBuildings);
+	~CvWonderProductionAI(void);
+	void Init(CvBuildingXMLEntries* pBuildings, CvCity* pCity);
+#else
 	CvWonderProductionAI(CvPlayer* pPlayer, CvBuildingXMLEntries* pBuildings);
 	~CvWonderProductionAI(void);
 	void Init(CvBuildingXMLEntries* pBuildings, CvPlayer* pPlayer, bool bIsCity);
+#endif
 
 	// Initialization
 	void Reset();
@@ -46,10 +52,18 @@ public:
 
 	// Recommend highest-weighted wonder
 	BuildingTypes ChooseWonder(bool bUseAsyncRandom, bool bAdjustForOtherPlayers, int& iWonderWeight);
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+	BuildingTypes ChooseWonderForGreatEngineer(CvUnit* pUnit, bool bUseAsyncRandom, int iExtraTurns, int& iWonderWeight);
+#else
+	BuildingTypes ChooseWonderForGreatEngineer(bool bUseAsyncRandom, int iExtraTurns, int& iWonderWeight);
+#endif
+#else
 #ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
 	BuildingTypes ChooseWonderForGreatEngineer(CvUnit* pUnit, bool bUseAsyncRandom, int& iWonderWeight, CvCity*& pCityToBuildAt);
 #else
 	BuildingTypes ChooseWonderForGreatEngineer(bool bUseAsyncRandom, int& iWonderWeight, CvCity*& pCityToBuildAt);
+#endif
 #endif
 
 	// Logging
@@ -59,10 +73,14 @@ public:
 	bool IsWonder(const CvBuildingEntry& kBuilding) const;
 
 private:
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	CvCity* m_pCity;
+#else
 	bool HaveCityToBuild(BuildingTypes eBuilding) const;
 
 	// Private data
 	CvPlayer* m_pPlayer;
+#endif
 	CvBuildingXMLEntries* m_pBuildings;
 	CvWeightedVector<int, SAFE_ESTIMATE_NUM_BUILDINGS, true> m_WonderAIWeights;
 	CvWeightedVector<int, SAFE_ESTIMATE_NUM_WONDERS, true> m_Buildables;
