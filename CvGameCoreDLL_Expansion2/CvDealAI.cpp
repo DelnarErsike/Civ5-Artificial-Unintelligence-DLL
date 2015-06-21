@@ -1258,25 +1258,25 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 	if(eUsage == RESOURCEUSAGE_LUXURY)
 	{
 #ifdef AUI_DEALAI_TWEAKED_RESOURCE_VALUE
-		// More happiness gets less useful at higher levels of existing happiness
-		double dOurHappinessDampener = 2.0 / (1.0 + exp((double)GetPlayer()->GetExcessHappiness() / GC.getSUPER_UNHAPPY_THRESHOLD()));
-		double dTheirHappinessDampener = 2.0 / (1.0 + exp((double)pOtherPlayer->GetExcessHappiness() / GC.getSUPER_UNHAPPY_THRESHOLD()));
-		// Commerce is not checked for extra luxury thing because it's always the last policy in the tree
-		PolicyBranchTypes ePatronageBranch = (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_PATRONAGE", true /*bHideAssert*/);
-		int iTheirPatronagePolicies = 1;
-		if (ePatronageBranch != NO_POLICY_BRANCH_TYPE)
-		{
-			iTheirPatronagePolicies = pOtherPlayer->GetPlayerPolicies()->GetNumPoliciesOwnedInBranch(ePatronageBranch);
-			// From here on, iTheirPatronagePolicies will be used as a happiness divider
-			if (iTheirPatronagePolicies > 5)
-				// If there are 6 or more policies, the luxury booster will always be unlocked
-				iTheirPatronagePolicies = 1;
-			else
-				// If there are 4 or 5 policies, there are always 2 possible policy allocations, one of which has the luxury booster and one that doesn't; the average is 1/2
-				iTheirPatronagePolicies = 2;
-		}
 		if (!GC.getGame().GetGameLeagues()->IsLuxuryHappinessBanned(GetPlayer()->GetID(), eResource))
 		{
+			// More happiness gets less useful at higher levels of existing happiness
+			double dOurHappinessDampener = 2.0 / (1.0 + exp((double)GetPlayer()->GetExcessHappiness() / GC.getSUPER_UNHAPPY_THRESHOLD()));
+			double dTheirHappinessDampener = 2.0 / (1.0 + exp((double)pOtherPlayer->GetExcessHappiness() / GC.getSUPER_UNHAPPY_THRESHOLD()));
+			// Commerce is not checked for extra luxury thing because it's always the last policy in the tree
+			PolicyBranchTypes ePatronageBranch = (PolicyBranchTypes)GC.getInfoTypeForString("POLICY_BRANCH_PATRONAGE", true /*bHideAssert*/);
+			int iTheirPatronagePolicies = 1;
+			if (ePatronageBranch != NO_POLICY_BRANCH_TYPE)
+			{
+				iTheirPatronagePolicies = pOtherPlayer->GetPlayerPolicies()->GetNumPoliciesOwnedInBranch(ePatronageBranch);
+				// From here on, iTheirPatronagePolicies will be used as a happiness divider
+				if (iTheirPatronagePolicies > 5)
+					// If there are 6 or more policies, the luxury booster will always be unlocked
+					iTheirPatronagePolicies = 1;
+				else
+					// If there are 4 or 5 policies, there are always 2 possible policy allocations, one of which has the luxury booster and one that doesn't; the average is 1/2
+					iTheirPatronagePolicies = 2;
+			}
 			int iBaseHappiness = pkResourceInfo->getHappiness();
 			if (bFromMe)
 			{
@@ -1359,7 +1359,7 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 	{
 		if (bFromMe)
 		{
-			if (GET_TEAM(pOtherPlayer->getTeam()).IsResourceObsolete(eResource))
+			if (pOtherPlayer->IsNoNeedForResource(eResource))
 			{
 				iItemValue = 0;
 			}
@@ -1376,7 +1376,9 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 						CvBuildingClassInfo* pkBuildingClassInfo = GC.getBuildingClassInfo(eBuildingClassInfo);
 						if (pkBuildingClassInfo)
 						{
-							const int iMaxBuildingInstances = pkBuildingClassInfo->getMaxPlayerInstances() + pkBuildingClassInfo->getExtraPlayerInstances();
+							int iMaxBuildingInstances = MAX_INT;
+							if (!pkBuildingClassInfo->isNoLimit())
+								iMaxBuildingInstances = pkBuildingClassInfo->getMaxPlayerInstances() + pkBuildingClassInfo->getExtraPlayerInstances();
 							int iCurBuildingCount = pOtherPlayer->getBuildingClassCount(eBuildingClassInfo);
 							for (pLoopCity = pOtherPlayer->firstCity(&iLoop); pLoopCity != NULL && iCurBuildingCount < iMaxBuildingInstances; pLoopCity = pOtherPlayer->nextCity(&iLoop))
 							{
@@ -1405,7 +1407,7 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 		}
 		else
 		{
-			if (GET_TEAM(GetPlayer()->getTeam()).IsResourceObsolete(eResource))
+			if (GetPlayer()->IsNoNeedForResource(eResource))
 			{
 				iItemValue = 0;
 			}
@@ -1423,7 +1425,9 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 						CvBuildingClassInfo* pkBuildingClassInfo = GC.getBuildingClassInfo(eBuildingClassInfo);
 						if (pkBuildingClassInfo)
 						{
-							const int iMaxBuildingInstances = pkBuildingClassInfo->getMaxPlayerInstances() + pkBuildingClassInfo->getExtraPlayerInstances();
+							int iMaxBuildingInstances = MAX_INT;
+							if (!pkBuildingClassInfo->isNoLimit())
+								iMaxBuildingInstances = pkBuildingClassInfo->getMaxPlayerInstances() + pkBuildingClassInfo->getExtraPlayerInstances();
 							int iCurBuildingCount = pOtherPlayer->getBuildingClassCount(eBuildingClassInfo);
 							for (pLoopCity = GetPlayer()->firstCity(&iLoop); pLoopCity != NULL && iCurBuildingCount < iMaxBuildingInstances; pLoopCity = GetPlayer()->nextCity(&iLoop))
 							{
@@ -2565,7 +2569,7 @@ int CvDealAI::GetResearchAgreementValue(bool bFromMe, PlayerTypes eOtherPlayer, 
 #else
 #ifdef AUI_GS_PRIORITY_RATIO
 			iItemValue = int(iItemValue / pow(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain / FASTMAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1),
-				1.0 + (double)GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP")) / AUI_GS_SCIENCE_FLAVOR_BOOST) + 0.5);
+				1.0 + (double)GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"))) + 0.5);
 #else
 			if (GetPlayer()->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"))
 				iItemValue = int(iItemValue / pow(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain 
