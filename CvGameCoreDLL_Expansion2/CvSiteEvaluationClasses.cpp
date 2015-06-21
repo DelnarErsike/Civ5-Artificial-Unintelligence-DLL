@@ -110,6 +110,9 @@ void CvCitySiteEvaluator::Init()
 	m_iGrowthIndex = GC.getInfoTypeForString("FLAVOR_GROWTH");
 	m_iExpansionIndex = GC.getInfoTypeForString("FLAVOR_EXPANSION");
 	m_iNavalIndex = GC.getInfoTypeForString("FLAVOR_NAVAL");
+#ifdef AUI_ASTAR_GHOSTFINDER
+	m_iDefenseIndex = GC.getInfoTypeForString("FLAVOR_DEFENSE");
+#endif
 
 #ifndef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 	m_iBrazilMultiplier = 1000;	//fertility boost from jungles
@@ -462,6 +465,9 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 
 	int iClosestCityOfMine = 999;
 	int iClosestEnemyCity = 999;
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_REINFORCE_SPEED
+	CvCity* pClosestEnemyCity = NULL;
+#endif
 
 	int iCapitalArea = NULL;
 
@@ -755,8 +761,15 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							if (iPlotValue == 0)
 							{
 								// this tile is so bad it gets negatives
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_SCALED_NEGATIVE_SCORE_FOR_EMPTY_PLOT
+								iPlotValue -= iRingModifier * GC.getSETTLER_FOOD_MULTIPLIER() * 2 * m_iFlavorMultiplier[YIELD_FOOD];
+#else
 								iPlotValue -= iRingModifier * GC.getSETTLER_FOOD_MULTIPLIER() * 2;
+#endif
 							}
+#ifdef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
+							if (iPlotValue > 0 || pLoopPlot->isImpassable() || pLoopPlot->isMountain())
+#endif
 							iPlotValue += iStrategicValue;
 
 #ifndef AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_NATURAL_WONDERS // No longer need flat bonus to natural wonder tiles, the added happiness value is enough
@@ -873,6 +886,9 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 							if (pLoopPlot->isCity() && (pLoopPlot->getOwner() < MAX_MAJOR_CIVS))
 							{
 								iClosestEnemyCity = iDistance;
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_REINFORCE_SPEED
+								pClosestEnemyCity = pLoopPlot->getPlotCity();
+#endif
 							}
 						}
 					}
@@ -880,48 +896,6 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 			}
 		}
 	}
-
-#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_ENABLED_BUILDINGS
-	if (rtnValue > 0)
-	{
-		CvGrandStrategyAI* pGrandStrategyAI = pPlayer->GetGrandStrategyAI();
-		double dLoopFlavor = 0;
-		double dTotalFlavor = 0;
-		double dTotalBaseFlavor = 0;
-		int iLoopEraDifference;
-		for (int iI = 0; iI < GC.getNumBuildingInfos(); iI++)
-		{
-			const BuildingTypes eBuilding = static_cast<BuildingTypes>(iI);
-			CvBuildingEntry* pkBuilding = GC.getBuildingInfo(eBuilding);
-			iLoopEraDifference = 0;
-			if (pPlot->isValidBuildingLocation(eBuilding, true) && pPlayer->canConstruct(eBuilding, false, false, false, NULL, true, &iLoopEraDifference) && pkBuilding)
-			{
-				const CvBuildingClassInfo* pkBuildingClassInfo = &(pkBuilding->GetBuildingClassInfo());
-				for (int iJ = 0; iJ < GC.getNumFlavorTypes(); iJ++)
-				{
-					dLoopFlavor = pkBuilding->GetFlavorValue(iJ) / double(iLoopEraDifference + 1);
-					if (pkBuildingClassInfo)
-					{
-						if (pkBuildingClassInfo->getDefaultBuildingIndex() != eBuilding)
-							dLoopFlavor *= 2;
-						else if (pkBuildingClassInfo->getMaxGlobalInstances() > 0 || pkBuildingClassInfo->getMaxTeamInstances() > 0 || pkBuildingClassInfo->getMaxPlayerInstances() > 0)
-						{
-							if (pPlayer->getNumCities() > 2)
-								dLoopFlavor /= (double)pPlayer->getNumCities();
-							else
-								dLoopFlavor /= 2;
-						}
-					}
-					dTotalBaseFlavor += pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)iJ);
-					dTotalFlavor += dLoopFlavor * pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)iJ);
-				}
-			}
-		}
-		if (dTotalBaseFlavor == 0)
-			dTotalBaseFlavor = 1;
-		rtnValue += int(dTotalFlavor / dTotalBaseFlavor + 0.5);
-	}
-#endif
 
 	if (pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest())
 	{
@@ -1000,7 +974,53 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 	}
 #endif // This stuff has been taken care of in the plot value part in AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_ENABLED_BUILDINGS
+	if (rtnValue > 0)
+	{
+		CvGrandStrategyAI* pGrandStrategyAI = pPlayer->GetGrandStrategyAI();
+		double dLoopFlavor = 0;
+		double dTotalFlavor = 0;
+		double dTotalBaseFlavor = 0;
+		int iLoopEraDifference;
+		for (int iI = 0; iI < GC.getNumBuildingInfos(); iI++)
+		{
+			const BuildingTypes eBuilding = static_cast<BuildingTypes>(iI);
+			CvBuildingEntry* pkBuilding = GC.getBuildingInfo(eBuilding);
+			iLoopEraDifference = 0;
+			if (pPlot->isValidBuildingLocation(eBuilding, true) && pPlayer->canConstruct(eBuilding, false, false, false, NULL, true, &iLoopEraDifference) && 
+				pPlot->IsBuildingLocalResourceValid(eBuilding, pPlayer->getTeam()) && pkBuilding)
+			{
+				const CvBuildingClassInfo* pkBuildingClassInfo = &(pkBuilding->GetBuildingClassInfo());
+				for (int iJ = 0; iJ < GC.getNumFlavorTypes(); iJ++)
+				{
+					dLoopFlavor = pkBuilding->GetFlavorValue(iJ) / double(iLoopEraDifference + 1);
+					if (pkBuildingClassInfo)
+					{
+						if (pkBuildingClassInfo->getDefaultBuildingIndex() != eBuilding)
+							dLoopFlavor *= 2;
+						else if (pkBuildingClassInfo->getMaxGlobalInstances() > 0 || pkBuildingClassInfo->getMaxTeamInstances() > 0 || pkBuildingClassInfo->getMaxPlayerInstances() > 0)
+						{
+							if (pPlayer->getNumCities() > 2)
+								dLoopFlavor /= (double)pPlayer->getNumCities();
+							else
+								dLoopFlavor /= 2;
+						}
+					}
+					dTotalBaseFlavor += pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)iJ);
+					dTotalFlavor += dLoopFlavor * pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)iJ);
+				}
+			}
+		}
+		if (dTotalBaseFlavor == 0)
+			dTotalBaseFlavor = 1;
+		dTotalBaseFlavor *= 10;
+		rtnValue += int(dTotalFlavor / dTotalBaseFlavor + 0.5);
+	}
+	else
+		return 0;
+#else
 	if (rtnValue < 0) rtnValue = 0;
+#endif
 
 	// Finally, look at the city plot itself and use it as an overall multiplier
 	if (pPlot->getResourceType(pPlayer->getTeam()) != NO_RESOURCE)
@@ -1019,6 +1039,23 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 	if (pPlot->isCoastalLand(GC.getMIN_WATER_SIZE_FOR_OCEAN()))
 #endif
 	{
+#ifdef AUI_SITE_EVALUATION_LOGISTIC_EXTRA_FLAVOR_FROM_COASTAL
+		double dNavalFlavor = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)m_iNavalIndex);
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FIRST_COASTAL_CITY_MULTIPLIER
+		if (pPlayer->getCivilizationInfo().isCoastalCiv() || !bHasCoastal)
+#else
+		if (pPlayer->getCivilizationInfo().isCoastalCiv())
+#endif
+		{
+			dNavalFlavor += GC.getFLAVOR_MAX_VALUE();
+			dNavalFlavor /= 2.0;
+		}
+		double dBonusPercent = 1.0 + (double)GC.getSETTLER_BUILD_ON_COAST_PERCENT() / 100.0;
+		double a = (2.0 - dBonusPercent) * dBonusPercent;
+		double b = 2.0 * (dBonusPercent - a);
+		double dMultiplier = a + b / (1.0 + exp(-dNavalFlavor / 4.0));
+		rtnValue = int(rtnValue * dMultiplier + 0.5);
+#else
 		// okay, coast used to have lots of gold so players settled there "naturally", it doesn't any more, so I am going to give it a nudge in that direction
 		// slewis - removed Brian(?)'s rtnValue adjustment and raised the BUILD_ON_COAST_PERCENT to 40 from 25
 		//rtnValue += rtnValue > 0 ? 10 : 0;
@@ -1052,6 +1089,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 			rtnValue *= AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FIRST_COASTAL_CITY_MULTIPLIER;
 		}
 #endif
+#endif
 	}
 
 	// Nearby Cities?
@@ -1070,6 +1108,35 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		int iGrowthFlavor = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)m_iGrowthIndex);
 		int iExpansionFlavor = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)m_iExpansionIndex);
 
+#ifdef AUI_SITE_EVALUATION_BETA_DISTRIBUTION_FOR_DISTANCE_MULTIPLIER
+		double dXValue = (iClosestCityOfMine - 3.0) / 4.0;
+		if (dXValue > 1.0)
+			dXValue = 1.0;
+		double dSpacingBetaDistribution = 0.75 * pow(dXValue, iGrowthFlavor) * pow(1.0 - dXValue, iExpansionFlavor);
+		dSpacingBetaDistribution *= double(getFactorial(iGrowthFlavor + iExpansionFlavor + 2)) / double(getFactorial(iGrowthFlavor + 1) * getFactorial(iExpansionFlavor + 1));
+		dSpacingBetaDistribution += 0.5;
+
+#ifndef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_REINFORCE_SPEED
+		if (iClosestEnemyCity < 999)
+		{
+			dXValue = (iClosestEnemyCity - 3.0) / 4.0;
+			if (dXValue > 1.0)
+				dXValue = 1.0;
+			double dBoldnessDistribution = 1.0;
+			// use boldness to decide if we want to push close to enemies
+			double dBoldness = double(pPlayer->GetDiplomacyAI()->GetBoldness()) / 10.0;
+			if (dBoldness < 1.0)
+			{
+				dBoldnessDistribution = 2.0 / (1.0 - dBoldness + exp(-dXValue/(2.0 - dBoldness))) - 1.0;
+				if (dBoldnessDistribution > 1.0)
+					dBoldnessDistribution = 1.0;
+			}
+			dSpacingBetaDistribution *= dBoldnessDistribution;
+		}
+#endif
+
+		rtnValue = int(rtnValue * dSpacingBetaDistribution + 0.5);
+#else
 		int iSweetSpot = 5;
 		iSweetSpot += (iGrowthFlavor > 7) ?  1 : 0;
 		iSweetSpot += (iExpansionFlavor > 7) ?  -1 : 0;
@@ -1111,6 +1178,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 			rtnValue /= 3;
 		}
 
+#ifndef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_REINFORCE_SPEED
 		// use boldness to decide if we want to push close to enemies
 		int iBoldness = pPlayer->GetDiplomacyAI()->GetBoldness();
 		if (iBoldness < 4)
@@ -1140,7 +1208,9 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 				rtnValue /= 3;
 			}
 		}
-
+#endif
+#endif
+#ifndef AUI_SITE_EVALUATION_NO_PULL_TOGETHER_ON_OFFSHORE
 		// if we are offshore, pull cities in tighter
 		if (iCapitalArea != pPlot->getArea())
 		{
@@ -1150,6 +1220,112 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 				rtnValue /= 2;
 			}
 		}
+#endif
+#ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_REINFORCE_SPEED
+		PlayerTypes eMyPlayer = pPlayer->GetID();
+		//TeamTypes eMyTeam = pPlayer->getTeam();
+		int iMyClosestReinforce = MAX_INT;
+		if (!pPlayer->getCapitalCity())
+		{
+			iMyClosestReinforce = 0;
+		}
+		else
+		{
+			int iLoopLandReinforce = 0;
+			int iLoopWaterReinforce = 0;
+			int iCityLoop = 0;
+			for (CvCity* pLoopCity = pPlayer->firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = pPlayer->nextCity(&iCityLoop))
+			{
+				iLoopLandReinforce = TurnsToGhostfindTarget(eMyPlayer, pPlot, pLoopCity->plot(), false);
+				if (iLoopLandReinforce < iMyClosestReinforce)
+				{
+					iMyClosestReinforce = iLoopLandReinforce;
+				}
+				iLoopWaterReinforce = TurnsToGhostfindTarget(eMyPlayer, pPlot, pLoopCity->plot(), true);
+				if (iLoopWaterReinforce < iMyClosestReinforce)
+				{
+					iMyClosestReinforce = iLoopWaterReinforce;
+				}
+			}
+		}
+		int iEnemyClosestReinforce = MAX_INT;
+		if (pClosestEnemyCity)
+		{
+			int iLoopLandReinforce = TurnsToGhostfindTarget(pClosestEnemyCity->getOwner(), pPlot, pClosestEnemyCity->plot(), false);
+			if (iLoopLandReinforce < iEnemyClosestReinforce)
+			{
+				iEnemyClosestReinforce = iLoopLandReinforce;
+			}
+			int iLoopWaterReinforce = TurnsToGhostfindTarget(pClosestEnemyCity->getOwner(), pPlot, pClosestEnemyCity->plot(), true);
+			if (iLoopWaterReinforce < iEnemyClosestReinforce)
+			{
+				iEnemyClosestReinforce = iLoopWaterReinforce;
+			}
+		}
+		CvDiplomacyAI* pDiploAI = pPlayer->GetDiplomacyAI();
+		for (int iI = 0; iI < MAX_MAJOR_CIVS; iI++)
+		{
+			PlayerTypes eLoopPlayer = static_cast<PlayerTypes>(iI);
+			CvPlayer& kLoopPlayer = GET_PLAYER(eLoopPlayer);
+			if (kLoopPlayer.isAlive() && pDiploAI->IsPlayerValid(eLoopPlayer))
+			{
+				int iLoopLandReinforce = 0;
+				int iLoopWaterReinforce = 0;
+				int iCityLoop = 0;
+				bool bConsiderCity = true;
+				for (CvCity* pLoopCity = kLoopPlayer.firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = kLoopPlayer.nextCity(&iCityLoop))
+				{
+					/*bConsiderCity = false;
+					if (pLoopCity->isRevealed(eMyTeam, false))
+						bConsiderCity = true;
+					else
+					{
+						int iCityX = pLoopCity->getX();
+						int iCityY = pLoopCity->getY();
+						for (int iJ = 0; iJ < NUM_CITY_PLOTS; iJ++)
+						{
+							CvPlot* pLoopPlot = plotCity(iCityX, iCityY, iJ);
+							if (pLoopPlot && pLoopPlot->getRevealedOwner(eMyTeam) == eLoopPlayer)
+							{
+								bConsiderCity = true;
+								break;
+							}
+						}
+					}*/
+					if (bConsiderCity)
+					{
+						iLoopLandReinforce = TurnsToGhostfindTarget(eLoopPlayer, pPlot, pLoopCity->plot(), false);
+						if (iLoopLandReinforce < iEnemyClosestReinforce)
+						{
+							iEnemyClosestReinforce = iLoopLandReinforce;
+						}
+						iLoopWaterReinforce = TurnsToGhostfindTarget(eLoopPlayer, pPlot, pLoopCity->plot(), true);
+						if (iLoopWaterReinforce < iEnemyClosestReinforce)
+						{
+							iEnemyClosestReinforce = iLoopWaterReinforce;
+						}
+					}
+				}
+			}
+		}
+		double dReinforceMultiplier = 1.0;
+		if (iMyClosestReinforce < MAX_INT)
+		{
+			double dDefenseFavor = (pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)m_iDefenseIndex)) / 1.0;
+			if (dDefenseFavor > 2.0)
+				dDefenseFavor = 2.0;
+			dReinforceMultiplier = 2.5 * exp(-pow((double)iMyClosestReinforce / (3.0 - dDefenseFavor), 2.0)) + 0.5;
+		}
+		if (iEnemyClosestReinforce < MAX_INT)
+		{
+			double dBoldness = 1.0 + double(pPlayer->GetDiplomacyAI()->GetBoldness());
+			if (dBoldness < 2.0)
+				dBoldness = 2.0;
+			dReinforceMultiplier /= 3.0 * exp(-pow(iEnemyClosestReinforce / 2.0 * log(dBoldness), 2.0)) + 1.0;
+		}
+
+		rtnValue = int(rtnValue * dReinforceMultiplier + 0.5);
+#endif
 	}
 
 	rtnValue = (rtnValue > 0) ? rtnValue : 0;
@@ -1381,7 +1557,7 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 /// Value of plot for providing Happiness
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
 #ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer, int iPlotsFromCity, bool bIgnoreCoast)
+int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer, int /*iPlotsFromCity*/, bool bIgnoreCoast)
 #else
 int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer, bool bIgnoreCoast)
 #endif
@@ -1424,7 +1600,7 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if(pPlayer)
 		{
 #ifdef AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER
-			if (pPlayer->getNumResourceTotal(eResource, false) == 0)
+			if (pPlayer->getNumResourceTotal(eResource, false) == 0 && pPlayer->getResourceInOwnedPlots(eResource) == 0)
 			{
 #ifdef AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_PLAYER_SOURCES
 				if (pPlayer->GetHappinessFromResources() > 0)
@@ -1449,10 +1625,6 @@ int CvCitySiteEvaluator::ComputeHappinessValue(CvPlot* pPlot, CvPlayer* pPlayer)
 #endif
 #endif
 		}
-#ifdef AUI_SITE_EVALUATION_COMPUTE_YIELD_VALUE_RECOGNIZE_CITY_PLOT
-		if (iPlotsFromCity == 0)
-			rtnValue *= 2;
-#endif
 	}
 
 #ifdef AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_NATURAL_WONDERS

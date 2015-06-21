@@ -105,6 +105,9 @@ protected:
 	int m_iExpansionIndex;
 	int m_iGrowthIndex;
 	int m_iNavalIndex;
+#ifdef AUI_ASTAR_GHOSTFINDER
+	int m_iDefenseIndex;
+#endif
 
 #ifndef AUI_PLOT_CALCULATE_NATURE_YIELD_USE_POTENTIAL_CIV_UNIQUE_IMPROVEMENT
 	int m_iBrazilMultiplier;
