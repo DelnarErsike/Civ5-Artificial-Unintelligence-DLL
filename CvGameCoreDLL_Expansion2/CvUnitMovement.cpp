@@ -39,7 +39,11 @@ void CvUnitMovement::GetCostsForMove(const CvUnit* pUnit, const CvPlot* pFromPlo
 
 		if(iRegularCost > 0)
 		{
+#ifdef AUI_FAST_COMP
+			iRegularCost = FASTMAX(1, (iRegularCost - pUnit->getExtraMoveDiscount()));
+#else
 			iRegularCost = std::max(1, (iRegularCost - pUnit->getExtraMoveDiscount()));
+#endif
 		}
 	}
 
@@ -69,7 +73,11 @@ void CvUnitMovement::GetCostsForMove(const CvUnit* pUnit, const CvPlot* pFromPlo
 		}
 	}
 
+#ifdef AUI_FAST_COMP
+	iRegularCost = FASTMIN(iRegularCost, (iBaseMoves * iMoveDenominator));
+#else
 	iRegularCost = std::min(iRegularCost, (iBaseMoves * iMoveDenominator));
+#endif
 
 	if(pFromPlot->isValidRoute(pUnit) && pToPlot->isValidRoute(pUnit) && ((kUnitTeam.isBridgeBuilding() || !(pFromPlot->isRiverCrossing(directionXY(pFromPlot, pToPlot))))))
 	{
@@ -102,12 +110,21 @@ void CvUnitMovement::GetCostsForMove(const CvUnit* pUnit, const CvPlot* pFromPlo
 		int iMovementCost = (pRouteInfo != NULL)? pRouteInfo->getMovementCost() : 0;
 		int iFlatMovementCost = (pRouteInfo != NULL)? pRouteInfo->getFlatMovementCost() : 0;
 
+#ifdef AUI_FAST_COMP
+#ifdef AUI_UNIT_MOVEMENT_IROQUOIS_ROAD_TRANSITION_FIX
+		iRouteCost = FASTMAX(iFromMovementCost + kUnitTeam.getRouteChange(eFromPlotRoute), iMovementCost + kUnitTeam.getRouteChange(eToPlotRoute));
+#else
+		iRouteCost = FASTMAX(iFromMovementCost + kUnitTeam.getRouteChange(pFromPlot->getRouteType()), iMovementCost + kUnitTeam.getRouteChange(pToPlot->getRouteType()));
+#endif
+		iRouteFlatCost = FASTMAX(iFromFlatMovementCost * iBaseMoves, iFlatMovementCost * iBaseMoves);
+#else
 #ifdef AUI_UNIT_MOVEMENT_IROQUOIS_ROAD_TRANSITION_FIX
 		iRouteCost = std::max(iFromMovementCost + kUnitTeam.getRouteChange(eFromPlotRoute), iMovementCost + kUnitTeam.getRouteChange(eToPlotRoute));
 #else
 		iRouteCost = std::max(iFromMovementCost + kUnitTeam.getRouteChange(pFromPlot->getRouteType()), iMovementCost + kUnitTeam.getRouteChange(pToPlot->getRouteType()));
 #endif
 		iRouteFlatCost = std::max(iFromFlatMovementCost * iBaseMoves, iFlatMovementCost * iBaseMoves);
+#endif
 	}
 #ifdef AUI_UNIT_MOVEMENT_IROQUOIS_ROAD_TRANSITION_FIX
 	else if(pTraits->IsMoveFriendlyWoodsAsRoad() && pUnit->getOwner() == pToPlot->getOwner() && (eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE) && 
@@ -180,7 +197,11 @@ int CvUnitMovement::MovementCost(const CvUnit* pUnit, const CvPlot* pFromPlot, c
 
 	GetCostsForMove(pUnit, pFromPlot, pToPlot, iBaseMoves, iRegularCost, iRouteCost, iRouteFlatCost);
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, FASTMIN(iRegularCost, FASTMIN(iRouteCost, iRouteFlatCost)));
+#else
 	return std::max(1, std::min(iRegularCost, std::min(iRouteCost, iRouteFlatCost)));
+#endif
 }
 
 //	---------------------------------------------------------------------------
@@ -206,7 +227,11 @@ int CvUnitMovement::MovementCostNoZOC(const CvUnit* pUnit, const CvPlot* pFromPl
 
 	GetCostsForMove(pUnit, pFromPlot, pToPlot, iBaseMoves, iRegularCost, iRouteCost, iRouteFlatCost);
 
+#ifdef AUI_FAST_COMP
+	return FASTMAX(1, FASTMIN(iRegularCost, FASTMIN(iRouteCost, iRouteFlatCost)));
+#else
 	return std::max(1, std::min(iRegularCost, std::min(iRouteCost, iRouteFlatCost)));
+#endif
 }
 
 //	---------------------------------------------------------------------------
@@ -217,10 +242,12 @@ bool CvUnitMovement::ConsumesAllMoves(const CvUnit* pUnit, const CvPlot* pFromPl
 		return true;
 	}
 
+#ifndef AUI_UNIT_MOVEMENT_FIX_BAD_ALLOWS_WATER_WALK_CHECK
 	if (!pUnit->isEmbarked() && (pToPlot->IsAllowsWalkWater() || pFromPlot->IsAllowsWalkWater()))
 	{
 		return false;
 	}
+#endif
 
 	if(!pFromPlot->isValidDomainForLocation(*pUnit))
 	{
@@ -230,10 +257,18 @@ bool CvUnitMovement::ConsumesAllMoves(const CvUnit* pUnit, const CvPlot* pFromPl
 	}
 
 	// if the unit can embark and we are transitioning from land to water or vice versa
+#ifdef AUI_UNIT_MOVEMENT_FIX_BAD_ALLOWS_WATER_WALK_CHECK
+	if ((pToPlot->isWater() && !pToPlot->IsAllowsWalkWater()) != (pFromPlot->isWater() && !pFromPlot->IsAllowsWalkWater()) && pUnit->CanEverEmbark())
+#else
 	if(pToPlot->isWater() != pFromPlot->isWater() && pUnit->CanEverEmbark())
+#endif
 	{
 		// Is the unit from a civ that can disembark for just 1 MP?
+#ifdef AUI_UNIT_MOVEMENT_FIX_BAD_VIKING_DISEMBARK_PREVIEW
+		if (!pToPlot->isWater() && pFromPlot->isWater() && GET_PLAYER(pUnit->getOwner()).GetPlayerTraits()->IsEmbarkedToLandFlatCost())
+#else
 		if(!pToPlot->isWater() && pFromPlot->isWater() && pUnit->isEmbarked() && GET_PLAYER(pUnit->getOwner()).GetPlayerTraits()->IsEmbarkedToLandFlatCost())
+#endif
 		{
 			return false;	// Then no, it does not.
 		}
@@ -265,7 +300,11 @@ bool CvUnitMovement::CostsOnlyOne(const CvUnit* pUnit, const CvPlot* pFromPlot, 
 	}
 
 	// Is the unit from a civ that can disembark for just 1 MP?
+#ifdef AUI_UNIT_MOVEMENT_FIX_BAD_VIKING_DISEMBARK_PREVIEW
+	if (!pToPlot->isWater() && pFromPlot->isWater() && pUnit->CanEverEmbark() && GET_PLAYER(pUnit->getOwner()).GetPlayerTraits()->IsEmbarkedToLandFlatCost())
+#else
 	if(!pToPlot->isWater() && pFromPlot->isWater() && pUnit->isEmbarked() && GET_PLAYER(pUnit->getOwner()).GetPlayerTraits()->IsEmbarkedToLandFlatCost())
+#endif
 	{
 		return true;
 	}
