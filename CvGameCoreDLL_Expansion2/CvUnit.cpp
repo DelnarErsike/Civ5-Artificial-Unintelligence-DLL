@@ -705,6 +705,141 @@ void CvUnit::initWithNameOffset(int iID, UnitTypes eUnit, int iNameOffset, UnitA
 
 }
 
+#ifdef AUI_ASTAR_GHOSTFINDER
+void CvUnit::initGhostFinder(int iID, UnitTypes eUnit, PlayerTypes eOwner)
+{
+	VALIDATE_OBJECT
+	int iI;
+
+	CvAssert(NO_UNIT != eUnit);
+
+	initPromotions();
+	m_pReligion->Init();
+
+	//--------------------------------
+	// Init saved data
+	reset(iID, eUnit, eOwner);
+
+	// If this is a hovering unit, we must add that promotion before setting XY, or else it'll get the embark promotion (which we don't want)
+	PromotionTypes ePromotion;
+	for (iI = 0; iI < GC.getNumPromotionInfos(); iI++)
+	{
+		if (getUnitInfo().GetFreePromotions(iI))
+		{
+			ePromotion = (PromotionTypes)iI;
+
+			if (GC.getPromotionInfo(ePromotion)->IsHoveringUnit())
+				setHasPromotion(ePromotion, true);
+		}
+	}
+
+	//--------------------------------
+	// Init pre-setup() data
+	setXY(INVALID_PLOT_COORD, INVALID_PLOT_COORD, false, false);
+
+	//--------------------------------
+	// Init other game data
+
+	setGameTurnCreated(GC.getGame().getGameTurn());
+
+	CvPlayer& kPlayer = GET_PLAYER(getOwner());
+
+	// Free Promotions from Unit XML
+	for (iI = 0; iI < GC.getNumPromotionInfos(); iI++)
+	{
+		if (getUnitInfo().GetFreePromotions(iI))
+		{
+			ePromotion = (PromotionTypes)iI;
+
+			if (!GC.getPromotionInfo(ePromotion)->IsHoveringUnit())	// Hovering units handled above
+				setHasPromotion(ePromotion, true);
+		}
+	}
+
+	const UnitCombatTypes unitCombatType = getUnitCombatType();
+	if (unitCombatType != NO_UNITCOMBAT)
+	{
+		// Any free Promotions to apply?
+		for (int iJ = 0; iJ < GC.getNumPromotionInfos(); iJ++)
+		{
+			const PromotionTypes promotionID = (PromotionTypes)iJ;
+			if (kPlayer.GetPlayerTraits()->HasFreePromotionUnitCombat(promotionID, unitCombatType))
+			{
+				setHasPromotion(promotionID, true);
+			}
+		}
+	}
+
+	// Free Promotions from Policies, Techs, etc.
+	for (iI = 0; iI < GC.getNumPromotionInfos(); iI++)
+	{
+		ePromotion = (PromotionTypes)iI;
+
+		if (kPlayer.IsFreePromotion(ePromotion))
+		{
+			// Valid Promotion for this Unit?
+			if (::IsPromotionValidForUnitCombatType(ePromotion, getUnitType()))
+			{
+				setHasPromotion(ePromotion, true);
+			}
+
+			else if (::IsPromotionValidForCivilianUnitType(ePromotion, getUnitType()))
+			{
+				setHasPromotion(ePromotion, true);
+			}
+
+		}
+	}
+
+	// Give embark promotion for free?
+	if (GET_TEAM(getTeam()).canEmbark() || kPlayer.GetPlayerTraits()->IsEmbarkedAllWater())
+	{
+		PromotionTypes ePromotionEmbarkation = kPlayer.GetEmbarkationPromotion();
+
+		bool bGivePromotion = false;
+
+		// Civilians get it for free
+		if (getDomainType() == DOMAIN_LAND)
+		{
+			if (!IsCombatUnit())
+				bGivePromotion = true;
+		}
+
+		// Can the unit get this? (handles water units and such)
+		if (!bGivePromotion && ::IsPromotionValidForUnitCombatType(ePromotionEmbarkation, getUnitType()))
+			bGivePromotion = true;
+
+		// Some case that gives us the promotion?
+		if (bGivePromotion)
+			setHasPromotion(ePromotionEmbarkation, true);
+	}
+
+	// Strip off Ocean Impassable promotion because of trait?
+	if (kPlayer.GetPlayerTraits()->IsEmbarkedAllWater())
+	{
+		PromotionTypes ePromotionOceanImpassable = (PromotionTypes)GC.getPROMOTION_OCEAN_IMPASSABLE();
+		if (isHasPromotion(ePromotionOceanImpassable))
+		{
+			setHasPromotion(ePromotionOceanImpassable, false);
+		}
+		PromotionTypes ePromotionOceanImpassableUntilAstronomy = (PromotionTypes)GC.getPROMOTION_OCEAN_IMPASSABLE_UNTIL_ASTRONOMY();
+		if (isHasPromotion(ePromotionOceanImpassableUntilAstronomy))
+		{
+			setHasPromotion(ePromotionOceanImpassableUntilAstronomy, false);
+		}
+	}
+
+	// Is this Unit immobile?
+	if (getUnitInfo().IsImmobile())
+	{
+		SetImmobile(true);
+	}
+
+	m_iMoves = maxMoves();
+
+	m_iArmyId = FFreeList::INVALID_INDEX;
+}
+#endif
 
 //	--------------------------------------------------------------------------------
 void CvUnit::uninit()
@@ -10370,11 +10505,7 @@ int CvUnit::GetRange() const
 //AMS: Special property to get unit range+ move possibility.
 int CvUnit::GetRangePlusMoveToshot(bool bWithRoads) const
 {
-#ifdef AUI_FAST_COMP
-	int iMoveRange = FASTMAX(baseMoves() - 1 - getMustSetUpToRangedAttackCount(), 0);
-#else
-	int iMoveRange = MAX(baseMoves() - 1 - getMustSetUpToRangedAttackCount(), 0);
-#endif
+	int iMoveRange = baseMoves();
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 	if (bWithRoads)
 	{
@@ -10382,9 +10513,9 @@ int CvUnit::GetRangePlusMoveToshot(bool bWithRoads) const
 	}
 #endif
 #ifdef AUI_FAST_COMP
-	return FASTMAX(GetRange(), 1) + iMoveRange;
+	return FASTMAX(GetRange(), 1) + FASTMAX(iMoveRange - 1 - getMustSetUpToRangedAttackCount(), 0);
 #else
-	return MAX(GetRange(), 1) + iMoveRange;
+	return MAX(GetRange(), 1) + MAX(iMoveRange - 1 - getMustSetUpToRangedAttackCount(), 0);
 #endif
 }
 #endif
@@ -16462,10 +16593,6 @@ void CvUnit::changeExtraIntercept(int iChange)
 {
 	VALIDATE_OBJECT
 	m_iExtraIntercept += iChange;
-#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
-	if (m_iExtraIntercept > GC.getMAX_INTERCEPTION_PROBABILITY())
-		m_iExtraIntercept = GC.getMAX_INTERCEPTION_PROBABILITY();
-#endif
 }
 
 
@@ -16482,10 +16609,6 @@ void CvUnit::changeExtraEvasion(int iChange)
 {
 	VALIDATE_OBJECT
 	m_iExtraEvasion += iChange;
-#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
-	if (m_iExtraEvasion > GC.getMAX_EVASION_PROBABILITY())
-		m_iExtraEvasion = GC.getMAX_EVASION_PROBABILITY();
-#endif
 }
 
 
@@ -19127,7 +19250,7 @@ bool CvUnit::isPromotionValid(PromotionTypes ePromotion) const
 	// Can't acquire interception promotion if unit can't intercept!
 	if(promotionInfo->GetInterceptionCombatModifier() != 0)
 	{
-#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
+#ifdef AUI_UNIT_FIX_ALLOW_COMBO_AIR_COMBAT_PROMOTIONS
 		if (!canAirDefend() && promotionInfo->GetInterceptChanceChange() == 0)
 #else
 		if(!canAirDefend())
@@ -19138,7 +19261,7 @@ bool CvUnit::isPromotionValid(PromotionTypes ePromotion) const
 	// Can't acquire Air Sweep promotion if unit can't air sweep!
 	if(promotionInfo->GetAirSweepCombatModifier() != 0)
 	{
-#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
+#ifdef AUI_UNIT_FIX_ALLOW_COMBO_AIR_COMBAT_PROMOTIONS
 		if (!IsAirSweepCapable() && !promotionInfo->IsAirSweepCapable())
 #else
 		if(!IsAirSweepCapable())
@@ -19149,7 +19272,7 @@ bool CvUnit::isPromotionValid(PromotionTypes ePromotion) const
 	// Max Interception
 	if(promotionInfo->GetInterceptChanceChange() > 0)
 	{
-#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
+#ifdef AUI_UNIT_FIX_ALLOW_COMBO_AIR_COMBAT_PROMOTIONS
 		if(maxInterceptionProbability() >= GC.getMAX_INTERCEPTION_PROBABILITY())
 #else
 		if(promotionInfo->GetInterceptChanceChange() + maxInterceptionProbability() > GC.getMAX_INTERCEPTION_PROBABILITY())
@@ -19160,7 +19283,7 @@ bool CvUnit::isPromotionValid(PromotionTypes ePromotion) const
 	// Max evasion
 	if(promotionInfo->GetEvasionChange() > 0)
 	{
-#ifdef AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
+#ifdef AUI_UNIT_FIX_ALLOW_COMBO_AIR_COMBAT_PROMOTIONS
 		if (evasionProbability() >= GC.getMAX_EVASION_PROBABILITY())
 #else
 		if(promotionInfo->GetEvasionChange() + evasionProbability() > GC.getMAX_EVASION_PROBABILITY())
@@ -20147,21 +20270,36 @@ bool CvUnit::canMoveAndRangedStrike(const CvPlot* pTargetPlot) const
 }
 
 //AMS: Optimized function to evaluate free plots for move and fire.
+#ifdef AUI_DANGER_PLOTS_REMADE
+bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bExitOnFound, int iWithinTurns, const CvPlot* pFromPlot, BaseVector<const CvPlot*, true>* pExcludePlotList, int iMovementLeftInExclude, bool bForDanger) const
+#else
 bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bExitOnFound, int iWithinTurns, const CvPlot* pFromPlot, BaseVector<const CvPlot*, true>* pExcludePlotList, int iMovementLeftInExclude) const
+#endif
 {
 	AI_PERF_FORMAT("AI-perf-MoveAndShoot.csv", ("%s Tile Search for %s (%d), %s, Turn %03d, %s", (iWithinTurns > 0 ? "Parthian" : "Regular"), getUnitInfo().GetDescription(), GetID(), (bExitOnFound ? "Heuristic" : "Full"), GC.getGame().getElapsedGameTurns(), GET_PLAYER(m_eOwner).getCivilizationShortDescription()));
 	bool bIsParthian = false;
 	CvAStar* pPathfinder = &GC.getIgnoreUnitsPathFinder();
+	int iFlags = MOVE_UNITS_IGNORE_DANGER;
 	if (pFromPlot == NULL)
 	{
 		pFromPlot = plot();
 		if (!bExitOnFound)
+		{
 			pPathfinder = &GC.GetTacticalAnalysisMapFinder();
+			iFlags = 0;
+		}
 	}
 	else
 	{
 		bIsParthian = true;
 	}
+#ifdef AUI_DANGER_PLOTS_REMADE
+	if (bForDanger)
+	{
+		pPathfinder = &GC.getDangerPathFinder();
+		iFlags |= MOVE_UNITS_IGNORE_DANGER;
+	}
+#endif
 	// Barbarians won't move off camps just to move and shoot
 	if (isBarbarian() && pFromPlot->getImprovementType() == GC.getBARBARIAN_CAMP_IMPROVEMENT())
 	{
@@ -20241,7 +20379,7 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, co
 						}
 						if (canEverRangeStrikeAt(pTargetPlot, pLoopPlot))
 						{
-							if (pPathfinder->GeneratePath(iFromX, iFromY, iDX, iDY, MOVE_UNITS_IGNORE_DANGER, true /*bReuse*/))
+							if (pPathfinder->GeneratePath(iFromX, iFromY, iDX, iDY, iFlags, true /*bReuse*/))
 							{
 								pNode = pPathfinder->GetLastNode();
 								if (pNode && pNode->m_iData2 == 1 && pNode->m_iData1 > iMovementLeft)
@@ -20291,8 +20429,8 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, co
 						}
 					}
 					// First pathfinder check is just to make sure we can attack, second one is the one whose node is stored
-					if (pPathfinder->GeneratePath(pLoopPlot->getX(), pLoopPlot->getY(), iToX, iToY, MOVE_UNITS_IGNORE_DANGER | MOVE_UNITS_THROUGH_ENEMY, true /*bReuse*/) &&
-						pPathfinder->GeneratePath(iFromX, iFromY, pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, true /*bReuse*/))
+					if (pPathfinder->GeneratePath(pLoopPlot->getX(), pLoopPlot->getY(), iToX, iToY, iFlags | MOVE_UNITS_THROUGH_ENEMY, true /*bReuse*/) &&
+						pPathfinder->GeneratePath(iFromX, iFromY, pLoopPlot->getX(), pLoopPlot->getY(), iFlags, true /*bReuse*/))
 					{
 						pNode = pPathfinder->GetLastNode();
 						if (pNode && pNode->m_iData2 == 1 && pNode->m_iData1 > iMovementLeft)
@@ -20339,11 +20477,11 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, co
 							}
 						}
 					}
-					if (pPathfinder->GeneratePath(iFromX, iFromY, pLoopPlot->getX(), pLoopPlot->getY(), MOVE_UNITS_IGNORE_DANGER, true /*bReuse*/))
+					if (pPathfinder->GeneratePath(iFromX, iFromY, pLoopPlot->getX(), pLoopPlot->getY(), iFlags, true /*bReuse*/))
 					{
 						pNode = pPathfinder->GetLastNode();
 						if (pNode && pNode->m_iData2 == 1 && pNode->m_iData1 >= iMovementLeft * GC.getMOVE_DENOMINATOR() && 
-							GetMovablePlotListOpt(plotData, pTargetPlot, true, iWithinTurns - 1, pLoopPlot))
+							GetMovablePlotListOpt(plotData, pTargetPlot, true, iWithinTurns - 1, pLoopPlot, NULL, 1, bForDanger))
 						{
 							if (bExitOnFound)
 							{
@@ -23312,7 +23450,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		dValue += dTemp + iFlavorDefense * 2;
 	}
 
-	if (pkPromotionInfo->IsRangeAttackIgnoreLOS() && IsCanAttackRanged() && GetRange() > 1)
+	if (pkPromotionInfo->IsRangeAttackIgnoreLOS() && GetBaseRangedCombatStrength() > 0 && GetRange() + pkPromotionInfo->GetRangeChange() > 1)
 	{
 		dValue += 5 * (GetRange() - 1) + iFlavorRanged * 2;
 		if (m_pUnitInfo->GetBaseSightRange() + getExtraVisibilityRange() + pkPromotionInfo->GetVisibilityChange() < GetRange() + pkPromotionInfo->GetRangeChange())

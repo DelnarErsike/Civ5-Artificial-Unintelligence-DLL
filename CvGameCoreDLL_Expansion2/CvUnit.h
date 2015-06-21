@@ -105,6 +105,9 @@ public:
 
 	void init(int iID, UnitTypes eUnit, UnitAITypes eUnitAI, PlayerTypes eOwner, int iX, int iY, DirectionTypes eFacingDirection, bool bNoMove, bool bSetupGraphical=true, int iMapLayer = DEFAULT_UNIT_MAP_LAYER, int iNumGoodyHutsPopped = 0);
 	void initWithNameOffset(int iID, UnitTypes eUnit, int iNameOffset, UnitAITypes eUnitAI, PlayerTypes eOwner, int iX, int iY, DirectionTypes eFacingDirection, bool bNoMove, bool bSetupGraphical=true, int iMapLayer = DEFAULT_UNIT_MAP_LAYER, int iNumGoodyHutsPopped = 0);
+#ifdef AUI_ASTAR_GHOSTFINDER
+	void initGhostFinder(int iID, UnitTypes eUnit, PlayerTypes eOwner);
+#endif
 
 	
 	void uninit();
@@ -1335,7 +1338,11 @@ public:
 #ifdef AUI_UNIT_CAN_MOVE_AND_RANGED_STRIKE
 	bool canMoveAndRangedStrike(int iX, int iY) const;
 	bool canMoveAndRangedStrike(const CvPlot* pTargetPlot) const;
+#ifdef AUI_DANGER_PLOTS_REMADE
+	bool GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bExitOnFound = false, int iWithinTurns = 0, const CvPlot* pFromPlot = NULL, BaseVector<const CvPlot*, true>* pExcludePlotList = NULL, int iMovementLeftInExclude = 1, bool bForDanger = false) const;
+#else
 	bool GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bExitOnFound = false, int iWithinTurns = 0, const CvPlot* pFromPlot = NULL, BaseVector<const CvPlot*, true>* pExcludePlotList = NULL, int iMovementLeftInExclude = 1) const;
+#endif
 	const CvPlot* getBestMovablePlot(BaseVector<const CvPlot*, true>& plotData, const CvPlot* pTargetPlot, bool bIgnoreDanger = true) const;
 #endif
 #ifdef AUI_UNIT_DO_AITYPE_FLIP
