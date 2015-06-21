@@ -57,7 +57,11 @@ public:
 	void PreKill();
 	void PostKill(bool bCapital, CvPlot* pPlot, PlayerTypes eOwner);
 
+#ifdef AUI_CONSTIFY
+	CvPlayer* GetPlayer() const;
+#else
 	CvPlayer* GetPlayer();
+#endif
 
 	void doTurn();
 
