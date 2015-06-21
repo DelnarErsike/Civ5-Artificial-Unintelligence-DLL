@@ -1485,6 +1485,13 @@ void CvHomelandAI::PlotPatrolMoves()
 		UnitHandle pUnit = m_pPlayer->getUnit(*it);
 		if(pUnit && !pUnit->isHuman() && pUnit->getDomainType() != DOMAIN_AIR && !pUnit->isTrade())
 		{
+#ifdef AUI_HOMELAND_FIND_PATROL_MOVES_CIVILIANS_PATROL_TO_SAFETY
+			if (!pUnit->IsCombatUnit())
+			{
+				MoveCivilianToSafety(pUnit.pointer());
+				continue;
+			}
+#endif
 			CvPlot* pTarget = FindPatrolTarget(pUnit.pointer());
 			if(pTarget)
 			{
@@ -4092,8 +4099,13 @@ void CvHomelandAI::ExecuteScientistMoves()
 /// Expends an engineer to gain a wonder (or a very emergency build)
 void CvHomelandAI::ExecuteEngineerMoves()
 {
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+	CvCity* pWonderCity = NULL;
+	int iTurnsToTarget = MAX_INT;
+#else
 	CvCity* pWonderCity;
 	int iTurnsToTarget;
+#endif
 
 	FStaticVector< CvHomelandUnit, 64, true, c_eCiv5GameplayDLL >::iterator it;
 	for(it = m_CurrentMoveUnits.begin(); it != m_CurrentMoveUnits.end(); ++it)
@@ -4117,11 +4129,36 @@ void CvHomelandAI::ExecuteEngineerMoves()
 		{
 			// Do we want to build any wonder?
 			int iNextWonderWeight;
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+			int iCityLoop = 0;
+			CvCity* pLoopCity = NULL;
+			iNextWonderWeight = 0;
+			BuildingTypes eNextWonderDesired = NO_BUILDING;
+			int iLoopBestWonderWeight = 0;
+			BuildingTypes eLoopBestWonder = NO_BUILDING;
+			for (pLoopCity = m_pPlayer->firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iCityLoop))
+			{
+				int iTurnsToCity = TurnsToReachTarget(pUnit, pLoopCity->plot(), true, false);
+#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+				eLoopBestWonder = pLoopCity->GetCityStrategyAI()->GetWonderProductionAI()->ChooseWonderForGreatEngineer(pUnit.pointer(), false, iTurnsToCity, iNextWonderWeight);
+#else
+				eLoopBestWonder = pLoopCity->GetCityStrategyAI()->GetWonderProductionAI()->ChooseWonderForGreatEngineer(false, iTurnsToCity, iLoopBestWonderWeight);
+#endif
+				if (iLoopBestWonderWeight > iNextWonderWeight)
+				{
+					iNextWonderWeight = iLoopBestWonderWeight;
+					eNextWonderDesired = eLoopBestWonder;
+					pWonderCity = pLoopCity;
+					iTurnsToTarget = iTurnsToCity;
+				}
+			}
+#else
 			CvCity* pCityToBuildAt = 0;
 #ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
 			BuildingTypes eNextWonderDesired = m_pPlayer->GetWonderProductionAI()->ChooseWonderForGreatEngineer(pUnit.pointer(), false, iNextWonderWeight, pCityToBuildAt);
 #else
 			BuildingTypes eNextWonderDesired = m_pPlayer->GetWonderProductionAI()->ChooseWonderForGreatEngineer(false, iNextWonderWeight, pCityToBuildAt);
+#endif
 #endif
 
 			// No?  Just move to safety...
@@ -4138,11 +4175,14 @@ void CvHomelandAI::ExecuteEngineerMoves()
 			}
 			else
 			{
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 				bool bForceWonderCity = true;
 
 				// Are we less than 25% done building the most desired wonder chosen by the city specialization AI?
 				pWonderCity = m_pPlayer->GetCitySpecializationAI()->GetWonderBuildCity();
+#endif
 				if(pWonderCity)
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 				{
 					int iProductionSoFar = pWonderCity->getProduction();
 					int iProductionRemaining = pWonderCity->getProductionNeeded(eNextWonderDesired);
@@ -4194,12 +4234,57 @@ void CvHomelandAI::ExecuteEngineerMoves()
 				}
 
 				if(bForceWonderCity)
+#endif
 				{
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 					pWonderCity = pCityToBuildAt;
 
 					if(pWonderCity)
+#endif
 					{
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 						iTurnsToTarget = TurnsToReachTarget(pUnit, pWonderCity->plot(), false /*bReusePaths*/, true);
+#endif
+
+#ifdef AUI_HOMELAND_FIX_EXECUTE_ENGINEER_MOVES_MOVE_AND_HURRY
+						if (pWonderCity->getProductionTurnsLeft(eNextWonderDesired, 1) > 1)
+						{
+							if (pUnit->plot() != pWonderCity->plot())
+							{
+								if (!CheckAndExecuteParadrop(pUnit, pWonderCity->plot(), iTurnsToTarget))
+								{
+									pUnit->PushMission(CvTypes::getMISSION_MOVE_TO(), pWonderCity->getX(), pWonderCity->getY());
+								}
+								if (GC.getLogging() && GC.getAILogging())
+								{
+									CvString strLogString;
+									strLogString.Format("Moving Great Engineer for free wonder to city at, X: %d, Y: %d", pWonderCity->getX(), pWonderCity->getY());
+									LogHomelandMessage(strLogString);
+								}
+							}
+							if (pUnit->canMove() && pUnit->plot() == pWonderCity->plot())
+							{
+								// Rush it
+								pUnit->PushMission(CvTypes::getMISSION_HURRY());
+								UnitProcessed(pUnit->GetID());
+								if (GC.getLogging() && GC.getAILogging())
+								{
+									CvString strLogString;
+									strLogString.Format("Great Engineer hurrying free wonder at, X: %d, Y: %d", pUnit->getX(), pUnit->getY());
+									LogHomelandMessage(strLogString);
+								}
+							}
+						}
+						else
+						{
+							if(GC.getLogging() && GC.getAILogging())
+							{
+								CvString strLogString;
+								strLogString.Format("Great Engineer not needed to hurry 1-turn wonder at, X: %d, Y: %d", pUnit->getX(), pUnit->getY());
+								LogHomelandMessage(strLogString);
+							}
+						}
+#else
 
 						// Already at target?
 						if(iTurnsToTarget == 0 && pUnit->plot() == pWonderCity->plot())
@@ -4247,7 +4332,7 @@ void CvHomelandAI::ExecuteEngineerMoves()
 								}
 							}
 						}
-
+#endif
 					}
 				}
 			}
@@ -5574,6 +5659,10 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 {
 	int iSearchRange = pUnit->SearchRange(1);
 
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	IncreaseMoveRangeForRoads(pUnit, iSearchRange);
+#endif
+
 	// Collecting all the possibilities first.
 	WeightedPlotVector aBestPlotList;
 	aBestPlotList.reserve( ((iSearchRange * 2) + 1) * 2 );
@@ -5691,11 +5780,19 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 		{
 			CvPlot* pPlot = aBestPlotList.GetElement(i);
 
+#ifdef AUI_HOMELAND_PARATROOPERS_PARADROP
+#ifdef AUI_ASTAR_TURN_LIMITER
+			int iPathTurns = TurnsToReachTarget(pUnit, pPlot, true, false, false, 1);
+#else
+			int iPathTurns = TurnsToReachTarget(pUnit, pPlot, true);
+#endif
+#else
 			int iPathTurns;
 			if(!pUnit->GeneratePath(pPlot, MOVE_UNITS_IGNORE_DANGER, true, &iPathTurns))
 			{
 				continue;
 			}
+#endif
 
 			// if we can't get there this turn, forget it
 			if(iPathTurns > 1)
@@ -6264,8 +6361,12 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 						{
 #ifdef AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
 							iValueBonus = 5000;
+#ifdef AUI_HOMELAND_FIND_PATROL_MOVES_CIVILIANS_PATROL_TO_SAFETY
+							if (pAdjacentPlot->isAdjacentPlayer(NO_PLAYER) || pAdjacentPlot->IsAdjacentOwnedByOtherTeam(m_pPlayer->getTeam()) || pAdjacentPlot->isValidRoute(pUnit))
+#else
 							if ((pUnit->IsCombatUnit() && (pAdjacentPlot->isAdjacentPlayer(NO_PLAYER) || pAdjacentPlot->IsAdjacentOwnedByOtherTeam(m_pPlayer->getTeam()))) ||
 								(pAdjacentPlot->isValidRoute(pUnit) && (!pAdjacentPlot->isCity() || !pUnit->IsCombatUnit())))
+#endif
 							{
 								iValueBonus += 5000;
 							}
