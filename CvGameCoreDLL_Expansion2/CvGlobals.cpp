@@ -102,11 +102,26 @@ CvGlobals::CvGlobals() :
 	m_internationalTradeRouteLandFinder(NULL),
 	m_internationalTradeRouteWaterFinder(NULL),
 	m_tacticalAnalysisMapFinder(NULL),
+#ifdef AUI_DANGER_PLOTS_REMADE
+	m_pathDangerFinder(NULL),
+#endif
 	m_pDLL(NULL),
 	m_pEngineUI(NULL),
 
 #ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
 	GD_INT_INIT(MULTIPLAYER_AI_DIPLOMACY_NOTIFICATIONS_ONLY_SIMULTANEOUS, 1),
+#endif
+#ifdef AUI_UNIT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_INIT(DISABLE_UNIT_AI_FLAVOR_LUA_MODDING, 0),
+#endif
+#ifdef AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_INIT(DISABLE_BUILDING_AI_FLAVOR_LUA_MODDING, 0),
+#endif
+#ifdef AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_INIT(DISABLE_PROJECT_AI_FLAVOR_LUA_MODDING, 0),
+#endif
+#ifdef AUI_PROCESS_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_INIT(DISABLE_PROCESS_AI_FLAVOR_LUA_MODDING, 0),
 #endif
 
 // -- ints --
@@ -2124,6 +2139,9 @@ void CvGlobals::init()
 	SetInternationalTradeRouteLandFinder(FNEW(CvAStar, c_eCiv5GameplayDLL, 0));
 	SetInternationalTradeRouteWaterFinder(FNEW(CvAStar, c_eCiv5GameplayDLL, 0));
 	SetTacticalAnalysisMapFinder(FNEW(CvTwoLayerPathFinder, c_eCiv5GameplayDLL, 0));
+#ifdef AUI_DANGER_PLOTS_REMADE
+	setDangerPathFinder(FNEW(CvTwoLayerPathFinder, c_eCiv5GameplayDLL, 0));
+#endif
 }
 
 //
@@ -2194,6 +2212,11 @@ void CvGlobals::uninit()
 	m_internationalTradeRouteLandFinder = NULL;
 	m_internationalTradeRouteWaterFinder = NULL;
 	m_tacticalAnalysisMapFinder = NULL;
+
+#ifdef AUI_DANGER_PLOTS_REMADE
+	SAFE_DELETE(m_pathDangerFinder);
+	m_pathDangerFinder = NULL;
+#endif
 
 }
 
@@ -2317,6 +2340,13 @@ CvTwoLayerPathFinder& CvGlobals::GetTacticalAnalysisMapFinder()
 {
 	return *m_tacticalAnalysisMapFinder;
 }
+
+#ifdef AUI_DANGER_PLOTS_REMADE
+CvTwoLayerPathFinder& CvGlobals::getDangerPathFinder()
+{
+	return *m_pathDangerFinder;
+}
+#endif
 
 ICvDLLDatabaseUtility1* CvGlobals::getDatabaseLoadUtility()
 {
@@ -4034,6 +4064,18 @@ void CvGlobals::cacheGlobals()
 
 #ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
 	GD_INT_CACHE(MULTIPLAYER_AI_DIPLOMACY_NOTIFICATIONS_ONLY_SIMULTANEOUS);
+#endif
+#ifdef AUI_UNIT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_CACHE(DISABLE_UNIT_AI_FLAVOR_LUA_MODDING);
+#endif
+#ifdef AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_CACHE(DISABLE_BUILDING_AI_FLAVOR_LUA_MODDING);
+#endif
+#ifdef AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_CACHE(DISABLE_PROJECT_AI_FLAVOR_LUA_MODDING);
+#endif
+#ifdef AUI_PROCESS_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_CACHE(DISABLE_PROCESS_AI_FLAVOR_LUA_MODDING);
 #endif
 	// -- ints --
 
@@ -6166,6 +6208,12 @@ void CvGlobals::SetTacticalAnalysisMapFinder(CvTwoLayerPathFinder* pVal)
 {
 	m_tacticalAnalysisMapFinder = pVal;
 }
+#ifdef AUI_DANGER_PLOTS_REMADE
+void CvGlobals::setDangerPathFinder(CvTwoLayerPathFinder* pVal)
+{
+	m_pathDangerFinder = pVal;
+}
+#endif
 
 void CvGlobals::setOutOfSyncDebuggingEnabled(bool isEnabled)
 {

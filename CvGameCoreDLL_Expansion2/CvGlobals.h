@@ -208,6 +208,9 @@ public:
 	CvAStar& GetInternationalTradeRouteLandFinder();
 	CvAStar& GetInternationalTradeRouteWaterFinder();
 	CvTwoLayerPathFinder& GetTacticalAnalysisMapFinder();
+#ifdef AUI_DANGER_PLOTS_REMADE
+	CvTwoLayerPathFinder& getDangerPathFinder();
+#endif
 	ICvDLLDatabaseUtility1* getDatabaseLoadUtility();
 
 	std::vector<CvInterfaceModeInfo*>& getInterfaceModeInfo();
@@ -614,6 +617,18 @@ public:
 
 #ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
 	GD_INT_DEF(MULTIPLAYER_AI_DIPLOMACY_NOTIFICATIONS_ONLY_SIMULTANEOUS);
+#endif
+#ifdef AUI_UNIT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_DEF(DISABLE_UNIT_AI_FLAVOR_LUA_MODDING);
+#endif
+#ifdef AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_DEF(DISABLE_BUILDING_AI_FLAVOR_LUA_MODDING);
+#endif
+#ifdef AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_DEF(DISABLE_PROJECT_AI_FLAVOR_LUA_MODDING);
+#endif
+#ifdef AUI_PROCESS_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_DEF(DISABLE_PROCESS_AI_FLAVOR_LUA_MODDING);
 #endif
 
 	// -- ints --
@@ -7492,6 +7507,9 @@ public:
 	void SetInternationalTradeRouteLandFinder(CvAStar* pVal);
 	void SetInternationalTradeRouteWaterFinder(CvAStar* pVal);
 	void SetTacticalAnalysisMapFinder(CvTwoLayerPathFinder* pVal);
+#ifdef AUI_DANGER_PLOTS_REMADE
+	void setDangerPathFinder(CvTwoLayerPathFinder* pVal);
+#endif
 
 	// So that CvEnums are moddable in the DLL
 	int getNumDirections() const;
@@ -7554,6 +7572,9 @@ protected:
 	CvAStar* m_internationalTradeRouteLandFinder;
 	CvAStar* m_internationalTradeRouteWaterFinder;
 	CvTwoLayerPathFinder* m_tacticalAnalysisMapFinder;
+#ifdef AUI_DANGER_PLOTS_REMADE
+	CvTwoLayerPathFinder* m_pathDangerFinder;
+#endif
 
 	ICvDLLDatabaseUtility1* m_pkDatabaseLoadUtility;
 
@@ -7682,6 +7703,18 @@ protected:
 	// -- Togglable AuI options
 #ifdef AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
 	GD_INT_DECL(MULTIPLAYER_AI_DIPLOMACY_NOTIFICATIONS_ONLY_SIMULTANEOUS);
+#endif
+#ifdef AUI_UNIT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_DECL(DISABLE_UNIT_AI_FLAVOR_LUA_MODDING);
+#endif
+#ifdef AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_DECL(DISABLE_BUILDING_AI_FLAVOR_LUA_MODDING);
+#endif
+#ifdef AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_DECL(DISABLE_PROJECT_AI_FLAVOR_LUA_MODDING);
+#endif
+#ifdef AUI_PROCESS_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+	GD_INT_DECL(DISABLE_PROCESS_AI_FLAVOR_LUA_MODDING);
 #endif
 
 	// -- ints --
