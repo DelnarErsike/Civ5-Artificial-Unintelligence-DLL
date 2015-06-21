@@ -8163,7 +8163,7 @@ void CvTacticalAI::ExecuteAttack(CvUnit* pTargetUnit, bool bMustSurviveAttack)
 			for (unsigned int iI = 0; iI < m_CurrentMoveUnits.size(); iI++)
 			{
 				UnitHandle pUnit = m_pPlayer->getUnit(m_CurrentMoveUnits[iI].GetID());
-				if (pUnit && pUnit->canMove())
+				if (pUnit && pUnit->canMoveAfterAttacking() && pUnit->canMove())
 				{
 					// Find the best plot from where we can move and attack the target next turn
 					const CvPlot* pRepositionPlot = GetBestRepositionPlot(pUnit, pTargetPlot, 1);
@@ -12066,7 +12066,7 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 	m_CurrentAirUnits.clear();
-	if (iNumTurnsAway <= 1 && !bNoRangedUnits && !bNavalOnly && !bWillPillage && !bTargetUndefended)
+	if (iNumTurnsAway <= 1 && !bNoRangedUnits && !bNavalOnly && !bWillPillage && (!bTargetUndefended || m_CurrentMoveUnits.empty()))
 	{
 		// With remade danger plots, air units need to be handled separately to make sure they are not suicided
 		ProcessAirUnitsInAttack(pTarget);
@@ -12596,6 +12596,21 @@ void CvTacticalAI::ProcessAirUnitsInAttack(CvPlot* pTarget)
 		pLoopUnit = m_pPlayer->getUnit(*it);
 		if (pLoopUnit && pLoopUnit->getDomainType() == DOMAIN_AIR && pLoopUnit->canMove())
 		{
+			if (!pLoopUnit->IsCanAttack())
+			{
+				continue;
+			}
+
+			if (pLoopUnit->isOutOfAttacks())
+			{
+				continue;
+			}
+
+			if (pLoopUnit->IsCityAttackOnly() && !pCity)
+			{
+				continue;
+			}
+
 			if (pLoopUnit->canAirSweepAt(pTarget->getX(), pTarget->getY()))
 			{
 				vpFighters.push_back(pLoopUnit.pointer());
