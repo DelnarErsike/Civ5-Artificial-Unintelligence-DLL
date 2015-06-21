@@ -744,6 +744,7 @@ public:
 
 #ifdef AUI_CITY_IS_VALID_BUILDING_LOCATION_MOVED_TO_PLOT
 	bool isValidBuildingLocation(BuildingTypes eBuilding, bool bNeedsAtLeastOneRequirement = false) const;
+	bool IsBuildingLocalResourceValid(BuildingTypes eBuilding, TeamTypes eForTeam) const;
 #endif
 
 protected:

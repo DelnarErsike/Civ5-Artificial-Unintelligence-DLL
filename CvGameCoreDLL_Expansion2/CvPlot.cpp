@@ -1681,7 +1681,9 @@ void CvPlot::changeAdjacentSight(TeamTypes eTeam, int iRange, bool bIncrement, I
 //	--------------------------------------------------------------------------------
 bool CvPlot::canSeePlot(const CvPlot* pPlot, TeamTypes eTeam, int iRange, DirectionTypes eFacingDirection) const
 {
+#ifndef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
 	iRange++;
+#endif
 
 	if(pPlot == NULL)
 	{
@@ -1700,7 +1702,11 @@ bool CvPlot::canSeePlot(const CvPlot* pPlot, TeamTypes eTeam, int iRange, Direct
 
 	int iDistance = plotDistance(startX, startY, destX,  destY);
 
+#ifdef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
+	if (iDistance < iRange)
+#else
 	if(iDistance <= iRange)
+#endif
 	{
 		//find displacement
 		int dy = destY - startY;
@@ -1714,7 +1720,11 @@ bool CvPlot::canSeePlot(const CvPlot* pPlot, TeamTypes eTeam, int iRange, Direct
 		dy = dyWrap(dy);
 
 		//check if in facing direction
+#ifdef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
+		if(shouldProcessDisplacementPlot(dx, dy, iRange, eFacingDirection))
+#else
 		if(shouldProcessDisplacementPlot(dx, dy, iRange - 1, eFacingDirection))
+#endif
 		{
 			if(iDistance == 1)
 			{
@@ -1755,6 +1765,21 @@ bool CvPlot::shouldProcessDisplacementPlot(int dx, int dy, int, DirectionTypes e
 		double crossProduct = directionX * dy - directionY * dx; //cross product
 		double dotProduct = directionX * dx + directionY * dy; //dot product
 
+#ifdef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
+		double theta = abs(atan2(crossProduct, dotProduct));
+		double spread = 37.5 * M_PI / 180.0;
+#if 0 // Enable if 8 or more directions
+		if((abs(dx) <= 1) && (abs(dy) <= 1)) //close plots use wider spread
+		{
+			spread = 90 * (double) M_PI / 180;
+		}
+#endif
+
+		if(theta <= spread)
+			return true;
+		else
+			return false;
+#else
 		double theta = atan2(crossProduct, dotProduct);
 		double spread = 75 * (double) M_PI / 180;
 		if((abs(dx) <= 1) && (abs(dy) <= 1)) //close plots use wider spread
@@ -1770,6 +1795,7 @@ bool CvPlot::shouldProcessDisplacementPlot(int dx, int dy, int, DirectionTypes e
 		{
 			return false;
 		}
+#endif
 	}
 }
 
@@ -4150,7 +4176,11 @@ void CvPlot::SetTradeRoute(PlayerTypes ePlayer, bool bActive)
 	{
 		for(int iI = 0; iI < MAX_TEAMS; ++iI)
 		{
+#ifdef AUI_PLOT_OBSERVER_SEE_ALL_PLOTS
+			if (iI == OBSERVER_TEAM || (GET_TEAM((TeamTypes)iI).isAlive()) && GC.getGame().getActiveTeam() == (TeamTypes)iI)
+#else
 			if(GET_TEAM((TeamTypes)iI).isAlive() && GC.getGame().getActiveTeam() == (TeamTypes)iI)
+#endif
 			{
 				if(isVisible((TeamTypes)iI))
 				{
@@ -5248,7 +5278,11 @@ void CvPlot::setOwner(PlayerTypes eNewValue, int iAcquiringCityID, bool bCheckUn
 
 			for(iI = 0; iI < MAX_TEAMS; ++iI)
 			{
+#ifdef AUI_PLOT_OBSERVER_SEE_ALL_PLOTS
+				if (iI == OBSERVER_TEAM || GET_TEAM((TeamTypes)iI).isAlive())
+#else
 				if(GET_TEAM((TeamTypes)iI).isAlive())
+#endif
 				{
 					updateRevealedOwner((TeamTypes)iI);
 				}
@@ -5777,6 +5811,10 @@ ResourceTypes CvPlot::getResourceType(TeamTypes eTeam) const
 		{
 			CvGame& Game = GC.getGame();
 			bool bDebug = Game.isDebugMode();
+#ifdef AUI_PLOT_OBSERVER_SEE_ALL_RESOURCES
+			if (eTeam == OBSERVER_TEAM)
+				bDebug = true;
+#endif
 
 			int iPolicyReveal = GC.getResourceInfo((ResourceTypes)m_eResourceType)->getPolicyReveal();
 			if (!bDebug && iPolicyReveal != NO_POLICY)
@@ -6129,7 +6167,11 @@ void CvPlot::setImprovementType(ImprovementTypes eNewValue, PlayerTypes eBuilder
 
 		for(iI = 0; iI < MAX_TEAMS; ++iI)
 		{
+#ifdef AUI_PLOT_OBSERVER_SEE_ALL_PLOTS
+			if (iI == OBSERVER_TEAM || GET_TEAM((TeamTypes)iI).isAlive())
+#else
 			if(GET_TEAM((TeamTypes)iI).isAlive())
+#endif
 			{
 				if(isVisible((TeamTypes)iI))
 				{
@@ -6545,7 +6587,11 @@ void CvPlot::setRouteType(RouteTypes eNewValue)
 
 		for(iI = 0; iI < MAX_TEAMS; ++iI)
 		{
+#ifdef AUI_PLOT_OBSERVER_SEE_ALL_PLOTS
+			if (iI == OBSERVER_TEAM || GET_TEAM((TeamTypes)iI).isAlive())
+#else
 			if(GET_TEAM((TeamTypes)iI).isAlive())
+#endif
 			{
 				if(isVisible((TeamTypes)iI))
 				{
@@ -6571,7 +6617,11 @@ void CvPlot::SetRoutePillaged(bool bPillaged)
 	{
 		for(int iI = 0; iI < MAX_TEAMS; ++iI)
 		{
+#ifdef AUI_PLOT_OBSERVER_SEE_ALL_PLOTS
+			if (iI == OBSERVER_TEAM || (GET_TEAM((TeamTypes)iI).isAlive() && GC.getGame().getActiveTeam() == (TeamTypes)iI))
+#else
 			if(GET_TEAM((TeamTypes)iI).isAlive() && GC.getGame().getActiveTeam() == (TeamTypes)iI)
+#endif
 			{
 				if(isVisible((TeamTypes)iI))
 				{
@@ -8556,6 +8606,10 @@ bool CvPlot::setRevealed(TeamTypes eTeam, bool bNewValue, bool bTerrainOnly, Tea
 					if(eTeam == eActiveTeam)
 					{
 						bool bDontShowRewardPopup = GC.GetEngineUserInterface()->IsOptionNoRewardPopups();
+#ifdef AUI_PLOT_OBSERVER_NO_NW_POPUPS
+						if (eTeam == OBSERVER_TEAM)
+							bDontShowRewardPopup = true;
+#endif
 
 						// Popup (no MP)
 						if(!GC.getGame().isNetworkMultiPlayer() && !bDontShowRewardPopup)	// KWG: candidate for !GC.getGame().isOption(GAMEOPTION_SIMULTANEOUS_TURNS)
@@ -11397,6 +11451,105 @@ bool CvPlot::isValidBuildingLocation(BuildingTypes eBuilding, bool bNeedsAtLeast
 		return false;
 
 	return true;
+}
+
+bool CvPlot::IsBuildingLocalResourceValid(BuildingTypes eBuilding, TeamTypes eForTeam) const
+{
+	VALIDATE_OBJECT
+
+	int iResourceLoop;
+	ResourceTypes eResource;
+	CvPlot* pLoopPlot;
+
+	CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eBuilding);
+	if (pkBuildingInfo == NULL)
+		return false;
+
+	// ANDs: City must have ALL of these nearby
+	for (iResourceLoop = 0; iResourceLoop < GC.getNUM_BUILDING_RESOURCE_PREREQS(); iResourceLoop++)
+	{
+		eResource = (ResourceTypes)pkBuildingInfo->GetLocalResourceAnd(iResourceLoop);
+
+		// Doesn't require a resource in this AND slot
+		if (eResource == NO_RESOURCE)
+			continue;
+
+		CvResourceInfo* pkResource = GC.getResourceInfo(eResource);
+		if (pkResource == NULL)
+			continue;
+
+		bool bFoundResourceLinked = false;
+		for (int iCityPlotLoop = 0; iCityPlotLoop < NUM_CITY_PLOTS; iCityPlotLoop++)
+		{
+			pLoopPlot = plotCity(getX(), getY(), iCityPlotLoop);
+
+			// Invalid plot
+			if (pLoopPlot == NULL)
+				continue;
+
+			// Doesn't have the resource (ignore team first to save time)
+			if (pLoopPlot->getResourceType(eForTeam) != eResource)
+				continue;
+
+			// Not owned by this player
+			if (pLoopPlot->getOwner() != getOwner())
+				continue;
+
+			bFoundResourceLinked = true;
+			break;
+		}
+
+		// City doesn't have resource locally - return false immediately
+		if (!bFoundResourceLinked)
+		{
+			return false;
+		}
+	}
+
+	int iOrResources = 0;
+
+	// ORs: City must have ONE of these nearby
+	for (iResourceLoop = 0; iResourceLoop < GC.getNUM_BUILDING_RESOURCE_PREREQS(); iResourceLoop++)
+	{
+		eResource = (ResourceTypes)pkBuildingInfo->GetLocalResourceOr(iResourceLoop);
+
+		// Doesn't require a resource in this AND slot
+		if (eResource == NO_RESOURCE)
+			continue;
+
+		CvResourceInfo* pkResource = GC.getResourceInfo(eResource);
+		if (pkResource == NULL)
+			continue;
+
+		// City has resource locally - return true immediately
+		for (int iCityPlotLoop = 0; iCityPlotLoop < NUM_CITY_PLOTS; iCityPlotLoop++)
+		{
+			pLoopPlot = plotCity(getX(), getY(), iCityPlotLoop);
+
+			// Invalid plot
+			if (pLoopPlot == NULL)
+				continue;
+
+			// Doesn't have the resource (ignore team first to save time)
+			if (pLoopPlot->getResourceType(eForTeam) != eResource)
+				continue;
+
+			// Not owned by this player
+			if (pLoopPlot->getOwner() != getOwner())
+				continue;
+
+			return true;
+		}
+
+		// Increment counter for OR we don't have
+		iOrResources++;
+	}
+
+	// No OR resource requirements (and passed the AND test above)
+	if (iOrResources == 0)
+		return true;
+
+	return false;
 }
 #endif
 
