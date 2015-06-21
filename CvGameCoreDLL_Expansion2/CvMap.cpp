@@ -540,6 +540,20 @@ void CvMap::setup()
 							MakeDelegate(pPathfinder1, &CvAStar::UnitPathInitialize),
 							NULL);
 	pPathfinder1->SetDataChangeInvalidatesCache(true);
+#ifdef AUI_DANGER_PLOTS_REMADE
+	pPathfinder1 = &GC.getDangerPathFinder();
+	pPathfinder1->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
+							MakeDelegate(pPathfinder1, &CvAStar::PathDest),
+							MakeDelegate(pPathfinder1, &CvAStar::PathDestValid),
+							MakeDelegate(pPathfinder1, &CvAStar::PathHeuristic),
+							MakeDelegate(pPathfinder1, &CvAStar::PathCost),
+							MakeDelegate(pPathfinder1, &CvAStar::PathValid),
+							MakeDelegate(pPathfinder1, &CvAStar::PathAdd),
+							MakeDelegate(pPathfinder1, &CvTwoLayerPathFinder::PathNodeAdd),
+							MakeDelegate(pPathfinder1, &CvAStar::UnitPathInitialize),
+							NULL);
+	pPathfinder1->SetDataChangeInvalidatesCache(true);
+#endif
 	// Ignore Units Pathfinder
 	CvIgnoreUnitsPathFinder* pPathfinder3 = &GC.getIgnoreUnitsPathFinder();
 	pPathfinder3->Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(),
@@ -684,6 +698,10 @@ void CvMap::setup()
 	GC.GetInternationalTradeRouteWaterFinder().Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(), PathDest, NULL, TradeRouteHeuristic, TradeRouteWaterPathCost, TradeRouteWaterValid, NULL, NULL, NULL, NULL, TradePathInitialize, TradePathUninitialize, NULL);
 	GC.GetTacticalAnalysisMapFinder().Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(), PathDest, PathDestValid, PathHeuristic, PathCost, TacticalAnalysisMapPathValid, PathAdd, PathNodeAdd, UnitPathInitialize, UnitPathUninitialize, NULL);
 	GC.GetTacticalAnalysisMapFinder().SetDataChangeInvalidatesCache(true);
+#ifdef AUI_DANGER_PLOTS_REMADE
+	GC.getDangerPathFinder().Initialize(getGridWidth(), getGridHeight(), isWrapX(), isWrapY(), PathDest, PathDestValid, PathHeuristic, PathCost, PathValid, PathAdd, PathNodeAdd, UnitPathInitialize, UnitPathUninitialize, NULL);
+	GC.getDangerPathFinder().SetDataChangeInvalidatesCache(true);
+#endif
 #endif
 }
 
@@ -698,11 +716,14 @@ void CvMap::setupGraphical()
 
 	if(m_pMapPlots != NULL)
 	{
-		int iI;
 #ifdef AUI_USE_OPENMP
-#pragma omp parallel for private(iI)
-#endif
+#pragma omp parallel for
+		for (int iI = 0; iI < numPlots(); iI++)
+#else
+		int iI;
+
 		for(iI = 0; iI < numPlots(); iI++)
+#endif
 		{
 			plotByIndexUnchecked(iI)->setupGraphical();
 		}
@@ -715,9 +736,6 @@ void CvMap::erasePlots()
 {
 	int iI;
 
-#ifdef AUI_USE_OPENMP
-#pragma omp parallel for private(iI)
-#endif
 	for(iI = 0; iI < numPlots(); iI++)
 	{
 		plotByIndexUnchecked(iI)->erase(true/*bEraseUnitsIfWater*/);
@@ -730,9 +748,6 @@ void CvMap::setRevealedPlots(TeamTypes eTeam, bool bNewValue, bool bTerrainOnly)
 {
 	int iI;
 
-#ifdef AUI_USE_OPENMP
-#pragma omp parallel for private(iI)
-#endif
 	for(iI = 0; iI < numPlots(); iI++)
 	{
 		plotByIndexUnchecked(iI)->setRevealed(eTeam, bNewValue, bTerrainOnly);
@@ -744,9 +759,6 @@ void CvMap::setRevealedPlots(TeamTypes eTeam, bool bNewValue, bool bTerrainOnly)
 void CvMap::setAllPlotTypes(PlotTypes ePlotType)
 {
 
-#ifdef AUI_USE_OPENMP
-#pragma omp parallel for
-#endif
 	for(int i=0; i<numPlots(); i++)
 	{
 		plotByIndexUnchecked(i)->setPlotType(ePlotType, false, false);
@@ -761,9 +773,6 @@ void CvMap::doTurn()
 {
 	int iI;
 
-#ifdef AUI_USE_OPENMP
-#pragma omp parallel for private(iI)
-#endif
 	for(iI = 0; iI < numPlots(); iI++)
 	{
 		plotByIndexUnchecked(iI)->doTurn();
@@ -774,9 +783,14 @@ void CvMap::doTurn()
 //	--------------------------------------------------------------------------------
 void CvMap::updateFog()
 {
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for
+	for (int iI = 0; iI < numPlots(); iI++)
+#else
 	int iI;
 
 	for(iI = 0; iI < numPlots(); iI++)
+#endif
 	{
 		plotByIndexUnchecked(iI)->updateFog();
 	}
@@ -797,12 +811,14 @@ void CvMap::updateDeferredFog()
 //	--------------------------------------------------------------------------------
 void CvMap::updateVisibility()
 {
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for
+	for (int iI = 0; iI < numPlots(); iI++)
+#else
 	int iI;
 
-#ifdef AUI_USE_OPENMP
-#pragma omp parallel for private(iI)
-#endif
 	for(iI = 0; iI < numPlots(); iI++)
+#endif
 	{
 		plotByIndexUnchecked(iI)->updateVisibility();
 	}
@@ -828,9 +844,6 @@ void CvMap::updateSight(bool bIncrement)
 {
 	int iI;
 
-#ifdef AUI_USE_OPENMP
-#pragma omp parallel for private(iI)
-#endif
 	for(iI = 0; iI < numPlots(); iI++)
 	{
 		plotByIndexUnchecked(iI)->updateSight(bIncrement);
@@ -841,12 +854,14 @@ void CvMap::updateSight(bool bIncrement)
 //	--------------------------------------------------------------------------------
 void CvMap::updateCenterUnit()
 {
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for
+	for (int iI = 0; iI < numPlots(); iI++)
+#else
 	int iI;
 
-#ifdef AUI_USE_OPENMP
-#pragma omp parallel for private(iI)
-#endif
 	for(iI = 0; iI < numPlots(); iI++)
+#endif
 	{
 		plotByIndexUnchecked(iI)->updateCenterUnit();
 	}
@@ -889,9 +904,6 @@ void CvMap::updateWorkingCity(CvPlot* pPlot, int iRange)
 	}
 	else
 	{
-#ifdef AUI_USE_OPENMP
-#pragma omp parallel for
-#endif
 		for(int iI = 0; iI < numPlots(); iI++)
 		{
 			plotByIndexUnchecked(iI)->updateWorkingCity();
@@ -915,9 +927,14 @@ void CvMap::updateYield()
 //	Update the adjacency cache values
 void CvMap::updateAdjacency()
 {
+#ifdef AUI_USE_OPENMP
+#pragma omp parallel for
+	for (int iI = 0; iI < numPlots(); iI++)
+#else
 	int iI;
 
 	for(iI = 0; iI < numPlots(); iI++)
+#endif
 	{
 		CvPlot* pPlot = plotByIndexUnchecked(iI);
 		pPlot->m_bIsAdjacentToLand = pPlot->isAdjacentToLand();
@@ -1612,11 +1629,7 @@ void CvMap::calculateStrategicValues(bool bForInitialize)
 
 
 //	--------------------------------------------------------------------------------
-#ifdef AUI_MAP_FIX_CALCULATE_INFLUENCE_DISTANCE_REUSE_PATHFINDER
-int CvMap::calculateInfluenceDistance(CvPlot* pSource, CvPlot* pDest, int iMaxRange, bool)
-#else
 int CvMap::calculateInfluenceDistance(CvPlot* pSource, CvPlot* pDest, int iMaxRange, bool bCorrectButSlower)
-#endif
 {
 	CvAStarNode* pNode;
 
@@ -1626,7 +1639,7 @@ int CvMap::calculateInfluenceDistance(CvPlot* pSource, CvPlot* pDest, int iMaxRa
 	}
 
 #ifdef AUI_MAP_FIX_CALCULATE_INFLUENCE_DISTANCE_REUSE_PATHFINDER
-	bool bCorrectButSlower = false;
+	bCorrectButSlower = false;
 	if (m_pLastInfluenceSourcePlot != pSource)
 	{
 		m_pLastInfluenceSourcePlot = pSource;
@@ -2561,9 +2574,6 @@ int CvMap::Validate()
 
 
 	int iErrors = 0;
-#ifdef AUI_USE_OPENMP
-#pragma omp parallel for
-#endif
 	for(int iI = 0; iI < numPlots(); iI++)
 	{
 		CvPlot* pLoopPlot = plotByIndexUnchecked(iI);
