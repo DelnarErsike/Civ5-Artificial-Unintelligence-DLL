@@ -6670,13 +6670,6 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 		iFlavorExpansion = GC.getFLAVOR_MIN_VALUE();
 	int iFlavorGrowth = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH"));
 	int iFlavorProduction = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION"));
-	int iFlavorReligion = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION"));
-
-	// Total yield change
-	double dTotalYield;
-	// Citizen value for yield
-	double dCitizenValue;
-	int kK, jJ;
 #else
 #ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_BETTER_HAPPINESS_FLAVOR
 	int iFlavorGrowth = pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH"));
@@ -6725,10 +6718,6 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 			iTemp *= 2;
 		}
 #endif
-#ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
-		// since we're getting faith, calculate the value of faith as a resouce for a flat, unreliable source
-		iTemp = int(iTemp * (1.0 + log10((double)iFlavorReligion) / 8.0) + 0.5);
-#endif
 		iRtnValue += iTemp;
 #endif
 	}
@@ -6757,26 +6746,35 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 
 			if(pBuildingEntry && pFlavorManager)
 			{
+#ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
+				int iLoop = 0;
+				double dTotalExtraFlavor = 0.0;
+				for (CvCity* pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
+				{
+					dTotalExtraFlavor += pLoopCity->GetCityStrategyAI()->GetBuildingProductionAI()->GetWeight(eBuilding);
+				}
+				// If can also be built with hammers, much less valuable
+				if (pBuildingEntry->GetProductionCost() > 0)
+				{
+					dTotalExtraFlavor /= 10.0;
+				}
+
+#ifdef AUI_RELIGION_USE_DOUBLES
+				// Since buildings are built with one in each city, PerCity-like calculations needed
+				dRtnValue += pBuildingEntry->GetHappiness() * (iFlavorExpansion + dHappinessNeedFactor) * m_pPlayer->getNumCities() + dTotalExtraFlavor;
+#else
+				iRtnValue += int(pBuildingEntry->GetHappiness() * (iFlavorExpansion + dHappinessNeedFactor) * m_pPlayer->getNumCities() / 3.0 + dTotalExtraFlavor + 0.5);
+#endif
+#else
 				for(int iFlavorLoop = 0; iFlavorLoop < GC.getNumFlavorTypes(); iFlavorLoop++)
 				{
 #ifdef AUI_RELIGION_USE_DOUBLES
 					double dFlavorValue = (double)pFlavorManager->GetPersonalityIndividualFlavor((FlavorTypes)iFlavorLoop) * pBuildingEntry->GetFlavorValue(iFlavorLoop);
 
-#ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
-					if (iFlavorLoop == (FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE"))
-					{
-						dFlavorValue *= m_pPlayer->GetGrandStrategyAI()->ScienceFlavorBoost();
-					}
-#endif
-
 					// If can also be built with hammers, much less valuable
 					if (pBuildingEntry->GetProductionCost() > 0)
 					{
-#ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
-						dFlavorValue /= (1.0 + iFlavorProduction);
-#else
 						dFlavorValue /= 10.0;
-#endif
 					}
 
 					dRtnValue += dFlavorValue;
@@ -6786,94 +6784,10 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 					// If can also be built with hammers, much less valuable
 					if (pBuildingEntry->GetProductionCost() > 0)
 					{
-#ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
-						iFlavorValue = int(iFlavorValue / (1.0 + sqrt((double)iFlavorProduction)) + 0.5);
-#else
 						iFlavorValue /= 10;
-#endif
 					}
 
 					iRtnValue += iFlavorValue;
-#endif
-				}
-
-#ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_TWEAKED_FLAVORS
-				// Since buildings are built with one in each city, PerCity-like calculations needed
-#ifdef AUI_RELIGION_USE_DOUBLES
-				dRtnValue += pBuildingEntry->GetHappiness() * (iFlavorExpansion + dHappinessNeedFactor) * m_pPlayer->getNumCities();
-#else
-				iRtnValue += int(pBuildingEntry->GetHappiness() * (iFlavorExpansion + dHappinessNeedFactor) * m_pPlayer->getNumCities() / 3.0 + 0.5);
-#endif
-				for (kK = 0; kK < NUM_YIELD_TYPES; kK++)
-				{					
-					// Total yield change
-					dTotalYield = 0;
-					// Citizen value for yield
-					dCitizenValue = 2.0 / sqrt(M_PI);
-					switch (kK)
-					{
-					case YIELD_FOOD:
-						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorGrowth, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FOOD() / 2, 1));
-						break;
-					case YIELD_PRODUCTION:
-						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorProduction, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_PRODUCTION(), 1));
-						break;
-					case YIELD_GOLD:
-						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorGold, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_GOLD(), 1));
-						break;
-					case YIELD_SCIENCE:
-						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorScience, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_SCIENCE(), 1));
-						break;
-					case YIELD_CULTURE:
-						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorCulture, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_CULTURE(), 1));
-						break;
-					case YIELD_FAITH:
-						// Since we're calculating beliefs, faith gets 2x its regular value and a bit more flavor
-						dCitizenValue *= (1.0 + log10((double)FASTMAX(iFlavorReligion, 1) / 2.0) + log10((double)FASTMAX(iFlavorExpansion, 1)) / 8.0) * log((double)FASTMAX(GC.getAI_CITIZEN_VALUE_FAITH() * 2, 1));
-						if (pEntry->IsPantheonBelief())
-							dCitizenValue *= M_PI;
-						break;
-					}
-
-					// If can also be built with hammers, much less valuable
-					if (pBuildingEntry->GetProductionCost() > 0)
-					{
-						dCitizenValue /= (1.0 + (double)iFlavorProduction);
-					}
-
-
-					for (jJ = 0; jJ < NUM_FEATURE_TYPES; jJ++)
-					{
-						if (pBuildingEntry->GetFeatureYieldChange(jJ, kK) != 0)
-						{
-							// Loop through each plot on map
-							int iPlotLoop;
-							CvPlot* pPlot;
-							for (iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
-							{
-								pPlot = GC.getMap().plotByIndexUnchecked(iPlotLoop);
-
-								// Skip if not revealed or not in our territory
-								PlayerTypes ePlotOwner = pPlot->getOwner();
-								if (pPlot->isRevealed(m_pPlayer->getTeam()) && (ePlotOwner == m_pPlayer->GetID()))
-								{
-									if (pPlot->getFeatureType() == (FeatureTypes)jJ)
-									{
-										dTotalYield += pBuildingEntry->GetFeatureYieldChange(jJ, kK);
-									}
-								}
-							}
-						}
-					}
-					if (pBuildingEntry->GetYieldChange(kK) != 0)
-					{
-						dTotalYield += m_pPlayer->getNumCities() * pBuildingEntry->GetYieldChange(kK);
-					}
-
-#ifdef AUI_RELIGION_USE_DOUBLES
-					dRtnValue += dTotalYield * dCitizenValue;
-#else
-					iRtnValue += int(dTotalYield * dCitizenValue + 0.5);
 #endif
 				}
 #endif
