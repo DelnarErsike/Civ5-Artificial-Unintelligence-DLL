@@ -214,6 +214,9 @@ public:
 	int GetImprovementYieldChanges(int i, int j) const;
 	int GetBuildingClassYieldModifiers(int i, int j) const;
 	int GetBuildingClassYieldChanges(int i, int j) const;
+#ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
+	int GetBuildingClassFlavorChanges(int i, int j) const;
+#endif
 	int GetFlavorValue(int i) const;
 
 	bool IsOneShot() const;
@@ -399,6 +402,9 @@ private:
 //	bool* m_pabHurry;
 	bool* m_pabSpecialistValid;
 	int** m_ppiImprovementYieldChanges;
+#ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
+	int** m_ppiBuildingClassFlavorChanges;
+#endif
 	int** m_ppiBuildingClassYieldModifiers;
 	int** m_ppiBuildingClassYieldChanges;
 	int* m_piFlavorValue;

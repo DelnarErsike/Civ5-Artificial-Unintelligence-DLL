@@ -22,6 +22,9 @@
 #define M_GLDNRT	1.61803398874989484820
 #define fM_GLDNRT	1.618033989f		//!< (1 + sqrt(5))/2 (float), aka The Golden Ratio
 
+// Factorial function! Result is stored as argument because it opens up compiler optimization opportunities
+#define AUI_FACTORIAL
+
 // Non-AI stuff (still used by AI routines, but could be used elsewhere as well)
 /// AUI's new GUID
 #define AUI_GUID
@@ -147,12 +150,24 @@
 #define AUI_UNIT_MOVEMENT_FIX_RADAR_ZOC
 /// When upgrading a unit to another unit with a different unit type (eg. Chariot -> Knight), promotions that the old unit has but the new unit could not receive are refunded
 // #define AUI_UNIT_PROMOTION_REFUND_ON_TYPE_UPGRADE // Disabled for now because this is a fairly significant gameplay change
-/// Max interception and max evasion are now checked and enforced when changing interception or evasion, instead of when a promotion would be valid
-#define AUI_UNIT_FIX_MAX_INTERCEPTION_EVASION
+/// Promotions that grant air combat bonuses are now allowed for units with no ability for air combat if the promotion also grants the ability for air combat
+#define AUI_UNIT_FIX_ALLOW_COMBO_AIR_COMBAT_PROMOTIONS
 /// Fixes a possible null pointer dereferences in FoundPantheon()
 #define AUI_RELIGION_FIX_FOUND_PANTHEON_NULL_POINTER_DEREFERENCE
 /// Changes the code that activates "We are Family" to work properly. Since achievements are disabled for modded games, this only works if the mod is turned into mock DLC
 #define AUI_ACHIEVEMENT_FIX_RELIGION_WE_ARE_FAMILY_WORKING
+/// Optimized parts of functions responsible for updating plot vision code
+#define AUI_PLOT_VISIBILITY_OPTIMIZATIONS
+/// Power calculations for units are more representative of how useful the unit is
+#define AUI_UNIT_ENTRY_MORE_ACCURATE_POWER
+/// Plot yields are updated every turn for all players
+#define AUI_PLOT_UPDATE_YIELD_EVERY_TURN
+/// Disables the check for whether a unit is currently embarked for triggering Denmark's UA, so the pathfinder can use it properly
+#define AUI_UNIT_MOVEMENT_FIX_BAD_VIKING_DISEMBARK_PREVIEW
+/// The allows water walk check is fixed to no longer trigger if water walk improvements are not built adjacent to each other
+#define AUI_UNIT_MOVEMENT_FIX_BAD_ALLOWS_WATER_WALK_CHECK
+/// Fixes the exploit where order-specific hammer bonuses would go into overflow 
+#define AUI_CITY_FIX_DO_PRODUCTION_NO_OVERFLOW_EXPLOIT
 
 // Multiplayer-specific fixes/changes
 /// First Contact notifications now happen properly in multiplayer
@@ -161,6 +176,24 @@
 #define AUI_DIPLOMACY_AI_LEADERHEAD_DEALS_IN_MULTIPLAYER
 /// In Hotseat (and now for all multiplayer modes), wars are now declared at the beginning of the AI's turn rather than at the beginning of the human player's turn
 #define AUI_DIPLOMACY_AI_FIX_WAR_DECLARATION_IN_MULTIPLAYER
+/// The sync checksum calculator now uses unsigned integers because their overflow is defined behavior, and integer overflow happens very easily in the function
+#define AUI_GAME_FIX_SYNC_CHECKSUM_USE_UNSIGNED
+/// Turn timers are paused when a player is reconnecting
+#define AUI_GAME_SET_PAUSED_TURN_TIMERS_PAUSE_ON_RECONNECT
+
+// Observer mode fixes
+/// Observers will see all resources
+#define AUI_PLOT_OBSERVER_SEE_ALL_RESOURCES
+/// Observers will have constant visibility over all plots
+#define AUI_PLOT_OBSERVER_SEE_ALL_PLOTS
+/// Observers are set to have met every team in the game
+#define AUI_GAME_OBSERVER_MEET_ALL_TEAMS
+/// Natural wonder popups do not trigger for observers
+#define AUI_PLOT_OBSERVER_NO_NW_POPUPS
+/// Observers can now open the city screen
+#define AUI_GAME_OBSERVER_CAN_OPEN_CITIES
+/// All cities are set to be revealed to observers
+#define AUI_CITY_OBSERVER_REVEALS_ALL_CITIES
 
 #ifdef AUI_FAST_COMP
 // Avoids Visual Studio's compiler from generating inefficient code
@@ -194,6 +227,28 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define ACTION_HEAL				8
 #define ACTION_NO_MELEE			16 // Used to make sure unit will heal overall if they only get ranged bombarded
 #endif
+
+// Flavor system modifications
+/// Reworks WonderProductionAI to be city-based
+#define AUI_PER_CITY_WONDER_PRODUCTION_AI
+/// Beliefs can now alter the flavors of certain buildingclasses
+#define AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS
+/// Policies can now alter the flavors of certain buildingclasses
+//#define AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
+/// Adds a new Lua event for adding onto a flavor for a building or a wonder
+#define AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
+/// WonderProdutionAI implementation of the new Lua event for adding onto a flavor
+#define AUI_WONDER_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+#endif
+/// Adds a new Lua event for adding onto a flavor for a unit
+#define AUI_UNIT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+/// Adds a new Lua event for adding onto a flavor for a project
+#define AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+/// Adds a new Lua event for adding onto a flavor for a process
+#define AUI_PROCESS_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
+/// Free buildings and units that a building would generate are factored into the flavor
+#define AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF
 
 // A* Pathfinding Stuff
 /// Adds a new function that is a middle-of-the-road fix for allowing the functions to take account of roads and railroads without calling pathfinder too often
@@ -230,6 +285,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_ASTAR_FIX_IGNORE_UNITS_PATHFINDER_TERRITORY_CHECK
 /// In addition to the movement cost from features on a tile, the route recommender will now also consider the movement cost of moving onto a tile with hills
 #define AUI_ASTAR_FIX_BUILD_ROUTE_COST_CONSIDER_HILLS_MOVEMENT
+/// Adds a new function that checks the amount of turns it would take for land or water reinforcements to arrive from one plot to another
+#define AUI_ASTAR_GHOSTFINDER
 
 // AI Operations Stuff
 /// If a settler tries and fails the no escort check, keep rerolling each turn
@@ -407,6 +464,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_DANGER_PLOTS_FIX_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_IGNORE_ALL_NONWARRED
 /// When adding danger from a source, the attack strength of the source onto the plot is added instead of the base attack strength
 #define AUI_DANGER_PLOTS_ADD_DANGER_CONSIDER_TERRAIN_STRENGTH_MODIFICATION
+/// Minors will assume tresspassing units are there for war
+#define AUI_DANGER_PLOTS_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_DO_NOT_IGNORE_TRESSPASSERS
 
 // Deals Stuff
 /// Tweaked various ways that certain resources are valued when making deals
@@ -540,7 +599,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_GS_GET_PERSONALITY_AND_GRAND_STRATEGY_USE_COMPARE_TO_LOWEST_RATIO
 #endif
 /// Multiplies the science flavor of buildings, wonders, and techs depending on how well the tech requirements of significant GS's is met (eg. have Archaeology, have Internet, etc.)
-#define AUI_GS_SCIENCE_FLAVOR_BOOST (6)
+//#define AUI_GS_SCIENCE_FLAVOR_BOOST (6)
 /// Replaces the logging function with one that allows for easy creation of graphs within Excel
 #define AUI_GS_BETTER_LOGGING
 
@@ -605,6 +664,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_HOMELAND_FIX_EXECUTE_EXPLORER_MOVES_MOVE_AFTER_GOODY
 /// Uses the unit's in-game movement range for plot search heuristic instead of relying on the unit's info's pre-determined movement range
 #define AUI_HOMELAND_FIX_EXECUTE_MOVES_TO_SAFEST_PLOT_USE_GAME_MOVEMENT_RANGE
+/// Great Engineers can now move to a city and hurry in the same turn
+#define AUI_HOMELAND_FIX_EXECUTE_ENGINEER_MOVES_MOVE_AND_HURRY
+/// Civilian units execute moves to safety instead of patrolling
+#define AUI_HOMELAND_FIND_PATROL_MOVES_CIVILIANS_PATROL_TO_SAFETY
 
 // Military AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
@@ -842,7 +905,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// Removes pointless loops from the PlotFoundValue() function (loops that wouldn't actually alter any values)
 #define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_LOOP_OPTIMIZED
 /// Tweaks the multiplier given to the happiness score luxury resources that the player does not have (multiplier is applied once for importing, twice and times 2 for don't have at all)
-#define AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER (4)
+#define AUI_SITE_EVALUATION_COMPUTE_HAPPINESS_VALUE_TWEAKED_UNOWNED_LUXURY_MULTIPLIER (10)
 /// Player bonuses from happiness (eg. extra happiness from luxuries, happiness from multiple luxury types) is included in the calculation
 #define AUI_SITE_EVALUATION_FIX_COMPUTE_HAPPINESS_VALUE_PLAYER_SOURCES
 /// Multiplies the settling value of coastal plots if we do not have a coastal city yet
@@ -891,6 +954,19 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_SITE_EVALUATION_COMPUTE_STRATEGIC_VALUE_DECAYING_STARTING_LOCATION_WEIGHT
 /// If the AI player has no coastal cities, non-coastal plots ignore sea resources for fertility (since no city can produce work boats)
 #define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
+/// Tiles with 0 or less fertility have their negative score scaled as if it were actually negative food yield
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_SCALED_NEGATIVE_SCORE_FOR_EMPTY_PLOT
+#ifdef AUI_FACTORIAL
+/// The fertility multiplier based on city distance is now a continuous beta function
+#define AUI_SITE_EVALUATION_BETA_DISTRIBUTION_FOR_DISTANCE_MULTIPLIER
+#endif
+/// Offshore cities are not pulled closer together on purpose
+#define AUI_SITE_EVALUATION_NO_PULL_TOGETHER_ON_OFFSHORE
+/// Extra flavor from settling coastal is now logistic and doesn't overcommit naval civs
+#define AUI_SITE_EVALUATION_LOGISTIC_EXTRA_FLAVOR_FROM_COASTAL
+#ifdef AUI_ASTAR_GHOSTFINDER
+#define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_REINFORCE_SPEED
+#endif
 
 // Tactical AI Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
@@ -1035,7 +1111,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TACTICAL_MOVE_TO_EMPTY_SPACE_FROM_TARGET_WEIGH_BY_TURNS_AND_DANGER
 /// When processing civilians in an escorted move, have them move to safety if they aren't currently defended and are in danger
 #define AUI_TACTICAL_PLOT_SINGLE_HEX_OPERATION_MOVES_CIVILIAN_TO_SAFETY
-/// Units that cannot caputre cities will not attempt to do so
+/// Units that cannot capture cities will not attempt to do so
 #define AUI_TACTICAL_FIX_NO_CAPTURE
 /// Removes the finishMoves() call that gets executed for every unit executing this function
 #define AUI_TACTICAL_FIX_EXECUTE_FORMATION_MOVES_NO_FINISHMOVE_COMMAND
@@ -1255,6 +1331,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_WONDER_PRODUCITON_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WANT_WORLD_WONDER (10)
 /// National wonders are handled as simple buildings, since wonder production AI is made to offset the high production costs of world wonders
 #define AUI_WONDER_PRODUCTION_CHOOSE_WONDER_NO_NATIONAL_WONDERS
+#ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
+/// The AI will now estimate production based on the production modifier of the wonder
+#define AUI_WONDER_PRODUCTION_FIX_CONSIDER_PRODUCTION_MODIFIERS
+#endif
 
 // GlobalDefines (GD) wrappers
 // INT

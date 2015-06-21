@@ -186,6 +186,9 @@ CvPolicyEntry::CvPolicyEntry(void):
 	m_ppiImprovementYieldChanges(NULL),
 	m_ppiBuildingClassYieldModifiers(NULL),
 	m_ppiBuildingClassYieldChanges(NULL),
+#ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
+	m_ppiBuildingClassFlavorChanges(NULL),
+#endif
 	m_piFlavorValue(NULL),
 	m_eFreeBuildingOnConquest(NO_BUILDING)
 {
@@ -222,6 +225,9 @@ CvPolicyEntry::~CvPolicyEntry(void)
 	CvDatabaseUtility::SafeDelete2DArray(m_ppiImprovementYieldChanges);
 	CvDatabaseUtility::SafeDelete2DArray(m_ppiBuildingClassYieldModifiers);
 	CvDatabaseUtility::SafeDelete2DArray(m_ppiBuildingClassYieldChanges);
+#ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
+	CvDatabaseUtility::SafeDelete2DArray(m_ppiBuildingClassFlavorChanges);
+#endif
 }
 
 /// Read from XML file (pass 1)
@@ -463,6 +469,31 @@ bool CvPolicyEntry::CacheResults(Database::Results& kResults, CvDatabaseUtility&
 			m_ppiBuildingClassYieldChanges[BuildingClassID][iYieldID] = iYieldChange;
 		}
 	}
+
+#ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
+	//BuildingFlavorChanges
+	{
+		kUtility.Initialize2DArray(m_ppiBuildingClassFlavorChanges, "BuildingClasses", "Flavors");
+
+		std::string strKey("Policy_BuildingClassFlavorChanges");
+		Database::Results* pResults = kUtility.GetResults(strKey);
+		if (pResults == NULL)
+		{
+			pResults = kUtility.PrepareResults(strKey, "select BuildingClasses.ID as BuildingClassID, Flavors.ID as FlavorID, FlavorChange from Policy_BuildingClassFlavorChanges inner join BuildingClasses on BuildingClasses.Type = BuildingClassType inner join Flavors on Flavors.Type = FlavorType where PolicyType = ?");
+		}
+
+		pResults->Bind(1, szPolicyType);
+
+		while (pResults->Step())
+		{
+			const int BuildingClassID = pResults->GetInt(0);
+			const int iFlavorID = pResults->GetInt(1);
+			const int iFlavorChange = pResults->GetInt(2);
+
+			m_ppiBuildingClassFlavorChanges[BuildingClassID][iFlavorID] = iFlavorChange;
+		}
+	}
+#endif
 
 	//ImprovementYieldChanges
 	{
@@ -1701,6 +1732,17 @@ int CvPolicyEntry::GetBuildingClassYieldChanges(int i, int j) const
 	CvAssertMsg(j > -1, "Index out of bounds");
 	return m_ppiBuildingClassYieldChanges[i][j];
 }
+
+#ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
+int CvPolicyEntry::GetBuildingClassFlavorChanges(int i, int j) const
+{
+	CvAssertMsg(i < GC.getNumBuildingClassInfos(), "Index out of bounds");
+	CvAssertMsg(i > -1, "Index out of bounds");
+	CvAssertMsg(j < GC.getNumFlavorTypes(), "Index out of bounds");
+	CvAssertMsg(j > -1, "Index out of bounds");
+	return m_ppiBuildingClassFlavorChanges[i][j];
+}
+#endif
 
 /// Production modifier for a specific BuildingClass
 int CvPolicyEntry::GetBuildingClassProductionModifier(int i) const
