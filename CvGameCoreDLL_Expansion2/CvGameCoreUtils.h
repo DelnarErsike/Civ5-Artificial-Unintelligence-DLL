@@ -16,6 +16,18 @@
 
 #undef min
 
+#ifdef AUI_FACTORIAL
+inline int getFactorial(int iInput, int iResult = 1)
+{
+	if (iInput < 0)
+		return getFactorial(-iInput, iResult);
+	else if (iInput <= 1)
+		return iResult; 
+	else
+		return getFactorial(iInput - 1, iInput * iResult);
+}
+#endif
+
 inline int range(int iNum, int iLow, int iHigh)
 {
 	CvAssertMsg(iHigh >= iLow, "High should be higher than low");
