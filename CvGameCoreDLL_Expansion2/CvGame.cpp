@@ -513,6 +513,7 @@ bool CvGame::InitMap(CvGameInitialItemsOverrides& kGameInitialItemsOverrides)
 	kMap.calculateStrategicValues(true);
 #endif
 
+#ifndef AUI_PLOT_OBSERVER_SEE_ALL_PLOTS
 	// Set all the observer teams to be able to see all the plots
 	for(int iI = 0; iI < MAX_PLAYERS; iI++)
 	{
@@ -524,10 +525,15 @@ bool CvGame::InitMap(CvGameInitialItemsOverrides& kGameInitialItemsOverrides)
 			if (eTeam != NO_TEAM)
 			{
 				const int iNumInvisibleInfos = NUM_INVISIBLE_TYPES;
-				for (iI = 0; iI < GC.getMap().numPlots(); iI++)
+#endif
+				for (int plotID = 0; plotID < GC.getMap().numPlots(); plotID++)
 				{
-					CvPlot* pLoopPlot = GC.getMap().plotByIndexUnchecked(iI);
+					CvPlot* pLoopPlot = GC.getMap().plotByIndexUnchecked(plotID);
 
+#ifdef AUI_PLOT_OBSERVER_SEE_ALL_PLOTS
+					pLoopPlot->setRevealed(OBSERVER_TEAM, true, false);
+					pLoopPlot->changeVisibilityCount(OBSERVER_TEAM, pLoopPlot->getVisibilityCount(OBSERVER_TEAM) + 1, NO_INVISIBLE, true, true);
+#else
 					pLoopPlot->changeVisibilityCount(eTeam, pLoopPlot->getVisibilityCount(eTeam) + 1, NO_INVISIBLE, true, false);
 
 					for (int iJ = 0; iJ < iNumInvisibleInfos; iJ++)
@@ -536,10 +542,20 @@ bool CvGame::InitMap(CvGameInitialItemsOverrides& kGameInitialItemsOverrides)
 					}
 
 					pLoopPlot->setRevealed(eTeam, true, false);
+#endif
 				}
+
+#ifdef AUI_GAME_OBSERVER_MEET_ALL_TEAMS
+				for (int iJ = 0; iJ < MAX_TEAMS; iJ++)
+				{
+					GET_TEAM(OBSERVER_TEAM).makeHasMet(static_cast<TeamTypes>(iJ), true, true);
+				}
+#endif
+#ifndef AUI_PLOT_OBSERVER_SEE_ALL_PLOTS
 			}
 		}
 	}
+#endif
 
 	return true;
 }
@@ -4704,6 +4720,12 @@ bool CvGame::CanOpenCityScreen(PlayerTypes eOpener, CvCity* pCity)
 	{
 		return true;
 	}
+#ifdef AUI_GAME_OBSERVER_CAN_OPEN_CITIES
+	else if (GET_PLAYER(eOpener).isObserver())
+	{
+		return true;
+	}
+#endif
 	else if (!GET_PLAYER(pCity->getOwner()).isMinorCiv() && (GET_PLAYER(eOpener).GetEspionage()->HasEstablishedSurveillanceInCity(pCity) || GET_PLAYER(eOpener).GetEspionage()->IsAnySchmoozing(pCity)))
 	{
 		return true;
@@ -5732,7 +5754,9 @@ bool CvGame::isPaused()
 //	-----------------------------------------------------------------------------------------------
 void CvGame::setPausePlayer(PlayerTypes eNewValue)
 {
+#ifndef AUI_GAME_SET_PAUSED_TURN_TIMERS_PAUSE_ON_RECONNECT
 	if(!isNetworkMultiPlayer())
+#endif
 	{
 		// If we're not in Network MP, if the game is paused the turn timer is too.
 		if(isOption(GAMEOPTION_END_TURN_TIMER_ENABLED))
@@ -9099,6 +9123,96 @@ int CvGame::getAsyncRandNum(int iNum, const char* pszLog)
 //	--------------------------------------------------------------------------------
 int CvGame::calculateSyncChecksum()
 {
+#ifdef AUI_GAME_FIX_SYNC_CHECKSUM_USE_UNSIGNED
+	CvUnit* pLoopUnit;
+	uint uiMultiplier;
+	uint uiValue = 0;
+	int iLoop;
+	int iJ;
+
+	uiValue += getMapRand().getSeed();
+	uiValue += getJonRand().getSeed();
+
+	uiValue += getNumCities();
+	uiValue += getTotalPopulation();
+
+	uiValue += GC.getMap().getOwnedPlots();
+	uiValue += GC.getMap().getNumAreas();
+
+	int iTurnSlice = getTurnSlice() % 4;
+
+	for(int iI = 0; iI < MAX_PLAYERS; iI++)
+	{
+		PlayerTypes ePlayer = static_cast<PlayerTypes>(iI);
+		CvPlayer& kPlayer = GET_PLAYER(ePlayer);
+		if (kPlayer.isEverAlive())
+		{
+			uiMultiplier = getPlayerScore((PlayerTypes)iI);
+
+			switch (iTurnSlice)
+			{
+			case 0:
+				uiMultiplier += kPlayer.getTotalPopulation() * 543271;
+				uiMultiplier += kPlayer.getTotalLand() * 327382;
+				uiMultiplier += kPlayer.GetTreasury()->GetGold() * 107564;
+				uiMultiplier += kPlayer.getPower() * 135647;
+				uiMultiplier += kPlayer.getNumCities() * 436432;
+				uiMultiplier += kPlayer.getNumUnits() * 324111;
+				break;
+
+			case 1:
+				for(iJ = 0; iJ < NUM_YIELD_TYPES; iJ++)
+				{
+					uiMultiplier += kPlayer.calculateTotalYield((YieldTypes)iJ) * 432754;
+				}
+				break;
+
+			case 2:
+				for(iJ = 0; iJ < GC.getNumImprovementInfos(); iJ++)
+				{
+					uiMultiplier += kPlayer.getImprovementCount((ImprovementTypes)iJ) * 883422;
+				}
+
+				for(iJ = 0; iJ < GC.getNumBuildingClassInfos(); iJ++)
+				{
+					CvBuildingClassInfo* pkBuildingClassInfo = GC.getBuildingClassInfo((BuildingClassTypes)iJ);
+					if(pkBuildingClassInfo)
+					{
+						uiMultiplier += kPlayer.getBuildingClassCountPlusMaking((BuildingClassTypes)iJ) * 954531;
+					}
+				}
+
+				for(iJ = 0; iJ < GC.getNumUnitClassInfos(); iJ++)
+				{
+					CvUnitClassInfo* pkUnitClassInfo = GC.getUnitClassInfo((UnitClassTypes)iJ);
+					if(pkUnitClassInfo)
+					{
+						uiMultiplier += kPlayer.getUnitClassCountPlusMaking((UnitClassTypes)iJ) * 754843;
+					}
+				}
+				break;
+
+			case 3:
+				for (pLoopUnit = GET_PLAYER((PlayerTypes)iI).firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = GET_PLAYER((PlayerTypes)iI).nextUnit(&iLoop))
+				{
+					uiMultiplier += pLoopUnit->getX() * 876543;
+					uiMultiplier += pLoopUnit->getY() * 985310;
+					uiMultiplier += pLoopUnit->getDamage() * 736373;
+					uiMultiplier += pLoopUnit->getExperience() * 820622;
+					uiMultiplier += pLoopUnit->getLevel() * 367291;
+				}
+				break;
+			}
+
+			if(uiMultiplier != 0)
+			{
+				uiValue *= uiMultiplier;
+			}
+		}
+	}
+
+	return (int)uiValue;
+#else
 	CvUnit* pLoopUnit;
 	int iMultiplier;
 	int iValue;
@@ -9189,6 +9303,7 @@ int CvGame::calculateSyncChecksum()
 	}
 
 	return iValue;
+#endif
 }
 
 
