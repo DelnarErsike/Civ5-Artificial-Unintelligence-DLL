@@ -9645,7 +9645,11 @@ int CvPlayer::GetJONSCulturePerTurnFromCities() const
 
 //	--------------------------------------------------------------------------------
 /// Special bonus which adds excess Happiness to Culture?
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+int CvPlayer::GetJONSCulturePerTurnFromExcessHappiness(int iExtraHappiness) const
+#else
 int CvPlayer::GetJONSCulturePerTurnFromExcessHappiness() const
+#endif
 {
 	if(GC.getGame().isOption(GAMEOPTION_NO_HAPPINESS))
 	{
@@ -9654,9 +9658,15 @@ int CvPlayer::GetJONSCulturePerTurnFromExcessHappiness() const
 
 	if(getHappinessToCulture() != 0)
 	{
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+		if (GetExcessHappiness() + iExtraHappiness > 0)
+		{
+			int iFreeCulture = (GetExcessHappiness() + iExtraHappiness) * getHappinessToCulture();
+#else
 		if(GetExcessHappiness() > 0)
 		{
 			int iFreeCulture = GetExcessHappiness() * getHappinessToCulture();
+#endif
 			iFreeCulture /= 100;
 
 			return iFreeCulture;
@@ -10573,14 +10583,22 @@ int CvPlayer::GetExcessHappiness() const
 
 //	--------------------------------------------------------------------------------
 /// Has the player passed the Happiness limit?
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+bool CvPlayer::IsEmpireUnhappy(int iExtra) const
+#else
 bool CvPlayer::IsEmpireUnhappy() const
+#endif
 {
 	if(GC.getGame().isOption(GAMEOPTION_NO_HAPPINESS))
 	{
 		return false;
 	}
 
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	if (GetExcessHappiness() + iExtra < 0)
+#else
 	if(GetExcessHappiness() < 0)
+#endif
 	{
 		return true;
 	}
@@ -10590,14 +10608,22 @@ bool CvPlayer::IsEmpireUnhappy() const
 
 //	--------------------------------------------------------------------------------
 /// Is the empire REALLY unhappy? (other penalties)
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+bool CvPlayer::IsEmpireVeryUnhappy(int iExtra) const
+#else
 bool CvPlayer::IsEmpireVeryUnhappy() const
+#endif
 {
 	if(GC.getGame().isOption(GAMEOPTION_NO_HAPPINESS))
 	{
 		return false;
 	}
 
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	if (GetExcessHappiness() + iExtra <= /*-10*/ GC.getVERY_UNHAPPY_THRESHOLD())
+#else
 	if(GetExcessHappiness() <= /*-10*/ GC.getVERY_UNHAPPY_THRESHOLD())
+#endif
 	{
 		return true;
 	}
@@ -10607,14 +10633,22 @@ bool CvPlayer::IsEmpireVeryUnhappy() const
 
 //	--------------------------------------------------------------------------------
 /// Is the empire SUPER unhappy? (leads to revolts)
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+bool CvPlayer::IsEmpireSuperUnhappy(int iExtra) const
+#else
 bool CvPlayer::IsEmpireSuperUnhappy() const
+#endif
 {
 	if(GC.getGame().isOption(GAMEOPTION_NO_HAPPINESS))
 	{
 		return false;
 	}
 
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	if (GetExcessHappiness() + iExtra <= /*-20*/ GC.getSUPER_UNHAPPY_THRESHOLD())
+#else
 	if(GetExcessHappiness() <= /*-20*/ GC.getSUPER_UNHAPPY_THRESHOLD())
+#endif
 	{
 		return true;
 	}
@@ -17070,7 +17104,11 @@ int CvPlayer::GetScienceFromOtherPlayersTimes100() const
 
 //	--------------------------------------------------------------------------------
 /// Where is our Science coming from?
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+int CvPlayer::GetScienceFromHappinessTimes100(int iExtraHappiness) const
+#else
 int CvPlayer::GetScienceFromHappinessTimes100() const
+#endif
 {
 	if(GC.getGame().isOption(GAMEOPTION_NO_HAPPINESS))
 	{
@@ -17081,7 +17119,11 @@ int CvPlayer::GetScienceFromHappinessTimes100() const
 
 	if(getHappinessToScience() != 0)
 	{
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+		if(GetExcessHappiness() + iExtraHappiness >= 0)
+#else
 		if(GetExcessHappiness() >= 0)
+#endif
 		{
 			int iFreeScience = GetScienceFromCitiesTimes100(false) * getHappinessToScience();
 			iFreeScience /= 100;

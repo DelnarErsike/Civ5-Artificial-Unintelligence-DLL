@@ -32,6 +32,8 @@
 #define AUI_USE_OPENMP
 /// Enables const for functions, variables, and parameters that both allow it and are intended to be const
 #define AUI_CONSTIFY
+/// Removes unused functions that simply increase filesize of the DLL without providing any benefit
+#define AUI_PRUNING
 /// Changes the scopes of certain functions to fall in line with other functions of the same type (eg. CvUnit::CanFallBackFromMelee() is public instead of protected)
 #define AUI_SCOPE_FIXES
 /// Civilizations that are marked as coastal get the same coastal bias as maritime city-states
@@ -423,6 +425,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITIZENS_FIX_FORCED_AVOID_GROWTH_ONLY_WHEN_GROWING_LOWERS_HAPPINESS
 /// If a civ does not have a religion and could still found one, faith value is increased, with the increase diminishing as more religions are founded
 #define AUI_CITIZENS_GET_VALUE_HIGHER_FAITH_VALUE_IF_BEFORE_RELIGION
+/// Unifies the value of plots and specialists based on stats into one central function that can also be called by other functions (eg. for trade route AI to determine route value)
+#define AUI_CITIZENS_GET_VALUE_FROM_STATS
+/// When comparing whether a specialist is better than an unemployed citizen, regular value evaluation is used
+#define AUI_CITIZENS_IS_BETTER_THAN_DEFAULT_SPECIALIST_USE_REGULAR_VALUES
 
 // City Strategy Stuff
 /// Scales the GetLastTurnWorkerDisbanded() computation to game speed

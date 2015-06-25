@@ -247,12 +247,13 @@ public:
 	void GetAvailableTR(TradeConnectionList& aTradeConnectionList);
 	void PrioritizeTradeRoutes(TradeConnectionList& aTradeConnectionList);
 	int	ScoreInternationalTR (const TradeConnection& kTradeConnection);
-#ifdef AUI_TRADE_SCORE_FOOD_VALUE
-	int ScoreFoodTR(const TradeConnection& kTradeConnection);
+#ifdef AUI_TRADE_UNBIASED_PRIORITIZE
+	int ScoreFoodTR (const TradeConnection& kTradeConnection) const;
+	int ScoreProductionTR (const TradeConnection& kTradeConnection) const;
 #else
 	int ScoreFoodTR(const TradeConnection& kTradeConnection, CvCity* pSmallestCity);
-#endif
 	int ScoreProductionTR (const TradeConnection& kTradeConnection, std::vector<CvCity*> aTargetCityList);
+#endif
 
 	bool ChooseTradeUnitTargetPlot(CvUnit* pUnit, int& iOriginPlotIndex, int& iDestPlotIndex, TradeConnectionType& eTradeConnectionType, bool& bDisband, const TradeConnectionList& aTradeConnections);
 

@@ -210,8 +210,13 @@ public:
 	int getCurrentProductionDifference(bool bIgnoreFood, bool bOverflow) const;
 	int getRawProductionDifference(bool bIgnoreFood, bool bOverflow) const;
 	int getProductionDifferenceTimes100(int iProductionNeeded, int iProduction, int iProductionModifier, bool bFoodProduction, bool bOverflow) const;
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	int getCurrentProductionDifferenceTimes100(bool bIgnoreFood, bool bOverflow, int iExtraModifier = 0) const;
+	int getRawProductionDifferenceTimes100(bool bIgnoreFood, bool bOverflow, int iExtraModifier = 0) const;
+#else
 	int getCurrentProductionDifferenceTimes100(bool bIgnoreFood, bool bOverflow) const;
 	int getRawProductionDifferenceTimes100(bool bIgnoreFood, bool bOverflow) const;
+#endif
 	int getExtraProductionDifference(int iExtra) const;
 	int GetFoodProduction(int iExcessFood) const;
 
@@ -262,8 +267,9 @@ public:
 
 	int foodConsumption(bool bNoAngry = false, int iExtra = 0) const;
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
-	int foodDifference(bool bBottom = true, bool bValueKnown = false, int iValueKnown = 0) const;
+	int foodDifference(bool bBottom = true, bool bValueKnown = false, int iValueKnown = 0, int iExtraHappiness = 0) const;
 	int foodDifferenceTimes100(bool bBottom = true, CvString* toolTipSink = NULL, bool bValueKnown = false, int iValueKnown = 0) const;
+	int foodDifferenceTimes100(int iExtraHappiness, bool bBottom = true, CvString* toolTipSink = NULL, bool bValueKnown = false, int iValueKnown = 0) const;
 #else
 	int foodDifference(bool bBottom = true) const;
 	int foodDifferenceTimes100(bool bBottom = true, CvString* toolTipSink = NULL) const;
@@ -569,9 +575,15 @@ public:
 	int getSeaResourceYield(YieldTypes eIndex) const;
 	void changeSeaResourceYield(YieldTypes eIndex, int iChange);
 
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	int getBaseYieldRateModifier(YieldTypes eIndex, int iExtra = 0, CvString* toolTipSink = NULL, int iExtraHappiness = 0) const;
+	int getYieldRate(YieldTypes eIndex, bool bIgnoreTrade, int iExtraHappiness = 0) const;
+	int getYieldRateTimes100(YieldTypes eIndex, bool bIgnoreTrade, int iExtraHappiness = 0) const;
+#else
 	int getBaseYieldRateModifier(YieldTypes eIndex, int iExtra = 0, CvString* toolTipSink = NULL) const;
 	int getYieldRate(YieldTypes eIndex, bool bIgnoreTrade) const;
 	int getYieldRateTimes100(YieldTypes eIndex, bool bIgnoreTrade) const;
+#endif
 
 	// Base Yield
 	int getBaseYieldRate(YieldTypes eIndex) const;
@@ -607,7 +619,11 @@ public:
 	int getResourceYieldRateModifier(YieldTypes eIndex) const;
 	void changeResourceYieldRateModifier(YieldTypes eIndex, int iChange);
 
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	int getHappinessModifier(YieldTypes eIndex, int iExtraHappiness = 0) const;
+#else
 	int getHappinessModifier(YieldTypes eIndex) const;
+#endif
 
 	int getExtraSpecialistYield(YieldTypes eIndex) const;
 	int getExtraSpecialistYield(YieldTypes eIndex, SpecialistTypes eSpecialist) const;

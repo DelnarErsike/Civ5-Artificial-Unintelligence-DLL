@@ -3663,10 +3663,18 @@ int CvPlayerCulture::GetLastTurnInfluenceOn(PlayerTypes ePlayer) const
 }
 
 /// Influence being applied each turn
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+int CvPlayerCulture::GetInfluencePerTurn(PlayerTypes ePlayer, bool bAssumeModifier, int iAssumeModifier) const
+#else
 int CvPlayerCulture::GetInfluencePerTurn(PlayerTypes ePlayer) const
+#endif
 {
 	int iRtnValue = 0;
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	int iModifier = iAssumeModifier;
+#else
 	int iModifier = 0;
+#endif
 
 	CvPlayer &kOtherPlayer = GET_PLAYER(ePlayer);
 	CvTeam &kOtherTeam = GET_TEAM(kOtherPlayer.getTeam());
@@ -3720,7 +3728,11 @@ int CvPlayerCulture::GetInfluencePerTurn(PlayerTypes ePlayer) const
 		for (pLoopCity = m_pPlayer->firstCity(&iLoopCity); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoopCity))
 		{
 			// Design has changed so modifier is always player-to-player so only need to get it once and can apply it at the end
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+			if (pLoopCity->isCapital() && !bAssumeModifier)
+#else
 			if (pLoopCity->isCapital())
+#endif
 			{
 				iModifier = pLoopCity->GetCityCulture()->GetTourismMultiplier(kOtherPlayer.GetID(), false, false, false, false, false);
 			}
@@ -5460,7 +5472,11 @@ GreatWorkSlotType CvCityCulture::GetSlotTypeFirstAvailableCultureBuilding() cons
 }
 
 /// Compute raw tourism from this city
+#ifdef AUI_CONSTIFY
+int CvCityCulture::GetBaseTourismBeforeModifiers() const
+#else
 int CvCityCulture::GetBaseTourismBeforeModifiers()
+#endif
 {
 	// If we're in Resistance, then no Tourism!
 	if(m_pCity->IsResistance() || m_pCity->IsRazing())
@@ -5549,9 +5565,17 @@ int CvCityCulture::GetBaseTourismBeforeModifiers()
 }
 
 /// What is the tourism output ignoring player-specific modifiers?
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+int CvCityCulture::GetBaseTourism(bool bAssumeBase, int iAssumeBaseTourism) const
+{
+	int iBase = iAssumeBaseTourism;
+	if (!bAssumeBase)
+		iBase = GetBaseTourismBeforeModifiers();
+#else
 int CvCityCulture::GetBaseTourism()
 {
 	int iBase = GetBaseTourismBeforeModifiers();
+#endif
 
 	int iModifier = 0;
 

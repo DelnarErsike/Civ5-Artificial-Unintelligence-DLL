@@ -338,7 +338,11 @@ public:
 
 	int GetJONSCulturePerTurnFromCities() const;
 
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	int GetJONSCulturePerTurnFromExcessHappiness(int iExtraHappiness = 0) const;
+#else
 	int GetJONSCulturePerTurnFromExcessHappiness() const;
+#endif
 	int GetJONSCulturePerTurnFromTraits() const;
 
 	int GetJONSCulturePerTurnForFree() const;
@@ -412,9 +416,15 @@ public:
 	void SetHappiness(int iNewValue);
 
 	int GetExcessHappiness() const;
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	bool IsEmpireUnhappy(int iExtra = 0) const;
+	bool IsEmpireVeryUnhappy(int iExtra = 0) const;
+	bool IsEmpireSuperUnhappy(int iExtra = 0) const;
+#else
 	bool IsEmpireUnhappy() const;
 	bool IsEmpireVeryUnhappy() const;
 	bool IsEmpireSuperUnhappy() const;
+#endif
 
 	void DoUpdateUprisings();
 	int GetUprisingCounter() const;
@@ -1056,7 +1066,11 @@ public:
 
 	int GetScienceFromCitiesTimes100(bool bIgnoreTrade) const;
 	int GetScienceFromOtherPlayersTimes100() const;
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	int GetScienceFromHappinessTimes100(int iExtraHappiness = 0) const;
+#else
 	int GetScienceFromHappinessTimes100() const;
+#endif
 	int GetScienceFromResearchAgreementsTimes100() const;
 	int GetScienceFromBudgetDeficitTimes100() const;
 

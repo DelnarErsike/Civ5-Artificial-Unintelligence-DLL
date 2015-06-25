@@ -2074,8 +2074,6 @@ int CvDangerPlotContents::GetDanger(const CvCity* pCity, int iAfterNIntercepts, 
 {
 	int iPlotDamage = 0;
 	CvPlot* pCityPlot = pCity->plot();
-	const int iCityX = pCityPlot->getX();
-	const int iCityY = pCityPlot->getY();
 	const int iMaxNoCaptureDamage = pCity->GetMaxHitPoints() - pCity->getDamage() - 1;
 
 	FFastVector<const CvPlot*, true, c_eCiv5GameplayDLL> vpPossibleAttackPlots;

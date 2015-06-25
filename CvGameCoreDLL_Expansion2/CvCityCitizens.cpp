@@ -190,13 +190,21 @@ void CvCityCitizens::Write(FDataStream& kStream)
 }
 
 /// Returns the City object this set of Citizens is associated with
+#ifdef AUI_CONSTIFY
+CvCity* CvCityCitizens::GetCity() const
+#else
 CvCity* CvCityCitizens::GetCity()
+#endif
 {
 	return m_pCity;
 }
 
 /// Returns the Player object this City belongs to
+#ifdef AUI_CONSTIFY
+CvPlayer* CvCityCitizens::GetPlayer() const
+#else
 CvPlayer* CvCityCitizens::GetPlayer()
+#endif
 {
 	return &GET_PLAYER(GetOwner());
 }
@@ -405,12 +413,34 @@ void CvCityCitizens::DoTurn()
 }
 
 /// What is the overall value of the current Plot?
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
-int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth)
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
+int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth) const
 #else
 int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag)
 #endif
 {
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	double dYieldArray[NUM_YIELD_TYPES] = {};
+
+	dYieldArray[YIELD_FOOD] += pPlot->getYield(YIELD_FOOD);
+	dYieldArray[YIELD_PRODUCTION] += pPlot->getYield(YIELD_PRODUCTION);
+	dYieldArray[YIELD_GOLD] += pPlot->getYield(YIELD_GOLD);
+	dYieldArray[YIELD_SCIENCE] += pPlot->getYield(YIELD_SCIENCE);
+	dYieldArray[YIELD_CULTURE] += pPlot->getYield(YIELD_CULTURE);
+	dYieldArray[YIELD_FAITH] += pPlot->getYield(YIELD_FAITH);
+
+	dYieldArray[YIELD_FOOD] *= m_pCity->getBaseYieldRateModifier(YIELD_FOOD) / 100.0;
+	dYieldArray[YIELD_PRODUCTION] *= m_pCity->getBaseYieldRateModifier(YIELD_PRODUCTION) / 100.0;
+	dYieldArray[YIELD_GOLD] *= m_pCity->getBaseYieldRateModifier(YIELD_GOLD) / 100.0;
+	dYieldArray[YIELD_SCIENCE] *= m_pCity->getBaseYieldRateModifier(YIELD_SCIENCE) / 100.0;
+	dYieldArray[YIELD_CULTURE] *= m_pCity->getBaseYieldRateModifier(YIELD_CULTURE) / 100.0;
+	dYieldArray[YIELD_FAITH] *= m_pCity->getBaseYieldRateModifier(YIELD_FAITH) / 100.0;
+
+	double dTourismYield = dYieldArray[YIELD_CULTURE] * m_pCity->GetCityBuildings()->GetLandmarksTourismPercent() / 100.0;
+	dTourismYield = m_pCity->GetCityCulture()->GetBaseTourism(true, int(m_pCity->GetCityCulture()->GetBaseTourismBeforeModifiers() + dTourismYield)) - m_pCity->GetCityCulture()->GetBaseTourism();
+	
+	return GetTotalValue(dYieldArray, NO_UNITCLASS, 0.0, 0, dTourismYield, bAfterGrowth, bUseAllowGrowthFlag);
+#else
 	int iValue = 0;
 
 	// Yield Values
@@ -656,7 +686,438 @@ int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag)
 	iValue += iFaithYieldValue;
 
 	return iValue;
+#endif
 }
+
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+/// Get the total value of a set of yields, great person points, tourism, and happiness
+int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonClass, double dGPPYield, int iExtraHappiness, double dTourismYield, bool bAfterGrowth, bool bUseAvoidGrowth) const
+{
+	double dValue = 0.0;
+
+	// Yield Values (note that generic modifiers are not calculated in this function, since not all set of yields will get the same modifiers)
+	double dFoodYield = aiYields[YIELD_FOOD];
+	double dProductionYield = aiYields[YIELD_PRODUCTION];
+	double dGoldYield = aiYields[YIELD_GOLD];
+	double dScienceYield = aiYields[YIELD_SCIENCE];
+	double dCultureYield = aiYields[YIELD_CULTURE];
+	double dFaithYield = aiYields[YIELD_FAITH];
+
+	double dCurrentExcessFood = m_pCity->getYieldRateTimes100(YIELD_FOOD, false) / 100.0 - m_pCity->foodConsumption();
+	double dExcessFoodYield = 0.0;
+	if (dCurrentExcessFood + dFoodYield > 0)
+	{
+		if (dCurrentExcessFood > 0)
+		{
+			dExcessFoodYield = dFoodYield;
+			dFoodYield = 0.0;
+		}
+		else
+		{
+			dExcessFoodYield = dFoodYield + dCurrentExcessFood;
+			dFoodYield = -dCurrentExcessFood;
+		}
+	}
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	dExcessFoodYield += (m_pCity->foodDifferenceTimes100(true, NULL, false, 0, iExtraHappiness) - m_pCity->foodDifferenceTimes100()) / 100.0;
+#endif
+
+	if (m_pCity->isFoodProduction())
+	{
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+		dProductionYield += (m_pCity->foodDifferenceTimes100(iExtraHappiness, true, NULL, true, m_pCity->GetFoodProduction(int(100 * (dCurrentExcessFood + dExcessFoodYield)))) -
+			m_pCity->foodDifferenceTimes100(iExtraHappiness, true, NULL, true, m_pCity->GetFoodProduction(int(100 * dCurrentExcessFood)))) / 100.0;
+#else
+		dProductionYield += (m_pCity->GetFoodProduction(int(100 * (dCurrentExcessFood + dExcessFoodYield))) - m_pCity->GetFoodProduction(int(100 * dCurrentExcessFood))) / 100.0;
+#endif
+		dExcessFoodYield = 0.0;
+	}
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	else
+		dExcessFoodYield = m_pCity->foodDifferenceTimes100(iExtraHappiness, true, NULL, true, int(100 * dExcessFoodYield)) / 100.0;
+#endif
+
+	double dPlayerIncome = GetPlayer()->GetTreasury()->CalculateBaseNetGoldTimes100() / 100.0;
+	double dPercentGoldToScience = 0.0;
+	if (dPlayerIncome < 0)
+	{
+		if (dPlayerIncome + dGoldYield > 0)
+		{
+			// Income is negative, so adding it to gold yield reduces the gold yield
+			dGoldYield += dPlayerIncome;
+			dScienceYield -= dPlayerIncome;
+			dPercentGoldToScience = 1.0 - dGoldYield / (dGoldYield - dPlayerIncome);
+		}
+		else
+		{
+			dScienceYield += dGoldYield;
+			dGoldYield = 0;
+			dPercentGoldToScience = 1.0;
+		}
+	}
+
+	double dFoodYieldValue = GC.getAI_CITIZEN_VALUE_FOOD();
+	double dExcessFoodYieldValue = dFoodYieldValue;
+	dFoodYieldValue *= 8.0;
+	double dProductionYieldValue = GC.getAI_CITIZEN_VALUE_PRODUCTION();
+	double dGoldYieldValue = GC.getAI_CITIZEN_VALUE_GOLD();
+	double dScienceYieldValue = GC.getAI_CITIZEN_VALUE_SCIENCE();
+	double dCultureYieldValue = GC.getAI_CITIZEN_VALUE_CULTURE();
+	double dFaithYieldValue = GC.getAI_CITIZEN_VALUE_FAITH();
+	double dTourismYieldValue = dCultureYieldValue;
+	double dGPPYieldValue = 2.0;
+	double dExcessHappiness = m_pCity->GetPlayer()->GetExcessHappiness();
+	double dHappinessValue = 4.0 * GC.getAI_CITIZEN_VALUE_FOOD() / (1.0 + exp(dExcessHappiness / 4.0 * (1.0 + exp(-dExcessHappiness / 10.0))));
+
+	// Extra multiplier (or divider) based on food needed to grow
+	dExcessFoodYieldValue *= 1.0 + 6.0 / (1.0 + exp(double(m_pCity->GetPlayer()->getGrowthThreshold(m_pCity->getPopulation())) / double(m_pCity->GetPlayer()->getGrowthThreshold(1)) - 1));
+	if (bAfterGrowth)
+		dFoodYieldValue = 0.0;
+	int iUnhappinessOnGrowth = 0;
+	if (!m_pCity->IsIgnoreCityForHappiness())
+	{
+		iUnhappinessOnGrowth = GC.getUNHAPPINESS_PER_POPULATION();
+		if (m_pCity->IsOccupied() && !m_pCity->IsNoOccupiedUnhappiness())
+			iUnhappinessOnGrowth = (int((m_pCity->getPopulation() + 1) * GC.getUNHAPPINESS_PER_OCCUPIED_POPULATION() * 100) -
+				int(m_pCity->getPopulation() * GC.getUNHAPPINESS_PER_OCCUPIED_POPULATION() * 100)) / 100;
+	}
+	if (IsAvoidGrowth(iExtraHappiness - iUnhappinessOnGrowth) && bUseAvoidGrowth)
+		dExcessFoodYieldValue = 0.0;
+
+#ifdef AUI_CITIZENS_GET_VALUE_HIGHER_FAITH_VALUE_IF_BEFORE_RELIGION
+	int iReligionsToFound = GC.getGame().GetGameReligions()->GetNumReligionsStillToFound();
+	if (iReligionsToFound > 0)
+	{
+		int iMaxReligions = GC.getMap().getWorldInfo().getMaxActiveReligions() + 1;
+		dFaithYieldValue += dFaithYieldValue * iReligionsToFound * iReligionsToFound / double(iMaxReligions * iMaxReligions);
+	}
+#endif
+
+	CvGrandStrategyAI* pGrandStrategyAI = GetPlayer()->GetGrandStrategyAI();
+#ifdef AUI_GS_PRIORITY_RATIO
+	dTourismYieldValue *= pGrandStrategyAI->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"));
+#else
+	if (pGrandStrategyAI->GetActiveGrandStrategy() != (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
+	{
+		dTourismYieldValue = 0.0;
+	}
+#endif
+
+	if (eGreatPersonClass != NO_UNITCLASS)
+	{
+		SpecialistTypes eSpecialist = NO_SPECIALIST;
+		CvSpecialistInfo* pkSpecialistInfo;
+		for (int iSpecialistLoop = 0; iSpecialistLoop < GC.getNumSpecialistInfos(); iSpecialistLoop++)
+		{
+			const SpecialistTypes eLoopSpecialist = static_cast<SpecialistTypes>(iSpecialistLoop);
+			pkSpecialistInfo = GC.getSpecialistInfo(eSpecialist);
+			if (pkSpecialistInfo && pkSpecialistInfo->getGreatPeopleUnitClass() == eGreatPersonClass)
+			{
+				eSpecialist = eLoopSpecialist;
+				break;
+			}
+		}
+		if (eSpecialist != NO_SPECIALIST)
+		{
+			int iMyTurnsToGP = GetTurnsToGP(eSpecialist, dGPPYield);
+			int iBaseTurnsToGP = GetTurnsToGP(eSpecialist);
+			int iBestOtherTurnsToGP = MAX_INT;
+			int iLoop = 0;
+			for (CvCity* pLoopCity = GetPlayer()->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = GetPlayer()->nextCity(&iLoop))
+			{
+				if (pLoopCity != m_pCity)
+				{
+					int iLoopTurns = pLoopCity->GetCityCitizens()->GetTurnsToGP(eSpecialist);
+					if (iLoopTurns < iBestOtherTurnsToGP)
+						iBestOtherTurnsToGP = iLoopTurns;
+				}
+			}
+			if (iMyTurnsToGP > iBestOtherTurnsToGP)
+			{
+				dGPPYieldValue /= log(M_E + iMyTurnsToGP - iBestOtherTurnsToGP);
+			}
+			else if (iMyTurnsToGP < MAX_INT)
+			{
+				if (iBaseTurnsToGP < MAX_INT)
+					dGPPYieldValue *= log(1.0 + iBaseTurnsToGP - iMyTurnsToGP);
+				else
+					dGPPYieldValue *= log(1.0 + iMyTurnsToGP);
+			}
+		}
+		UnitTypes eGPUnitType = (UnitTypes)GetPlayer()->getCivilizationInfo().getCivilizationUnits(eGreatPersonClass);
+		CvUnitEntry *pkGPEntry = GC.GetGameUnits()->GetEntry(eGPUnitType);
+		if (pkGPEntry)
+		{
+			int iBestFlavor = 0;
+			for (int iFlavorLoop = 0; iFlavorLoop < GC.getNumFlavorTypes(); iFlavorLoop++)
+			{
+				if (pkGPEntry->GetFlavorValue(iFlavorLoop) > 0)
+				{
+					iBestFlavor = MAX(iBestFlavor, pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)iFlavorLoop));
+				}
+			}
+			if (iBestFlavor > 0)
+			{
+				dGPPYieldValue *= pow(1.05, (double)(iBestFlavor - GC.getDEFAULT_FLAVOR_VALUE()));
+			}
+		}
+		if (eGreatPersonClass == GC.getInfoTypeForString("UNITCLASS_SCIENTIST"))
+		{
+			dGPPYieldValue *= 2.0;
+			if (GetPlayer()->GetUniqueGreatPersons() & UNIQUE_GP_SCIENTIST)
+				dGPPYieldValue *= 2.0;
+		}
+		else if (eGreatPersonClass == GC.getInfoTypeForString("UNITCLASS_WRITER"))
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGPPYieldValue *= 1.0 + pGrandStrategyAI->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"));
+#else
+			if (pGrandStrategyAI->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
+			{
+				dGPPYieldValue *= 2.0;
+			}
+#endif
+			if (GetPlayer()->GetUniqueGreatPersons() & UNIQUE_GP_WRITER)
+				dGPPYieldValue *= 2.0;
+		}
+		else if (eGreatPersonClass == GC.getInfoTypeForString("UNITCLASS_ARTIST"))
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGPPYieldValue *= 1.0 + pGrandStrategyAI->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"));
+#else
+			if (pGrandStrategyAI->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
+			{
+				dGPPYieldValue *= 2.0;
+			}
+#endif
+			if (GetPlayer()->GetUniqueGreatPersons() & UNIQUE_GP_ARTIST)
+				dGPPYieldValue *= 2.0;
+		}
+		else if (eGreatPersonClass == GC.getInfoTypeForString("UNITCLASS_MUSICIAN"))
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGPPYieldValue *= 1.0 + pGrandStrategyAI->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"));
+#else
+			if (pGrandStrategyAI->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))
+			{
+				dGPPYieldValue *= 2.0;
+			}
+#endif
+			if (GetPlayer()->GetUniqueGreatPersons() & UNIQUE_GP_MUSICIAN)
+				dGPPYieldValue *= 2.0;
+		}
+		else if (eGreatPersonClass == GC.getInfoTypeForString("UNITCLASS_MERCHANT"))
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGPPYieldValue *= 1.0 + pGrandStrategyAI->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"));
+#else
+			if (pGrandStrategyAI->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"))
+			{
+				dGPDesireFactor *= 2.0;
+			}
+#endif
+			if (GetPlayer()->GetUniqueGreatPersons() & UNIQUE_GP_MERCHANT)
+				dGPPYieldValue *= 2.0;
+		}
+		else if (eGreatPersonClass == GC.getInfoTypeForString("UNITCLASS_ENGINEER"))
+		{
+			dGPPYieldValue *= 1.5;
+		}
+		else if (eGreatPersonClass == GC.getInfoTypeForString("UNITCLASS_GENERAL"))
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGPPYieldValue *= 1.0 + pGrandStrategyAI->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"));
+#else
+			if (pGrandStrategyAI->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"))
+			{
+				dGPDesireFactor *= 2.0;
+			}
+#endif
+			if (GetPlayer()->GetUniqueGreatPersons() & UNIQUE_GP_GENERAL)
+				dGPPYieldValue *= 2.0;
+		}
+		else if (eGreatPersonClass == GC.getInfoTypeForString("UNITCLASS_ADMIRAL"))
+		{
+#ifdef AUI_GS_PRIORITY_RATIO
+			dGPPYieldValue *= 1.0 + pGrandStrategyAI->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"));
+#else
+			if (GetPlayer()->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST"))
+			{
+				dGPDesireFactor *= 2.0;
+			}
+#endif
+			if (GetPlayer()->GetUniqueGreatPersons() & UNIQUE_GP_ADMIRAL)
+				dGPPYieldValue *= 2.0;
+		}
+	}
+
+	// City Focus
+	CityAIFocusTypes eFocus = GetFocusType();
+	if (eFocus == CITY_AI_FOCUS_TYPE_FOOD)
+	{
+		dFoodYieldValue *= 3.0;
+		dExcessFoodYieldValue *= 3.0;
+	}
+	else if (eFocus == CITY_AI_FOCUS_TYPE_PRODUCTION)
+		dProductionYieldValue *= 3.0;
+	else if (eFocus == CITY_AI_FOCUS_TYPE_GOLD)
+	{
+		dGoldYieldValue *= 3.0;
+		dScienceYieldValue *= 1.0 + 2.0 * dPercentGoldToScience;
+	}
+	else if (eFocus == CITY_AI_FOCUS_TYPE_SCIENCE)
+	{
+		dFoodYieldValue *= 2.0;
+		dExcessFoodYieldValue *= 2.0;
+		dScienceYieldValue *= 3.0;
+	}
+	else if (eFocus == CITY_AI_FOCUS_TYPE_CULTURE)
+	{
+		dCultureYieldValue *= 3.0;
+		dTourismYieldValue *= 3.0;
+	}
+	else if (eFocus == CITY_AI_FOCUS_TYPE_GOLD_GROWTH)
+	{
+		dFoodYieldValue *= 2.0;
+		dExcessFoodYieldValue *= 2.0;
+		dGoldYieldValue *= 2.0;
+	}
+	else if (eFocus == CITY_AI_FOCUS_TYPE_PROD_GROWTH)
+	{
+		dFoodYieldValue *= 2.0;
+		dExcessFoodYieldValue *= 2.0;
+		dProductionYieldValue *= 2.0;
+	}
+	else if (eFocus == CITY_AI_FOCUS_TYPE_FAITH)
+	{
+		dFaithYieldValue *= 3.0;
+	}
+	else if (eFocus == CITY_AI_FOCUS_TYPE_GREAT_PEOPLE)
+	{
+		dGPPYieldValue *= 3.0;
+	}
+
+	// Flavor modifiers that are roughly +/-10%
+	if (!GetPlayer()->isHuman())
+	{
+		double dFoodFlavor = (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GROWTH"));
+		dFoodFlavor += (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_EXPANSION"));
+		dFoodFlavor /= 2.0;
+		dExcessFoodYieldValue *= pow(1.02, dFoodFlavor - GC.getDEFAULT_FLAVOR_VALUE());
+
+		double dProductionFlavor = (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION"));
+		dProductionFlavor += (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_WONDER"));
+		dProductionFlavor += (double)MAX(pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE")), 
+										 pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DEFENSE")));
+		dProductionFlavor /= 3.0;
+		dProductionYieldValue *= pow(1.02, dProductionFlavor - GC.getDEFAULT_FLAVOR_VALUE());
+
+		double dGoldFlavor = (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GOLD"));
+		dGoldFlavor += (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DIPLOMACY"));
+		dGoldFlavor /= 2.0;
+		dGoldYieldValue *= pow(1.02, dGoldFlavor - GC.getDEFAULT_FLAVOR_VALUE());
+
+		dScienceYieldValue *= pow(1.02, (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_SCIENCE")) - GC.getDEFAULT_FLAVOR_VALUE());
+		dCultureYieldValue *= pow(1.02, (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_CULTURE")) - GC.getDEFAULT_FLAVOR_VALUE());
+		dFaithYieldValue *= pow(1.02, (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RELIGION")) - GC.getDEFAULT_FLAVOR_VALUE());
+		dTourismYieldValue *= pow(1.02, (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_TOURISM")) - GC.getDEFAULT_FLAVOR_VALUE());
+		dGPPYieldValue *= pow(1.02, (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_GREAT_PEOPLE")) - GC.getDEFAULT_FLAVOR_VALUE());
+		dHappinessValue *= pow(1.02, (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_HAPPINESS")) - GC.getDEFAULT_FLAVOR_VALUE());
+	}
+
+	dValue += dFoodYield * dFoodYieldValue;
+	dValue += dExcessFoodYield * dExcessFoodYieldValue;
+	dValue += dProductionYield * dProductionYieldValue;
+	dValue += dGoldYield * dGoldYieldValue;
+	dValue += dScienceYield * dScienceYieldValue;
+	dValue += dCultureYield * dCultureYieldValue;
+	dValue += dTourismYield * dTourismYieldValue;
+	dValue += dFaithYield * dFaithYieldValue;
+	dValue += dGPPYield * dGPPYieldValue;
+	dValue += iExtraHappiness * dHappinessValue;
+
+	return int(dValue + 0.5);
+}
+
+int CvCityCitizens::GetTurnsToGP(SpecialistTypes eSpecialist, double dExtraGPP) const
+{
+	CvSpecialistInfo* pkSpecialistInfo = GC.getSpecialistInfo(eSpecialist);
+	if (pkSpecialistInfo)
+	{
+		UnitClassTypes eGPUnitClass = (UnitClassTypes)pkSpecialistInfo->getGreatPeopleUnitClass();
+		// Does this Specialist spawn a GP?
+		if (eGPUnitClass != NO_UNITCLASS)
+		{
+			double dGPThreshold = GetSpecialistUpgradeThreshold(eGPUnitClass) - GetSpecialistGreatPersonProgressTimes100(eSpecialist) / 100.0;
+			int iCount = GetSpecialistCount(eSpecialist);
+
+			// GPP from Specialists
+			dExtraGPP += pkSpecialistInfo->getGreatPeopleRateChange() * iCount;
+
+			// GPP from Buildings
+			dExtraGPP += GetBuildingGreatPeopleRateChanges(eSpecialist);
+
+			if (dExtraGPP > 0)
+			{
+				int iMod = 0;
+
+				// City mod
+				iMod += GetCity()->getGreatPeopleRateModifier();
+
+				// Player mod
+				iMod += GetPlayer()->getGreatPeopleRateModifier();
+
+				// Player and Golden Age mods to this specific class
+				if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_SCIENTIST"))
+				{
+					iMod += GetPlayer()->getGreatScientistRateModifier();
+				}
+				else if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_WRITER"))
+				{
+					if (GetPlayer()->isGoldenAge())
+					{
+						iMod += GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatWriterRateModifier();
+					}
+					iMod += GetPlayer()->getGreatWriterRateModifier();
+				}
+				else if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_ARTIST"))
+				{
+					if (GetPlayer()->isGoldenAge())
+					{
+						iMod += GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatArtistRateModifier();
+					}
+					iMod += GetPlayer()->getGreatArtistRateModifier();
+				}
+				else if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_MUSICIAN"))
+				{
+					if (GetPlayer()->isGoldenAge())
+					{
+						iMod += GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatMusicianRateModifier();
+					}
+					iMod += GetPlayer()->getGreatMusicianRateModifier();
+				}
+				else if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_MERCHANT"))
+				{
+					iMod += GetPlayer()->getGreatMerchantRateModifier();
+				}
+				else if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_ENGINEER"))
+				{
+					iMod += GetPlayer()->getGreatEngineerRateModifier();
+				}
+
+				// Apply mod
+				dExtraGPP *= (100.0 + iMod) / 100.0;
+
+				return int(dGPThreshold / dExtraGPP + 0.5);
+			}
+			else
+				return MAX_INT;
+		}
+	}
+
+	return MAX_INT;
+}
+#endif
 
 /// Are this City's Citizens under automation?
 bool CvCityCitizens::IsAutomated() const
@@ -694,17 +1155,33 @@ void CvCityCitizens::SetNoAutoAssignSpecialists(bool bValue)
 }
 
 /// Is this City avoiding growth?
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+bool CvCityCitizens::IsAvoidGrowth(int iExtraHappiness) const
+#else
+#ifdef AUI_CONSTIFY
+bool CvCityCitizens::IsAvoidGrowth() const
+#else
 bool CvCityCitizens::IsAvoidGrowth()
+#endif
+#endif
 {
 #ifdef AUI_CITIZENS_FIX_AVOID_GROWTH_FLAG_NOT_IGNORED_IF_NO_HAPPINESS
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	if(GetPlayer()->IsEmpireUnhappy(iExtraHappiness))
+#else
 	if(GetPlayer()->IsEmpireUnhappy())
+#endif
 #else
 	if(GC.getGame().isOption(GAMEOPTION_NO_HAPPINESS))
 	{
 		return false;
 	}
 
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	if (GetPlayer()->GetExcessHappiness() + iExtraHappiness < 0)
+#else
 	if(GetPlayer()->GetExcessHappiness() < 0)
+#endif
 #endif
 	{
 #ifdef AUI_CITIZENS_FIX_FORCED_AVOID_GROWTH_ONLY_WHEN_GROWING_LOWERS_HAPPINESS
@@ -739,7 +1216,11 @@ bool CvCityCitizens::IsAvoidGrowth()
 	return IsForcedAvoidGrowth();
 }
 
+#if defined(AUI_CONSTIFY) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
+bool CvCityCitizens::IsForcedAvoidGrowth() const
+#else
 bool CvCityCitizens::IsForcedAvoidGrowth()
+#endif
 {
 	return m_bForceAvoidGrowth;
 }
@@ -773,6 +1254,7 @@ void CvCityCitizens::SetFocusType(CityAIFocusTypes eFocus)
 	}
 }
 
+#ifndef AUI_PRUNING
 /// Does the AI want a Specialist?
 bool CvCityCitizens::IsAIWantSpecialistRightNow()
 {
@@ -1083,9 +1565,10 @@ bool CvCityCitizens::IsAIWantSpecialistRightNow()
 
 	return false;
 }
+#endif
 
 /// What is the Building Type the AI likes the Specialist of most right now?
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 BuildingTypes CvCityCitizens::GetAIBestSpecialistBuilding(int& iSpecialistValue, bool bAfterGrowth)
 #else
 BuildingTypes CvCityCitizens::GetAIBestSpecialistBuilding(int& iSpecialistValue)
@@ -1114,7 +1597,7 @@ BuildingTypes CvCityCitizens::GetAIBestSpecialistBuilding(int& iSpecialistValue)
 				{
 					eSpecialist = (SpecialistTypes) pkBuildingInfo->GetSpecialistType();
 
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 					iValue = GetSpecialistValue(eSpecialist, bAfterGrowth);
 #else
 					iValue = GetSpecialistValue(eSpecialist);
@@ -1141,8 +1624,8 @@ BuildingTypes CvCityCitizens::GetAIBestSpecialistBuilding(int& iSpecialistValue)
 }
 
 /// How valuable is eSpecialist?
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
-int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist, bool bAfterGrowth)
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
+int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist, bool bAfterGrowth) const
 #else
 int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 #endif
@@ -1156,9 +1639,143 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 		return 0;
 	}
 
+#ifndef AUI_CITIZENS_GET_VALUE_FROM_STATS
 	int iValue = 0;
+#endif
 
 	CvPlayer* pPlayer = m_pCity->GetPlayer();
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	double dYieldArray[NUM_YIELD_TYPES] = {};
+
+	dYieldArray[YIELD_FOOD] += pPlayer->specialistYield(eSpecialist, YIELD_FOOD);
+	if (pPlayer->isHalfSpecialistFood())
+		dYieldArray[YIELD_FOOD] += GC.getFOOD_CONSUMPTION_PER_POPULATION() / 2.0;
+	dYieldArray[YIELD_PRODUCTION] += pPlayer->specialistYield(eSpecialist, YIELD_PRODUCTION);
+	dYieldArray[YIELD_GOLD] += pPlayer->specialistYield(eSpecialist, YIELD_GOLD);
+	dYieldArray[YIELD_SCIENCE] += pPlayer->specialistYield(eSpecialist, YIELD_SCIENCE);
+	dYieldArray[YIELD_CULTURE] += pPlayer->specialistYield(eSpecialist, YIELD_CULTURE);
+	dYieldArray[YIELD_FAITH] += pPlayer->specialistYield(eSpecialist, YIELD_FAITH);
+
+	int iHappiness = 0;
+	if (pPlayer->isHalfSpecialistUnhappiness() && !m_pCity->IsIgnoreCityForHappiness())
+	{
+		iHappiness = GC.getUNHAPPINESS_PER_POPULATION() * 50;
+		if (m_pCity->IsOccupied() && !m_pCity->IsNoOccupiedUnhappiness())
+			iHappiness = int(GC.getUNHAPPINESS_PER_OCCUPIED_POPULATION() * 50);
+		if (pPlayer->GetCapitalUnhappinessMod() != 0 && m_pCity->isCapital())
+		{
+			iHappiness *= 100;
+			iHappiness /= (100 + pPlayer->GetCapitalUnhappinessMod());
+		}
+		iHappiness *= 100;
+		iHappiness /= (100 + pPlayer->GetUnhappinessMod());
+		iHappiness *= 100;
+		iHappiness /= (100 + pPlayer->GetPlayerTraits()->GetPopulationUnhappinessModifier());
+		// Handicap mod
+		iHappiness *= 100;
+		iHappiness /= pPlayer->getHandicapInfo().getPopulationUnhappinessMod();
+
+		// For the initial *50
+		iHappiness /= 100;
+	}
+
+	if (GetTotalSpecialistCount() > 0)
+	{
+		const CvReligion* pReligion = GC.getGame().GetGameReligions()->GetReligion(m_pCity->GetCityReligions()->GetReligiousMajority(), pPlayer->GetID());
+		dYieldArray[YIELD_FOOD] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_FOOD);
+		dYieldArray[YIELD_PRODUCTION] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_PRODUCTION);
+		dYieldArray[YIELD_GOLD] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_GOLD);
+		dYieldArray[YIELD_SCIENCE] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_SCIENCE);
+		dYieldArray[YIELD_CULTURE] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_CULTURE);
+		dYieldArray[YIELD_FAITH] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_FAITH);
+
+		BeliefTypes eSecondaryPantheon = m_pCity->GetCityReligions()->GetSecondaryReligionPantheonBelief();
+		if (eSecondaryPantheon != NO_BELIEF)
+		{
+			CvBeliefEntry* pBeliefEntry = GC.GetGameBeliefs()->GetEntry(eSecondaryPantheon);
+			if (pBeliefEntry)
+			{
+				dYieldArray[YIELD_FOOD] += pBeliefEntry->GetYieldChangeAnySpecialist(YIELD_FOOD);
+				dYieldArray[YIELD_PRODUCTION] += pBeliefEntry->GetYieldChangeAnySpecialist(YIELD_PRODUCTION);
+				dYieldArray[YIELD_GOLD] += pBeliefEntry->GetYieldChangeAnySpecialist(YIELD_GOLD);
+				dYieldArray[YIELD_SCIENCE] += pBeliefEntry->GetYieldChangeAnySpecialist(YIELD_SCIENCE);
+				dYieldArray[YIELD_CULTURE] += pBeliefEntry->GetYieldChangeAnySpecialist(YIELD_CULTURE);
+				dYieldArray[YIELD_FAITH] += pBeliefEntry->GetYieldChangeAnySpecialist(YIELD_FAITH);
+			}
+		}
+	}
+
+	dYieldArray[YIELD_FOOD] *= m_pCity->getBaseYieldRateModifier(YIELD_FOOD, iHappiness) / 100.0;
+	dYieldArray[YIELD_PRODUCTION] *= m_pCity->getBaseYieldRateModifier(YIELD_PRODUCTION, iHappiness) / 100.0;
+	dYieldArray[YIELD_GOLD] *= m_pCity->getBaseYieldRateModifier(YIELD_GOLD, iHappiness) / 100.0;
+	dYieldArray[YIELD_SCIENCE] *= m_pCity->getBaseYieldRateModifier(YIELD_SCIENCE, iHappiness) / 100.0;
+	dYieldArray[YIELD_CULTURE] *= m_pCity->getBaseYieldRateModifier(YIELD_CULTURE, iHappiness) / 100.0;
+	dYieldArray[YIELD_FAITH] *= m_pCity->getBaseYieldRateModifier(YIELD_FAITH, iHappiness) / 100.0;
+
+	dYieldArray[YIELD_FOOD] += (m_pCity->getYieldRateTimes100(YIELD_FOOD, false, iHappiness) - m_pCity->getYieldRateTimes100(YIELD_FOOD, false)) / 100.0;
+	dYieldArray[YIELD_PRODUCTION] += (m_pCity->getYieldRateTimes100(YIELD_PRODUCTION, false, iHappiness) - m_pCity->getYieldRateTimes100(YIELD_PRODUCTION, false)) / 100.0;
+	dYieldArray[YIELD_GOLD] += (m_pCity->getYieldRateTimes100(YIELD_GOLD, false, iHappiness) - m_pCity->getYieldRateTimes100(YIELD_GOLD, false)) / 100.0;
+	dYieldArray[YIELD_SCIENCE] += (m_pCity->getYieldRateTimes100(YIELD_SCIENCE, false, iHappiness) - m_pCity->getYieldRateTimes100(YIELD_SCIENCE, false)) / 100.0;
+	dYieldArray[YIELD_CULTURE] += (m_pCity->getYieldRateTimes100(YIELD_CULTURE, false, iHappiness) - m_pCity->getYieldRateTimes100(YIELD_CULTURE, false)) / 100.0;
+	dYieldArray[YIELD_FAITH] += (m_pCity->getYieldRateTimes100(YIELD_FAITH, false, iHappiness) - m_pCity->getYieldRateTimes100(YIELD_FAITH, false)) / 100.0;
+
+	dYieldArray[YIELD_SCIENCE] += (pPlayer->GetScienceFromHappinessTimes100(iHappiness) - pPlayer->GetScienceFromHappinessTimes100()) / 100.0;
+	dYieldArray[YIELD_CULTURE] += (pPlayer->GetJONSCulturePerTurnFromExcessHappiness(iHappiness) - pPlayer->GetJONSCulturePerTurnFromExcessHappiness()) / 100.0;
+
+	UnitClassTypes eGPUnitClass = (UnitClassTypes)pSpecialistInfo->getGreatPeopleUnitClass();
+	double dGPPChange = pSpecialistInfo->getGreatPeopleRateChange();
+	if (dGPPChange > 0)
+	{
+		// City mod
+		int iMod = GetCity()->getGreatPeopleRateModifier();
+
+		// Player mod
+		iMod += GetPlayer()->getGreatPeopleRateModifier();
+
+		// Player and Golden Age mods to this specific class
+		if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_SCIENTIST"))
+		{
+			iMod += GetPlayer()->getGreatScientistRateModifier();
+		}
+		else if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_WRITER"))
+		{
+			if (GetPlayer()->isGoldenAge())
+			{
+				iMod += GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatWriterRateModifier();
+			}
+			iMod += GetPlayer()->getGreatWriterRateModifier();
+		}
+		else if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_ARTIST"))
+		{
+			if (GetPlayer()->isGoldenAge())
+			{
+				iMod += GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatArtistRateModifier();
+			}
+			iMod += GetPlayer()->getGreatArtistRateModifier();
+		}
+		else if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_MUSICIAN"))
+		{
+			if (GetPlayer()->isGoldenAge())
+			{
+				iMod += GetPlayer()->GetPlayerTraits()->GetGoldenAgeGreatMusicianRateModifier();
+			}
+			iMod += GetPlayer()->getGreatMusicianRateModifier();
+		}
+		else if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_MERCHANT"))
+		{
+			iMod += GetPlayer()->getGreatMerchantRateModifier();
+		}
+		else if (eGPUnitClass == GC.getInfoTypeForString("UNITCLASS_ENGINEER"))
+		{
+			iMod += GetPlayer()->getGreatEngineerRateModifier();
+		}
+
+		// Apply mod
+		dGPPChange *= (100.0 + iMod) / 100.0;
+	}
+	
+	return GetTotalValue(dYieldArray, eGPUnitClass, dGPPChange, iHappiness, 0.0, bAfterGrowth);
+#else
 
 	// factor in the fact that specialists may need less food
 #ifdef AUI_CITIZENS_FIX_SPECIALIST_VALUE_HALF_FOOD_CONSUMPTION
@@ -1619,11 +2236,19 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 	iValue += iHappinessYieldValue;
 
 	return iValue;
+#endif
 }
 
 /// Determine if eSpecialist is preferable to a default specialist, based on our focus
+#ifdef AUI_CONSTIFY
+bool CvCityCitizens::IsBetterThanDefaultSpecialist(SpecialistTypes eSpecialist) const
+#else
 bool CvCityCitizens::IsBetterThanDefaultSpecialist(SpecialistTypes eSpecialist)
+#endif
 {
+#ifdef AUI_CITIZENS_IS_BETTER_THAN_DEFAULT_SPECIALIST_USE_REGULAR_VALUES
+	return GetSpecialistValue(eSpecialist) >= GetSpecialistValue((SpecialistTypes) GC.getDEFAULT_SPECIALIST());
+#else
 	CvSpecialistInfo* pSpecialistInfo = GC.getSpecialistInfo(eSpecialist);
 	CvAssertMsg(pSpecialistInfo, "Invalid specialist type when assigning citizens. Please send Anton your save file and version.");
 	if(!pSpecialistInfo) return false; // Assumes that default specialist will work out
@@ -1681,6 +2306,7 @@ bool CvCityCitizens::IsBetterThanDefaultSpecialist(SpecialistTypes eSpecialist)
 	}
 
 	return (iSpecialistYield >= iDefaultSpecialistYield); // Unless default Specialist has strictly more, this Specialist is better
+#endif
 }
 
 /// How many Citizens need to be given a job?
@@ -1709,7 +2335,7 @@ void CvCityCitizens::ChangeNumCitizensWorkingPlots(int iChange)
 }
 
 /// Pick the best Plot to work from one of our unassigned pool
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 bool CvCityCitizens::DoAddBestCitizenFromUnassigned(bool bAfterGrowth)
 #else
 bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
@@ -1726,7 +2352,7 @@ bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
 	BuildingTypes eBestSpecialistBuilding = NO_BUILDING;
 	if (!IsNoAutoAssignSpecialists())
 	{
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 		eBestSpecialistBuilding = GetAIBestSpecialistBuilding(iSpecialistValue, bAfterGrowth);
 #else
 		eBestSpecialistBuilding = GetAIBestSpecialistBuilding(iSpecialistValue);
@@ -1749,7 +2375,7 @@ bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
 	}
 
 	int iBestPlotValue = 0;
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 	CvPlot* pBestPlot = GetBestCityPlotWithValue(iBestPlotValue, /*bBest*/ true, /*bWorked*/ false, bAfterGrowth);
 #else
 	CvPlot* pBestPlot = GetBestCityPlotWithValue(iBestPlotValue, /*bBest*/ true, /*bWorked*/ false);
@@ -1765,7 +2391,7 @@ bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
 	}
 	// Found a Valid Plot to place a guy?
 #ifdef AUI_CITIZENS_IS_PLOT_BETTER_THAN_DEFAULT_SPECIALIST
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 	else if (pBestPlot != NULL && iBestPlotValue >= GetSpecialistValue((SpecialistTypes)GC.getDEFAULT_SPECIALIST(), bAfterGrowth))
 #else
 	else if (pBestPlot != NULL && iBestPlotValue >= GetSpecialistValue((SpecialistTypes)GC.getDEFAULT_SPECIALIST()))
@@ -1789,7 +2415,7 @@ bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
 		{
 			if (!GET_PLAYER(GetOwner()).isHuman() || !IsNoAutoAssignSpecialists())
 			{
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 				BuildingTypes eBestBuilding = GetAIBestSpecialistBuilding(iSpecialistValue, bAfterGrowth);
 #else
 				BuildingTypes eBestBuilding = GetAIBestSpecialistBuilding(iSpecialistValue);
@@ -1881,7 +2507,7 @@ bool CvCityCitizens::DoRemoveWorstCitizen(bool bRemoveForcedStatus, SpecialistTy
 }
 
 /// Find a Plot the City is either working or not, and the best/worst value for it - this function does "double duty" depending on what the user wants to find
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 CvPlot* CvCityCitizens::GetBestCityPlotWithValue(int& iValue, bool bWantBest, bool bWantWorked, bool bAfterGrowth)
 #else
 CvPlot* CvCityCitizens::GetBestCityPlotWithValue(int& iValue, bool bWantBest, bool bWantWorked)
@@ -1913,7 +2539,7 @@ CvPlot* CvCityCitizens::GetBestCityPlotWithValue(int& iValue, bool bWantBest, bo
 						// Working the Plot or CAN work the Plot?
 						if(bWantWorked || IsCanWork(pLoopPlot))
 						{
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 							iValue = GetPlotValue(pLoopPlot, bWantBest, bAfterGrowth);
 #else
 							iValue = GetPlotValue(pLoopPlot, bWantBest);
@@ -2620,13 +3246,21 @@ void CvCityCitizens::DoSpecialists()
 }
 
 /// How many Specialists are assigned to this Building Type?
+#ifdef AUI_CONSTIFY
+int CvCityCitizens::GetNumSpecialistsAllowedByBuilding(const CvBuildingEntry& kBuilding) const
+#else
 int CvCityCitizens::GetNumSpecialistsAllowedByBuilding(const CvBuildingEntry& kBuilding)
+#endif
 {
 	return kBuilding.GetSpecialistCount();
 }
 
 /// Are we in the position to add another Specialist to eBuilding?
+#ifdef AUI_CONSTIFY
+bool CvCityCitizens::IsCanAddSpecialistToBuilding(BuildingTypes eBuilding) const
+#else
 bool CvCityCitizens::IsCanAddSpecialistToBuilding(BuildingTypes eBuilding)
+#endif
 {
 	CvAssert(eBuilding > -1);
 	CvAssert(eBuilding < GC.getNumBuildingInfos());
@@ -2995,7 +3629,11 @@ void CvCityCitizens::DoClearForcedSpecialists()
 }
 
 /// What upgrade progress does a Specialist need to level up?
+#ifdef AUI_CONSTIFY
+int CvCityCitizens::GetSpecialistUpgradeThreshold(UnitClassTypes eUnitClass) const
+#else
 int CvCityCitizens::GetSpecialistUpgradeThreshold(UnitClassTypes eUnitClass)
+#endif
 {
 	int iThreshold = /*100*/ GC.getGREAT_PERSON_THRESHOLD_BASE();
 	int iNumCreated;

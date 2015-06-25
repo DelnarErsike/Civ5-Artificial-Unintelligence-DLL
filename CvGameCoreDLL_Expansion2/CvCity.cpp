@@ -5371,18 +5371,32 @@ int CvCity::getProductionDifferenceTimes100(int /*iProductionNeeded*/, int /*iPr
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+int CvCity::getCurrentProductionDifferenceTimes100(bool bIgnoreFood, bool bOverflow, int iExtraModifier) const
+{
+	VALIDATE_OBJECT
+	return getProductionDifferenceTimes100(getProductionNeeded(), getProductionTimes100(), getProductionModifier() + iExtraModifier, (!bIgnoreFood && isFoodProduction()), bOverflow);
+#else
 int CvCity::getCurrentProductionDifferenceTimes100(bool bIgnoreFood, bool bOverflow) const
 {
 	VALIDATE_OBJECT
 	return getProductionDifferenceTimes100(getProductionNeeded(), getProductionTimes100(), getProductionModifier(), (!bIgnoreFood && isFoodProduction()), bOverflow);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
 // What is the production of this city, not counting modifiers specific to what we happen to be building?
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+int CvCity::getRawProductionDifferenceTimes100(bool bIgnoreFood, bool bOverflow, int iExtraModifier) const
+{
+	VALIDATE_OBJECT
+	return getProductionDifferenceTimes100(getProductionNeeded(), getProductionTimes100(), getGeneralProductionModifiers() + iExtraModifier, (!bIgnoreFood && isFoodProduction()), bOverflow);
+#else
 int CvCity::getRawProductionDifferenceTimes100(bool bIgnoreFood, bool bOverflow) const
 {
 	VALIDATE_OBJECT
 	return getProductionDifferenceTimes100(getProductionNeeded(), getProductionTimes100(), getGeneralProductionModifiers(), (!bIgnoreFood && isFoodProduction()), bOverflow);
+#endif
 }
 
 
@@ -6627,14 +6641,14 @@ int CvCity::foodConsumption(bool /*bNoAngry*/, int iExtra) const
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
-int CvCity::foodDifference(bool bBottom, bool bValueKnown, int iValueKnown) const
+int CvCity::foodDifference(bool bBottom, bool bValueKnown, int iValueKnown, int iExtraHappiness) const
 #else
 int CvCity::foodDifference(bool bBottom) const
 #endif
 {
 	VALIDATE_OBJECT
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
-	return foodDifferenceTimes100(bBottom, NULL, bValueKnown, iValueKnown * 100) / 100;
+	return foodDifferenceTimes100(iExtraHappiness, bBottom, NULL, bValueKnown, iValueKnown * 100) / 100;
 #else
 	return foodDifferenceTimes100(bBottom) / 100;
 #endif
@@ -6644,6 +6658,12 @@ int CvCity::foodDifference(bool bBottom) const
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
 int CvCity::foodDifferenceTimes100(bool bBottom, CvString* toolTipSink, bool bValueKnown, int iValueKnown) const
+{
+	return foodDifferenceTimes100(0, bBottom, toolTipSink, bValueKnown, iValueKnown);
+}
+
+//	--------------------------------------------------------------------------------
+int CvCity::foodDifferenceTimes100(int iExtraHappiness, bool bBottom, CvString* toolTipSink, bool bValueKnown, int iValueKnown) const
 #else
 int CvCity::foodDifferenceTimes100(bool bBottom, CvString* toolTipSink) const
 #endif
@@ -6718,14 +6738,22 @@ int CvCity::foodDifferenceTimes100(bool bBottom, CvString* toolTipSink) const
 		}
 
 		// Cities stop growing when empire is very unhappy
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+		if (GET_PLAYER(getOwner()).IsEmpireVeryUnhappy(iExtraHappiness))
+#else
 		if(GET_PLAYER(getOwner()).IsEmpireVeryUnhappy())
+#endif
 		{
 			int iMod = /*-100*/ GC.getVERY_UNHAPPY_GROWTH_PENALTY();
 			iTotalMod += iMod;
 			GC.getGame().BuildProdModHelpText(toolTipSink, "TXT_KEY_FOODMOD_UNHAPPY", iMod);
 		}
 		// Cities grow slower if the player is over his Happiness Limit
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+		if (GET_PLAYER(getOwner()).IsEmpireUnhappy(iExtraHappiness))
+#else
 		else if(GET_PLAYER(getOwner()).IsEmpireUnhappy())
+#endif
 		{
 			int iMod = /*-75*/ GC.getUNHAPPY_GROWTH_PENALTY();
 			iTotalMod += iMod;
@@ -9311,7 +9339,11 @@ void CvCity::changeSeaResourceYield(YieldTypes eIndex, int iChange)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+int CvCity::getBaseYieldRateModifier(YieldTypes eIndex, int iExtra, CvString* toolTipSink, int iExtraHappiness) const
+#else
 int CvCity::getBaseYieldRateModifier(YieldTypes eIndex, int iExtra, CvString* toolTipSink) const
+#endif
 {
 	VALIDATE_OBJECT
 	int iModifier = 0;
@@ -9330,7 +9362,11 @@ int CvCity::getBaseYieldRateModifier(YieldTypes eIndex, int iExtra, CvString* to
 		GC.getGame().BuildProdModHelpText(toolTipSink, "TXT_KEY_PRODMOD_YIELD_RESOURCES", iTempMod);
 
 	// Happiness Yield Rate Modifier
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	iTempMod = getHappinessModifier(eIndex, iExtraHappiness);
+#else
 	iTempMod = getHappinessModifier(eIndex);
+#endif
 	iModifier += iTempMod;
 	if(toolTipSink)
 		GC.getGame().BuildProdModHelpText(toolTipSink, "TXT_KEY_PRODMOD_YIELD_HAPPINESS", iTempMod);
@@ -9425,15 +9461,25 @@ int CvCity::getBaseYieldRateModifier(YieldTypes eIndex, int iExtra, CvString* to
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+int CvCity::getHappinessModifier(YieldTypes eIndex, int iExtraHappiness) const
+#else
 int CvCity::getHappinessModifier(YieldTypes eIndex) const
+#endif
 {
 	VALIDATE_OBJECT
 	int iModifier = 0;
 	CvPlayer &kPlayer = GET_PLAYER(getOwner());
 
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	if (kPlayer.IsEmpireUnhappy(iExtraHappiness))
+	{
+		int iUnhappy = -1 * kPlayer.GetExcessHappiness() - iExtraHappiness;
+#else
 	if (kPlayer.IsEmpireUnhappy())
 	{
 		int iUnhappy = -1 * kPlayer.GetExcessHappiness();
+#endif
 
 		// Production and Gold slow down when Empire is Unhappy
 		if(eIndex == YIELD_PRODUCTION)
@@ -9452,6 +9498,16 @@ int CvCity::getHappinessModifier(YieldTypes eIndex) const
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+int CvCity::getYieldRate(YieldTypes eIndex, bool bIgnoreTrade, int iExtraHappiness) const
+{
+	VALIDATE_OBJECT
+	return (getYieldRateTimes100(eIndex, bIgnoreTrade, iExtraHappiness) / 100);
+}
+
+//	--------------------------------------------------------------------------------
+int CvCity::getYieldRateTimes100(YieldTypes eIndex, bool bIgnoreTrade, int iExtraHappiness) const
+#else
 int CvCity::getYieldRate(YieldTypes eIndex, bool bIgnoreTrade) const
 {
 	VALIDATE_OBJECT
@@ -9460,6 +9516,7 @@ int CvCity::getYieldRate(YieldTypes eIndex, bool bIgnoreTrade) const
 
 //	--------------------------------------------------------------------------------
 int CvCity::getYieldRateTimes100(YieldTypes eIndex, bool bIgnoreTrade) const
+#endif
 {
 	VALIDATE_OBJECT
 
@@ -9486,7 +9543,11 @@ int CvCity::getYieldRateTimes100(YieldTypes eIndex, bool bIgnoreTrade) const
 	iBaseYield += (GetYieldPerPopTimes100(eIndex) * getPopulation());
 	iBaseYield += (GetYieldPerReligionTimes100(eIndex) * GetCityReligions()->GetNumReligionsWithFollowers());
 
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+	int iModifiedYield = iBaseYield * getBaseYieldRateModifier(eIndex, iExtraHappiness);
+#else
 	int iModifiedYield = iBaseYield * getBaseYieldRateModifier(eIndex);
+#endif
 	iModifiedYield /= 100;
 
 	iModifiedYield += iProcessYield;

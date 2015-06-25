@@ -247,7 +247,11 @@ public:
 	int GetInfluenceOn(PlayerTypes ePlayer) const;
 	void ChangeInfluenceOn(PlayerTypes ePlayer, int iValue);
 	int GetLastTurnInfluenceOn(PlayerTypes ePlayer) const;
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	int GetInfluencePerTurn(PlayerTypes ePlayer, bool bAssumeModifier = false, int iAssumeModifier = 0) const;
+#else
 	int GetInfluencePerTurn(PlayerTypes ePlayer) const;
+#endif
 	InfluenceLevelTypes GetInfluenceLevel(PlayerTypes ePlayer) const;
 	InfluenceLevelTrend GetInfluenceTrend(PlayerTypes ePlayer) const;
 	int GetTurnsToInfluential(PlayerTypes ePlayer) const;
@@ -345,8 +349,16 @@ public:
 	void ClearGreatWorks();
 	GreatWorkSlotType GetSlotTypeFirstAvailableCultureBuilding() const;
 
+#ifdef AUI_CONSTIFY
+	int GetBaseTourismBeforeModifiers() const;
+#else
 	int GetBaseTourismBeforeModifiers();
+#endif
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	int GetBaseTourism(bool bAssumeBase = false, int iAssumeBaseTourism = 0) const;
+#else
 	int GetBaseTourism();
+#endif
 	int GetTourismMultiplier(PlayerTypes ePlayer, bool bIgnoreReligion, bool bIgnoreOpenBorders, bool bIgnoreTrade, bool bIgnorePolicies, bool bIgnoreIdeologies) const;
 
 	CvString GetTourismTooltip();

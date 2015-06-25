@@ -29,18 +29,28 @@ public:
 	void Read(FDataStream& kStream);
 	void Write(FDataStream& kStream);
 
+#ifdef AUI_CONSTIFY
+	CvCity* GetCity() const;
+	CvPlayer* GetPlayer() const;
+#else
 	CvCity* GetCity();
 	CvPlayer* GetPlayer();
+#endif
 	PlayerTypes GetOwner() const;
 	TeamTypes GetTeam() const;
 
 	void DoFoundCity();
 	void DoTurn();
 
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
-	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth = false);
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
+	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth = false) const;
 #else
 	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag);
+#endif
+
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	int GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonClass = NO_UNITCLASS, double dGPPYield = 0.0, int iExtraHappiness = 0, double dTourismYield = 0.0, bool bAfterGrowth = false, bool bUseAvoidGrowth = true) const;
+	int GetTurnsToGP(SpecialistTypes eSpecialist, double dExtraGPP = 0.0) const;
 #endif
 
 	// Are this City's Citizens automated? (always true for AI civs)
@@ -50,22 +60,38 @@ public:
 	bool IsNoAutoAssignSpecialists() const;
 	void SetNoAutoAssignSpecialists(bool bValue);
 
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	bool IsAvoidGrowth(int iExtraHappiness = 0) const;
+	bool IsForcedAvoidGrowth() const;
+#else
+#ifdef AUI_CONSTIFY
+	bool IsAvoidGrowth() const;
+	bool IsForcedAvoidGrowth() const;
+#else
 	bool IsAvoidGrowth();
 	bool IsForcedAvoidGrowth();
+#endif
+#endif
 	void SetForcedAvoidGrowth(bool bAvoidGrowth);
 	CityAIFocusTypes GetFocusType() const;
 	void SetFocusType(CityAIFocusTypes eFocus);
 
 	// Specialist AI
+#ifndef AUI_PRUNING
 	bool IsAIWantSpecialistRightNow();
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#endif
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 	BuildingTypes GetAIBestSpecialistBuilding(int& iSpecialistValue, bool bAfterGrowth = false);
-	int GetSpecialistValue(SpecialistTypes eSpecialist, bool bAfterGrowth = false);
+	int GetSpecialistValue(SpecialistTypes eSpecialist, bool bAfterGrowth = false) const;
 #else
 	BuildingTypes GetAIBestSpecialistBuilding(int& iSpecialistValue);
 	int GetSpecialistValue(SpecialistTypes eSpecialist);
 #endif
+#ifdef AUI_CONSTIFY
+	bool IsBetterThanDefaultSpecialist(SpecialistTypes eSpecialist) const;
+#else
 	bool IsBetterThanDefaultSpecialist(SpecialistTypes eSpecialist);
+#endif
 
 	// Citizen Assignment
 	int GetNumUnassignedCitizens() const;
@@ -73,7 +99,7 @@ public:
 	int GetNumCitizensWorkingPlots() const;
 	void ChangeNumCitizensWorkingPlots(int iChange);
 
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 	bool DoAddBestCitizenFromUnassigned(bool bAfterGrowth = false);
 #else
 	bool DoAddBestCitizenFromUnassigned();
@@ -82,7 +108,7 @@ public:
 
 	void DoReallocateCitizens();
 
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
+#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
 	CvPlot* GetBestCityPlotWithValue(int& iValue, bool bWantBest, bool bWantWorked, bool bAfterGrowth = false);
 #else
 	CvPlot* GetBestCityPlotWithValue(int& iValue, bool bWantBest, bool bWantWorked);
@@ -117,7 +143,11 @@ public:
 	// Specialists
 	void DoSpecialists();
 
+#ifdef AUI_CONSTIFY
+	bool IsCanAddSpecialistToBuilding(BuildingTypes eBuilding) const;
+#else
 	bool IsCanAddSpecialistToBuilding(BuildingTypes eBuilding);
+#endif
 	void DoAddSpecialistToBuilding(BuildingTypes eBuilding, bool bForced);
 	void DoRemoveSpecialistFromBuilding(BuildingTypes eBuilding, bool bForced, bool bEliminatePopulation = false);
 	void DoRemoveAllSpecialistsFromBuilding(BuildingTypes eBuilding, bool bEliminatePopulation = false);
@@ -144,9 +174,15 @@ public:
 
 	void DoClearForcedSpecialists();
 
+#ifdef AUI_CONSTIFY
+	int GetNumSpecialistsAllowedByBuilding(const CvBuildingEntry& kBuilding) const;
+
+	int GetSpecialistUpgradeThreshold(UnitClassTypes eUnitClass) const;
+#else
 	int GetNumSpecialistsAllowedByBuilding(const CvBuildingEntry& kBuilding);
 
 	int GetSpecialistUpgradeThreshold(UnitClassTypes eUnitClass);
+#endif
 	void DoSpawnGreatPerson(UnitTypes eUnit, bool bIncrementCount, bool bCountAsProphet);
 
 private:
