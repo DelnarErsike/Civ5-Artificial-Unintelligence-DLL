@@ -269,7 +269,7 @@ public:
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
 	int foodDifference(bool bBottom = true, bool bValueKnown = false, int iValueKnown = 0, int iExtraHappiness = 0) const;
 	int foodDifferenceTimes100(bool bBottom = true, CvString* toolTipSink = NULL, bool bValueKnown = false, int iValueKnown = 0) const;
-	int foodDifferenceTimes100(int iExtraHappiness, bool bBottom = true, CvString* toolTipSink = NULL, bool bValueKnown = false, int iValueKnown = 0) const;
+	int foodDifferenceTimes100(int iExtraHappiness, int iExtraGrowthMod = 0, bool bBottom = true, CvString* toolTipSink = NULL, bool bValueKnown = false, int iValueKnown = 0) const;
 #else
 	int foodDifference(bool bBottom = true) const;
 	int foodDifferenceTimes100(bool bBottom = true, CvString* toolTipSink = NULL) const;

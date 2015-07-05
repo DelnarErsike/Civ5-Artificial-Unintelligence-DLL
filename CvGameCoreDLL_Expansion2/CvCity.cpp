@@ -6032,6 +6032,9 @@ void CvCity::processBuilding(BuildingTypes eBuilding, int iChange, bool bFirst, 
 		m_pCityBuildings->ChangeBuildingProductionModifier(pBuildingInfo->GetBuildingProductionModifier() * iChange);
 		m_pCityBuildings->ChangeMissionaryExtraSpreads(pBuildingInfo->GetExtraMissionarySpreads() * iChange);
 		m_pCityBuildings->ChangeLandmarksTourismPercent(pBuildingInfo->GetLandmarksTourismPercent() * iChange);
+#ifdef AUI_CACHED_MODIFIERS
+		m_pCityBuildings->ChangeProductionModifierPerCityStateTradeRoute(pBuildingInfo->GetCityStateTradeRouteProductionModifier());
+#endif
 		m_pCityBuildings->ChangeGreatWorksTourismModifier(pBuildingInfo->GetGreatWorksTourismModifier() * iChange);
 		ChangeWonderProductionModifier(pBuildingInfo->GetWonderProductionModifier() * iChange);
 		changeCapturePlunderModifier(pBuildingInfo->GetCapturePlunderModifier() * iChange);
@@ -6648,7 +6651,7 @@ int CvCity::foodDifference(bool bBottom) const
 {
 	VALIDATE_OBJECT
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
-	return foodDifferenceTimes100(iExtraHappiness, bBottom, NULL, bValueKnown, iValueKnown * 100) / 100;
+	return foodDifferenceTimes100(iExtraHappiness, 0, bBottom, NULL, bValueKnown, iValueKnown * 100) / 100;
 #else
 	return foodDifferenceTimes100(bBottom) / 100;
 #endif
@@ -6659,11 +6662,11 @@ int CvCity::foodDifference(bool bBottom) const
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
 int CvCity::foodDifferenceTimes100(bool bBottom, CvString* toolTipSink, bool bValueKnown, int iValueKnown) const
 {
-	return foodDifferenceTimes100(0, bBottom, toolTipSink, bValueKnown, iValueKnown);
+	return foodDifferenceTimes100(0, 0, bBottom, toolTipSink, bValueKnown, iValueKnown);
 }
 
 //	--------------------------------------------------------------------------------
-int CvCity::foodDifferenceTimes100(int iExtraHappiness, bool bBottom, CvString* toolTipSink, bool bValueKnown, int iValueKnown) const
+int CvCity::foodDifferenceTimes100(int iExtraHappiness, int iExtraGrowthMod, bool bBottom, CvString* toolTipSink, bool bValueKnown, int iValueKnown) const
 #else
 int CvCity::foodDifferenceTimes100(bool bBottom, CvString* toolTipSink) const
 #endif
@@ -6697,6 +6700,9 @@ int CvCity::foodDifferenceTimes100(bool bBottom, CvString* toolTipSink) const
 	if(iDifference > 0)
 	{
 		int iTotalMod = 100;
+#ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
+		iTotalMod += iExtraGrowthMod;
+#endif
 
 		// Capital Mod for player. Used for Policies and such
 		if(isCapital())
@@ -10743,7 +10749,16 @@ int CvCity::getStrengthValue(bool bForRangeStrike) const
 int CvCity::GetPower() const
 {
 	VALIDATE_OBJECT
+#ifdef AUI_UNIT_ENTRY_MORE_ACCURATE_POWER
+	double dPower = pow(double(getStrengthValue()) / 100.0, log(3.0) / log(2.0));
+	double dRangedPower = pow(double(getStrengthValue(true)) / 100.0, log(3.0) / log(2.0));
+	dRangedPower *= 1.0 + log((double)GC.getCITY_ATTACK_RANGE());
+	if (dRangedPower > dPower)
+		dPower = dRangedPower;
+	return int(dPower + 0.5); // This is the same math used to calculate Unit Power in CvUnitEntry
+#else
 	return int(pow((double) getStrengthValue() / 100, 1.5));		// This is the same math used to calculate Unit Power in CvUnitEntry
+#endif
 }
 
 

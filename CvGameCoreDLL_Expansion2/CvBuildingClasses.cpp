@@ -2052,6 +2052,9 @@ CvCityBuildings::CvCityBuildings():
 	m_iMissionaryExtraSpreads(0),
 	m_iLandmarksTourismPercent(0),
 	m_iGreatWorksTourismModifier(0),
+#ifdef AUI_CACHED_MODIFIERS
+	m_iProductionModifierPerCityStateTradeRoute(0),
+#endif
 	m_bSoldBuildingThisTurn(false),
 	m_pBuildings(NULL),
 	m_pCity(NULL)
@@ -2124,6 +2127,9 @@ void CvCityBuildings::Reset()
 	m_iMissionaryExtraSpreads = 0;
 	m_iLandmarksTourismPercent = 0;
 	m_iGreatWorksTourismModifier = 0;
+#ifdef AUI_CACHED_MODIFIERS
+	m_iProductionModifierPerCityStateTradeRoute = 0;
+#endif
 
 	m_bSoldBuildingThisTurn = false;
 
@@ -2154,6 +2160,9 @@ void CvCityBuildings::Read(FDataStream& kStream)
 	kStream >> m_iMissionaryExtraSpreads;
 	kStream >> m_iLandmarksTourismPercent;
 	kStream >> m_iGreatWorksTourismModifier;
+#ifdef AUI_CACHED_MODIFIERS
+	kStream >> m_iProductionModifierPerCityStateTradeRoute;
+#endif
 
 	kStream >> m_bSoldBuildingThisTurn;
 
@@ -2184,6 +2193,9 @@ void CvCityBuildings::Write(FDataStream& kStream)
 	kStream << m_iMissionaryExtraSpreads;
 	kStream << m_iLandmarksTourismPercent;
 	kStream << m_iGreatWorksTourismModifier;
+#ifdef AUI_CACHED_MODIFIERS
+	kStream << m_iProductionModifierPerCityStateTradeRoute;
+#endif
 	kStream << m_bSoldBuildingThisTurn;
 
 #ifdef _MSC_VER
@@ -3160,6 +3172,23 @@ void CvCityBuildings::ChangeGreatWorksTourismModifier(int iChange)
 	}
 }
 
+#ifdef AUI_CACHED_MODIFIERS
+int CvCityBuildings::GetProductionModifierPerCityStateTradeRoute() const
+{
+	return m_iProductionModifierPerCityStateTradeRoute;
+}
+
+void CvCityBuildings::SetProductionModifierPerCityStateTradeRoute(int iChange)
+{
+	m_iProductionModifierPerCityStateTradeRoute = iChange;
+}
+
+void CvCityBuildings::ChangeProductionModifierPerCityStateTradeRoute(int iChange)
+{
+	SetProductionModifierPerCityStateTradeRoute(GetProductionModifierPerCityStateTradeRoute() + iChange);
+}
+#endif
+
 /// Accessor: Total theming bonus from all buildings in the city
 int CvCityBuildings::GetThemingBonuses() const
 {
@@ -3220,6 +3249,9 @@ int CvCityBuildings::GetNumBuildingsFromFaith() const
 /// Accessor: What is the production modifier for each city state trade route?
 int CvCityBuildings::GetCityStateTradeRouteProductionModifier() const
 {
+#ifdef AUI_CACHED_MODIFIERS
+	return GetProductionModifierPerCityStateTradeRoute() * GET_PLAYER(m_pCity->getOwner()).GetTrade()->GetNumberOfCityStateTradeRoutes();
+#else
 	int iRtnValue = 0;
 
 	for(int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
@@ -3249,6 +3281,7 @@ int CvCityBuildings::GetCityStateTradeRouteProductionModifier() const
 	}
 
 	return iRtnValue;
+#endif
 }
 
 

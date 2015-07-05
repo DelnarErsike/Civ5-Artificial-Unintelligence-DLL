@@ -605,6 +605,12 @@ public:
 	int GetGreatWorksTourismModifier() const;
 	void ChangeGreatWorksTourismModifier(int iChange);
 
+#ifdef AUI_CACHED_MODIFIERS
+	int GetProductionModifierPerCityStateTradeRoute() const;
+	void SetProductionModifierPerCityStateTradeRoute(int iChange);
+	void ChangeProductionModifierPerCityStateTradeRoute(int iChange);
+#endif
+
 	int GetThemingBonuses() const;
 	int GetNumBuildingsFromFaith() const;
 
@@ -635,6 +641,9 @@ private:
 	int m_iMissionaryExtraSpreads;
 	int m_iLandmarksTourismPercent;
 	int m_iGreatWorksTourismModifier;
+#ifdef AUI_CACHED_MODIFIERS
+	int m_iProductionModifierPerCityStateTradeRoute;
+#endif
 
 	bool m_bSoldBuildingThisTurn;
 
