@@ -450,11 +450,11 @@ public:
 	void  SetScratchPointer2(void* pPtr) { m_pScratchPtr1 = pPtr; }
 #endif
 
-#ifdef AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
-	inline void* GetScratchBuffer() const { return m_ScratchBuffer; }
-#else
-	void* GetScratchBuffer() { return &m_ScratchBuffer[0]; }
+#ifdef AUI_CONSTIFY
+	const void* CvAStar::GetScratchBuffer() const { return &m_ScratchBuffer[0]; }
 #endif
+	void* GetScratchBuffer() { return &m_ScratchBuffer[0]; }
+
 	//--------------------------------------- PROTECTED FUNCTIONS -------------------------------------------
 protected:
 
@@ -557,11 +557,7 @@ protected:
 	void* m_pScratchPtr2;						// Will be cleared to NULL before each GeneratePath call
 #endif
 
-#ifdef AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
-	char*  m_ScratchBuffer;
-#else
 	char  m_ScratchBuffer[SCRATCH_BUFFER_SIZE];	// Will NOT be modified directly by CvAStar
-#endif
 };
 
 

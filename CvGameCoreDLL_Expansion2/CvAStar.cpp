@@ -119,9 +119,6 @@ CvAStar::CvAStar()
 
 	m_bIsMPCacheSafe = false;
 	m_bDataChangeInvalidatesCache = false;
-#ifdef AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
-	m_ScratchBuffer = NULL;
-#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -145,9 +142,6 @@ void CvAStar::DeInit()
 		FFREEALIGNED(m_ppaaNodes);
 		m_ppaaNodes=0;
 	}
-#ifdef AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
-	SAFE_DELETE_ARRAY(m_ScratchBuffer);
-#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -216,11 +210,6 @@ void CvAStar::Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAP
 	for (iI = 0; iI < m_iColumns; iI++)
 		for (iJ = 0; iJ < m_iRows; iJ++)
 			PrecalcNeighbors(&(m_ppaaNodes[iI][iJ]));
-#endif
-
-#ifdef AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
-	if (udInitializeFunc)
-		m_ScratchBuffer = FNEW(char[SCRATCH_BUFFER_SIZE], c_eCiv5GameplayDLL, 0);
 #endif
 
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
@@ -1450,7 +1439,12 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 
 	CvAssertMsg(eUnitDomain != DOMAIN_AIR, "pUnit->getDomainType() is not expected to be equal with DOMAIN_AIR");
 
+
 	bool bToPlotIsWater = pToPlot->isWater() && !pToPlot->IsAllowsWalkWater();
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	int iBaseMoves = pCacheData->baseMoves((pFromPlot->isWater() && !pFromPlot->IsAllowsWalkWater()) || pCacheData->isEmbarked() ? DOMAIN_SEA : pCacheData->getDomainType());
+	int iMaxMoves = iBaseMoves * GC.getMOVE_DENOMINATOR();
+#endif
 	int iMax;
 	if(parent->m_iData1 > 0)
 	{
@@ -1458,6 +1452,9 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 	}
 	else
 	{
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+		iMax = iMaxMoves;
+#else
 		if (CvUnitMovement::ConsumesAllMoves(pUnit, pFromPlot, pToPlot) || CvUnitMovement::IsSlowedByZOC(pUnit, pFromPlot, pToPlot))
 		{
 			// The movement would consume all moves, get the moves we will forfeit based on the source plot, rather than
@@ -1467,13 +1464,18 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 		}
 		else
 			iMax = pCacheData->baseMoves(bToPlotIsWater?DOMAIN_SEA:DOMAIN_LAND) * GC.getMOVE_DENOMINATOR();
+#endif
 	}
 
 	// Get the cost of moving to the new plot, passing in our max moves or the moves we have left, in case the movementCost 
 	// method wants to burn all our remaining moves.  This is needed because our remaining moves for this segment of the path
 	// may be larger or smaller than the baseMoves if some moves have already been used or if the starting domain (LAND/SEA)
 	// of the path segment is different from the destination plot.
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	int iCost = CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, iBaseMoves, iMaxMoves, iMax);
+#else
 	int iCost = CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves(), iMax);
+#endif
 
 	TeamTypes eUnitTeam = pCacheData->getTeam();
 #ifdef AUI_ASTAR_USE_DELEGATES
@@ -1495,7 +1497,11 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 	{
 		iCost = (PATH_MOVEMENT_WEIGHT * iCost);
 
+#ifdef AUI_UNIT_MOVEMENT_FIX_BAD_ALLOWS_WATER_WALK_CHECK
+		if (eUnitDomain == DOMAIN_LAND && (!pFromPlot->isWater() || pFromPlot->IsAllowsWalkWater()) && bToPlotIsWater && !pUnit->canEmbarkOnto(*pFromPlot, *pToPlot, true))
+#else
 		if(eUnitDomain == DOMAIN_LAND && !pFromPlot->isWater() && bToPlotIsWater && !pUnit->canEmbarkOnto(*pFromPlot, *pToPlot, true))
+#endif
 		{
 			iCost += PATH_INCORRECT_EMBARKING_WEIGHT;
 		}
@@ -1627,7 +1633,7 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 	// be on the water.  Don't add this penalty if the unit is human controlled however, we will assume they want
 	// the best path, rather than the safest.
 #ifdef AUI_ASTAR_HUMAN_UNITS_GET_DIMINISHED_AVOID_WEIGHT
-	if (eUnitDomain == DOMAIN_LAND && bToPlotIsWater && !pToPlot->IsAllowsWalkWater())
+	if (eUnitDomain == DOMAIN_LAND && bToPlotIsWater)
 	{
 		if (!pCacheData->isHuman() || pCacheData->IsAutomated())
 		{
@@ -2398,7 +2404,7 @@ int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 		int iStartMoves = parent->m_iData1;
 		iTurns = parent->m_iData2;
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-		int iBaseMoves = pCacheData->baseMoves(((pToPlot->isWater() && !pToPlot->IsAllowsWalkWater()) || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType());
+		int iBaseMoves = pCacheData->baseMoves(((pFromPlot->isWater() && !pFromPlot->IsAllowsWalkWater()) || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType());
 #endif
 
 		if(iStartMoves == 0)
@@ -2666,13 +2672,22 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 
 	CvAssertMsg(pUnit->getDomainType() != DOMAIN_AIR, "pUnit->getDomainType() is not expected to be equal with DOMAIN_AIR");
 
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	int iBaseMoves = pCacheData->baseMoves(((pFromPlot->isWater() && !pFromPlot->IsAllowsWalkWater()) || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType());
+	int iMaxMoves = iBaseMoves * GC.getMOVE_DENOMINATOR();
+#endif
+
 	if(parent->m_iData1 > 0)
 	{
 		iMax = parent->m_iData1;
 	}
 	else
 	{
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+		iMax = iMaxMoves;
+#else
 		iMax = pCacheData->baseMoves((pToPlot->isWater() && !pToPlot->IsAllowsWalkWater()) ? DOMAIN_SEA : DOMAIN_LAND) * GC.getMOVE_DENOMINATOR();
+#endif
 	}
 
 	// Get the cost of moving to the new plot, passing in our max moves or the moves we have left, in case the movementCost 
@@ -2680,7 +2695,7 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 	// may be larger or smaller than the baseMoves if some moves have already been used or if the starting domain (LAND/SEA)
 	// of the path segment is different from the destination plot.
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-	int iCost = CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType()), pCacheData->maxMoves(), iMax);
+	int iCost = CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, iBaseMoves, iMaxMoves, iMax);
 #else
 	iCost = CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves(), iMax);
 #endif
@@ -2700,7 +2715,11 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 	{
 		iCost = (PATH_MOVEMENT_WEIGHT * iCost);
 
+#ifdef AUI_UNIT_MOVEMENT_FIX_BAD_ALLOWS_WATER_WALK_CHECK
+		if (pUnit->getDomainType() == DOMAIN_LAND && (!pFromPlot->isWater() || pFromPlot->IsAllowsWalkWater()) && pToPlot->isWater() && !pToPlot->IsAllowsWalkWater() && !pUnit->canEmbarkOnto(*pFromPlot, *pToPlot, true))
+#else
 		if(!pFromPlot->isWater() && pToPlot->isWater() && !pUnit->canEmbarkOnto(*pFromPlot, *pToPlot, true))
+#endif
 		{
 			iCost += PATH_INCORRECT_EMBARKING_WEIGHT;
 		}
@@ -3207,7 +3226,7 @@ int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const v
 		int iStartMoves = parent->m_iData1;
 		iTurns = parent->m_iData2;
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-		int iBaseMoves = pCacheData->baseMoves(((pToPlot->isWater() && !pToPlot->IsAllowsWalkWater()) || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType());
+		int iBaseMoves = pCacheData->baseMoves(((pFromPlot->isWater() && !pFromPlot->IsAllowsWalkWater()) || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType());
 #endif
 
 		if(iStartMoves == 0)
