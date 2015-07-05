@@ -7529,7 +7529,11 @@ int CvPlot::calculateImprovementYieldChange(ImprovementTypes eImprovement, Yield
 		{
 			eRouteType = eAssumeThisRoute;
 		}
+#ifdef AUI_PLOT_FIX_IMPROVEMENT_YIELD_CHANGES_CATCH_PILLAGED_ROUTE
+		else if (!IsRoutePillaged())
+#else
 		else
+#endif
 		{
 			eRouteType = getRouteType();
 		}
@@ -7627,10 +7631,18 @@ int CvPlot::calculateImprovementYieldChange(ImprovementTypes eImprovement, Yield
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+int CvPlot::calculateYield(YieldTypes eYield, bool bDisplay, bool bAssumeWorkingCity, CvCity* pAssumeWorkingCity) const
+#else
 int CvPlot::calculateYield(YieldTypes eYield, bool bDisplay)
+#endif
 {
 	CvCity* pCity = 0;
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	CvCity* pWorkingCity = pAssumeWorkingCity;
+#else
 	CvCity* pWorkingCity = 0;
+#endif
 	ImprovementTypes eImprovement = NO_IMPROVEMENT;
 	RouteTypes eRoute = NO_ROUTE;
 	PlayerTypes ePlayer = NO_PLAYER;
@@ -7727,6 +7739,9 @@ int CvPlot::calculateYield(YieldTypes eYield, bool bDisplay)
 			}
 		}
 
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+		if (!bAssumeWorkingCity)
+#endif
 		pWorkingCity = getWorkingCity();
 
 		if(isWater())
@@ -10434,10 +10449,18 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 	if(!isPotentialCityWork())
 		return 0;
 
+#ifdef AUI_PLOT_FIX_GET_YIELD_WITH_BUILD_IGNORE_FEATURE_EXTENDS_TO_CITY
+	CvCity* pCity = getPlotCity();
+	bool bCity = pCity != NULL;
+
+	// Will the build remove the feature?
+	bool bIgnoreFeature = bCity;
+#else
 	bool bCity = false;
 
 	// Will the build remove the feature?
 	bool bIgnoreFeature = false;
+#endif
 	if(getFeatureType() != NO_FEATURE)
 	{
 		if(GC.getBuildInfo(eBuild)->isFeatureRemove(getFeatureType()))
@@ -10457,6 +10480,26 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 			eImprovement = getImprovementType();
 		}
 	}
+
+#ifdef AUI_PLOT_FIX_GET_YIELD_WITH_BUILD_IMPROVEMENT_WITH_ROUTE
+	RouteTypes eRoute = (RouteTypes)GC.getBuildInfo(eBuild)->getRoute();
+
+	// If we're not changing the route that's here, use the route that's here already
+	if (eRoute == NO_ROUTE)
+	{
+		if (!IsRoutePillaged() || GC.getBuildInfo(eBuild)->isRepair())
+		{
+			eRoute = getRouteType();
+		}
+	}
+
+	if (eRoute != NO_ROUTE)
+	{
+		CvRouteInfo* pRouteInfo = GC.getRouteInfo(eRoute);
+		if (pRouteInfo)
+			iYield += pRouteInfo->getYieldChange(eYield);
+	}
+#endif
 
 	if(eImprovement != NO_IMPROVEMENT)
 	{
@@ -10484,7 +10527,11 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 			}
 		}
 
+#ifdef AUI_PLOT_FIX_GET_YIELD_WITH_BUILD_IMPROVEMENT_WITH_ROUTE
+		iYield += calculateImprovementYieldChange(eImprovement, eYield, ePlayer, false, eRoute);
+#else
 		iYield += calculateImprovementYieldChange(eImprovement, eYield, ePlayer, false);
+#endif
 
 		if (eYield == YIELD_CULTURE && getOwner() != NO_PLAYER)
 		{
@@ -10503,6 +10550,7 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 		}
 	}
 
+#ifndef AUI_PLOT_FIX_GET_YIELD_WITH_BUILD_IMPROVEMENT_WITH_ROUTE
 	RouteTypes eRoute = (RouteTypes)GC.getBuildInfo(eBuild)->getRoute();
 
 	// If we're not changing the route that's here, use the route that's here already
@@ -10529,8 +10577,11 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 			}
 		}
 	}
+#endif
 
+#ifndef AUI_PLOT_FIX_GET_YIELD_WITH_BUILD_IGNORE_FEATURE_EXTENDS_TO_CITY
 	CvCity* pCity = getPlotCity();
+#endif
 
 	if(ePlayer != NO_PLAYER)
 	{
@@ -10604,7 +10655,11 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 		}
 
 		// Worked Feature extra yield (e.g. University bonus)
+#ifdef AUI_PLOT_FIX_GET_YIELD_WITH_BUILD_IGNORE_FEATURE_EXTENDS_TO_CITY
+		if (getFeatureType() != NO_FEATURE && !bIgnoreFeature)
+#else
 		if(getFeatureType() != NO_FEATURE)
+#endif
 		{
 			if(pWorkingCity != NULL)
 				iYield += pWorkingCity->GetFeatureExtraYield(getFeatureType(), eYield);

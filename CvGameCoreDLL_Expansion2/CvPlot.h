@@ -562,7 +562,11 @@ public:
 #else
 	int calculateImprovementYieldChange(ImprovementTypes eImprovement, YieldTypes eYield, PlayerTypes ePlayer, bool bOptimal = false, RouteTypes eAssumeThisRoute = NUM_ROUTE_TYPES) const;
 #endif
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	int calculateYield(YieldTypes eIndex, bool bDisplay = false, bool bAssumeWorkingCity = false, CvCity* pAssumeWorkingCity = NULL) const;
+#else
 	int calculateYield(YieldTypes eIndex, bool bDisplay = false);
+#endif
 	bool hasYield() const;
 	void updateYield();
 
