@@ -36,6 +36,8 @@
 #define AUI_PRUNING
 /// Changes the scopes of certain functions to fall in line with other functions of the same type (eg. CvUnit::CanFallBackFromMelee() is public instead of protected)
 #define AUI_SCOPE_FIXES
+/// Caches certain modifiers that were not cached before to help with performance and stability
+#define AUI_CACHED_MODIFIERS
 /// Civilizations that are marked as coastal get the same coastal bias as maritime city-states
 #define AUI_STARTPOSITIONER_COASTAL_CIV_WATER_BIAS
 /// When calculating the founding value of a tile, tailor the SiteEvaluation function to the current player instead of the first one
@@ -112,8 +114,6 @@
 #define AUI_PLAYER_CACHE_UNIQUE_GREAT_PEOPLE
 /// Fixes badly set up damage modifier checks (eg. Friendly lands modifier gets applied twice to melee attackers, Friendly/Enemy territory bonus for ranged units applied based on plot target intead of unit plot)
 #define AUI_UNIT_FIX_BAD_BONUS_STACKS
-/// Scratch buffer for pathfinders is instantiated and stored as a separate array to avoid cases where something will overwrite the data stored at its address
-#define AUI_ASTAR_SCRATCH_BUFFER_INSTANTIATED
 /// Gets the last node before the parent (used for planning melee attacks to know where they'd attack from)
 #define AUI_ASTAR_GET_PENULTIMATE_NODE
 /// Fixes possible null pointer dereferences in A*
@@ -182,6 +182,8 @@
 #define AUI_GAME_FIX_SYNC_CHECKSUM_USE_UNSIGNED
 /// Turn timers are paused when a player is reconnecting
 #define AUI_GAME_SET_PAUSED_TURN_TIMERS_PAUSE_ON_RECONNECT
+/// If the player receives a yield from a goody hut, floating text appears above the plot indicating the number and type of yields received
+#define AUI_PLAYER_RECEIVE_GOODY_PLOT_MESSAGE_FOR_YIELD
 
 // Observer mode fixes
 /// Observers will see all resources
@@ -220,6 +222,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 ///		Instead of constantly remaking great works vectors (possibly having 8 at a time), these functions now juggle pointers, vectors of pointers, and pointers to vectors of pointers. It may be a bit more confusing, but it should work significantly faster.
 ///		Fixes include: AI not prioritizing Great Works at all, AI not swapping Music if game allows it, AI not able to swap great works owned by other players that were not created by that player, AI not prioritizing great work slots that give unit XP if filled, AI giving inefficient Museum fill the same priority as more efficient fills, AI not willing to swap with more than one player for a given building, AI not able to process equal Art-Artifact case for slots numbers that were multiples of 2 and an odd number
 #define AUI_DO_SWAP_GREAT_WORKS_REMADE
+/// Unifies the value of plots and specialists based on stats into one central function that can also be called by other functions (eg. for trade route AI to determine route value)
+#define AUI_CITIZENS_GET_VALUE_FROM_STATS
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 #define ACTION_DEFAULT			0
@@ -323,18 +327,22 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_OPERATION_FIX_RETARGET_CIVILIAN_ABORT_IF_UNREACHABLE_ESCORT
 
 // Worker Automation Stuff
+/// The value of a plot's yields with a built improvement now use the centralized citizen yield evaluator
+#define AUI_WORKER_SCORE_PLOT_USE_CITIZENS_YIELD_VALUE
 /// Automated Inca workers know that there is no maintenance on hills, so routines are adjusted as a result
 #define AUI_WORKER_INCA_HILLS
 /// Automated workers do not care about the build time or cost of scrubbing fallout
 #define AUI_WORKER_FIX_FALLOUT
+#ifndef AUI_WORKER_SCORE_PLOT_USE_CITIZENS_YIELD_VALUE
 /// AI City Focus/Specialization no longer affects improvement score
 #define AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS (0)
+/// Embeds flavors and plot yield multipliers into the ScorePlot() function (copied from the chop directives function), value is base yield value
+#define AUI_WORKER_SCORE_PLOT_FLAVORS (2.0)
+#endif
 /// Divides score for improvement if built for a puppeted city
 #define AUI_WORKER_SCORE_PLOT_REDUCED_PUPPET_SCORE (2)
 /// Returns score of 0 for improvement if built for a city being razed
 #define AUI_WORKER_SCORE_PLOT_NO_SCORE_FROM_RAZE
-/// Embeds flavors and plot yield multipliers into the ScorePlot() function (copied from the chop directives function), value is base yield value
-#define AUI_WORKER_SCORE_PLOT_FLAVORS (2.0)
 /// If building an improvement also generates flat hammers, consider the effect as flat +parameter hammer yield
 #define AUI_WORKER_SCORE_PLOT_CHOP (1.0)
 /// Removes the bias to chop forests after optics (since it doesn't actually offer a gameplay improvement)
@@ -343,8 +351,6 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_WORKER_EVALUATE_FAITH
 /// For improvement evaluation, leader flavor now have ln() taken before being multiplied by everything else; this reduces cases were leader flavor makes a huge difference in worker automation logic
 #define AUI_WORKER_LOGARITHMIC_FLAVOR
-/// Automated Dutch workers now remove marshes on tiles with resources (since polders won't be built anyway)
-#define AUI_WORKER_DUTCH_MARSH_RESOURCES
 /// AI Celt workers will no longer leave forests unimproved once they enter the Industrial Era
 #define AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL "ERA_INDUSTRIAL"
 /// Automated workers value strategic resources that a player has none of higher than strategic resources that the player has used all of
@@ -377,6 +383,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_WORKER_EVALUATE_WORKER_RETREAT_AND_BUILD
 /// AI/Automated workers will now consider any modifiers the player has to road maintenance when calculating how much profit the road earns
 #define AUI_WORKER_FIX_CONNECT_CITIES_TO_CAPITOL_CONSIDER_MAINTENANCE_MODIFIERS
+/// No longer requires that an improvement enable use of a bonus resource, since the projected plot yields will be higher from unlocking the resource anyway
+#define AUI_WORKER_FIX_IMPROVING_PLOTS_DIRECTIVE_DONT_REQUIRE_BONUS_RESOURCE_UNLOCKER
+/// Unhardcodes the fact that the AI will not remove features that are needed to construct a civ's unique improvement
+#define AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
 
 // City Stuff
 /// Shifts the scout assignment code to EconomicAI
@@ -425,10 +435,12 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_CITIZENS_FIX_FORCED_AVOID_GROWTH_ONLY_WHEN_GROWING_LOWERS_HAPPINESS
 /// If a civ does not have a religion and could still found one, faith value is increased, with the increase diminishing as more religions are founded
 #define AUI_CITIZENS_GET_VALUE_HIGHER_FAITH_VALUE_IF_BEFORE_RELIGION
-/// Unifies the value of plots and specialists based on stats into one central function that can also be called by other functions (eg. for trade route AI to determine route value)
-#define AUI_CITIZENS_GET_VALUE_FROM_STATS
 /// When comparing whether a specialist is better than an unemployed citizen, regular value evaluation is used
 #define AUI_CITIZENS_IS_BETTER_THAN_DEFAULT_SPECIALIST_USE_REGULAR_VALUES
+
+// City Specialization Stuff
+/// Instead of using the city's current production and modifying it in various ways to approximate the production towards a wonder, a city's actual production rate towards a wonder is used
+#define AUI_CITY_SPECIALIZATION_FIX_FIND_BEST_WONDER_CITY_USE_PROPER_PRODUCTION
 
 // City Strategy Stuff
 /// Scales the GetLastTurnWorkerDisbanded() computation to game speed
@@ -738,6 +750,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_PLAYER_GET_BEST_SETTLE_PLOT_DEBUG_HELP
 /// Fixes the fact that the AI will automatically assume all unowned water tiles and most natural wonders are "bad" plots for being cramped, even if they are unowned
 #define AUI_PLAYER_FIX_DO_UPDATE_CRAMPED_ACCURATE_PLOT_TYPES
+/// Adds a new function that will automatically shuffle the ownership of a tile between cities based on Citizen Management
+#define AUI_PLAYER_RESOLVE_WORKED_PLOT_CONFLICTS
 
 // PlayerAI Stuff
 /// Great prophet will be chosen as a free great person if the AI can still found a religion with them
@@ -790,6 +804,12 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_PLOT_CALCULATE_IMPROVEMENT_YIELD_CHANGE_ASSUMPTION_ARGUMENTS
 /// If a plot is not visible to the attacking player, disregard the defending unit (fixes radaring #1)
 #define AUI_PLOT_FIX_GET_BEST_DEFENDER_CHECK_PLOT_VISIBILITY
+/// If a plot's feature is ignored when calculating the yield of a tile, this also extends to any yield changes based on the working city
+#define AUI_PLOT_FIX_GET_YIELD_WITH_BUILD_IGNORE_FEATURE_EXTENDS_TO_CITY
+/// Fixes the poor setup of calculating the potential gains of having an improvement on a plot with a certain road
+#define AUI_PLOT_FIX_GET_YIELD_WITH_BUILD_IMPROVEMENT_WITH_ROUTE
+/// If the plot's current route is pillaged, the extra yield from the route is no longer factored into the function
+#define AUI_PLOT_FIX_IMPROVEMENT_YIELD_CHANGES_CATCH_PILLAGED_ROUTE
 
 // Policy Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
@@ -838,14 +858,17 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_RELIGION_FIX_MULTIPLE_FAITH_BUILDINGS
 /// Actually checks the cost of purchasing great people at a city instead of just returning the oldest city founded (deactivated while this is equal across all cities)
 // #define AUI_RELIGION_FIX_BEST_CITY_HELPER_GREAT_PERSON
-/// Raises individual belief components (plots as a whole, each city, player twice) to the power of this number
-#define AUI_RELIGION_SCORE_BELIEF_RAISE_COMPONENT_SCORES_TO_POWER (1.25)
-/// Increases plot search distance, but scales the belief score of a plot based on distance to the closest friendly city
-#define AUI_RELIGION_SCORE_BELIEF_SCALE_PLOTS_WITH_DISTANCE (4)
 /// Tweaks the amount a pantheon belief's score is divided (to compensate for higher scoring of certain plots)
 #define AUI_RELIGION_SCORE_BELIEF_TWEAK_PANTHEON_DIVIDER (6.0)
 /// Applies a myriad of tweaks to the ScoreBeliefAtPlot() function (consolidation of lots of small, but important, changes)
 #define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REMADE
+/// Remakes the ScoreBeliefAtCity() function
+#define AUI_RELIGION_SCORE_BELIEF_AT_CITY_REMADE
+#ifndef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REMADE
+/// Increases plot search distance, but scales the belief score of a plot based on distance to the closest friendly city
+#define AUI_RELIGION_SCORE_BELIEF_SCALE_PLOTS_WITH_DISTANCE (4)
+#endif
+#ifndef AUI_RELIGION_SCORE_BELIEF_AT_CITY_REMADE
 /// Weighs different yield types differently depending on flavor and citizen value
 #define AUI_RELIGION_SCORE_BELIEF_AT_CITY_FLAVOR_YIELDS
 /// Happiness need and multiplier have been tweaked to use more flavors
@@ -854,14 +877,15 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_RELIGION_SCORE_BELIEF_AT_CITY_CONSIDER_GRAND_STRATEGY
 /// Tweaks the flavor values and inputs used by various belief effects
 #define AUI_RELIGION_SCORE_BELIEF_AT_CITY_TWEAKED_FLAVORS
-/// River happiness score will only be applied if the city being scored is actually on a river
-#define AUI_RELIGION_FIX_SCORE_BELIEF_AT_CITY_RIVER_HAPPINESS
 /// Instead of multiplying a score if the city is at or above the minimum population required, score is divided if the city is below the minimum population required
 #define AUI_RELIGION_SCORE_BELIEF_AT_CITY_REVERSED_MINIMUM_POPULATION_MODIFIER
 /// Removes the extra score given by large cities to beliefs that give yield if any specialist is present
 #define AUI_RELIGION_SCORE_BELIEF_AT_CITY_DISABLE_ANY_SPECIALIST_YIELD_BIAS
 /// If a building for which yield improvement is being calculated is a wonder of any kind, divide the yield by the city count (so there's effective only one instance being scored in the civ)
 #define AUI_RELIGION_SCORE_BELIEF_AT_CITY_YIELDS_FROM_WONDERS_COUNT_ONCE
+#endif
+/// River happiness score will only be applied if the city being scored is actually on a river
+#define AUI_RELIGION_FIX_SCORE_BELIEF_AT_CITY_RIVER_HAPPINESS
 /// When a belief has an obsoleting era, uses the player's current era as the benchmark instead of the game's average era
 #define AUI_RELIGION_FIX_SCORE_BELIEF_AT_CITY_USE_PLAYER_ERA
 /// Tweaks the flavor values and inputs used by various belief effects
