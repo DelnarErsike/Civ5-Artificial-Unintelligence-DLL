@@ -1225,6 +1225,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		PlayerTypes eMyPlayer = pPlayer->GetID();
 		//TeamTypes eMyTeam = pPlayer->getTeam();
 		int iMyClosestReinforce = MAX_INT;
+		int iMySecondClosestReinforce = MAX_INT;
 		if (!pPlayer->getCapitalCity())
 		{
 			iMyClosestReinforce = 0;
@@ -1239,12 +1240,22 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 				iLoopLandReinforce = TurnsToGhostfindTarget(eMyPlayer, pPlot, pLoopCity->plot(), false);
 				if (iLoopLandReinforce < iMyClosestReinforce)
 				{
+					iMySecondClosestReinforce = iMyClosestReinforce;
 					iMyClosestReinforce = iLoopLandReinforce;
+				}
+				else if (iLoopLandReinforce < iMySecondClosestReinforce)
+				{
+					iMySecondClosestReinforce = iLoopLandReinforce;
 				}
 				iLoopWaterReinforce = TurnsToGhostfindTarget(eMyPlayer, pPlot, pLoopCity->plot(), true);
 				if (iLoopWaterReinforce < iMyClosestReinforce)
 				{
+					iMySecondClosestReinforce = iMyClosestReinforce;
 					iMyClosestReinforce = iLoopWaterReinforce;
+				}
+				else if (iLoopWaterReinforce < iMySecondClosestReinforce)
+				{
+					iMySecondClosestReinforce = iLoopWaterReinforce;
 				}
 			}
 		}
@@ -1311,17 +1322,19 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		double dReinforceMultiplier = 1.0;
 		if (iMyClosestReinforce < MAX_INT)
 		{
+			if (iMySecondClosestReinforce == MAX_INT)
+				iMySecondClosestReinforce = 0;
 			double dDefenseFavor = (pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)m_iDefenseIndex)) / 1.0;
 			if (dDefenseFavor > 2.0)
 				dDefenseFavor = 2.0;
-			dReinforceMultiplier = 2.5 * exp(-pow((double)iMyClosestReinforce / (3.0 - dDefenseFavor), 2.0)) + 0.5;
+			dReinforceMultiplier = 4.5 * exp(-pow(sqrt(pow((double)iMyClosestReinforce, 2.0) + pow((double)iMySecondClosestReinforce, 2.0)) / (3.0 - dDefenseFavor), 2.0)) + 0.5;
 		}
 		if (iEnemyClosestReinforce < MAX_INT)
 		{
 			double dBoldness = 1.0 + double(pPlayer->GetDiplomacyAI()->GetBoldness());
 			if (dBoldness < 2.0)
 				dBoldness = 2.0;
-			dReinforceMultiplier /= 3.0 * exp(-pow(iEnemyClosestReinforce / 2.0 * log(dBoldness), 2.0)) + 1.0;
+			dReinforceMultiplier /= 5.5 * exp(-pow(iEnemyClosestReinforce / 2.0 * log(dBoldness), 2.0)) + 1.0;
 		}
 
 		rtnValue = int(rtnValue * dReinforceMultiplier + 0.5);
