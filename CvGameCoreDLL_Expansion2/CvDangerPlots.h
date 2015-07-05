@@ -139,20 +139,24 @@ public:
 
 #ifdef AUI_CONSTIFY
 	bool ShouldIgnorePlayer(PlayerTypes ePlayer) const;
+#ifdef AUI_DANGER_PLOTS_REMADE
+	bool ShouldIgnoreUnit(CvUnit* pUnit) const;
+#else
 	bool ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility = false) const;
+#endif
 	bool ShouldIgnoreCity(const CvCity* pCity, bool bIgnoreVisibility = false) const;
 	bool ShouldIgnoreCitadel(const CvPlot* pCitadelPlot, bool bIgnoreVisibility = false) const;
 #else
 	bool ShouldIgnorePlayer(PlayerTypes ePlayer);
+#ifdef AUI_DANGER_PLOTS_REMADE
+	bool ShouldIgnoreUnit(CvUnit* pUnit) const;
+#else
 	bool ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility = false);
+#endif
 	bool ShouldIgnoreCity(CvCity* pCity, bool bIgnoreVisibility = false);
 	bool ShouldIgnoreCitadel(CvPlot* pCitadelPlot, bool bIgnoreVisibility = false);
 #endif
-#ifdef AUI_DANGER_PLOTS_REMADE
-	void AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot, bool bReuse = true);
-#else
 	void AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot);
-#endif
 	void AssignCityDangerValue(CvCity* pCity, CvPlot* pPlot);
 
 	void SetDirty();

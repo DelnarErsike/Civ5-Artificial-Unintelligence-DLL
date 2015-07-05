@@ -20663,6 +20663,36 @@ void CvUnit::SetPlotAttacked(CvPlot* pPlot)
 {
 	vpPlotsAttackedList.push_back(pPlot);
 }
+
+bool CvUnit::ShouldIgnoreForDanger(PlayerTypes ePlayer) const
+{
+	CvPlayer& kPlayer = GET_PLAYER(ePlayer);
+
+	for (FFastVector<CvPlot*, true, c_eCiv5GameplayDLL>::const_iterator it = vpPlotsAttackedList.begin(); it != vpPlotsAttackedList.end(); ++it)
+	{
+		if ((*it)->isVisible(kPlayer.getTeam()))
+		{
+			return false;
+		}
+	}
+
+	if (isInvisible(kPlayer.getTeam(), false))
+	{
+		return true;
+	}
+
+	if (getDomainType() == DOMAIN_AIR)
+	{
+		return false;
+	}
+
+	if (!plot()->isVisible(kPlayer.getTeam()))
+	{
+		return true;
+	}
+
+	return false;
+}
 #endif
 
 //	--------------------------------------------------------------------------------

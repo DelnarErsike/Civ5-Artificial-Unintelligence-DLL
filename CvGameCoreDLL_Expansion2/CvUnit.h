@@ -1352,6 +1352,7 @@ public:
 	FFastVector<std::pair<CvPlot*, bool>, true, c_eCiv5GameplayDLL>& GetDangerPlotList(bool bMoveOnly = false);
 	FFastVector<CvPlot*, true, c_eCiv5GameplayDLL>& GetPlotsAttackedList();
 	void SetPlotAttacked(CvPlot* pPlot);
+	bool ShouldIgnoreForDanger(PlayerTypes ePlayer) const;
 #endif
 
 	// Ported in from old CvUnitAI class
