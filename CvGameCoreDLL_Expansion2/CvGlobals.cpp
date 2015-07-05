@@ -2972,7 +2972,11 @@ std::vector<CvYieldInfo*>& CvGlobals::getYieldInfo()
 	return m_paYieldInfo;
 }
 
+#ifdef AUI_CONSTIFY
+CvYieldInfo* CvGlobals::getYieldInfo(YieldTypes eYieldNum) const
+#else
 CvYieldInfo* CvGlobals::getYieldInfo(YieldTypes eYieldNum)
+#endif
 {
 	CvAssert(eYieldNum > -1);
 	CvAssert(eYieldNum < NUM_YIELD_TYPES);

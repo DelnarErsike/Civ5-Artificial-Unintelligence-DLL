@@ -1535,25 +1535,23 @@ void CvHomelandAI::PlotUpgradeMoves()
 #ifdef AUI_HOMELAND_FIX_PLOT_UPGRADE_MOVES_APPLIES_TO_WAITING_ARMIES
 		// Previous check of pUnit->getArmyID() == -1 replaced with Army check
 		if(pUnit && !pUnit->isHuman())
-#else
-		if(pUnit && !pUnit->isHuman() && pUnit->getArmyID() == -1)
-#endif
 		{
-#ifdef AUI_HOMELAND_FIX_PLOT_UPGRADE_MOVES_APPLIES_TO_WAITING_ARMIES
 			// Army check
 			if (pUnit->getArmyID() != -1)
 			{
 				CvArmyAI* pThisArmy = m_pPlayer->getArmyAI(pUnit->getArmyID());
 				// Check if army is in an active state
-				if (pThisArmy && ((pThisArmy->GetArmyAIState() == ARMYAISTATE_MOVING_TO_DESTINATION) || 
+				if (pThisArmy && ((pThisArmy->GetArmyAIState() == ARMYAISTATE_MOVING_TO_DESTINATION) ||
 					// if army is in a static state, make sure it's in friendly territory so it doesn't start moving units back and forth
 					(pThisArmy->GetArmyAIState() != ARMYAISTATE_WAITING_FOR_UNITS_TO_REINFORCE && pUnit->plot()->getOwner() != pUnit->getOwner())))
 				{
 					continue;
 				}
 			}
-#endif
-			
+#else
+		if(pUnit && !pUnit->isHuman() && pUnit->getArmyID() == -1)
+		{
+#endif			
 			// Can this unit be upgraded?
 			UnitTypes eUpgradeUnitType = pUnit->GetUpgradeUnitType();
 			if(eUpgradeUnitType != NO_UNIT)

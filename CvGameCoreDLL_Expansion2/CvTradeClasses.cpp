@@ -4113,12 +4113,10 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	double dOurYields[NUM_YIELD_TYPES] = {};
 	dOurYields[YIELD_GOLD] = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_GOLD, true) / 100.0;
 	dOurYields[YIELD_SCIENCE] = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_SCIENCE, true) / 100.0;
+	double dOurTourismGain = 0;
 
 	double dTheirScore = 0;
 	double dTheirYields[NUM_YIELD_TYPES] = {};
-	dTheirYields[YIELD_GOLD] = pOtherPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_GOLD, false) / 100.0;
-	dTheirYields[YIELD_SCIENCE] = pOtherPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_SCIENCE, true) / 100.0;
-	double dOurTourismGain = 0;
 	double dTheirTourismGain = 0;
 
 	if (!GC.getGame().GetGameTrade()->IsPlayerConnectedToPlayer(kTradeConnection.m_eOriginOwner, kTradeConnection.m_eDestOwner))
@@ -4142,33 +4140,14 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 				kOtherPlayer.GetCulture()->GetTourismModifierTradeRoute()) - kOtherPlayer.GetCulture()->GetInfluencePerTurn(kTradeConnection.m_eOriginOwner);
 		}
 	}
-	dOurScore += pFromCity->GetCityCitizens()->GetTotalValue(dOurYields, NO_UNITCLASS, 0.0, 0, dOurTourismGain);
-	dTheirScore += pToCity->GetCityCitizens()->GetTotalValue(dTheirYields, NO_UNITCLASS, 0.0, 0, dTheirTourismGain);
+
 	if (kOtherPlayer.isMinorCiv())
 	{
-		CvCivilizationInfo& kCivInfo = m_pPlayer->getCivilizationInfo();
 		int iLoop = 0;
+		double dExtraYields[NUM_YIELD_TYPES] = {};
 		for (CvCity* pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; m_pPlayer->nextCity(&iLoop))
 		{
-			double dExtraYields[NUM_YIELD_TYPES] = {};
-			int iCSTradeRouteProductionModifier = 0;
-			for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
-			{
-				BuildingClassTypes eLoopBuildingClass = (BuildingClassTypes)iI;
-				BuildingTypes eBuilding = (BuildingTypes)kCivInfo.getCivilizationBuildings(eLoopBuildingClass);
-				if (NO_BUILDING != eBuilding && pLoopCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0)
-				{
-					CvBuildingEntry *pkEntry = GC.getBuildingInfo(eBuilding);
-					if (pkEntry)
-					{
-						int iLoopCSTradeRouteProductionModifier = pkEntry->GetCityStateTradeRouteProductionModifier();
-						if (iLoopCSTradeRouteProductionModifier != 0)
-						{
-							iCSTradeRouteProductionModifier += iLoopCSTradeRouteProductionModifier;
-						}
-					}
-				}
-			}
+			int iCSTradeRouteProductionModifier = pLoopCity->GetCityBuildings()->GetCityStateTradeRouteProductionModifier();
 			if (iCSTradeRouteProductionModifier != 0)
 			{
 				dExtraYields[YIELD_PRODUCTION] = pLoopCity->getRawProductionDifferenceTimes100(true, false, iCSTradeRouteProductionModifier) -
@@ -4176,6 +4155,14 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 				dOurScore += pLoopCity->GetCityCitizens()->GetTotalValue(dExtraYields);
 			}
 		}	
+	}
+
+	dOurScore += pFromCity->GetCityCitizens()->GetTotalValue(dOurYields, NO_UNITCLASS, 0.0, 0, dOurTourismGain);
+	if (dDiplomacyTaper != 0)
+	{
+		dTheirYields[YIELD_GOLD] = pOtherPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_GOLD, false) / 100.0;
+		dTheirYields[YIELD_SCIENCE] = pOtherPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_SCIENCE, true) / 100.0;
+		dTheirScore += pToCity->GetCityCitizens()->GetTotalValue(dTheirYields, NO_UNITCLASS, 0.0, 0, dTheirTourismGain);
 	}
 #else
 	// gold

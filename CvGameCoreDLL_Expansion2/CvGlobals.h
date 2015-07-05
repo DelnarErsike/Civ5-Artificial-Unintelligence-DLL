@@ -377,7 +377,11 @@ public:
 	_Ret_maybenull_ CvPlayerOptionInfo* getPlayerOptionInfo(PlayerOptionTypes ePlayerOptionNum);
 
 	std::vector<CvYieldInfo*>& getYieldInfo();
+#ifdef AUI_CONSTIFY
+	_Ret_maybenull_ CvYieldInfo* getYieldInfo(YieldTypes eYieldNum) const;
+#else
 	_Ret_maybenull_ CvYieldInfo* getYieldInfo(YieldTypes eYieldNum);
+#endif
 
 	int getNumRouteInfos();
 	std::vector<CvRouteInfo*>& getRouteInfo();
