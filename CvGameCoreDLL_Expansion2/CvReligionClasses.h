@@ -514,13 +514,23 @@ private:
 #endif
 
 	int ScoreBelief(CvBeliefEntry* pEntry);
+#ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REMADE
+	double ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot, CvCity* pForCity);
+#else
 #ifdef AUI_RELIGION_USE_DOUBLES
 	double ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot);
-	double ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity);
-	double ScoreBeliefForPlayer(CvBeliefEntry* pEntry);
 #else
 	int ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot);
+#endif
+#endif
+#if defined(AUI_RELIGION_SCORE_BELIEF_AT_CITY_REMADE) || defined(AUI_RELIGION_USE_DOUBLES)
+	double ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity);
+#else
 	int ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity);
+#endif
+#ifdef AUI_RELIGION_USE_DOUBLES
+	double ScoreBeliefForPlayer(CvBeliefEntry* pEntry);
+#else
 	int ScoreBeliefForPlayer(CvBeliefEntry* pEntry);
 #endif
 
