@@ -52,6 +52,7 @@ void CvBuilderTaskingAI::Init(CvPlayer* pPlayer)
 	m_iNumCities = -1;
 	m_pTargetPlot = NULL;
 
+#ifndef AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
 	// special case code so the Dutch don't remove marshes
 	m_bKeepMarshes = false;
 	// special case code so Brazil doesn't remove jungle
@@ -94,6 +95,7 @@ void CvBuilderTaskingAI::Init(CvPlayer* pPlayer)
 			}
 		}
 	}
+#endif
 }
 
 /// Uninit
@@ -126,6 +128,7 @@ void CvBuilderTaskingAI::Read(FDataStream& kStream)
 		kStream >> m_aiNonTerritoryPlots[ui];
 	}
 
+#ifndef AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
 	kStream >> m_bKeepMarshes;
 	if (uiVersion >= 2)
 	{
@@ -135,6 +138,7 @@ void CvBuilderTaskingAI::Read(FDataStream& kStream)
 	{
 		m_bKeepJungle = false;
 	}
+#endif
 		
 	m_iNumCities = -1; //Force everyone to do an CvBuilderTaskingAI::Update() after loading
 	m_pTargetPlot = NULL;		//Force everyone to recalculate current yields after loading.
@@ -156,8 +160,10 @@ void CvBuilderTaskingAI::Write(FDataStream& kStream)
 		kStream << m_aiNonTerritoryPlots[ui];
 	}
 
+#ifndef AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
 	kStream << m_bKeepMarshes;
 	kStream << m_bKeepJungle;
+#endif
 }
 
 /// Update
@@ -1028,10 +1034,6 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 	}
 #endif
 
-#ifdef AUI_WORKER_SCORE_PLOT_CHOP
-	FeatureTypes eFeatureType = pPlot->getFeatureType();
-#endif
-
 #ifdef AUI_WORKER_FIX_CELTIC_IMPROVE_UNIMPROVED_FORESTS
 	// celtic rule: if this is a forest tile next to a city, do not improve this tile with a normal improvement (unless we're an AI in at least industrial)
 	if (m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest() && eExistingPlotImprovement == NO_IMPROVEMENT && pkResource->getResourceUsage() == RESOURCEUSAGE_LUXURY &&
@@ -1198,7 +1200,7 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 
 		UpdateProjectedPlotYields(pPlot, eBuild);
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
-		int iScore = ScorePlot(eFeatureType != NO_FEATURE && pkBuild->isFeatureRemove(eFeatureType) && pkBuild->getFeatureProduction(eFeatureType) > 0);
+		int iScore = ScorePlot(eBuild);
 #else
 		int iScore = ScorePlot();
 #endif
@@ -1275,6 +1277,9 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 			return;
 		}
 	}
+#ifdef AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
+	FeatureTypes eFeature = pPlot->getFeatureType();
+#endif
 
 #ifdef AUI_WORKER_CELT_FOREST_IMPROVE_INDUSTRIAL
 	// celtic rule: if this is a forest tile next to a city, do not improve this tile with a normal improvement (unless we're an AI in at least industrial)
@@ -1288,7 +1293,11 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 		CvCity* pNextCity = pPlot->GetAdjacentCity();
 		if (pNextCity && pNextCity->getOwner() == m_pPlayer->GetID())
 		{
+#ifdef AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
+			if (eFeature == FEATURE_FOREST)
+#else
 			if (pPlot->getFeatureType() == FEATURE_FOREST)
+#endif
 			{
 #ifdef AUI_WORKER_FIX_CELTIC_IMPROVE_UNIMPROVED_FORESTS
 				int iNeighboringForestCount = 1;
@@ -1399,6 +1408,54 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 	BuildTypes eBuild;
 	BuildTypes eOriginalBuildType;
 	int iBuildIndex;
+#ifdef AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
+	int iLoopScore;
+	int iBestUniqueImprovementWeight = 0;
+	for (uint iI = 0; iI < m_pPlayer->GetNumUniqueImprovements(); iI++)
+	{
+		ImprovementTypes eUniqueImprovement = m_pPlayer->GetUniqueImprovement(iI);
+		if (eUniqueImprovement != NO_IMPROVEMENT)
+		{
+			CvImprovementEntry* pUniqueImprovement = GC.getImprovementInfo(eUniqueImprovement);
+			if (pUniqueImprovement && pUniqueImprovement->IsRequiresFeature() && pUniqueImprovement->GetFeatureMakesValid(eFeature))
+			{
+				eBuild = m_pPlayer->GetUniqueImprovementBuild(iI);
+#ifdef AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
+				iLoopScore = 0;
+				if (pCity)
+				{
+					UpdateProjectedPlotYields(pPlot, eBuild);
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+					iLoopScore = ScorePlot(eBuild);
+#else
+					iLoopScore = ScorePlot();
+#endif
+				}
+				if (!pCity || iLoopScore > 0)
+				{
+					int iBaseDefenseBonus = (pPlot->isHills() || pPlot->isMountain() ? GC.getHILLS_EXTRA_DEFENSE() : GC.getFeatureInfo(eFeature)->getDefenseModifier());
+					iLoopScore += (pUniqueImprovement->GetDefenseModifier() + iBaseDefenseBonus) * pPlot->getStrategicValue() / (100 * GC.getCHOKEPOINT_STRATEGIC_VALUE());
+				}
+#else
+				UpdateProjectedPlotYields(pPlot, eBuild);
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+				iLoopScore = ScorePlot(eBuild);
+#else
+				iLoopScore = ScorePlot();
+#endif
+#endif
+				int iWeight = GC.getBUILDER_TASKING_BASELINE_BUILD_IMPROVEMENTS();
+				iWeight = GetBuildCostWeight(iWeight, pPlot, eBuild);
+				iWeight += GetBuildTimeWeight(pUnit, pPlot, eBuild, DoesBuildHelpRush(pUnit, pPlot, eBuild), iMoveTurnsAway);
+				iWeight *= iLoopScore;
+				iWeight = CorrectWeight(iWeight);
+
+				if (iWeight > iBestUniqueImprovementWeight)
+					iBestUniqueImprovementWeight = iWeight;
+			}
+		}
+	}
+#endif
 	for(iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
 	{
 		eBuild = (BuildTypes)iBuildIndex;
@@ -1431,6 +1488,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 		//}
 #endif
 
+#ifndef AUI_WORKER_FIX_IMPROVING_PLOTS_DIRECTIVE_DONT_REQUIRE_BONUS_RESOURCE_UNLOCKER
 		// for bonus resources, check to see if this is the improvement that connects it
 		if(eResource != NO_RESOURCE)
 		{
@@ -1444,6 +1502,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 				continue;
 			}
 		}
+#endif
 
 		if(eImprovement == pPlot->getImprovementType())
 		{
@@ -1478,6 +1537,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 			}
 		}
 
+
 		// Only check to make sure our unit can build this after possibly switching this to a repair build in the block of code above
 		if(!pUnit->canBuild(pPlot, eBuild))
 		{
@@ -1490,7 +1550,9 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 		}
 
 		bool bWillRemoveForestOrJungle = false;
+#ifndef AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
 		FeatureTypes eFeature = pPlot->getFeatureType();
+#endif
 		if(eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE)
 		{
 			if(pkBuild->isFeatureRemove(eFeature))
@@ -1499,6 +1561,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 			}
 		}
 
+#ifndef AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
 		// special case for Dutch
 		if (m_bKeepMarshes && eFeature == FEATURE_MARSH)
 		{
@@ -1509,14 +1572,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 					strTemp.Format("Weight,Marsh Remove,%s,,,,%i, %i", GC.getBuildInfo(eBuild)->GetType(), pPlot->getX(), pPlot->getY());
 					LogInfo(strTemp, m_pPlayer);
 				}
-#ifdef AUI_WORKER_DUTCH_MARSH_RESOURCES
-				if (pPlot->getResourceType(m_pPlayer->getTeam()) == NO_RESOURCE)
-				{
-					continue;
-				}
-#else
 				continue;
-#endif
 			}
 		}
 
@@ -1536,6 +1592,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 				}
 			}
 		}
+#endif
 
 		if(GET_PLAYER(pUnit->getOwner()).isOption(PLAYEROPTION_LEAVE_FORESTS))
 		{
@@ -1559,7 +1616,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 		{
 			UpdateProjectedPlotYields(pPlot, eBuild);
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
-			iScore = ScorePlot(bWillRemoveForestOrJungle && pkBuild->getFeatureProduction(eFeature) > 0);
+			iScore = ScorePlot(eBuild);
 #else
 			iScore = ScorePlot();
 #endif
@@ -1574,7 +1631,7 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 #else
 		UpdateProjectedPlotYields(pPlot, eBuild);
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
-		int iScore = ScorePlot(bWillRemoveForestOrJungle && pkBuild->getFeatureProduction(eFeature) > 0);
+		int iScore = ScorePlot(eBuild);
 #else
 		int iScore = ScorePlot();
 #endif
@@ -1620,6 +1677,11 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 		}
 
 		iWeight = CorrectWeight(iWeight);
+
+#ifdef AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
+		if (iWeight < iBestUniqueImprovementWeight && eFeature != NO_FEATURE && pkBuild->isFeatureRemove(eFeature))
+			continue;
+#endif
 
 		BuilderDirective directive;
 
@@ -2102,7 +2164,7 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 			{
 				BuildTypes eOtherBuild = pLoopUnit->getBuildType();
 				CvBuildInfo* pkBuild = GC.getBuildInfo(eOtherBuild);
-				if (pkBuild != NULL && pkBuild->getImprovement() == NO_IMPROVEMENT && pkBuild->isFeatureRemove(eFeature) && pkBuild->getFeatureProduction(eFeature) > 0)
+				if (pkBuild != NULL && pkBuild->getImprovement() == NO_IMPROVEMENT && pkBuild->isFeatureRemove(eFeature))
 				{
 					if (m_bLogging)
 					{
@@ -2605,7 +2667,7 @@ int CvBuilderTaskingAI::FindTurnsAway(CvUnit* pUnit, CvPlot* pPlot)
 	}
 
 #ifdef AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER
-	int iPlotDistance = TurnsToReachTarget(pUnit, pPlot, AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER /*bReusePaths*/, AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER /*bIgnoreUnits*/);
+	int iPlotDistance = TurnsToReachTarget(pUnit, pPlot, true /*bReusePaths*/, AUI_WORKER_FIND_TURNS_AWAY_USES_PATHFINDER /*bIgnoreUnits*/);
 	if (iPlotDistance < MAX_INT)
 		return iPlotDistance;
 	else
@@ -2786,6 +2848,7 @@ int CvBuilderTaskingAI::GetResourceWeight(ResourceTypes eResource, ImprovementTy
 	return iWeight;
 }
 
+#ifndef AUI_PRUNING
 /// Determine if an improvement will increase any of the outputs of the plot
 bool CvBuilderTaskingAI::IsImprovementBeneficial(CvPlot* pPlot, const CvBuildInfo& kBuild, YieldTypes eYield, bool bIsBreakEvenOK)
 {
@@ -2898,6 +2961,7 @@ bool CvBuilderTaskingAI::IsImprovementBeneficial(CvPlot* pPlot, const CvBuildInf
 
 	return false;
 }
+#endif
 
 /// Get this city that can interact with this plot
 CvCity* CvBuilderTaskingAI::GetWorkingCity(CvPlot* pPlot)
@@ -2956,7 +3020,7 @@ bool CvBuilderTaskingAI::DoesBuildHelpRush(CvUnit* pUnit, CvPlot* pPlot, BuildTy
 }
 
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
-int CvBuilderTaskingAI::ScorePlot(bool bWillChop)
+int CvBuilderTaskingAI::ScorePlot(BuildTypes eBuild) const
 #else
 int CvBuilderTaskingAI::ScorePlot()
 #endif
@@ -2982,6 +3046,53 @@ int CvBuilderTaskingAI::ScorePlot()
 		return -1;
 	}
 
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+	CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
+	if (!pkBuild)
+	{
+		return -1;
+	}
+	FeatureTypes ePlotFeature = m_pTargetPlot->getFeatureType();
+#endif
+
+#ifdef AUI_WORKER_SCORE_PLOT_USE_CITIZENS_YIELD_VALUE
+	double adProjectedYields[NUM_YIELD_TYPES] = {};
+	adProjectedYields[YIELD_FOOD] = m_aiProjectedPlotYields[YIELD_FOOD];
+	adProjectedYields[YIELD_PRODUCTION] = m_aiProjectedPlotYields[YIELD_PRODUCTION];
+	adProjectedYields[YIELD_GOLD] = m_aiProjectedPlotYields[YIELD_GOLD];
+	adProjectedYields[YIELD_SCIENCE] = m_aiProjectedPlotYields[YIELD_SCIENCE];
+	adProjectedYields[YIELD_CULTURE] = m_aiProjectedPlotYields[YIELD_CULTURE];
+	adProjectedYields[YIELD_FAITH] = m_aiProjectedPlotYields[YIELD_FAITH];
+
+	adProjectedYields[YIELD_FOOD] *= pCity->getBaseYieldRateModifier(YIELD_FOOD) / 100.0;
+	adProjectedYields[YIELD_PRODUCTION] *= pCity->getBaseYieldRateModifier(YIELD_PRODUCTION) / 100.0;
+	adProjectedYields[YIELD_GOLD] *= pCity->getBaseYieldRateModifier(YIELD_GOLD) / 100.0;
+	adProjectedYields[YIELD_SCIENCE] *= pCity->getBaseYieldRateModifier(YIELD_SCIENCE) / 100.0;
+	adProjectedYields[YIELD_CULTURE] *= pCity->getBaseYieldRateModifier(YIELD_CULTURE) / 100.0;
+	adProjectedYields[YIELD_FAITH] *= pCity->getBaseYieldRateModifier(YIELD_FAITH) / 100.0;
+	double dProjectedPlotTourism = adProjectedYields[YIELD_CULTURE] * pCity->GetCityBuildings()->GetLandmarksTourismPercent() / 100.0;
+	dProjectedPlotTourism = pCity->GetCityCulture()->GetBaseTourism(true, int(pCity->GetCityCulture()->GetBaseTourismBeforeModifiers() + dProjectedPlotTourism)) - pCity->GetCityCulture()->GetBaseTourism();
+
+	double adCurrentPlotYields[NUM_YIELD_TYPES] = {};
+	adCurrentPlotYields[YIELD_FOOD] = m_aiCurrentPlotYields[YIELD_FOOD];
+	adCurrentPlotYields[YIELD_PRODUCTION] = m_aiCurrentPlotYields[YIELD_PRODUCTION];
+	adCurrentPlotYields[YIELD_GOLD] = m_aiCurrentPlotYields[YIELD_GOLD];
+	adCurrentPlotYields[YIELD_SCIENCE] = m_aiCurrentPlotYields[YIELD_SCIENCE];
+	adCurrentPlotYields[YIELD_CULTURE] = m_aiCurrentPlotYields[YIELD_CULTURE];
+	adCurrentPlotYields[YIELD_FAITH] = m_aiCurrentPlotYields[YIELD_FAITH];
+	double dCurrentPlotTourism = adCurrentPlotYields[YIELD_CULTURE] * pCity->GetCityBuildings()->GetLandmarksTourismPercent() / 100.0;
+	dCurrentPlotTourism = pCity->GetCityCulture()->GetBaseTourism(true, int(pCity->GetCityCulture()->GetBaseTourismBeforeModifiers() + dCurrentPlotTourism)) - pCity->GetCityCulture()->GetBaseTourism();
+
+#ifdef AUI_WORKER_SCORE_PLOT_CHOP
+	if (ePlotFeature != NO_FEATURE && pkBuild->isFeatureRemove(ePlotFeature))
+	{
+		adProjectedYields[YIELD_PRODUCTION] += 100.0 * m_pTargetPlot->getFeatureProduction(eBuild, pCity->getOwner(), &pCity) / (1.0 + pCity->getCurrentProductionDifferenceTimes100(true, false));
+	}
+#endif
+
+	int iScore = pCity->GetCityCitizens()->GetTotalValue(adProjectedYields, NO_UNITCLASS, 0, 0, dProjectedPlotTourism);
+	iScore -= pCity->GetCityCitizens()->GetTotalValue(adCurrentPlotYields, NO_UNITCLASS, 0, 0, dCurrentPlotTourism);
+#else
 	int iScore = 0;
 	bool bAnyNegativeMultiplier = false;
 	YieldTypes eFocusYield = pCityStrategy->GetFocusYield();
@@ -3088,7 +3199,7 @@ int CvBuilderTaskingAI::ScorePlot()
 		int iYieldDelta = m_aiProjectedPlotYields[ui] - m_aiCurrentPlotYields[ui];
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
 		double dFlatBonus = 0;
-		if (bWillChop && ui == YIELD_PRODUCTION && iYieldDelta >= 0)
+		if (ePlotFeature != NO_FEATURE && pkBuild->isFeatureRemove(ePlotFeature) && ui == YIELD_PRODUCTION && iYieldDelta >= 0)
 		{
 			dFlatBonus = AUI_WORKER_SCORE_PLOT_CHOP;
 		}
@@ -3254,6 +3365,7 @@ int CvBuilderTaskingAI::ScorePlot()
 #endif
 		}
 	}
+#endif
 
 	if (pCity->isCapital()) // this is our capital and needs emphasis
 	{
