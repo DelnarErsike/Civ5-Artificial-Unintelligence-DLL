@@ -688,6 +688,10 @@ public:
 	// Unit Killed in Combat
 	void DoUnitKilledCombat(PlayerTypes eKilledPlayer, UnitTypes eUnit);
 
+#ifdef AUI_PLAYER_RESOLVE_WORKED_PLOT_CONFLICTS
+	void DoResolveWorkedPlotConflicts();
+#endif
+
 	// Great People Expenditure
 	void DoGreatPersonExpended(UnitTypes eGreatPersonUnit);
 	int GetGreatPersonExpendGold() const;

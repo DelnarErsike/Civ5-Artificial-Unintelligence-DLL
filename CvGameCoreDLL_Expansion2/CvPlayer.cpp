@@ -4288,6 +4288,10 @@ void CvPlayer::doTurnPostDiplomacy()
 		ChangeTourismBonusTurns(-1);
 	}
 
+#ifdef AUI_PLAYER_RESOLVE_WORKED_PLOT_CONFLICTS
+	DoResolveWorkedPlotConflicts();
+#endif
+
 	// Golden Age
 	DoProcessGoldenAge();
 
@@ -6075,6 +6079,10 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 
 	CvGoodyHuts::DoPlayerReceivedGoody(GetID(), eGoody);
 
+#ifdef AUI_PLAYER_RECEIVE_GOODY_PLOT_MESSAGE_FOR_YIELD
+	int iNumYieldBonuses = 0;
+#endif
+
 	strBuffer = kGoodyInfo.GetDescription();
 
 	// Gold
@@ -6085,6 +6093,10 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 		GetTreasury()->ChangeGold(iGold);
 
 		strBuffer += GetLocalizedText("TXT_KEY_MISC_RECEIVED_GOLD", iGold);
+#ifdef AUI_PLAYER_RECEIVE_GOODY_PLOT_MESSAGE_FOR_YIELD
+		ReportYieldFromKill(YIELD_GOLD, iGold, pPlot->getX(), pPlot->getY(), iNumYieldBonuses);
+		iNumYieldBonuses += 1;
+#endif
 	}
 
 	// Population
@@ -6123,6 +6135,10 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 		iCulture /= 100;
 
 		changeJONSCulture(iCulture);
+#ifdef AUI_PLAYER_RECEIVE_GOODY_PLOT_MESSAGE_FOR_YIELD
+		ReportYieldFromKill(YIELD_CULTURE, iCulture, pPlot->getX(), pPlot->getY(), iNumYieldBonuses);
+		iNumYieldBonuses += 1;
+#endif
 	}
 
 	// Faith
@@ -6134,6 +6150,10 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 		iFaith /= 100;
 
 		ChangeFaith(iFaith);
+#ifdef AUI_PLAYER_RECEIVE_GOODY_PLOT_MESSAGE_FOR_YIELD
+		ReportYieldFromKill(YIELD_FAITH, iFaith, pPlot->getX(), pPlot->getY(), iNumYieldBonuses);
+		iNumYieldBonuses += 1;
+#endif
 	}
 
 	// Faith for pantheon
@@ -6146,6 +6166,10 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 		iFaith /= iDivisor;
 		iFaith *= iDivisor;
 		ChangeFaith(iFaith);
+#ifdef AUI_PLAYER_RECEIVE_GOODY_PLOT_MESSAGE_FOR_YIELD
+		ReportYieldFromKill(YIELD_FAITH, iFaith, pPlot->getX(), pPlot->getY(), iNumYieldBonuses);
+		iNumYieldBonuses += 1;
+#endif
 	}
 
 	// Faith for percent of great prophet
@@ -6157,6 +6181,10 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 		iFaith /= iDivisor;
 		iFaith *= iDivisor;
 		ChangeFaith(iFaith);
+#ifdef AUI_PLAYER_RECEIVE_GOODY_PLOT_MESSAGE_FOR_YIELD
+		ReportYieldFromKill(YIELD_FAITH, iFaith, pPlot->getX(), pPlot->getY(), iNumYieldBonuses);
+		iNumYieldBonuses += 1;
+#endif
 	}
 
 	// Reveal Nearby Barbs
@@ -13192,6 +13220,74 @@ void CvPlayer::DoUnitKilledCombat(PlayerTypes eKilledPlayer, UnitTypes eUnitType
 		LuaSupport::CallHook(pkScriptSystem, "UnitKilledInCombat", args.get(), bResult);
 	}
 }
+
+#ifdef AUI_PLAYER_RESOLVE_WORKED_PLOT_CONFLICTS
+void CvPlayer::DoResolveWorkedPlotConflicts()
+{
+	if (getNumCities() > 1)
+	{
+		int iLoop = 0;
+		for (CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
+		{
+			pLoopCity->GetCityCitizens()->DoTurn(false);
+		}
+
+		FFastVector<CvCity*, true, c_eCiv5GameplayDLL> vpPossibleWorkingCities;
+		vpPossibleWorkingCities.reserve(NUM_DIRECTION_TYPES);
+		for (int iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
+		{
+			CvPlot* pLoopPlot = GC.getMap().plotByIndexUnchecked(iPlotLoop);
+			if (pLoopPlot && pLoopPlot->getOwner() == GetID())
+			{
+				CvCity* pOriginalWorkedCity = pLoopPlot->getWorkingCityOverride();
+				if (!pOriginalWorkedCity || !pOriginalWorkedCity->GetCityCitizens()->IsForcedWorkingPlot(pLoopPlot))
+				{
+					vpPossibleWorkingCities.clear();
+					for (CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
+					{
+						if (CITY_PLOTS_RADIUS <= plotDistance(pLoopPlot->getX(), pLoopPlot->getY(), pLoopCity->getX(), pLoopCity->getY()) && pLoopCity->GetCityCitizens()->IsCanWork(pLoopPlot, true))
+						{
+							vpPossibleWorkingCities.push_back(pLoopCity);
+						}
+					}
+					if (vpPossibleWorkingCities.size() > 1)
+					{
+						CvCity* pBestCity = pOriginalWorkedCity;
+						int iBestScoreDelta = 0;
+						int iLoopScoreGain = 0;
+						int iLoopScoreLoss = 0;
+						if (pOriginalWorkedCity && pOriginalWorkedCity->GetCityCitizens()->IsWorkingPlot(pLoopPlot))
+						{
+							iBestScoreDelta = pOriginalWorkedCity->GetCityCitizens()->GetPlotValue(pLoopPlot, true);
+							pOriginalWorkedCity->GetCityCitizens()->GetBestCityPlotWithValue(iLoopScoreLoss, true, false);
+							iBestScoreDelta -= iLoopScoreLoss;
+						}
+						for (FFastVector<CvCity*, true, c_eCiv5GameplayDLL>::iterator it = vpPossibleWorkingCities.begin(); it != vpPossibleWorkingCities.end(); ++it)
+						{
+							if (*it != pOriginalWorkedCity)
+							{
+								iLoopScoreGain = (*it)->GetCityCitizens()->GetPlotValue(pLoopPlot, true);
+								(*it)->GetCityCitizens()->GetBestCityPlotWithValue(iLoopScoreLoss, false, true);
+								iLoopScoreGain -= iLoopScoreLoss;
+								if (iLoopScoreGain > iBestScoreDelta)
+								{
+									iBestScoreDelta = iLoopScoreGain;
+									pBestCity = *it;
+								}
+							}
+						}
+						if (pBestCity && pOriginalWorkedCity != pBestCity)
+						{
+							pLoopPlot->setWorkingCityOverride(pBestCity);
+							pBestCity->GetCityCitizens()->DoTurn(false);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#endif
 
 //	--------------------------------------------------------------------------------
 /// Do effects when a GP is consumed
