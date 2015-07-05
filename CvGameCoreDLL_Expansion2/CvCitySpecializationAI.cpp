@@ -1177,12 +1177,21 @@ CvCity* CvCitySpecializationAI::FindBestWonderCity() const
 	}
 	else if(m_eNextWonderDesired != NO_BUILDING)
 	{
+#ifdef AUI_CITY_SPECIALIZATION_FIX_FIND_BEST_WONDER_CITY_USE_PROPER_PRODUCTION
+		CvBuildingEntry* pkWonderInfo = GC.getBuildingInfo(m_eNextWonderDesired);
+		if (!pkWonderInfo)
+			return NULL;
+#endif
 		for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 		{
 			if(!pLoopCity->IsPuppet())
 			{
 				if(pLoopCity->canConstruct(m_eNextWonderDesired))
 				{
+#ifdef AUI_CITY_SPECIALIZATION_FIX_FIND_BEST_WONDER_CITY_USE_PROPER_PRODUCTION
+					iProduction = pLoopCity->getProductionDifferenceTimes100(pLoopCity->getProductionNeeded(m_eNextWonderDesired), 
+						0, pLoopCity->getProductionModifier(m_eNextWonderDesired), false, false);
+#else
 					iProduction = pLoopCity->getCurrentProductionDifference(true, false);
 					if(pLoopCity->GetCityStrategyAI()->GetDefaultSpecialization() == GetWonderSpecialization())
 					{
@@ -1191,6 +1200,7 @@ CvCity* CvCitySpecializationAI::FindBestWonderCity() const
 
 					// factor in Marble, etc.
 					iProduction = (iProduction * (100 + pLoopCity->GetWonderProductionModifier())) / 100;
+#endif
 
 					if(iProduction > iBestProduction)
 					{
