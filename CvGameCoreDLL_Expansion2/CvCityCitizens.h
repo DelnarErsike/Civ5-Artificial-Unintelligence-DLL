@@ -40,16 +40,22 @@ public:
 	TeamTypes GetTeam() const;
 
 	void DoFoundCity();
+#ifdef AUI_PLAYER_RESOLVE_WORKED_PLOT_CONFLICTS
+	void DoTurn(bool bDoSpecialist = true);
+#else
 	void DoTurn();
+#endif
 
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, double* adBonusYields = NULL, double* adBonusYieldModifiers = NULL, int iExtraHappiness = 0, int iExtraGrowthMod = 0, bool bAfterGrowth = false) const;
+#elif defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW)
 	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth = false) const;
 #else
 	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag);
 #endif
 
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
-	int GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonClass = NO_UNITCLASS, double dGPPYield = 0.0, int iExtraHappiness = 0, double dTourismYield = 0.0, bool bAfterGrowth = false, bool bUseAvoidGrowth = true) const;
+	int GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonClass = NO_UNITCLASS, double dGPPYield = 0.0, int iExtraHappiness = 0, double dTourismYield = 0.0, int iExtraGrowthMod = 0, bool bAfterGrowth = false, bool bUseAvoidGrowth = true) const;
 	int GetTurnsToGP(SpecialistTypes eSpecialist, double dExtraGPP = 0.0) const;
 #endif
 
@@ -129,7 +135,11 @@ public:
 	int GetNumForcedWorkingPlots() const;
 	void ChangeNumForcedWorkingPlots(int iChange);
 
+#ifdef AUI_PLAYER_RESOLVE_WORKED_PLOT_CONFLICTS
+	bool IsCanWork(CvPlot* pPlot, bool bIgnoreOverride = false) const;
+#else
 	bool IsCanWork(CvPlot* pPlot) const;
+#endif
 	bool IsPlotBlockaded(CvPlot* pPlot) const;
 	bool IsAnyPlotBlockaded() const;
 

@@ -234,7 +234,11 @@ void CvCityCitizens::DoFoundCity()
 }
 
 /// Processed every turn
+#ifdef AUI_PLAYER_RESOLVE_WORKED_PLOT_CONFLICTS
+void CvCityCitizens::DoTurn(bool bDoSpecialist)
+#else
 void CvCityCitizens::DoTurn()
+#endif
 {
 	AI_PERF_FORMAT("City-AI-perf.csv", ("CvCityCitizens::DoTurn, Turn %03d, %s, %s", GC.getGame().getElapsedGameTurns(), m_pCity->GetPlayer()->getCivilizationShortDescription(), m_pCity->getName().c_str()) );
 	DoVerifyWorkingPlots();
@@ -407,13 +411,18 @@ void CvCityCitizens::DoTurn()
 	CvAssertMsg((GetNumCitizensWorkingPlots() + GetTotalSpecialistCount() + GetNumUnassignedCitizens()) <= GetCity()->getPopulation(), "Gameplay: More workers than population in the city.");
 	DoReallocateCitizens();
 	CvAssertMsg((GetNumCitizensWorkingPlots() + GetTotalSpecialistCount() + GetNumUnassignedCitizens()) <= GetCity()->getPopulation(), "Gameplay: More workers than population in the city.");
+#ifdef AUI_PLAYER_RESOLVE_WORKED_PLOT_CONFLICTS
+	if (bDoSpecialist)
+#endif
 	DoSpecialists();
 
 	CvAssertMsg((GetNumCitizensWorkingPlots() + GetTotalSpecialistCount() + GetNumUnassignedCitizens()) <= GetCity()->getPopulation(), "Gameplay: More workers than population in the city.");
 }
 
 /// What is the overall value of the current Plot?
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, double* adBonusYields, double* adBonusYieldModifiers, int iExtraHappiness, int iExtraGrowthMod, bool bAfterGrowth) const
+#elif defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW)
 int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth) const
 #else
 int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag)
@@ -422,24 +431,46 @@ int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag)
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
 	double dYieldArray[NUM_YIELD_TYPES] = {};
 
-	dYieldArray[YIELD_FOOD] += pPlot->getYield(YIELD_FOOD);
-	dYieldArray[YIELD_PRODUCTION] += pPlot->getYield(YIELD_PRODUCTION);
-	dYieldArray[YIELD_GOLD] += pPlot->getYield(YIELD_GOLD);
-	dYieldArray[YIELD_SCIENCE] += pPlot->getYield(YIELD_SCIENCE);
-	dYieldArray[YIELD_CULTURE] += pPlot->getYield(YIELD_CULTURE);
-	dYieldArray[YIELD_FAITH] += pPlot->getYield(YIELD_FAITH);
+	dYieldArray[YIELD_FOOD] += pPlot->calculateYield(YIELD_FOOD, false, true, m_pCity);
+	dYieldArray[YIELD_PRODUCTION] += pPlot->calculateYield(YIELD_PRODUCTION, false, true, m_pCity);
+	dYieldArray[YIELD_GOLD] += pPlot->calculateYield(YIELD_GOLD, false, true, m_pCity);
+	dYieldArray[YIELD_SCIENCE] += pPlot->calculateYield(YIELD_SCIENCE, false, true, m_pCity);
+	dYieldArray[YIELD_CULTURE] += pPlot->calculateYield(YIELD_CULTURE, false, true, m_pCity);
+	dYieldArray[YIELD_FAITH] += pPlot->calculateYield(YIELD_FAITH, false, true, m_pCity);
 
-	dYieldArray[YIELD_FOOD] *= m_pCity->getBaseYieldRateModifier(YIELD_FOOD) / 100.0;
-	dYieldArray[YIELD_PRODUCTION] *= m_pCity->getBaseYieldRateModifier(YIELD_PRODUCTION) / 100.0;
-	dYieldArray[YIELD_GOLD] *= m_pCity->getBaseYieldRateModifier(YIELD_GOLD) / 100.0;
-	dYieldArray[YIELD_SCIENCE] *= m_pCity->getBaseYieldRateModifier(YIELD_SCIENCE) / 100.0;
-	dYieldArray[YIELD_CULTURE] *= m_pCity->getBaseYieldRateModifier(YIELD_CULTURE) / 100.0;
-	dYieldArray[YIELD_FAITH] *= m_pCity->getBaseYieldRateModifier(YIELD_FAITH) / 100.0;
+	if (adBonusYields != NULL)
+	{
+		dYieldArray[YIELD_FOOD] += adBonusYields[YIELD_FOOD];
+		dYieldArray[YIELD_PRODUCTION] += adBonusYields[YIELD_PRODUCTION];
+		dYieldArray[YIELD_GOLD] += adBonusYields[YIELD_GOLD];
+		dYieldArray[YIELD_SCIENCE] += adBonusYields[YIELD_SCIENCE];
+		dYieldArray[YIELD_CULTURE] += adBonusYields[YIELD_CULTURE];
+		dYieldArray[YIELD_FAITH] += adBonusYields[YIELD_FAITH];
+	}
+
+	if (adBonusYieldModifiers != NULL)
+	{
+		dYieldArray[YIELD_FOOD] *= (m_pCity->getBaseYieldRateModifier(YIELD_FOOD) + adBonusYieldModifiers[YIELD_FOOD]) / 100.0;
+		dYieldArray[YIELD_PRODUCTION] *= (m_pCity->getBaseYieldRateModifier(YIELD_PRODUCTION) + adBonusYieldModifiers[YIELD_PRODUCTION]) / 100.0;
+		dYieldArray[YIELD_GOLD] *= (m_pCity->getBaseYieldRateModifier(YIELD_GOLD) + adBonusYieldModifiers[YIELD_GOLD]) / 100.0;
+		dYieldArray[YIELD_SCIENCE] *= (m_pCity->getBaseYieldRateModifier(YIELD_SCIENCE) + adBonusYieldModifiers[YIELD_SCIENCE]) / 100.0;
+		dYieldArray[YIELD_CULTURE] *= (m_pCity->getBaseYieldRateModifier(YIELD_CULTURE) + adBonusYieldModifiers[YIELD_CULTURE]) / 100.0;
+		dYieldArray[YIELD_FAITH] *= (m_pCity->getBaseYieldRateModifier(YIELD_FAITH) + adBonusYieldModifiers[YIELD_FAITH]) / 100.0;
+	}
+	else
+	{
+		dYieldArray[YIELD_FOOD] *= m_pCity->getBaseYieldRateModifier(YIELD_FOOD) / 100.0;
+		dYieldArray[YIELD_PRODUCTION] *= m_pCity->getBaseYieldRateModifier(YIELD_PRODUCTION) / 100.0;
+		dYieldArray[YIELD_GOLD] *= m_pCity->getBaseYieldRateModifier(YIELD_GOLD) / 100.0;
+		dYieldArray[YIELD_SCIENCE] *= m_pCity->getBaseYieldRateModifier(YIELD_SCIENCE) / 100.0;
+		dYieldArray[YIELD_CULTURE] *= m_pCity->getBaseYieldRateModifier(YIELD_CULTURE) / 100.0;
+		dYieldArray[YIELD_FAITH] *= m_pCity->getBaseYieldRateModifier(YIELD_FAITH) / 100.0;
+	}
 
 	double dTourismYield = dYieldArray[YIELD_CULTURE] * m_pCity->GetCityBuildings()->GetLandmarksTourismPercent() / 100.0;
 	dTourismYield = m_pCity->GetCityCulture()->GetBaseTourism(true, int(m_pCity->GetCityCulture()->GetBaseTourismBeforeModifiers() + dTourismYield)) - m_pCity->GetCityCulture()->GetBaseTourism();
 	
-	return GetTotalValue(dYieldArray, NO_UNITCLASS, 0.0, 0, dTourismYield, bAfterGrowth, bUseAllowGrowthFlag);
+	return GetTotalValue(dYieldArray, NO_UNITCLASS, 0.0, iExtraHappiness, dTourismYield, iExtraGrowthMod, bAfterGrowth, bUseAllowGrowthFlag);
 #else
 	int iValue = 0;
 
@@ -691,7 +722,7 @@ int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag)
 
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
 /// Get the total value of a set of yields, great person points, tourism, and happiness
-int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonClass, double dGPPYield, int iExtraHappiness, double dTourismYield, bool bAfterGrowth, bool bUseAvoidGrowth) const
+int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonClass, double dGPPYield, int iExtraHappiness, double dTourismYield, int iExtraGrowthMod, bool bAfterGrowth, bool bUseAvoidGrowth) const
 {
 	double dValue = 0.0;
 
@@ -719,14 +750,14 @@ int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonC
 		}
 	}
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
-	dExcessFoodYield += (m_pCity->foodDifferenceTimes100(true, NULL, false, 0, iExtraHappiness) - m_pCity->foodDifferenceTimes100()) / 100.0;
+	dExcessFoodYield += (m_pCity->foodDifferenceTimes100(iExtraHappiness, iExtraGrowthMod) - m_pCity->foodDifferenceTimes100()) / 100.0;
 #endif
 
 	if (m_pCity->isFoodProduction())
 	{
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
-		dProductionYield += (m_pCity->foodDifferenceTimes100(iExtraHappiness, true, NULL, true, m_pCity->GetFoodProduction(int(100 * (dCurrentExcessFood + dExcessFoodYield)))) -
-			m_pCity->foodDifferenceTimes100(iExtraHappiness, true, NULL, true, m_pCity->GetFoodProduction(int(100 * dCurrentExcessFood)))) / 100.0;
+		dProductionYield += (m_pCity->foodDifferenceTimes100(iExtraHappiness, iExtraGrowthMod, true, NULL, true, m_pCity->GetFoodProduction(int(100 * (dCurrentExcessFood + dExcessFoodYield)))) -
+			m_pCity->foodDifferenceTimes100(0, 0, true, NULL, true, m_pCity->GetFoodProduction(int(100 * dCurrentExcessFood)))) / 100.0;
 #else
 		dProductionYield += (m_pCity->GetFoodProduction(int(100 * (dCurrentExcessFood + dExcessFoodYield))) - m_pCity->GetFoodProduction(int(100 * dCurrentExcessFood))) / 100.0;
 #endif
@@ -734,7 +765,7 @@ int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonC
 	}
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
 	else
-		dExcessFoodYield = m_pCity->foodDifferenceTimes100(iExtraHappiness, true, NULL, true, int(100 * dExcessFoodYield)) / 100.0;
+		dExcessFoodYield = m_pCity->foodDifferenceTimes100(iExtraHappiness, iExtraGrowthMod, true, NULL, true, int(100 * dExcessFoodYield)) / 100.0;
 #endif
 
 	double dPlayerIncome = GetPlayer()->GetTreasury()->CalculateBaseNetGoldTimes100() / 100.0;
@@ -1007,7 +1038,7 @@ int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonC
 
 		double dProductionFlavor = (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION"));
 		dProductionFlavor += (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_WONDER"));
-		dProductionFlavor += (double)MAX(pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE")), 
+		dProductionFlavor += (double)FASTMAX(pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE")), 
 										 pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DEFENSE")));
 		dProductionFlavor /= 3.0;
 		dProductionYieldValue *= pow(1.02, dProductionFlavor - GC.getDEFAULT_FLAVOR_VALUE());
@@ -1774,7 +1805,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 		dGPPChange *= (100.0 + iMod) / 100.0;
 	}
 	
-	return GetTotalValue(dYieldArray, eGPUnitClass, dGPPChange, iHappiness, 0.0, bAfterGrowth);
+	return GetTotalValue(dYieldArray, eGPUnitClass, dGPPChange, iHappiness, 0.0, 0, bAfterGrowth);
 #else
 
 	// factor in the fact that specialists may need less food
@@ -2539,7 +2570,9 @@ CvPlot* CvCityCitizens::GetBestCityPlotWithValue(int& iValue, bool bWantBest, bo
 						// Working the Plot or CAN work the Plot?
 						if(bWantWorked || IsCanWork(pLoopPlot))
 						{
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+							iValue = GetPlotValue(pLoopPlot, bWantBest, NULL, NULL, 0, 0, bAfterGrowth);
+#elif defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW)
 							iValue = GetPlotValue(pLoopPlot, bWantBest, bAfterGrowth);
 #else
 							iValue = GetPlotValue(pLoopPlot, bWantBest);
@@ -2965,9 +2998,15 @@ void CvCityCitizens::ChangeNumForcedWorkingPlots(int iChange)
 }
 
 /// Can our City work a particular CvPlot?
+#ifdef AUI_PLAYER_RESOLVE_WORKED_PLOT_CONFLICTS
+bool CvCityCitizens::IsCanWork(CvPlot* pPlot, bool bIgnoreOverride) const
+{
+	if (pPlot->getWorkingCity() != m_pCity && !bIgnoreOverride)
+#else
 bool CvCityCitizens::IsCanWork(CvPlot* pPlot) const
 {
 	if(pPlot->getWorkingCity() != m_pCity)
+#endif
 	{
 		return false;
 	}
