@@ -298,7 +298,11 @@ public:
 
 		~base_iterator(){};
 
+#ifdef AUI_WARNING_FIXES
+		const base_iterator operator++(int){
+#else
 		const base_iterator operator++(int notused){
+#endif
 			base_iterator temp = *this;
 			++(*this);
 			return temp;

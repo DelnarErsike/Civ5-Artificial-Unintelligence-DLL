@@ -85,7 +85,11 @@ class FSTLBlockAllocator
 		{
 		}
 
+#ifdef AUI_WARNING_FIXES
+		FSTLBlockAllocator(const FSTLBlockAllocator<T, uBlockCountT> &)
+#else
 		FSTLBlockAllocator(const FSTLBlockAllocator<T, uBlockCountT> & rhs)
+#endif
 		{
 		}
 
@@ -122,7 +126,11 @@ class FSTLBlockAllocator
 		//---------------------------------------------------------------------
 		//
 		//---------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+		pointer allocate(size_type nCount, const void *)
+#else
 		pointer allocate(size_type nCount, const void * pHint)
+#endif
 		{
 			if (nCount == 1)
 			{

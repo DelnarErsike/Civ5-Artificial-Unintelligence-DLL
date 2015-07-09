@@ -1977,9 +1977,15 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 			CvBuildingEntry *pkBuilding = GC.getBuildingInfo((BuildingTypes)iI);
 			if (pkBuilding)
 			{
+#ifdef AUI_WARNING_FIXES
+				for (uint jJ = 0; jJ < pkBuilding->GetGreatWorkCount(); jJ++)
+				{
+					int iGreatWork = pOldCity->GetCityBuildings()->GetBuildingGreatWork((BuildingClassTypes)pkBuilding->GetBuildingClassType(), (int)jJ);
+#else
 				for (int jJ = 0; jJ < pkBuilding->GetGreatWorkCount(); jJ++)
 				{
 					int iGreatWork = pOldCity->GetCityBuildings()->GetBuildingGreatWork((BuildingClassTypes)pkBuilding->GetBuildingClassType(), jJ);
+#endif
 					if (iGreatWork != NO_GREAT_WORK)
 					{
 						CopyGreatWorkData kData;
@@ -23903,9 +23909,15 @@ int CvPlayer::getGrowthThreshold(int iPopulation) const
 /// This sets up the m_aiPlots array that is used to contain which plots the player contains
 void CvPlayer::InitPlots(void)
 {
+#ifdef AUI_WARNING_FIXES
+	int iNumPlots = GC.getMap().numPlots();
+	// in case we're loading
+	if (iNumPlots != int(m_aiPlots.size()))
+#else
 	int iNumPlots = GC.getMap().getGridHeight() * GC.getMap().getGridHeight();
 	// in case we're loading
 	if(iNumPlots != m_aiPlots.size())
+#endif
 	{
 		m_aiPlots.clear();
 		m_aiPlots.push_back_copy(-1, iNumPlots);

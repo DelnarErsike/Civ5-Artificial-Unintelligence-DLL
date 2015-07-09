@@ -35,7 +35,8 @@ struct CvDangerPlotContents
 		}
 		else if (!m_pPlot)
 		{
-			if (!(m_pPlot = GC.getMap().plot(iX, iY)))
+			m_pPlot = GC.getMap().plot(iX, iY);
+			if (!m_pPlot)
 			{
 				m_iX = INVALID_PLOT_COORD;
 				m_iY = INVALID_PLOT_COORD;

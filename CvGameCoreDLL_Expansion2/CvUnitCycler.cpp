@@ -117,7 +117,11 @@ void CvUnitCycler::Rebuild(CvUnit *pkStartUnit /* = NULL */)
 }
 
 //	---------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvUnitCycler::AddUnit(int)
+#else
 void CvUnitCycler::AddUnit(int iID)
+#endif
 {
 	Rebuild();
 }

@@ -202,7 +202,11 @@ void CvBuilderTaskingAI::Update(void)
 
 			LogInfo(str, m_pPlayer, bShowOutput);
 
+#ifdef AUI_WARNING_FIXES
+			for (int ui = 0; ui < NUM_YIELD_TYPES; ui++)
+#else
 			for(uint ui = 0; ui < NUM_YIELD_TYPES; ui++)
+#endif
 			{
 				//double fYield = pLoopCity->GetCityStrategyAI()->GetYieldAverage((YieldTypes)ui);
 				//double fYieldDeficient = pLoopCity->GetCityStrategyAI()->GetDeficientYieldValue((YieldTypes)ui);
@@ -402,7 +406,11 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 	}
 
 
+#ifdef AUI_WARNING_FIXES
+	int sValue = -1;
+#else
 	short sValue = -1;
+#endif
 #ifdef AUI_WORKER_FIX_CONNECT_CITIES_TO_CAPITOL_CONSIDER_MAINTENANCE_MODIFIERS
 #ifdef AUI_WORKER_INCA_HILLS
 	int iTotalMaintenance = (iRoadLength - iFreeIncaRoadLength) * iMaintenancePerTile;
@@ -431,7 +439,11 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 	{
 		if(iProfit >= 0)
 		{
+#ifdef AUI_WARNING_FIXES
+			sValue = MAX_INT;
+#else
 			sValue = MAX_SHORT;
+#endif
 		}
 		else if(m_pPlayer->calculateGoldRate() + iProfit >= 0)
 		{
@@ -444,7 +456,11 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 	}
 	else if(bMajorMinorConnection)
 	{
+#ifdef AUI_WARNING_FIXES
+		sValue = FASTMIN(GC.getMINOR_CIV_ROUTE_QUEST_WEIGHT() / iPlotsNeeded, MAX_INT);
+#else
 		sValue = min(GC.getMINOR_CIV_ROUTE_QUEST_WEIGHT() / iPlotsNeeded, MAX_SHORT);
+#endif
 	}
 	else // normal route
 	{
@@ -467,7 +483,11 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 		iValue = (iValue * iRoadLength) / iPlotsNeeded;
 #endif
 #endif
+#ifdef AUI_WARNING_FIXES
+		sValue = FASTMIN(iValue, MAX_INT);
+#else
 		sValue = min(iValue, MAX_SHORT);
+#endif
 	}
 
 	pPlot = NULL;
@@ -3603,7 +3623,12 @@ void CvBuilderTaskingAI::LogDirective(BuilderDirective directive, CvUnit* pUnit,
 			strLog += pkResourceInfo->GetType();
 			strLog += ",";
 			CvPlot* pPlot = GC.getMap().plot(directive.m_sX, directive.m_sY);
+#ifdef AUI_WARNING_FIXES
+			strTemp.Format("%d,", pPlot->getNumResource());
+			strLog += strTemp;
+#else
 			strLog += pPlot->getNumResource();
+#endif
 			strLog += ",";
 		}
 	}

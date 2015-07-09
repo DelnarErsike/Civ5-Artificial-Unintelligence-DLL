@@ -75,7 +75,6 @@ public:
 	//------------
 	~FScopedCriticalSection( void );
 
-
 private:
 	// Members:
 	//--------

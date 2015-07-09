@@ -44,8 +44,13 @@ public:
 	bool isWater() const;
 	bool isLake() const;
 
+#ifdef AUI_WARNING_FIXES
+	int GetContinentType() const;
+	void SetContinentType(const int iContinent);
+#else
 	char GetContinentType() const;
 	void SetContinentType(const char cContinent);
+#endif
 
 	void ChangeCentroidX(int iDelta);
 	void ChangeCentroidY(int iDelta);
@@ -60,7 +65,11 @@ protected:
 
 	int m_iID;
 	int m_iNumTiles;
+#ifdef AUI_WARNING_FIXES
+	int m_cContinentType;
+#else
 	char m_cContinentType;
+#endif
 	bool m_bWater;
 	int m_iCentroidX;
 	int m_iCentroidY;
@@ -145,7 +154,11 @@ public:
 
 	inline int isPlot(int iX, int iY) const
 	{
+#ifdef AUI_WARNING_FIXES
+		return ((iX >= 0) && (uint(iX) < getGridWidth()) && (iY >= 0) && (uint(iY) < getGridHeight()));
+#else
 		return ((iX >= 0) && (iX < getGridWidth()) && (iY >= 0) && (iY < getGridHeight()));
+#endif
 	}
 
 	inline int numPlots() const
@@ -153,9 +166,18 @@ public:
 		return m_iGridSize;
 	}
 
+#ifdef AUI_WARNING_FIXES
+	inline uint plotNum(int iX, int iY) const
+	{
+		if (isPlot(iX, iY))
+			return ((uint(iY) * getGridWidth()) + uint(iX));
+		else
+			return MAX_UNSIGNED_INT;
+#else
 	inline int plotNum(int iX, int iY) const
 	{
 		return ((iY * getGridWidth()) + iX);
+#endif
 	}
 
 	int plotX(int iIndex) const;
@@ -163,11 +185,19 @@ public:
 
 	int maxPlotDistance();
 
+#ifdef AUI_WARNING_FIXES
+	inline uint getGridWidth() const
+#else
 	inline int getGridWidth() const
+#endif
 	{
 		return m_iGridWidth;
 	}
+#ifdef AUI_WARNING_FIXES
+	inline uint getGridHeight() const
+#else
 	inline int getGridHeight() const
+#endif
 	{
 		return m_iGridHeight;
 	}
@@ -305,9 +335,15 @@ public:
 
 protected:
 
+#ifdef AUI_WARNING_FIXES
+	uint m_iGridWidth;
+	uint m_iGridHeight;
+	uint m_iGridSize; // not serialized as it is always w*h
+#else
 	int m_iGridWidth;
 	int m_iGridHeight;
 	int m_iGridSize; // not serialized as it is always w*h
+#endif
 	int m_iLandPlots;
 	int m_iOwnedPlots;
 	int m_iTopLatitude;
@@ -328,6 +364,16 @@ protected:
 
 	CvPlot* m_pMapPlots;
 
+#ifdef AUI_WARNING_FIXES
+	int* m_pYields;
+	int*   m_pFoundValue;
+	int*  m_pPlayerCityRadiusCount;
+	int* m_pVisibilityCount;
+	int*  m_pRevealedOwner;
+	bool*  m_pRevealed;
+	int* m_pRevealedImprovementType;
+	int* m_pRevealedRouteType;
+#else
 	short* m_pYields;
 	int*   m_pFoundValue;
 	char*  m_pPlayerCityRadiusCount;
@@ -336,6 +382,7 @@ protected:
 	bool*  m_pRevealed;
 	short* m_pRevealedImprovementType;
 	short* m_pRevealedRouteType;
+#endif
 	bool*  m_pNoSettling;
 	bool* m_pResourceForceReveal;
 

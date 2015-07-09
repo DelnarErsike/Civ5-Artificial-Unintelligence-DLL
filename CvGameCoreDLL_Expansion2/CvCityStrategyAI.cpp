@@ -231,7 +231,11 @@ CvAICityStrategyEntry* CvAICityStrategies::GetEntry(int index)
 //=====================================
 
 /// defining static
+#ifdef AUI_WARNING_FIXES
+unsigned int CvCityStrategyAI::m_acBestYields[NUM_YIELD_TYPES][NUM_CITY_PLOTS];
+#else
 unsigned char  CvCityStrategyAI::m_acBestYields[NUM_YIELD_TYPES][NUM_CITY_PLOTS];
+#endif
 
 /// Constructor
 CvCityStrategyAI::CvCityStrategyAI():
@@ -2050,12 +2054,20 @@ void CvCityStrategyAI::UpdateBestYields()
 	m_eFocusYield = pEntry->GetYieldType();
 }
 
+#ifdef AUI_WARNING_FIXES
+unsigned int CvCityStrategyAI::GetBestYieldAverageTimes100(YieldTypes eYield)
+#else
 unsigned short CvCityStrategyAI::GetBestYieldAverageTimes100(YieldTypes eYield)
+#endif
 {
 	return m_asBestYieldAverageTimes100[eYield];
 }
 
+#ifdef AUI_WARNING_FIXES
+int CvCityStrategyAI::GetYieldDeltaTimes100(YieldTypes eYield)
+#else
 short CvCityStrategyAI::GetYieldDeltaTimes100(YieldTypes eYield)
+#endif
 {
 	return m_asYieldDeltaTimes100[eYield];
 }

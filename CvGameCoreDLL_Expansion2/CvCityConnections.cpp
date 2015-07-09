@@ -279,7 +279,11 @@ void CvCityConnections::UpdateRouteInfo(void)
 
 	// pass 0 = can cities connect via water routes
 	// pass 1 = can cities connect via land and water routes
+#ifdef AUI_WARNING_FIXES
+	for (char iPass = 0; iPass < 2; iPass++)
+#else
 	for(int iPass = 0; iPass < 2; iPass++)
+#endif
 	{
 		if(iPass == 0 && !bAllowWaterRoutes)  // if in the first pass, we can't embark, skip
 		{

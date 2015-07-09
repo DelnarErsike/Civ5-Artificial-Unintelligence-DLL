@@ -36,8 +36,13 @@ private:
 	static UnitTypes GetRandomBarbarianUnitType(CvArea* pArea, UnitAITypes eUnitAI);
 	static void DoCampActivationNotice(CvPlot* pPlot);
 
+#ifdef AUI_WARNING_FIXES
+	static int* m_aiPlotBarbCampSpawnCounter;
+	static int* m_aiPlotBarbCampNumUnitsSpawned;
+#else
 	static short* m_aiPlotBarbCampSpawnCounter;
 	static short* m_aiPlotBarbCampNumUnitsSpawned;
+#endif
 	static FStaticVector<DirectionTypes, 6, true, c_eCiv5GameplayDLL, 0> m_aeValidBarbSpawnDirections;
 };
 

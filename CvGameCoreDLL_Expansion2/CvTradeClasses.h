@@ -33,7 +33,11 @@ struct TradeConnection
 	PlayerTypes m_eDestOwner;
 	DomainTypes m_eDomain;
 	TradeConnectionType m_eConnectionType;
+#ifdef AUI_WARNING_FIXES
+	uint m_iTradeUnitLocationIndex;
+#else
 	int m_iTradeUnitLocationIndex;
+#endif
 	bool m_bTradeUnitMovingForward;
 	TradeConnectionPlotList m_aPlotList;
 	int m_unitID;

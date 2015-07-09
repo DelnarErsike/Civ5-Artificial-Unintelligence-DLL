@@ -1454,7 +1454,11 @@ bool GetGUIDSegment(const char* pszGUID, uint* puiIndex, T& kDest)
 		{
 			UINT uiValue = 0;
 			if(GetHexDigitValue(pszGUID[*puiIndex], uiValue))
+#ifdef AUI_WARNING_FIXES
+				kDest = T((kDest * 16) + uiValue);
+#else
 				kDest = (kDest * 16) + uiValue;
+#endif
 			else
 				return false;
 			*puiIndex += 1;

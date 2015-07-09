@@ -33,7 +33,11 @@ struct AutoVectorCommand
 {
 	enum CommandTypes
 	{
+#ifdef AUI_WARNING_FIXES
+		ERASE = 0
+#else
 		ERASE
+#endif
 		, INSERT
 		, SET
 		, PUSH_BACK
@@ -70,7 +74,11 @@ struct AutoVectorCommand
 		return true;
 	}
 
+#ifdef AUI_WARNING_FIXES
+	CommandTypes command;
+#else
 	unsigned char command;
+#endif
 	unsigned int  index;
 	ElementType   value;
 };

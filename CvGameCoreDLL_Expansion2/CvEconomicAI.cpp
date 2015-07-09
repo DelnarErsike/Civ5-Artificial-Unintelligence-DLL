@@ -274,7 +274,11 @@ void CvEconomicAI::Init(CvEconomicAIStrategyXMLEntries* pAIStrategies, CvPlayer*
 	m_aiTempFlavors = FNEW(int[GC.getNumFlavorTypes()], c_eCiv5GameplayDLL, 0);
 
 	m_auiYields.clear();
+#ifdef AUI_WARNING_FIXES
+	m_auiYields.push_back_copy(0, uint(NUM_YIELD_TYPES));
+#else
 	m_auiYields.push_back_copy(-1, NUM_YIELD_TYPES);
+#endif
 	m_RequestedSavings.clear();
 
 	Reset();

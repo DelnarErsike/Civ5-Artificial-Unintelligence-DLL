@@ -46,10 +46,19 @@ struct BuilderDirective
 
 	BuildTypes m_eBuild;
 	ResourceTypes m_eResource;
+#ifdef AUI_WARNING_FIXES
+	int m_sX;
+	int m_sY;
+#else
 	short m_sX;
 	short m_sY;
+#endif
 	//int m_iGoldCost;
+#ifdef AUI_WARNING_FIXES
+	int m_sMoveTurnsAway;
+#else
 	short m_sMoveTurnsAway;
+#endif
 };
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

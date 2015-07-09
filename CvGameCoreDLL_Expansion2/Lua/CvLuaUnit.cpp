@@ -4460,7 +4460,9 @@ int CvLuaUnit::lCanStartMission(lua_State* L)
 	const int iData2 = lua_tointeger(L, 4);
 	CvPlot* pkPlot = CvLuaPlot::GetInstance(L, 5, false);
 	const bool bTestVisible = luaL_optint(L, 6, 0);
+#ifndef AUI_WARNING_FIXES
 	const bool bUseCache = luaL_optint(L, 7, 0);
+#endif
 
 	const bool bResult = pkUnit->CanStartMission(iMission, iData1, iData2, pkPlot, bTestVisible);
 	lua_pushboolean(L, bResult);

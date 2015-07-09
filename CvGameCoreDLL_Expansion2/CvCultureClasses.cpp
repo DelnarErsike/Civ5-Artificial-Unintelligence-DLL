@@ -6588,14 +6588,22 @@ int CultureHelpers::GetThemingBonusIndex(PlayerTypes eOwner, CvBuildingEntry *pk
 
 	if (pkEntry)
 	{
+#ifdef AUI_WARNING_FIXES
+		uint iNumSlots = pkEntry->GetGreatWorkCount();
+#else
 		int iNumSlots = pkEntry->GetGreatWorkCount();
+#endif
 		if (aGreatWorkIndices.size() != iNumSlots)
 		{
 			return -1;  // No theming bonus if some slots still empty or too many entries
 		}
 
 		// Store info on the attributes of all our Great Works
+#ifdef AUI_WARNING_FIXES
+		for (uint iI = 0; iI < iNumSlots; iI++)
+#else
 		for (int iI = 0; iI < iNumSlots; iI++)
+#endif
 		{
 			int iGreatWork = aGreatWorkIndices[iI];
 			CvGreatWork work = pCulture->m_CurrentGreatWorks[iGreatWork];

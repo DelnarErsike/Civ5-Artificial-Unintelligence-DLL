@@ -34,6 +34,8 @@
 #define AUI_CONSTIFY
 /// Removes unused functions that simply increase filesize of the DLL without providing any benefit
 #define AUI_PRUNING
+/// Fixes some sources for level 4 warnings
+#define AUI_WARNING_FIXES
 /// Changes the scopes of certain functions to fall in line with other functions of the same type (eg. CvUnit::CanFallBackFromMelee() is public instead of protected)
 #define AUI_SCOPE_FIXES
 /// Caches certain modifiers that were not cached before to help with performance and stability
@@ -146,7 +148,7 @@
 #define AUI_MAP_FIX_CALCULATE_INFLUENCE_DISTANCE_REUSE_PATHFINDER
 /// Fixes radar
 #define AUI_ASTAR_FIX_RADAR
-/// Fixes more rarer cases of radar
+/// Fixes rarer cases of radar
 #define AUI_UNIT_FIX_RADAR
 /// Fixes cases of indirect radaring via ZOC.
 #define AUI_UNIT_MOVEMENT_FIX_RADAR_ZOC

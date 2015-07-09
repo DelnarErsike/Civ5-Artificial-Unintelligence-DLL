@@ -3850,7 +3850,11 @@ bool CvBuildInfo::CacheResults(Database::Results& kResults, CvDatabaseUtility& k
 }
 
 /// Helper function to read in an integer array of data sized according to number of build types
+#ifdef AUI_WARNING_FIXES
+void BuildArrayHelpers::Read(FDataStream& kStream, int* paiBuildArray)
+#else
 void BuildArrayHelpers::Read(FDataStream& kStream, short* paiBuildArray)
+#endif
 {
 	int iNumEntries;
 	int iType;
@@ -3882,7 +3886,11 @@ void BuildArrayHelpers::Read(FDataStream& kStream, short* paiBuildArray)
 }
 
 /// Helper function to write out an integer array of data sized according to number of building types
+#ifdef AUI_WARNING_FIXES
+void BuildArrayHelpers::Write(FDataStream& kStream, int* paiBuildArray, int iArraySize)
+#else
 void BuildArrayHelpers::Write(FDataStream& kStream, short* paiBuildArray, int iArraySize)
+#endif
 {
 	kStream << iArraySize;
 

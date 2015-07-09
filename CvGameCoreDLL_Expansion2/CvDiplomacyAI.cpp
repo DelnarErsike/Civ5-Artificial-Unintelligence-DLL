@@ -1039,17 +1039,51 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 
 	int iI;
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapMajorOpinion(MAX_MAJOR_CIVS, m_paeMajorCivOpinion);
+#else
 	ArrayWrapper<char> wrapMajorOpinion(MAX_MAJOR_CIVS, m_paeMajorCivOpinion);
+#endif
 	kStream >> wrapMajorOpinion;
 
 	for(iI = 0; iI < MAX_MAJOR_CIVS; iI++)
 	{
+#ifdef AUI_WARNING_FIXES
+		ArrayWrapper<int> wrapOtherMajorOpinion(MAX_MAJOR_CIVS, m_ppaaeOtherPlayerMajorCivOpinion[iI]);
+#else
 		ArrayWrapper<char> wrapOtherMajorOpinion(MAX_MAJOR_CIVS, m_ppaaeOtherPlayerMajorCivOpinion[iI]);
+#endif
 		kStream >> wrapOtherMajorOpinion;
 
 		ArrayWrapper<bool> wrapWorkingAgainstPlayerAccepted(MAX_MAJOR_CIVS, m_ppaabWorkingAgainstPlayerAccepted[iI]);
 		kStream >> wrapWorkingAgainstPlayerAccepted;
 
+#ifdef AUI_WARNING_FIXES
+		ArrayWrapper<int> workingAgainstPlayerCounter(MAX_MAJOR_CIVS, m_ppaaiWorkingAgainstPlayerCounter[iI]);
+		kStream >> workingAgainstPlayerCounter;
+
+		ArrayWrapper<int> wrapCoopWarAcceptedState(MAX_MAJOR_CIVS, m_ppaacCoopWarAcceptedState[iI]);
+		kStream >> wrapCoopWarAcceptedState;
+
+		ArrayWrapper<int> wrapCoopWarCounter(MAX_MAJOR_CIVS, m_ppaaiCoopWarCounter[iI]);
+		kStream >> wrapCoopWarCounter;
+	}
+
+	ArrayWrapper<int> wrapm_paeMajorCivApproach(MAX_MAJOR_CIVS, m_paeMajorCivApproach);
+	kStream >> wrapm_paeMajorCivApproach;
+
+	ArrayWrapper<int> wrapm_paeMinorCivApproach(MAX_MINOR_CIVS, m_paeMinorCivApproach);
+	kStream >> wrapm_paeMinorCivApproach;
+
+	ArrayWrapper<int> wrapm_paeApproachTowardsUsGuess(MAX_MAJOR_CIVS, m_paeApproachTowardsUsGuess);
+	kStream >> wrapm_paeApproachTowardsUsGuess;
+
+	ArrayWrapper<int> wrapm_paeApproachTowardsUsGuessCounter(MAX_MAJOR_CIVS, m_paeApproachTowardsUsGuessCounter);
+	kStream >> wrapm_paeApproachTowardsUsGuessCounter;
+
+
+	ArrayWrapper<int> wrapm_paiNumWondersBeatenTo(MAX_CIV_PLAYERS, m_paiNumWondersBeatenTo);
+#else
 		ArrayWrapper<short> workingAgainstPlayerCounter(MAX_MAJOR_CIVS, m_ppaaiWorkingAgainstPlayerCounter[iI]);
 		kStream >> workingAgainstPlayerCounter;
 
@@ -1074,6 +1108,7 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 
 
 	ArrayWrapper<short> wrapm_paiNumWondersBeatenTo(MAX_CIV_PLAYERS, m_paiNumWondersBeatenTo);
+#endif
 	kStream >> wrapm_paiNumWondersBeatenTo;
 
 	ArrayWrapper<bool> wrapm_pabMusteringForAttack(MAX_CIV_PLAYERS, m_pabMusteringForAttack);
@@ -1087,6 +1122,74 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 	kStream >> wrapm_pabWantToRouteToMinor;
 
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paeWantPeaceCounter(MAX_CIV_PLAYERS, m_paeWantPeaceCounter);
+	kStream >> wrapm_paeWantPeaceCounter;
+
+	ArrayWrapper<int> wrapm_paePeaceTreatyWillingToOffer(MAX_MAJOR_CIVS, m_paePeaceTreatyWillingToOffer);
+	kStream >> wrapm_paePeaceTreatyWillingToOffer;
+
+	ArrayWrapper<int> wrapm_paePeaceTreatyWillingToAccept(MAX_MAJOR_CIVS, m_paePeaceTreatyWillingToAccept);
+	kStream >> wrapm_paePeaceTreatyWillingToAccept;
+
+
+	ArrayWrapper<int> wrapm_paeWarFace(MAX_CIV_PLAYERS, m_paeWarFace);
+	kStream >> wrapm_paeWarFace;
+
+	ArrayWrapper<int> wrapm_paeWarState(MAX_CIV_PLAYERS, m_paeWarState);
+	kStream >> wrapm_paeWarState;
+
+	ArrayWrapper<int> wrapm_paeWarProjection(MAX_CIV_PLAYERS, m_paeWarProjection);
+	kStream >> wrapm_paeWarProjection;
+
+	ArrayWrapper<int> wrapm_paeLastWarProjection(MAX_CIV_PLAYERS, m_paeLastWarProjection);
+	kStream >> wrapm_paeLastWarProjection;
+
+	ArrayWrapper<int> wrapm_paeWarGoal(MAX_CIV_PLAYERS, m_paeWarGoal);
+	kStream >> wrapm_paeWarGoal;
+
+	ArrayWrapper<int> wrapm_paiPlayerNumTurnsAtWar(MAX_CIV_PLAYERS, m_paiPlayerNumTurnsAtWar);
+	kStream >> wrapm_paiPlayerNumTurnsAtWar;
+
+	ArrayWrapper<int> wrapm_paiNumWarsFought(MAX_CIV_PLAYERS, m_paiNumWarsFought);
+	kStream >> wrapm_paiNumWarsFought;
+
+	ArrayWrapper<int> wrapm_paePlayerMilitaryStrengthComparedToUs(MAX_CIV_PLAYERS, m_paePlayerMilitaryStrengthComparedToUs);
+	kStream >> wrapm_paePlayerMilitaryStrengthComparedToUs;
+
+	ArrayWrapper<int> wrapm_paePlayerEconomicStrengthComparedToUs(MAX_CIV_PLAYERS, m_paePlayerEconomicStrengthComparedToUs);
+	kStream >> wrapm_paePlayerEconomicStrengthComparedToUs;
+
+	ArrayWrapper<int> wrapm_paePlayerTargetValue(MAX_CIV_PLAYERS, m_paePlayerTargetValue);
+	kStream >> wrapm_paePlayerTargetValue;
+
+
+	ArrayWrapper<int> wrapm_paePlayerLandDisputeLevel(MAX_CIV_PLAYERS, m_paePlayerLandDisputeLevel);
+	kStream >> wrapm_paePlayerLandDisputeLevel;
+
+	ArrayWrapper<int> wrapm_paePlayerLastTurnLandDisputeLevel(MAX_CIV_PLAYERS, m_paePlayerLastTurnLandDisputeLevel);
+	kStream >> wrapm_paePlayerLastTurnLandDisputeLevel;
+
+	ArrayWrapper<int> wrapm_paePlayerVictoryDisputeLevel(MAX_CIV_PLAYERS, m_paePlayerVictoryDisputeLevel);
+	kStream >> wrapm_paePlayerVictoryDisputeLevel;
+
+	ArrayWrapper<int> wrapm_paePlayerWonderDisputeLevel(MAX_CIV_PLAYERS, m_paePlayerWonderDisputeLevel);
+	kStream >> wrapm_paePlayerWonderDisputeLevel;
+
+	ArrayWrapper<int> wrapm_paePlayerMinorCivDisputeLevel(MAX_CIV_PLAYERS, m_paePlayerMinorCivDisputeLevel);
+	kStream >> wrapm_paePlayerMinorCivDisputeLevel;
+
+
+	for(iI = 0; iI < MAX_CIV_PLAYERS; iI++)
+	{
+		ArrayWrapper<int> wrapm_ppaaeOtherPlayerLandDisputeLevel(MAX_CIV_PLAYERS, m_ppaaeOtherPlayerLandDisputeLevel[iI]);
+		kStream >> wrapm_ppaaeOtherPlayerLandDisputeLevel;
+
+		ArrayWrapper<int> wrapm_ppaaeOtherPlayerVictoryDisputeLevel(MAX_CIV_PLAYERS, m_ppaaeOtherPlayerVictoryDisputeLevel[iI]);
+		kStream >> wrapm_ppaaeOtherPlayerVictoryDisputeLevel;
+
+		ArrayWrapper<int> wrapm_ppaaeOtherPlayerWarDamageLevel(MAX_CIV_PLAYERS, m_ppaaeOtherPlayerWarDamageLevel[iI]);
+#else
 	ArrayWrapper<short> wrapm_paeWantPeaceCounter(MAX_CIV_PLAYERS, m_paeWantPeaceCounter);
 	kStream >> wrapm_paeWantPeaceCounter;
 
@@ -1153,12 +1256,17 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 		kStream >> wrapm_ppaaeOtherPlayerVictoryDisputeLevel;
 
 		ArrayWrapper<char> wrapm_ppaaeOtherPlayerWarDamageLevel(MAX_CIV_PLAYERS, m_ppaaeOtherPlayerWarDamageLevel[iI]);
+#endif
 		kStream >> wrapm_ppaaeOtherPlayerWarDamageLevel;
 
 		ArrayWrapper<int> wrapm_ppaaiOtherPlayerWarValueLost(MAX_CIV_PLAYERS, m_ppaaiOtherPlayerWarValueLost[iI]);
 		kStream >> wrapm_ppaaiOtherPlayerWarValueLost;
 
+#ifdef AUI_WARNING_FIXES
+		ArrayWrapper<int> wrapm_ppaaeOtherPlayerMilitaryThreat(MAX_CIV_PLAYERS, m_ppaaeOtherPlayerMilitaryThreat[iI]);
+#else
 		ArrayWrapper<char> wrapm_ppaaeOtherPlayerMilitaryThreat(MAX_CIV_PLAYERS, m_ppaaeOtherPlayerMilitaryThreat[iI]);
+#endif
 		kStream >> wrapm_ppaaeOtherPlayerMilitaryThreat;
 	}
 
@@ -1171,12 +1279,34 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 		kStream >> wrapm_ppaabSentAttackMessageToMinorCivProtector;
 	}
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paeWarDamageLevel(MAX_CIV_PLAYERS, m_paeWarDamageLevel);
+#else
 	ArrayWrapper<char> wrapm_paeWarDamageLevel(MAX_CIV_PLAYERS, m_paeWarDamageLevel);
+#endif
 	kStream >> wrapm_paeWarDamageLevel;
 
 	ArrayWrapper<int> wrapm_paiWarValueLost(MAX_CIV_PLAYERS, m_paiWarValueLost);
 	kStream >> wrapm_paiWarValueLost;
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paeMilitaryAggressivePosture(MAX_CIV_PLAYERS, m_paeMilitaryAggressivePosture);
+	kStream >> wrapm_paeMilitaryAggressivePosture;
+
+	ArrayWrapper<int> wrapm_paeLastTurnMilitaryAggressivePosture(MAX_CIV_PLAYERS, m_paeLastTurnMilitaryAggressivePosture);
+	kStream >> wrapm_paeLastTurnMilitaryAggressivePosture;
+
+	ArrayWrapper<int> wrapm_paeExpansionAggressivePosture(MAX_CIV_PLAYERS, m_paeExpansionAggressivePosture);
+	kStream >> wrapm_paeExpansionAggressivePosture;
+
+	ArrayWrapper<int> wrapm_paePlotBuyingAggressivePosture(MAX_CIV_PLAYERS, m_paePlotBuyingAggressivePosture);
+	kStream >> wrapm_paePlotBuyingAggressivePosture;
+
+	ArrayWrapper<int> wrapm_paeMilitaryThreat(MAX_CIV_PLAYERS, m_paeMilitaryThreat);
+	kStream >> wrapm_paeMilitaryThreat;
+
+	ArrayWrapper<int> wrapm_paeWarmongerThreat(MAX_CIV_PLAYERS, m_paeWarmongerThreat);
+#else
 	ArrayWrapper<char> wrapm_paeMilitaryAggressivePosture(MAX_CIV_PLAYERS, m_paeMilitaryAggressivePosture);
 	kStream >> wrapm_paeMilitaryAggressivePosture;
 
@@ -1193,17 +1323,31 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 	kStream >> wrapm_paeMilitaryThreat;
 
 	ArrayWrapper<char> wrapm_paeWarmongerThreat(MAX_CIV_PLAYERS, m_paeWarmongerThreat);
+#endif
 	kStream >> wrapm_paeWarmongerThreat;
 
 	ArrayWrapper<bool> wrapm_pabPlayerNoSettleRequestAccepted(MAX_MAJOR_CIVS, m_pabPlayerNoSettleRequestAccepted);
 	kStream >> wrapm_pabPlayerNoSettleRequestAccepted;
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paiPlayerNoSettleRequestCounter(MAX_MAJOR_CIVS, m_paiPlayerNoSettleRequestCounter);
+#else
 	ArrayWrapper<short> wrapm_paiPlayerNoSettleRequestCounter(MAX_MAJOR_CIVS, m_paiPlayerNoSettleRequestCounter);
+#endif
 	kStream >> wrapm_paiPlayerNoSettleRequestCounter;
 
 	ArrayWrapper<bool> wrapm_pabPlayerStopSpyingRequestAccepted(MAX_MAJOR_CIVS, m_pabPlayerStopSpyingRequestAccepted);
 	kStream >> wrapm_pabPlayerStopSpyingRequestAccepted;
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paiPlayerStopSpyingRequestCounter(MAX_MAJOR_CIVS, m_paiPlayerStopSpyingRequestCounter);
+	kStream >> wrapm_paiPlayerStopSpyingRequestCounter;
+
+	ArrayWrapper<int> wrapm_paiDemandCounter(MAX_MAJOR_CIVS, m_paiDemandCounter);
+	kStream >> wrapm_paiDemandCounter;
+
+	ArrayWrapper<int> wrapm_paiDemandTooSoonNumTurns(MAX_MAJOR_CIVS, m_paiDemandTooSoonNumTurns);
+#else
 	ArrayWrapper<short> wrapm_paiPlayerStopSpyingRequestCounter(MAX_MAJOR_CIVS, m_paiPlayerStopSpyingRequestCounter);
 	kStream >> wrapm_paiPlayerStopSpyingRequestCounter;
 
@@ -1211,12 +1355,17 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 	kStream >> wrapm_paiDemandCounter;
 
 	ArrayWrapper<short> wrapm_paiDemandTooSoonNumTurns(MAX_MAJOR_CIVS, m_paiDemandTooSoonNumTurns);
+#endif
 	kStream >> wrapm_paiDemandTooSoonNumTurns;
 
 	ArrayWrapper<bool> wrapm_pabDoFAccepted(MAX_MAJOR_CIVS, m_pabDoFAccepted);
 	kStream >> wrapm_pabDoFAccepted;
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paiDoFCounter(MAX_MAJOR_CIVS, m_paiDoFCounter);
+#else
 	ArrayWrapper<short> wrapm_paiDoFCounter(MAX_MAJOR_CIVS, m_paiDoFCounter);
+#endif
 	kStream >> wrapm_paiDoFCounter;
 
 	ArrayWrapper<bool> wrapm_pabDenouncedPlayer(MAX_MAJOR_CIVS, m_pabDenouncedPlayer);
@@ -1225,12 +1374,87 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 	ArrayWrapper<bool> wrapm_pabFriendDenouncedUs(MAX_MAJOR_CIVS, m_pabFriendDenouncedUs);
 	kStream >> wrapm_pabFriendDenouncedUs;
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paiDenouncedPlayerCounter(MAX_MAJOR_CIVS, m_paiDenouncedPlayerCounter);
+#else
 	ArrayWrapper<short> wrapm_paiDenouncedPlayerCounter(MAX_MAJOR_CIVS, m_paiDenouncedPlayerCounter);
+#endif
 	kStream >> wrapm_paiDenouncedPlayerCounter;
 
 	ArrayWrapper<bool> wrapm_pabFriendDeclaredWarOnUs(MAX_MAJOR_CIVS, m_pabFriendDeclaredWarOnUs);
 	kStream >> wrapm_pabFriendDeclaredWarOnUs;
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paiNumRequestsRefused(MAX_MAJOR_CIVS, m_paiNumRequestsRefused);
+	kStream >> wrapm_paiNumRequestsRefused;
+
+	ArrayWrapper<int> wrapm_paiNumCiviliansReturnedToMe(MAX_MAJOR_CIVS, m_paiNumCiviliansReturnedToMe);
+	kStream >> wrapm_paiNumCiviliansReturnedToMe;
+
+	if (uiVersion >= 4)
+	{
+		ArrayWrapper<int> wrapm_paiNumLandmarksBuiltForMe(MAX_MAJOR_CIVS, m_paiNumLandmarksBuiltForMe);
+		kStream >> wrapm_paiNumLandmarksBuiltForMe;
+	}
+	else
+	{
+		for (int i = 0; i<MAX_MAJOR_CIVS; i++)
+		{
+			m_paiNumLandmarksBuiltForMe[i] = 0;
+		}
+	}
+
+	ArrayWrapper<int> wrapm_paiResurrected(MAX_MAJOR_CIVS, m_paiResurrectedOnTurn);
+	kStream >> wrapm_paiResurrected;
+
+	ArrayWrapper<int> wrapm_paiNumTimesCultureBombed(MAX_MAJOR_CIVS, m_paiNumTimesCultureBombed);
+	kStream >> wrapm_paiNumTimesCultureBombed;
+
+	ArrayWrapper<int> wrapm_paiNegativeReligiousConversionPoints(MAX_MAJOR_CIVS, m_paiNegativeReligiousConversionPoints);
+	kStream >> wrapm_paiNegativeReligiousConversionPoints;
+
+	if (uiVersion > 1)
+	{
+		ArrayWrapper<int> wrapm_paiNegativeArchaeologyPoints(MAX_MAJOR_CIVS, m_paiNegativeArchaeologyPoints);
+		kStream >> wrapm_paiNegativeArchaeologyPoints;
+	}
+	else
+	{
+		for (int i = 0; i<MAX_MAJOR_CIVS; i++)
+		{
+			m_paiNegativeArchaeologyPoints[i] = 0;
+		}
+	}
+
+	ArrayWrapper<int> wrapm_paiNumTimesNuked(MAX_MAJOR_CIVS, m_paiNumTimesNuked);
+	kStream >> wrapm_paiNumTimesNuked;
+
+	ArrayWrapper<int> wrapm_paiNumTimesRobbedBy(MAX_MAJOR_CIVS, m_paiNumTimesRobbedBy);
+	kStream >> wrapm_paiNumTimesRobbedBy;
+
+	ArrayWrapper<int> wrapm_paiNumTimesIntrigueSharedBy(MAX_MAJOR_CIVS, m_paiNumTimesIntrigueSharedBy);
+	kStream >> wrapm_paiNumTimesIntrigueSharedBy;
+
+	ArrayWrapper<int> wrapm_paiBrokenExpansionPromiseValue(MAX_MAJOR_CIVS, m_paiBrokenExpansionPromiseValue);
+	kStream >> wrapm_paiBrokenExpansionPromiseValue;
+	ArrayWrapper<int> wrapm_paiIgnoredExpansionPromiseValue(MAX_MAJOR_CIVS, m_paiIgnoredExpansionPromiseValue);
+	kStream >> wrapm_paiIgnoredExpansionPromiseValue;
+
+	ArrayWrapper<int> wrapm_paiBrokenBorderPromiseValue(MAX_MAJOR_CIVS, m_paiBrokenBorderPromiseValue);
+	kStream >> wrapm_paiBrokenBorderPromiseValue;
+	ArrayWrapper<int> wrapm_paiIgnoredBorderPromiseValue(MAX_MAJOR_CIVS, m_paiIgnoredBorderPromiseValue);
+	kStream >> wrapm_paiIgnoredBorderPromiseValue;
+
+	ArrayWrapper<int> wrapm_aiDeclaredWarOnFriendValue(MAX_MAJOR_CIVS, m_paiDeclaredWarOnFriendValue);
+	kStream >> wrapm_aiDeclaredWarOnFriendValue;
+
+	ArrayWrapper<int> wrapm_paiTradeValue(MAX_MAJOR_CIVS, m_paiTradeValue);
+	kStream >> wrapm_paiTradeValue;
+
+	ArrayWrapper<int> wrapm_paiCommonFoeValue(MAX_MAJOR_CIVS, m_paiCommonFoeValue);
+	kStream >> wrapm_paiCommonFoeValue;
+	ArrayWrapper<int> wrapm_paiAssistValue(MAX_MAJOR_CIVS, m_paiAssistValue);
+#else
 	ArrayWrapper<short> wrapm_paiNumRequestsRefused(MAX_MAJOR_CIVS, m_paiNumRequestsRefused);
 	kStream >> wrapm_paiNumRequestsRefused;
 
@@ -1300,6 +1524,7 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 	ArrayWrapper<short> wrapm_paiCommonFoeValue(MAX_MAJOR_CIVS, m_paiCommonFoeValue);
 	kStream >> wrapm_paiCommonFoeValue;
 	ArrayWrapper<short> wrapm_paiAssistValue(MAX_MAJOR_CIVS, m_paiAssistValue);
+#endif
 	kStream >> wrapm_paiAssistValue;
 
 	ArrayWrapper<bool> wrapm_pabPlayerMadeMilitaryPromise(MAX_MAJOR_CIVS, m_pabPlayerMadeMilitaryPromise);
@@ -1311,10 +1536,17 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 	ArrayWrapper<bool> wrapm_pabPlayerIgnoredMilitaryPromise(MAX_MAJOR_CIVS, m_pabPlayerIgnoredMilitaryPromise);
 	kStream >> wrapm_pabPlayerIgnoredMilitaryPromise;
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paiPlayerMilitaryPromiseCounter(MAX_MAJOR_CIVS, m_paiPlayerMilitaryPromiseCounter);
+	kStream >> wrapm_paiPlayerMilitaryPromiseCounter;
+
+	ArrayWrapper<int> wrapm_paiPlayerMadeExpansionPromiseTurn(MAX_MAJOR_CIVS, m_paiPlayerMadeExpansionPromiseTurn);
+#else
 	ArrayWrapper<short> wrapm_paiPlayerMilitaryPromiseCounter(MAX_MAJOR_CIVS, m_paiPlayerMilitaryPromiseCounter);
 	kStream >> wrapm_paiPlayerMilitaryPromiseCounter;
 
 	ArrayWrapper<short> wrapm_paiPlayerMadeExpansionPromiseTurn(MAX_MAJOR_CIVS, m_paiPlayerMadeExpansionPromiseTurn);
+#endif
 	kStream >> wrapm_paiPlayerMadeExpansionPromiseTurn;		
 
 	ArrayWrapper<bool> wrapm_pabPlayerBrokenExpansionPromise(MAX_MAJOR_CIVS, m_pabPlayerBrokenExpansionPromise);
@@ -1323,10 +1555,17 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 	ArrayWrapper<bool> wrapm_pabPlayerIgnoredExpansionPromise(MAX_MAJOR_CIVS, m_pabPlayerIgnoredExpansionPromise);
 	kStream >> wrapm_pabPlayerIgnoredExpansionPromise;
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paePlayerExpansionPromiseData(MAX_MAJOR_CIVS, m_paePlayerExpansionPromiseData);
+	kStream >> wrapm_paePlayerExpansionPromiseData;
+
+	ArrayWrapper<int> wrapm_paiPlayerMadeBorderPromiseTurn(MAX_MAJOR_CIVS, m_paiPlayerMadeBorderPromiseTurn);
+#else
 	ArrayWrapper<char> wrapm_paePlayerExpansionPromiseData(MAX_MAJOR_CIVS, m_paePlayerExpansionPromiseData);
 	kStream >> wrapm_paePlayerExpansionPromiseData;
 
 	ArrayWrapper<short> wrapm_paiPlayerMadeBorderPromiseTurn(MAX_MAJOR_CIVS, m_paiPlayerMadeBorderPromiseTurn);
+#endif
 	kStream >> wrapm_paiPlayerMadeBorderPromiseTurn;
 
 	ArrayWrapper<bool> wrapm_pabPlayerBrokenBorderPromise(MAX_MAJOR_CIVS, m_pabPlayerBrokenBorderPromise);
@@ -1335,7 +1574,11 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 	ArrayWrapper<bool> wrapm_pabPlayerIgnoredBorderPromise(MAX_MAJOR_CIVS, m_pabPlayerIgnoredBorderPromise);
 	kStream >> wrapm_pabPlayerIgnoredBorderPromise;
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paePlayerBorderPromiseData(MAX_MAJOR_CIVS, m_paePlayerBorderPromiseData);
+#else
 	ArrayWrapper<char> wrapm_paePlayerBorderPromiseData(MAX_MAJOR_CIVS, m_paePlayerBorderPromiseData);
+#endif
 	kStream >> wrapm_paePlayerBorderPromiseData;
 
 	ArrayWrapper<bool> wrapm_pabPlayerMadeAttackCityStatePromise(MAX_MAJOR_CIVS, m_pabPlayerMadeAttackCityStatePromise);
@@ -1435,6 +1678,48 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 	kStream >> m_iChattiness;
 	kStream >> m_iMeanness;
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paiPersonalityMajorCivApproachBiases(NUM_MAJOR_CIV_APPROACHES, m_paiPersonalityMajorCivApproachBiases);
+	kStream >> wrapm_paiPersonalityMajorCivApproachBiases;
+
+	ArrayWrapper<int> wrapm_paiPersonalityMinorCivApproachBiases(NUM_MINOR_CIV_APPROACHES, m_paiPersonalityMinorCivApproachBiases);
+	kStream >> wrapm_paiPersonalityMinorCivApproachBiases;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerTurnsSinceAttackedProtectedMinor(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceAttackedProtectedMinor);
+	kStream >> wrapm_paiOtherPlayerTurnsSinceAttackedProtectedMinor;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerProtectedMinorAttacked(MAX_MAJOR_CIVS, m_paiOtherPlayerProtectedMinorAttacked);
+	kStream >> wrapm_paiOtherPlayerProtectedMinorAttacked;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerNumProtectedMinorsAttacked(MAX_MAJOR_CIVS, m_paiOtherPlayerNumProtectedMinorsAttacked);
+	kStream >> wrapm_paiOtherPlayerNumProtectedMinorsAttacked;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerTurnsSinceKilledProtectedMinor(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceKilledProtectedMinor);
+	kStream >> wrapm_paiOtherPlayerTurnsSinceKilledProtectedMinor;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerProtectedMinorKilled(MAX_MAJOR_CIVS, m_paiOtherPlayerProtectedMinorKilled);
+	kStream >> wrapm_paiOtherPlayerProtectedMinorKilled;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerNumProtectedMinorsKilled(MAX_MAJOR_CIVS, m_paiOtherPlayerNumProtectedMinorsKilled);
+	kStream >> wrapm_paiOtherPlayerNumProtectedMinorsKilled;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerNumProtectedMinorsBullied(MAX_MAJOR_CIVS, m_paiOtherPlayerNumProtectedMinorsBullied);
+	kStream >> wrapm_paiOtherPlayerNumProtectedMinorsBullied;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerTurnsSinceSidedWithTheirProtectedMinor(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceSidedWithTheirProtectedMinor);
+	kStream >> wrapm_paiOtherPlayerTurnsSinceSidedWithTheirProtectedMinor;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerNumMinorsAttacked(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMinorsAttacked);
+	kStream >> wrapm_paiOtherPlayerNumMinorsAttacked;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerNumMinorsConquered(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMinorsConquered);
+	kStream >> wrapm_paiOtherPlayerNumMinorsConquered;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerNumMajorsAttacked(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMajorsAttacked);
+	kStream >> wrapm_paiOtherPlayerNumMajorsAttacked;
+
+	ArrayWrapper<int> wrapm_paiOtherPlayerNumMajorsConquered(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMajorsConquered);
+#else
 	ArrayWrapper<char> wrapm_paiPersonalityMajorCivApproachBiases(NUM_MAJOR_CIV_APPROACHES, m_paiPersonalityMajorCivApproachBiases);
 	kStream >> wrapm_paiPersonalityMajorCivApproachBiases;
 
@@ -1475,6 +1760,7 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 	kStream >> wrapm_paiOtherPlayerNumMajorsAttacked;
 
 	ArrayWrapper<char> wrapm_paiOtherPlayerNumMajorsConquered(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMajorsConquered);
+#endif
 	kStream >> wrapm_paiOtherPlayerNumMajorsConquered;
 
 	ArrayWrapper<int> wrapm_paiOtherPlayerWarmongerAmount(MAX_MAJOR_CIVS, m_paiOtherPlayerWarmongerAmount);
@@ -1482,6 +1768,21 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 
 	if (uiVersion >= 3)
 	{
+#ifdef AUI_WARNING_FIXES
+		ArrayWrapper<int> wrapm_paiOtherPlayerTurnsSinceWeLikedTheirProposal(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceWeLikedTheirProposal);
+		kStream >> wrapm_paiOtherPlayerTurnsSinceWeLikedTheirProposal;
+
+		ArrayWrapper<int> wrapm_paiOtherPlayerTurnsSinceWeDislikedTheirProposal(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceWeDislikedTheirProposal);
+		kStream >> wrapm_paiOtherPlayerTurnsSinceWeDislikedTheirProposal;
+
+		ArrayWrapper<int> wrapm_paiOtherPlayerTurnsSinceTheySupportedOurProposal(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceTheySupportedOurProposal);
+		kStream >> wrapm_paiOtherPlayerTurnsSinceTheySupportedOurProposal;
+
+		ArrayWrapper<int> wrapm_paiOtherPlayerTurnsSinceTheyFoiledOurProposal(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceTheyFoiledOurProposal);
+		kStream >> wrapm_paiOtherPlayerTurnsSinceTheyFoiledOurProposal;
+
+		ArrayWrapper<int> wrapm_paiOtherPlayerTurnsSinceTheySupportedOurHosting(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceTheySupportedOurHosting);
+#else
 		ArrayWrapper<short> wrapm_paiOtherPlayerTurnsSinceWeLikedTheirProposal(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceWeLikedTheirProposal);
 		kStream >> wrapm_paiOtherPlayerTurnsSinceWeLikedTheirProposal;
 
@@ -1495,6 +1796,7 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 		kStream >> wrapm_paiOtherPlayerTurnsSinceTheyFoiledOurProposal;
 
 		ArrayWrapper<short> wrapm_paiOtherPlayerTurnsSinceTheySupportedOurHosting(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceTheySupportedOurHosting);
+#endif
 		kStream >> wrapm_paiOtherPlayerTurnsSinceTheySupportedOurHosting;
 	}
 	else
@@ -1509,7 +1811,11 @@ void CvDiplomacyAI::Read(FDataStream& kStream)
 		}
 	}
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> wrapm_paiNumCitiesLiberated(MAX_MAJOR_CIVS, m_paiNumCitiesLiberated);
+#else
 	ArrayWrapper<short> wrapm_paiNumCitiesLiberated(MAX_MAJOR_CIVS, m_paiNumCitiesLiberated);
+#endif
 	kStream >> wrapm_paiNumCitiesLiberated;
 
 	for(iI = 0; iI < MAX_MAJOR_CIVS; iI++)
@@ -1532,10 +1838,29 @@ void CvDiplomacyAI::Write(FDataStream& kStream) const
 
 	int iI;
 
+#ifdef AUI_WARNING_FIXES
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paeMajorCivOpinion);
+#else
 	kStream << ArrayWrapper<char>(MAX_MAJOR_CIVS, m_paeMajorCivOpinion);
+#endif
 
 	for(iI = 0; iI < MAX_MAJOR_CIVS; iI++)
 	{
+#ifdef AUI_WARNING_FIXES
+		kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_ppaaeOtherPlayerMajorCivOpinion[iI]);
+		kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_ppaabWorkingAgainstPlayerAccepted[iI]);
+		kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_ppaaiWorkingAgainstPlayerCounter[iI]);
+		kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_ppaacCoopWarAcceptedState[iI]);
+		kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_ppaaiCoopWarCounter[iI]);
+	}
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paeMajorCivApproach);
+	kStream << ArrayWrapper<int>(MAX_MINOR_CIVS, m_paeMinorCivApproach);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paeApproachTowardsUsGuess);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paeApproachTowardsUsGuessCounter);
+
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paiNumWondersBeatenTo);
+#else
 		kStream << ArrayWrapper<char>(MAX_MAJOR_CIVS, m_ppaaeOtherPlayerMajorCivOpinion[iI]);
 		kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_ppaabWorkingAgainstPlayerAccepted[iI]);
 		kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_ppaaiWorkingAgainstPlayerCounter[iI]);
@@ -1549,11 +1874,45 @@ void CvDiplomacyAI::Write(FDataStream& kStream) const
 	kStream << ArrayWrapper<char>(MAX_MAJOR_CIVS, m_paeApproachTowardsUsGuessCounter);
 
 	kStream << ArrayWrapper<short>(MAX_CIV_PLAYERS, m_paiNumWondersBeatenTo);
+#endif
 	kStream << ArrayWrapper<bool>(MAX_CIV_PLAYERS, m_pabMusteringForAttack);
 
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabWantsResearchAgreementWithPlayer);
 	kStream << ArrayWrapper<bool>(MAX_MINOR_CIVS, m_pabWantToRouteToMinor);
 
+#ifdef AUI_WARNING_FIXES
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeWantPeaceCounter);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paePeaceTreatyWillingToOffer);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paePeaceTreatyWillingToAccept);
+
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeWarFace);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeWarState);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeWarProjection);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeLastWarProjection);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeWarGoal);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paiPlayerNumTurnsAtWar);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paiNumWarsFought);
+
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paePlayerMilitaryStrengthComparedToUs);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paePlayerEconomicStrengthComparedToUs);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paePlayerTargetValue);
+
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paePlayerLandDisputeLevel);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paePlayerLastTurnLandDisputeLevel);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paePlayerVictoryDisputeLevel);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paePlayerWonderDisputeLevel);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paePlayerMinorCivDisputeLevel);
+
+	for (iI = 0; iI < MAX_CIV_PLAYERS; iI++)
+	{
+		kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_ppaaeOtherPlayerLandDisputeLevel[iI]);
+		kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_ppaaeOtherPlayerVictoryDisputeLevel[iI]);
+
+		kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_ppaaeOtherPlayerWarDamageLevel[iI]);
+		kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_ppaaiOtherPlayerWarValueLost[iI]);
+
+		kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_ppaaeOtherPlayerMilitaryThreat[iI]);
+#else
 	kStream << ArrayWrapper<short>(MAX_CIV_PLAYERS, m_paeWantPeaceCounter);
 	kStream << ArrayWrapper<char>(MAX_MAJOR_CIVS, m_paePeaceTreatyWillingToOffer);
 	kStream << ArrayWrapper<char>(MAX_MAJOR_CIVS, m_paePeaceTreatyWillingToAccept);
@@ -1585,6 +1944,7 @@ void CvDiplomacyAI::Write(FDataStream& kStream) const
 		kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_ppaaiOtherPlayerWarValueLost[iI]);
 
 		kStream << ArrayWrapper<char>(MAX_CIV_PLAYERS, m_ppaaeOtherPlayerMilitaryThreat[iI]);
+#endif
 	}
 
 	// Added in Version 29
@@ -1594,6 +1954,31 @@ void CvDiplomacyAI::Write(FDataStream& kStream) const
 		kStream << ArrayWrapper<bool>(MAX_CIV_PLAYERS, m_ppaabSentAttackMessageToMinorCivProtector[iI]);
 	}
 
+#ifdef AUI_WARNING_FIXES
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeWarDamageLevel);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paiWarValueLost);
+
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeMilitaryAggressivePosture);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeLastTurnMilitaryAggressivePosture);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeExpansionAggressivePosture);
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paePlotBuyingAggressivePosture);
+
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeMilitaryThreat);
+
+	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paeWarmongerThreat);
+
+	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabPlayerNoSettleRequestAccepted);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiPlayerNoSettleRequestCounter);
+
+	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabPlayerStopSpyingRequestAccepted);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiPlayerStopSpyingRequestCounter);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiDemandCounter);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiDemandTooSoonNumTurns);
+
+	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabDoFAccepted);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiDoFCounter);
+#else
 	kStream << ArrayWrapper<char>(MAX_CIV_PLAYERS, m_paeWarDamageLevel);
 	kStream << ArrayWrapper<int>(MAX_CIV_PLAYERS, m_paiWarValueLost);
 
@@ -1617,12 +2002,42 @@ void CvDiplomacyAI::Write(FDataStream& kStream) const
 
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabDoFAccepted);
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiDoFCounter);
+#endif
 
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabDenouncedPlayer);
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabFriendDenouncedUs);
+#ifdef AUI_WARNING_FIXES
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiDenouncedPlayerCounter);
+#else
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiDenouncedPlayerCounter);
+#endif
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabFriendDeclaredWarOnUs);
 
+#ifdef AUI_WARNING_FIXES
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiNumRequestsRefused);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiNumCiviliansReturnedToMe);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiNumLandmarksBuiltForMe);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiResurrectedOnTurn);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiNumTimesCultureBombed);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiNegativeReligiousConversionPoints);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiNegativeArchaeologyPoints);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiNumTimesNuked);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiNumTimesRobbedBy);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiNumTimesIntrigueSharedBy);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiBrokenExpansionPromiseValue);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiIgnoredExpansionPromiseValue);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiBrokenBorderPromiseValue);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiIgnoredBorderPromiseValue);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiDeclaredWarOnFriendValue);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiTradeValue);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiCommonFoeValue);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiAssistValue);
+#else
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiNumRequestsRefused);
 
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiNumCiviliansReturnedToMe);
@@ -1646,21 +2061,38 @@ void CvDiplomacyAI::Write(FDataStream& kStream) const
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiTradeValue);
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiCommonFoeValue);
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiAssistValue);
+#endif
 
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabPlayerMadeMilitaryPromise);
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabPlayerBrokenMilitaryPromise);
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabPlayerIgnoredMilitaryPromise);
+#ifdef AUI_WARNING_FIXES
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiPlayerMilitaryPromiseCounter);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiPlayerMadeExpansionPromiseTurn);
+#else
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiPlayerMilitaryPromiseCounter);
 
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiPlayerMadeExpansionPromiseTurn);
+#endif
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabPlayerBrokenExpansionPromise);
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabPlayerIgnoredExpansionPromise);
+#ifdef AUI_WARNING_FIXES
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paePlayerExpansionPromiseData);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiPlayerMadeBorderPromiseTurn);
+#else
 	kStream << ArrayWrapper<char>(MAX_MAJOR_CIVS, m_paePlayerExpansionPromiseData);
 
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiPlayerMadeBorderPromiseTurn);
+#endif
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabPlayerBrokenBorderPromise);
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabPlayerIgnoredBorderPromise);
+#ifdef AUI_WARNING_FIXES
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paePlayerBorderPromiseData);
+#else
 	kStream << ArrayWrapper<char>(MAX_MAJOR_CIVS, m_paePlayerBorderPromiseData);
+#endif
 
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabPlayerMadeAttackCityStatePromise);
 	kStream << ArrayWrapper<bool>(MAX_MAJOR_CIVS, m_pabPlayerBrokenAttackCityStatePromise);
@@ -1707,6 +2139,27 @@ void CvDiplomacyAI::Write(FDataStream& kStream) const
 	kStream << m_iChattiness;
 	kStream << m_iMeanness;
 
+#ifdef AUI_WARNING_FIXES
+	kStream << ArrayWrapper<int>(NUM_MAJOR_CIV_APPROACHES, m_paiPersonalityMajorCivApproachBiases);
+	kStream << ArrayWrapper<int>(NUM_MINOR_CIV_APPROACHES, m_paiPersonalityMinorCivApproachBiases);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceAttackedProtectedMinor);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerProtectedMinorAttacked);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerNumProtectedMinorsAttacked);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceKilledProtectedMinor);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerProtectedMinorKilled);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerNumProtectedMinorsKilled);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerNumProtectedMinorsBullied);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceSidedWithTheirProtectedMinor);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMinorsAttacked);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMinorsConquered);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMajorsAttacked);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMajorsConquered);
+#else
 	kStream << ArrayWrapper<char>(NUM_MAJOR_CIV_APPROACHES, m_paiPersonalityMajorCivApproachBiases);
 	kStream << ArrayWrapper<char>(NUM_MINOR_CIV_APPROACHES, m_paiPersonalityMinorCivApproachBiases);
 
@@ -1726,9 +2179,19 @@ void CvDiplomacyAI::Write(FDataStream& kStream) const
 	kStream << ArrayWrapper<char>(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMinorsConquered);
 	kStream << ArrayWrapper<char>(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMajorsAttacked);
 	kStream << ArrayWrapper<char>(MAX_MAJOR_CIVS, m_paiOtherPlayerNumMajorsConquered);
+#endif
 
 	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerWarmongerAmount);
 
+#ifdef AUI_WARNING_FIXES
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceWeLikedTheirProposal);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceWeDislikedTheirProposal);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceTheySupportedOurProposal);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceTheyFoiledOurProposal);
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceTheySupportedOurHosting);
+
+	kStream << ArrayWrapper<int>(MAX_MAJOR_CIVS, m_paiNumCitiesLiberated);
+#else
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceWeLikedTheirProposal);
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceWeDislikedTheirProposal);
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceTheySupportedOurProposal);
@@ -1736,6 +2199,7 @@ void CvDiplomacyAI::Write(FDataStream& kStream) const
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiOtherPlayerTurnsSinceTheySupportedOurHosting);
 
 	kStream << ArrayWrapper<short>(MAX_MAJOR_CIVS, m_paiNumCitiesLiberated);
+#endif
 
 	for(iI = 0; iI < MAX_MAJOR_CIVS; iI++)
 	{
@@ -7886,7 +8350,11 @@ void CvDiplomacyAI::ChangeRecentTradeValue(PlayerTypes ePlayer, int iChange)
 		CvAssertMsg(ePlayer < MAX_MAJOR_CIVS, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 
 		m_paiTradeValue[ePlayer] += iChange;
+#ifdef AUI_WARNING_FIXES
+		int iMaxOpinionValue = GC.getDEAL_VALUE_PER_OPINION_WEIGHT() * -(GC.getOPINION_WEIGHT_TRADE_MAX());
+#else
 		short iMaxOpinionValue = GC.getDEAL_VALUE_PER_OPINION_WEIGHT() * -(GC.getOPINION_WEIGHT_TRADE_MAX());
+#endif
 
 		// Must be between 0 and maximum possible boost to opinion
 		if(m_paiTradeValue[ePlayer] < 0)
@@ -7914,7 +8382,11 @@ void CvDiplomacyAI::ChangeCommonFoeValue(PlayerTypes ePlayer, int iChange)
 		CvAssertMsg(ePlayer >= 0, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 
 		m_paiCommonFoeValue[ePlayer] += iChange;
+#ifdef AUI_WARNING_FIXES
+		int iMaxOpinionValue = GC.getCOMMON_FOE_VALUE_PER_OPINION_WEIGHT() * -(GC.getOPINION_WEIGHT_COMMON_FOE_MAX());
+#else
 		short iMaxOpinionValue = GC.getCOMMON_FOE_VALUE_PER_OPINION_WEIGHT() * -(GC.getOPINION_WEIGHT_COMMON_FOE_MAX());
+#endif
 
 		// Must be between 0 and maximum possible boost to opinion
 		if(m_paiCommonFoeValue[ePlayer] < 0)
@@ -7943,7 +8415,11 @@ void CvDiplomacyAI::ChangeRecentAssistValue(PlayerTypes ePlayer, int iChange)
 		CvAssertMsg(ePlayer < MAX_MAJOR_CIVS, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 
 		m_paiAssistValue[ePlayer] += iChange;
+#ifdef AUI_WARNING_FIXES
+		int iMaxOpinionValue = GC.getDEAL_VALUE_PER_OPINION_WEIGHT() * GC.getOPINION_WEIGHT_ASSIST_MAX();
+#else
 		short iMaxOpinionValue = GC.getDEAL_VALUE_PER_OPINION_WEIGHT() * GC.getOPINION_WEIGHT_ASSIST_MAX();
+#endif
 
 		if (m_paiAssistValue[ePlayer] < -iMaxOpinionValue)
 		{
@@ -18721,7 +19197,11 @@ void CvDiplomacyAI::SetCoopWarAcceptedState(PlayerTypes ePlayer, PlayerTypes eTa
 	}
 }
 
+#ifdef AUI_WARNING_FIXES
+int CvDiplomacyAI::GetCoopWarCounter(PlayerTypes ePlayer, PlayerTypes eTargetPlayer) const
+#else
 short CvDiplomacyAI::GetCoopWarCounter(PlayerTypes ePlayer, PlayerTypes eTargetPlayer) const
+#endif
 {
 	CvAssertMsg(ePlayer >= 0, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 	CvAssertMsg(ePlayer < MAX_MAJOR_CIVS, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
@@ -18915,7 +19395,11 @@ bool CvDiplomacyAI::IsDemandTooSoon(PlayerTypes ePlayer) const
 	return false;
 }
 
+#ifdef AUI_WARNING_FIXES
+int CvDiplomacyAI::GetDemandTooSoonNumTurns(PlayerTypes ePlayer) const
+#else
 short CvDiplomacyAI::GetDemandTooSoonNumTurns(PlayerTypes ePlayer) const
+#endif
 {
 	CvAssertMsg(ePlayer >= 0, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 	CvAssertMsg(ePlayer < MAX_MAJOR_CIVS, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
@@ -18930,7 +19414,11 @@ bool CvDiplomacyAI::IsDemandEverMade(PlayerTypes ePlayer) const
 	return true;
 }
 
+#ifdef AUI_WARNING_FIXES
+int CvDiplomacyAI::GetDemandCounter(PlayerTypes ePlayer) const
+#else
 short CvDiplomacyAI::GetDemandCounter(PlayerTypes ePlayer) const
+#endif
 {
 	CvAssertMsg(ePlayer >= 0, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 	CvAssertMsg(ePlayer < MAX_MAJOR_CIVS, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
@@ -19176,7 +19664,11 @@ void CvDiplomacyAI::SetPlayerNoSettleRequestAccepted(PlayerTypes ePlayer, bool b
 	}
 }
 
+#ifdef AUI_WARNING_FIXES
+int CvDiplomacyAI::GetPlayerNoSettleRequestCounter(PlayerTypes ePlayer) const
+#else
 short CvDiplomacyAI::GetPlayerNoSettleRequestCounter(PlayerTypes ePlayer) const
+#endif
 {
 	CvAssertMsg(ePlayer >= 0, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 	CvAssertMsg(ePlayer < MAX_MAJOR_CIVS, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
@@ -19275,7 +19767,11 @@ void CvDiplomacyAI::SetPlayerStopSpyingRequestAccepted(PlayerTypes ePlayer, bool
 	}
 }
 
+#ifdef AUI_WARNING_FIXES
+int CvDiplomacyAI::GetPlayerStopSpyingRequestCounter(PlayerTypes ePlayer) const
+#else
 short CvDiplomacyAI::GetPlayerStopSpyingRequestCounter(PlayerTypes ePlayer) const
+#endif
 {
 	CvAssertMsg(ePlayer >= 0, "DIPLOMACY_AI: Invalid Player Index.  Please send slewis this with your last 5 autosaves and what changelist # you're playing.");
 	CvAssertMsg(ePlayer < MAX_MAJOR_CIVS, "DIPLOMACY_AI: Invalid Player Index.  Please send slewis this with your last 5 autosaves and what changelist # you're playing.");
@@ -19484,7 +19980,11 @@ void CvDiplomacyAI::SetDoFAccepted(PlayerTypes ePlayer, bool bValue)
 	}
 }
 
+#ifdef AUI_WARNING_FIXES
+int CvDiplomacyAI::GetDoFCounter(PlayerTypes ePlayer) const
+#else
 short CvDiplomacyAI::GetDoFCounter(PlayerTypes ePlayer) const
+#endif
 {
 	CvAssertMsg(ePlayer >= 0, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 	CvAssertMsg(ePlayer < MAX_MAJOR_CIVS, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
@@ -19876,7 +20376,11 @@ bool CvDiplomacyAI::IsDenouncingPlayer(PlayerTypes ePlayer) const
 	return (IsDenouncedPlayer(ePlayer) && GetDenouncedPlayerCounter(ePlayer) == 1);
 }
 
+#ifdef AUI_WARNING_FIXES
+int CvDiplomacyAI::GetDenouncedPlayerCounter(PlayerTypes ePlayer) const
+#else
 short CvDiplomacyAI::GetDenouncedPlayerCounter(PlayerTypes ePlayer) const
+#endif
 {
 	CvAssertMsg(ePlayer >= 0, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 	CvAssertMsg(ePlayer < MAX_MAJOR_CIVS, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
@@ -20606,7 +21110,11 @@ void CvDiplomacyAI::SetPlayerIgnoredMilitaryPromise(PlayerTypes ePlayer, bool bV
 	m_pabPlayerIgnoredMilitaryPromise[ePlayer] = bValue;
 }
 
+#ifdef AUI_WARNING_FIXES
+int CvDiplomacyAI::GetPlayerMilitaryPromiseCounter(PlayerTypes ePlayer)
+#else
 short CvDiplomacyAI::GetPlayerMilitaryPromiseCounter(PlayerTypes ePlayer)
+#endif
 {
 	CvAssertMsg(ePlayer >= 0, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");
 	CvAssertMsg(ePlayer < MAX_MAJOR_CIVS, "DIPLOMACY_AI: Invalid Player Index.  Please send Jon this with your last 5 autosaves and what changelist # you're playing.");

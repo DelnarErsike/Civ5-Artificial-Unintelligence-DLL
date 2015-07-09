@@ -123,7 +123,11 @@ CvPlayerAchievements::CvPlayerAchievements(const CvPlayer& kPlayer)
 {
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvPlayerAchievements::AlliedWithCityState(PlayerTypes /*eNewCityStateAlly*/)
+#else
 void CvPlayerAchievements::AlliedWithCityState(PlayerTypes eNewCityStateAlly)
+#endif
 {
 	if(m_kPlayer.GetID() != GC.getGame().getActivePlayer())
 		return;
@@ -392,7 +396,11 @@ void CvPlayerAchievements::EndTurn()
 {
 }
 //-------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvPlayerAchievements::FinishedBuilding(CvCity* pkCity, BuildingTypes /*eBuilding*/)
+#else
 void CvPlayerAchievements::FinishedBuilding(CvCity* pkCity, BuildingTypes eBuilding)
+#endif
 {
 	if(m_eCollossusType == UNDEFINED_TYPE)
 	{

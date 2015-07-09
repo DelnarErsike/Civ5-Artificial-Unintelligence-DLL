@@ -43,14 +43,22 @@ struct DestructionNotification
 		}
 	}
 
+#if defined(AUI_WARNING_FIXES) && !defined(TRACK_DESTRUCTION_NOTIFICATION)
+	void addTarget(const NotificationTarget & /*target*/)
+#else
 	void addTarget(const NotificationTarget & target)
+#endif
 	{
 #ifdef TRACK_DESTRUCTION_NOTIFICATION
 		m_targets.insert(&target);
 #endif
 	}
 
+#if defined(AUI_WARNING_FIXES) && !defined(TRACK_DESTRUCTION_NOTIFICATION)
+	void removeTarget(const NotificationTarget & /*target*/)
+#else
 	void removeTarget(const NotificationTarget & target)
+#endif
 	{
 #ifdef TRACK_DESTRUCTION_NOTIFICATION
 		m_targets.erase(&target);

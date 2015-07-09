@@ -795,7 +795,11 @@ GreatWorkSlotType CvBuildingEntry::GetGreatWorkSlotType() const
 }
 
 /// How many great works are allowed by this Building
+#ifdef AUI_WARNING_FIXES
+uint CvBuildingEntry::GetGreatWorkCount() const
+#else
 int CvBuildingEntry::GetGreatWorkCount() const
+#endif
 {
 	return m_iGreatWorkCount;
 }

@@ -60,9 +60,15 @@ class FVariableCallback
 {
 	public:
         virtual ~FVariableCallback() {};
+#ifdef AUI_WARNING_FIXES
+		virtual void VariableAttached(const FVARTYPE * /*pkVariable*/) { };
+		virtual void VariableHasChanged(const FVARTYPE * /*pkVariable*/) { };
+		virtual void VariableRemoved(const FVARTYPE * /*pkVariable*/) { };
+#else
 		virtual void VariableAttached(const FVARTYPE * pkVariable) { };
 		virtual void VariableHasChanged(const FVARTYPE * pkVariable) { };
 		virtual void VariableRemoved(const FVARTYPE * pkVariable) { };
+#endif
 		virtual bool FinalValueOnly() const { return false; }				// Does this callback want slider values as the slider is moving or only the final value (when the button is unpressed)?
 		virtual bool ApplyInitialState() const { return true; }				// Should this callback apply it's initial state when the var is first registered?
 };
@@ -107,9 +113,15 @@ class FVariable
 
 		eVariableType	m_eType;		//!< The type of data contained in this variable.
 
+#ifdef AUI_WARNING_FIXES
+		virtual void SetCategory(const char * /*szCategory*/) { };
+		virtual void SetEditType(const char * /*szEditType*/) { };
+		virtual void SetCallback(FVariableCallback * /*pkCallback*/) { };
+#else
 		virtual void SetCategory( const char * szCategory) { };
 		virtual void SetEditType( const char * szEditType) { };
 		virtual void SetCallback( FVariableCallback * pkCallback ) { };
+#endif
 
 		virtual const char * GetCategory() const
 		{
@@ -157,7 +169,11 @@ class FVariable
 
 		virtual FVariableCallback * GetCallback() const { return NULL; }
 
+#ifdef AUI_WARNING_FIXES
+		virtual void SetVariableRange(const char * /*szMin*/, const char * /*szMax*/) {};
+#else
 		virtual void SetVariableRange( const char * szMin, const char * szMax ) {};
+#endif
 		virtual const char * GetVariableMinimum() const { return NULL; };
 		virtual const char * GetVariableMaximum() const { return NULL; };
 };

@@ -672,7 +672,11 @@ void CvDllPreGame::setDLCAllowed(const GUID& kDLCID, bool bState)
 	CvPreGame::setDLCAllowed(kDLCID, bState);
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvDllPreGame::setEarthMap(bool)
+#else
 void CvDllPreGame::setEarthMap(bool bIsEarthMap)
+#endif
 {
 	//This function is no longer used, it only exists for interface compatibility.
 }

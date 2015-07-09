@@ -238,7 +238,11 @@ bool CvWorldBuilderMapLoader::Preload(const wchar_t* wszFilename, bool bScenario
 				{
 					if(uiNew < uiPlayerCount)
 					{
+#ifdef AUI_WARNING_FIXES
+						sg_kSave.SwapPlayers(byte(uiNew), byte(i));
+#else
 						sg_kSave.SwapPlayers(uiNew, i);
+#endif
 
 						for(uint j = i + 1; j < uiPlayerCount; ++j)
 						{
@@ -299,8 +303,13 @@ void CvWorldBuilderMapLoader::SetupGameOptions()
 
 void CvWorldBuilderMapLoader::SetupPlayers()
 {
+#ifdef AUI_WARNING_FIXES
+	const byte uiPlayerCount = FASTMIN(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
+	for (byte i = 0; i < uiPlayerCount; ++i)
+#else
 	const uint uiPlayerCount = std::min(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
 	for(uint i = 0; i < uiPlayerCount; ++i)
+#endif
 	{
 		const PlayerTypes ePlayer = (PlayerTypes)i;
 		const SlotStatus eStatus = CvPreGame::slotStatus(ePlayer);
@@ -387,7 +396,11 @@ void CvWorldBuilderMapLoader::SetupPlayers()
 	else if(!CvPreGame::mapNoPlayers())
 		CvPreGame::setNumMinorCivs(0);
 
+#ifdef AUI_WARNING_FIXES
+	for (byte i = 0; i < uiCityStateCount; ++i)
+#else
 	for(uint i = 0; i < uiCityStateCount; ++i)
+#endif
 	{
 		const PlayerTypes ePlayer = (PlayerTypes)(i + MAX_MAJOR_CIVS);
 		const CvWorldBuilderMap::Player& kPlayer = sg_kSave.GetCityState(i);
@@ -543,15 +556,25 @@ void SetTeamInitialItems(CvTeam& kGameplayTeam, const CvWorldBuilderMap::Team& k
 
 void CvWorldBuilderMapLoader::SetInitialItems(bool bFirstCall)
 {
+#ifdef AUI_WARNING_FIXES
+	const byte uiTeamCount = FASTMIN(sg_kSave.GetTeamCount(), (byte)MAX_TEAMS);
+	for (byte i = 0; i < uiTeamCount; ++i)
+#else
 	const uint uiTeamCount = std::min(sg_kSave.GetTeamCount(), (byte)MAX_TEAMS);
 	for(uint i = 0; i < uiTeamCount; ++i)
+#endif
 	{
 		const TeamTypes eTeam = (TeamTypes)i;
 		SetTeamInitialItems(GET_TEAM(eTeam), sg_kSave.GetTeam(i));
 	}
 
+#ifdef AUI_WARNING_FIXES
+	const byte uiPlayerCount = FASTMIN(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
+	for (byte i = 0; i < uiPlayerCount; ++i)
+#else
 	const uint uiPlayerCount = std::min(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
 	for(uint i = 0; i < uiPlayerCount; ++i)
+#endif
 	{
 		const PlayerTypes ePlayer = (PlayerTypes)i;
 		CvPlayer& kPlayer = GET_PLAYER(ePlayer);
@@ -575,8 +598,13 @@ void CvWorldBuilderMapLoader::SetInitialItems(bool bFirstCall)
 		}
 	}
 
+#ifdef AUI_WARNING_FIXES
+	const byte uiCityStateCount = FASTMIN(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
+	for (byte i = 0; i < uiCityStateCount; ++i)
+#else
 	const uint uiCityStateCount = std::min(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
 	for(uint i = 0; i < uiCityStateCount; ++i)
+#endif
 	{
 		const PlayerTypes ePlayer = (PlayerTypes)(i + MAX_MAJOR_CIVS);
 		SetPlayerInitialItems(GET_PLAYER(ePlayer), sg_kSave.GetCityState(i));
@@ -974,8 +1002,13 @@ bool CvWorldBuilderMapLoader::InitMap()
 
 	OutputDebugStringA("Setting up players...\n");
 
+#ifdef AUI_WARNING_FIXES
+	const byte uiPlayerCount = FASTMIN(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
+	for (byte i = 0; i < uiPlayerCount; ++i)
+#else
 	const uint uiPlayerCount = std::min(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
 	for(uint i = 0; i < uiPlayerCount; ++i)
+#endif
 	{
 		const PlayerTypes ePlayer = (PlayerTypes)i;
 		CvPlayer& kGameplayPlayer = GET_PLAYER(ePlayer);
@@ -989,8 +1022,13 @@ bool CvWorldBuilderMapLoader::InitMap()
 		}
 	}
 
+#ifdef AUI_WARNING_FIXES
+	const byte uiCityStateCount = FASTMIN(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
+	for (byte i = 0; i < uiCityStateCount; ++i)
+#else
 	const uint uiCityStateCount = std::min(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
 	for(uint i = 0; i < uiCityStateCount; ++i)
+#endif
 	{
 		const PlayerTypes ePlayer = (PlayerTypes)(i + MAX_MAJOR_CIVS);
 		CvPlayer& kGameplayPlayer = GET_PLAYER(ePlayer);
@@ -1403,7 +1441,11 @@ bool CvWorldBuilderMapLoader::Save(const wchar_t* wszFilename, const char* szMap
 			kPlotData.ClearFlag(CvWorldBuilderMap::PlotMapData::NE_OF_RIVER);
 		}
 
+#ifdef AUI_WARNING_FIXES
+		kPlotData.SetContinentType((byte)pkPlot->GetContinentType());
+#else
 		kPlotData.SetContinentType(pkPlot->GetContinentType());
+#endif
 	}
 
 	return sg_kSave.Save(wszFilename, sg_kMapTypeDesc, false);
@@ -1954,7 +1996,11 @@ int CvWorldBuilderMapLoader::GetMapPreview(lua_State* L)
 		}
 
 		const char* szStartEra = "";
+#ifdef AUI_WARNING_FIXES
+		for (byte i = 0; i < sg_kTempMap.GetPlayerCount(); ++i)
+#else
 		for(int i = 0; i < sg_kTempMap.GetPlayerCount(); ++i)
+#endif
 		{
 			const CvWorldBuilderMap::Player& kPlayer = sg_kTempMap.GetPlayer(i);
 			if(kPlayer.m_bPlayable)
@@ -2050,12 +2096,20 @@ int CvWorldBuilderMapLoader::GetMapPlayers(lua_State* L)
 	{
 		TempMapLoaded(wszMapFile);
 
+#ifdef AUI_WARNING_FIXES
+		const byte uiPlayerCount = sg_kTempMap.GetPlayerCount();
+#else
 		const uint uiPlayerCount = sg_kTempMap.GetPlayerCount();
+#endif
 		const int iCivCount = GC.getNumCivilizationInfos();
 		const int iHandicapCount = GC.getNumHandicapInfos();
 
 		lua_createtable(L, uiPlayerCount, 0);
+#ifdef AUI_WARNING_FIXES
+		for (byte uiPlayer = 0; uiPlayer < uiPlayerCount; ++uiPlayer)
+#else
 		for(uint uiPlayer = 0; uiPlayer < uiPlayerCount; ++uiPlayer)
+#endif
 		{
 			const CvWorldBuilderMap::Player& kPlayer = sg_kTempMap.GetPlayer(uiPlayer);
 

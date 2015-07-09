@@ -3511,7 +3511,11 @@ void CvPlayerPolicies::SetPolicyBranchFinished(PolicyBranchTypes eBranchType, bo
 			//Must not be playing smokey skies scenario.
 			if(m_pPlayer->GetID() == GC.getGame().getActivePlayer() && !bUsingXP1Scenario3)
 			{
+#ifdef AUI_WARNING_FIXES
+				switch(static_cast<int>(eBranchType))
+#else
 				switch(eBranchType)
+#endif
 				{
 				case 0:
 					gDLL->UnlockAchievement(ACHIEVEMENT_POLICY_TRADITION);

@@ -34,7 +34,11 @@ struct FAllocBase
 		FAssert( !m_pData );
 	}
 
+#ifdef AUI_WARNING_FIXES
+	void* Alloc(unsigned int nBytes, AllocData*)
+#else
 	void* Alloc( unsigned int nBytes, AllocData* pData )
+#endif
 	{
 		m_pData = FNEW( unsigned char[nBytes], AllocPool, nSubID );
 		return static_cast< void* >( m_pData + nBytes );

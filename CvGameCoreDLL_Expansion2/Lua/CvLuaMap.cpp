@@ -349,12 +349,20 @@ int CvLuaMap::lRand(lua_State* L)
 	return 1;
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+int CvLuaMap::lCalculateAreas(lua_State*)
+#else
 int CvLuaMap::lCalculateAreas(lua_State* L)
+#endif
 {
 	GC.getMap().calculateAreas();
 	return 0;
 }//------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+int CvLuaMap::lRecalculateAreas(lua_State*)
+#else
 int CvLuaMap::lRecalculateAreas(lua_State* L)
+#endif
 {
 	GC.getMap().recalculateAreas();
 	return 0;
@@ -397,13 +405,21 @@ int CvLuaMap::lPlotDirection(lua_State* L)
 	return 1;
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+int CvLuaMap::lDefaultContinentStamper(lua_State*)
+#else
 int CvLuaMap::lDefaultContinentStamper(lua_State* L)
+#endif
 {
 	GC.getMap().DefaultContinentStamper();
 	return 0;
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+int CvLuaMap::lDoPlaceNaturalWonders(lua_State*)
+#else
 int CvLuaMap::lDoPlaceNaturalWonders(lua_State* L)
+#endif
 {
 	GC.getMap().DoPlaceNaturalWonders();
 	return 0;
@@ -422,7 +438,11 @@ int CvLuaMap::lGetCustomOption(lua_State* L)
 	return 0;
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+int CvLuaMap::lUpdateDeferredFog(lua_State*)
+#else
 int CvLuaMap::lUpdateDeferredFog(lua_State* L)
+#endif
 {
 	GC.getMap().updateDeferredFog();
 	return 0;

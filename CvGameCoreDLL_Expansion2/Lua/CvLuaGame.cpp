@@ -35,7 +35,11 @@ const char* CvLuaGame::GetInstanceName()
 	return "Game";
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+CvGame* CvLuaGame::GetInstance(lua_State*, int)
+#else
 CvGame* CvLuaGame::GetInstance(lua_State* L, int idx)
+#endif
 {
 	return &GC.getGame();
 }

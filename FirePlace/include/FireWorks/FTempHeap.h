@@ -139,7 +139,11 @@ extern "C" {
 //====================================================================================================
 struct FTempHeapFastVectorAllocator
 {
+#ifdef AUI_WARNING_FIXES
+	static void* AllocAligned( unsigned int nBytes, unsigned int nAlign, unsigned int /*nAllocPool*/, unsigned int /*nAllocSubID*/)
+#else
 	static void* AllocAligned( unsigned int nBytes, unsigned int nAlign, unsigned int nAllocPool, unsigned int nAllocSubID )
+#endif
 	{
 		FAssertMsg( nAlign <= 16, "Unavailable alignment requested from TempHeap" );
 		void* pRet = (void*)GetTempHeap()->Allocate( nBytes );

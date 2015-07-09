@@ -105,7 +105,11 @@ void CvGoodyHuts::Uninit()
 }
 
 //	---------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvGoodyHuts::Read(FDataStream& kStream, uint /*uiParentVersion*/)
+#else
 void CvGoodyHuts::Read(FDataStream& kStream, uint uiParentVersion)
+#endif
 {
 	Reset();
 
@@ -114,7 +118,12 @@ void CvGoodyHuts::Read(FDataStream& kStream, uint uiParentVersion)
 
 	for (int iI = 0; iI < MAX_MAJOR_CIVS; iI++)
 	{
+#ifdef AUI_WARNING_FIXES
+		ArrayWrapper<int> kWrapper(NUM_GOODIES_REMEMBERED, m_aaiPlayerGoodyHutResults[iI]);
+		kStream >> kWrapper;
+#else
 		kStream >> ArrayWrapper<int>(NUM_GOODIES_REMEMBERED, m_aaiPlayerGoodyHutResults[iI]);
+#endif
 	}
 }
 
@@ -127,6 +136,11 @@ void CvGoodyHuts::Write(FDataStream& kStream)
 
 	for (int iI = 0; iI < MAX_MAJOR_CIVS; iI++)
 	{
+#ifdef AUI_WARNING_FIXES
+		ArrayWrapper<int> kWrapper(NUM_GOODIES_REMEMBERED, m_aaiPlayerGoodyHutResults[iI]);
+		kStream << kWrapper;
+#else
 		kStream << ArrayWrapper<int>(NUM_GOODIES_REMEMBERED, m_aaiPlayerGoodyHutResults[iI]);
+#endif
 	}
 }

@@ -182,7 +182,6 @@ public:
 		//----------
 		operator LPSTR( void );
 
-
 	private:
 		// Members:
 		//--------
@@ -690,7 +689,6 @@ public:
 		// Operators:
 		//----------
 		operator LPWSTR( void );
-
 
 	private:
 		// Members:

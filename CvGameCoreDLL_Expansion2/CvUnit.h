@@ -1414,7 +1414,11 @@ protected:
 	FAutoVariable<int, CvUnit> m_iHotKeyNumber;
 	FAutoVariable<int, CvUnit> m_iDeployFromOperationTurn;
 	int m_iLastMoveTurn;
+#ifdef AUI_WARNING_FIXES
+	int m_iCycleOrder;
+#else
 	short m_iCycleOrder;
+#endif
 	FAutoVariable<int, CvUnit> m_iReconX;
 	FAutoVariable<int, CvUnit> m_iReconY;
 	FAutoVariable<int, CvUnit> m_iReconCount;

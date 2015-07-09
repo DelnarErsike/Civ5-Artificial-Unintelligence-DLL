@@ -853,7 +853,11 @@ bool CvGameTrade::EmptyTradeRoute(int iIndex)
 	kTradeConnection.m_eOriginOwner = NO_PLAYER;
 	kTradeConnection.m_eDomain = NO_DOMAIN;
 	kTradeConnection.m_eConnectionType = NUM_TRADE_CONNECTION_TYPES;
+#ifdef AUI_WARNING_FIXES
+	kTradeConnection.m_iTradeUnitLocationIndex = MAX_UNSIGNED_INT;
+#else
 	kTradeConnection.m_iTradeUnitLocationIndex = -1;
+#endif
 	kTradeConnection.m_bTradeUnitMovingForward = false;
 	kTradeConnection.m_iCircuitsCompleted = 0;
 	kTradeConnection.m_iCircuitsToComplete = 0;
@@ -1342,7 +1346,11 @@ bool CvGameTrade::StepUnit (int iIndex)
 
 	// if the unit needs to turn around
 	TradeConnection &kTradeConnection = m_aTradeConnections[iIndex];
+#ifdef AUI_WARNING_FIXES
+	bool bAtEndGoingForward = (kTradeConnection.m_bTradeUnitMovingForward && kTradeConnection.m_iTradeUnitLocationIndex + 1 >= kTradeConnection.m_aPlotList.size());
+#else
 	bool bAtEndGoingForward = (kTradeConnection.m_bTradeUnitMovingForward && kTradeConnection.m_iTradeUnitLocationIndex >= ((int)kTradeConnection.m_aPlotList.size() - 1));
+#endif
 	bool bAtEndGoingBackward = (!kTradeConnection.m_bTradeUnitMovingForward && kTradeConnection.m_iTradeUnitLocationIndex <= 0);
 	if (bAtEndGoingForward || bAtEndGoingBackward)
 	{

@@ -15581,7 +15581,11 @@ int CvUnit::setDamage(int iNewValue, PlayerTypes ePlayer, float fAdditionalTextD
 		}
 
 		auto_ptr<ICvPlot1> pDllSelectionPlot(DLLUI->getSelectionPlot());
+#ifdef AUI_WARNING_FIXES
+		const uint iSelectionPlotIndex = (pDllSelectionPlot.get() != NULL) ? uint(pDllSelectionPlot->GetPlotIndex()) : MAX_UNSIGNED_INT;
+#else
 		const int iSelectionPlotIndex = (pDllSelectionPlot.get() != NULL)? pDllSelectionPlot->GetPlotIndex() : -1;
+#endif
 
 		if(plot()->GetPlotIndex() == iSelectionPlotIndex)
 		{
@@ -15684,7 +15688,11 @@ void CvUnit::setMoves(int iNewValue)
 		}
 
 		auto_ptr<ICvPlot1> pDllSelectionPlot(DLLUI->getSelectionPlot());
+#ifdef AUI_WARNING_FIXES
+		const uint iSelectionPlotIndex = (pDllSelectionPlot.get() != NULL) ? uint(pDllSelectionPlot->GetPlotIndex()) : MAX_UNSIGNED_INT;
+#else
 		int iSelectionPlotIndex = (pDllSelectionPlot.get() != NULL)? pDllSelectionPlot->GetPlotIndex() : -1;
+#endif
 
 		if(pPlot->GetPlotIndex() == iSelectionPlotIndex)
 		{
@@ -18557,7 +18565,11 @@ void CvUnit::clearCombat()
 		}
 
 		auto_ptr<ICvPlot1> pDllSelectionPlot(DLLUI->getSelectionPlot());
+#ifdef AUI_WARNING_FIXES
+		const uint iSelectionPlotIndex = (pDllSelectionPlot.get() != NULL) ? uint(pDllSelectionPlot->GetPlotIndex()) : MAX_UNSIGNED_INT;
+#else
 		int iSelectionPlotIndex = (pDllSelectionPlot.get() != NULL)? pDllSelectionPlot->GetPlotIndex() : -1;
+#endif
 		if(plot()->GetPlotIndex() == iSelectionPlotIndex)
 		{
 			DLLUI->setDirty(PlotListButtons_DIRTY_BIT, true);
@@ -21063,7 +21075,11 @@ void CvUnit::SetActivityType(ActivityTypes eNewValue)
 		}
 
 		auto_ptr<ICvPlot1> pDllSelectionPlot(DLLUI->getSelectionPlot());
+#ifdef AUI_WARNING_FIXES
+		const uint iSelectionPlotIndex = (pDllSelectionPlot.get() != NULL) ? uint(pDllSelectionPlot->GetPlotIndex()) : MAX_UNSIGNED_INT;
+#else
 		int iSelectionPlotIndex = (pDllSelectionPlot.get() != NULL)? pDllSelectionPlot->GetPlotIndex() : -1;
+#endif
 		if(pPlot->GetPlotIndex() == iSelectionPlotIndex)
 		{
 			DLLUI->setDirty(PlotListButtons_DIRTY_BIT, true);
@@ -21778,7 +21794,11 @@ int CvUnit::UnitPathTo(int iX, int iY, int iFlags, int iPrevETA, bool bBuildingR
 				pPathPlot = GC.getMap().plotCheckInvalid(pNode->m_iX, pNode->m_iY);
 			}
 
+#ifdef AUI_WARNING_FIXES
+			if(!pPathPlot || !canMoveInto(*pPathPlot, byte(iFlags) | MOVEFLAG_DESTINATION))
+#else
 			if(!pPathPlot || !canMoveInto(*pPathPlot, iFlags | MOVEFLAG_DESTINATION))
+#endif
 			{
 				// add route interrupted
 				CvNotifications* pNotifications = GET_PLAYER(getOwner()).GetNotifications();

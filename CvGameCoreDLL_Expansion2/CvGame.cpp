@@ -272,7 +272,11 @@ void CvGame::init(HandicapTypes eHandicap)
 			char szRandomPassword[iPasswordSize];
 			for(int i = 0; i < iPasswordSize-1; i++)
 			{
+#ifdef AUI_WARNING_FIXES
+				szRandomPassword[i] = char(getJonRandNum(128, "Random Keyword"));
+#else
 				szRandomPassword[i] = getJonRandNum(128, "Random Keyword");
+#endif
 			}
 			szRandomPassword[iPasswordSize-1] = 0;
 
@@ -5421,6 +5425,8 @@ Localization::String CvGame::GetDiploResponse(const char* szLeader, const char* 
 	//This implementation generates a ton of strings to store the text keys though and would benefit greatly from a "stack_string"
 	//implementation.  For now though, it works, and the code is called so infrequently that it shouldn't be noticeable.
 	//NOTE: Profiled on my machine to take 0.006965 seconds on average to complete.
+#ifdef AUI_TODO
+#endif
 	std::vector<string> probabilities;
 	probabilities.reserve(512);
 
@@ -5965,7 +5971,11 @@ void CvGame::setWinner(TeamTypes eNewWinner, VictoryTypes eNewVictory)
 					HandicapTypes winnerHandicapType = getHandicapType();
 					if(!bUsingXP2Scenario1 && !bUsingXP2Scenario2) 
 					{
+#ifdef AUI_WARNING_FIXES
+						switch (static_cast<int>(winnerHandicapType))
+#else
 						switch(winnerHandicapType)
+#endif
 						{
 						case 0:
 							gDLL->UnlockAchievement(ACHIEVEMENT_DIFLEVEL_SETTLER);
@@ -5999,7 +6009,11 @@ void CvGame::setWinner(TeamTypes eNewWinner, VictoryTypes eNewVictory)
 					//Different Victory Win Types
 					if(!bUsingXP2Scenario1 && !bUsingXP2Scenario2)
 					{
+#ifdef AUI_WARNING_FIXES
+						switch (static_cast<int>(eNewVictory))
+#else
 						switch(eNewVictory)
+#endif
 						{
 						case 0:
 							OutputDebugString("No current Achievement for a time victory");
@@ -6333,7 +6347,11 @@ void CvGame::setWinner(TeamTypes eNewWinner, VictoryTypes eNewVictory)
 						else if(strCivType == "CIVILIZATION_FRANCE")
 							gDLL->UnlockAchievement(ACHIEVEMENT_SCENARIO_04_NORMANDY);
 
+#ifdef AUI_WARNING_FIXES
+						switch (static_cast<int>(winnerHandicapType))
+#else
 						switch(winnerHandicapType)
+#endif
 						{
 						case 5:	//	Win scenario on Emperor (any civ)  YOU! The Conqueror
 							gDLL->UnlockAchievement(ACHIEVEMENT_SCENARIO_04_WIN_EMPEROR);
@@ -6362,7 +6380,11 @@ void CvGame::setWinner(TeamTypes eNewWinner, VictoryTypes eNewVictory)
 							gDLL->UnlockAchievement(ACHIEVEMENT_SCENARIO_05_WIN_MANCHU);
 
 						// Difficulty
+#ifdef AUI_WARNING_FIXES
+						switch (static_cast<int>(winnerHandicapType))
+#else
 						switch(winnerHandicapType)
+#endif
 						{
 						case 5: // Emperor
 							gDLL->UnlockAchievement(ACHIEVEMENT_SCENARIO_05_WIN_EMPEROR);
@@ -6400,7 +6422,11 @@ void CvGame::setWinner(TeamTypes eNewWinner, VictoryTypes eNewVictory)
 							gDLL->UnlockAchievement(ACHIEVEMENT_SCENARIO_06_WIN_PERSIA);
 
 						// Difficulty
+#ifdef AUI_WARNING_FIXES
+						switch (static_cast<int>(winnerHandicapType))
+#else
 						switch(winnerHandicapType)
+#endif
 						{
 						case 3: // Prince
 							gDLL->UnlockAchievement(ACHIEVEMENT_SCENARIO_06_WIN_PRINCE);

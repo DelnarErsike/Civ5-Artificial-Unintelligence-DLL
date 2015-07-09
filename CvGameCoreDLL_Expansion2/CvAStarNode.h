@@ -159,7 +159,11 @@ public:
 	FStaticVector<CvAStarNode*, 6, true, c_eCiv5GameplayDLL, 0> m_apChildren;
 #endif
 
+#ifdef AUI_WARNING_FIXES
+	int m_iX, m_iY;         // Coordinate position
+#else
 	short m_iX, m_iY;         // Coordinate position
+#endif
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
 	CvPlot* m_pPlot;
 #endif
@@ -212,7 +216,11 @@ public:
 	int m_iData1;
 	int m_iData2;
 	int m_iFlags;
+#ifdef AUI_WARNING_FIXES
+	int m_iX, m_iY;         // Coordinate position
+#else
 	short m_iX, m_iY;         // Coordinate position
+#endif
 
 	bool GetFlag(int eFlag) const { return (m_iFlags & eFlag) != 0; }
 	void SetFlag(int eFlag) { m_iFlags |= eFlag; }

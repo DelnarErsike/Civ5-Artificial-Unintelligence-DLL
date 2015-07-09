@@ -2259,7 +2259,11 @@ void CvTacticalAI::AssignBarbarianMoves()
 
 		AI_PERF_FORMAT("AI-perf-tact.csv", ("Barb Move: %d, Turn %03d, %s", (int)move.m_eMoveType, GC.getGame().getElapsedGameTurns(), m_pPlayer->getCivilizationShortDescription()) );
 
+#ifdef AUI_WARNING_FIXES
+		switch (static_cast<AIBarbarianTacticalMove>(move.m_eMoveType))
+#else
 		switch(move.m_eMoveType)
+#endif
 		{
 		case AI_TACTICAL_BARBARIAN_CAPTURE_CITY:
 			PlotCaptureCityMoves();

@@ -105,7 +105,11 @@ public:
 	int GetSpecialistExtraCulture() const;
 	int GetGreatPeopleRateChange() const;
 	GreatWorkSlotType GetGreatWorkSlotType() const;
+#ifdef AUI_WARNING_FIXES
+	uint GetGreatWorkCount() const;
+#else
 	int GetGreatWorkCount() const;
+#endif
 	GreatWorkType GetFreeGreatWork() const;
 	int GetFreeBuildingClass() const;
 	int GetFreeBuildingThisCity() const;
@@ -317,7 +321,11 @@ private:
 	int m_iSpecialistExtraCulture;
 	int m_iGreatPeopleRateChange;
 	GreatWorkSlotType m_eGreatWorkSlotType;
+#ifdef AUI_WARNING_FIXES
+	uint m_iGreatWorkCount;
+#else
 	int m_iGreatWorkCount;
+#endif
 	GreatWorkType m_eFreeGreatWork;
 	int m_iFreeBuildingClass;
 	int m_iFreeBuildingThisCity;

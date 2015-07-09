@@ -672,7 +672,11 @@ public:
 	CoopWarStates GetCoopWarAcceptedState(PlayerTypes ePlayer, PlayerTypes eAgainstPlayer) const;
 	void SetCoopWarAcceptedState(PlayerTypes ePlayer, PlayerTypes eAgainstPlayer, CoopWarStates eValue);
 
+#ifdef AUI_WARNING_FIXES
+	int GetCoopWarCounter(PlayerTypes ePlayer, PlayerTypes eAgainstPlayer) const;
+#else
 	short GetCoopWarCounter(PlayerTypes ePlayer, PlayerTypes eAgainstPlayer) const;
+#endif
 	void SetCoopWarCounter(PlayerTypes ePlayer, PlayerTypes eAgainstPlayer, int iValue);
 	void ChangeCoopWarCounter(PlayerTypes ePlayer, PlayerTypes eAgainstPlayer, int iChange);
 
@@ -686,11 +690,19 @@ public:
 	// Human Demand
 	void DoDemandMade(PlayerTypes ePlayer);
 	bool IsDemandTooSoon(PlayerTypes ePlayer) const;
+#ifdef AUI_WARNING_FIXES
+	int GetDemandTooSoonNumTurns(PlayerTypes ePlayer) const;
+#else
 	short GetDemandTooSoonNumTurns(PlayerTypes ePlayer) const;
+#endif
 
 	bool IsDemandEverMade(PlayerTypes ePlayer) const;
 
+#ifdef AUI_WARNING_FIXES
+	int GetDemandCounter(PlayerTypes ePlayer) const;
+#else
 	short GetDemandCounter(PlayerTypes ePlayer) const;
+#endif
 	void SetDemandCounter(PlayerTypes ePlayer, int iValue);
 	void ChangeDemandCounter(PlayerTypes ePlayer, int iChange);
 
@@ -704,7 +716,11 @@ public:
 	bool IsPlayerNoSettleRequestAccepted(PlayerTypes ePlayer) const;
 	void SetPlayerNoSettleRequestAccepted(PlayerTypes ePlayer, bool bValue);
 
+#ifdef AUI_WARNING_FIXES
+	int GetPlayerNoSettleRequestCounter(PlayerTypes ePlayer) const;
+#else
 	short GetPlayerNoSettleRequestCounter(PlayerTypes ePlayer) const;
+#endif
 	void SetPlayerNoSettleRequestCounter(PlayerTypes ePlayer, int iValue);
 	void ChangePlayerNoSettleRequestCounter(PlayerTypes ePlayer, int iChange);
 
@@ -718,7 +734,11 @@ public:
 	bool IsPlayerStopSpyingRequestAccepted(PlayerTypes ePlayer) const;
 	void SetPlayerStopSpyingRequestAccepted(PlayerTypes ePlayer, bool bValue);
 
+#ifdef AUI_WARNING_FIXES
+	int GetPlayerStopSpyingRequestCounter(PlayerTypes ePlayer) const;
+#else
 	short GetPlayerStopSpyingRequestCounter(PlayerTypes ePlayer) const;
+#endif
 	void SetPlayerStopSpyingRequestCounter(PlayerTypes ePlayer, int iValue);
 	void ChangePlayerStopSpyingRequestCounter(PlayerTypes ePlayer, int iChange);
 
@@ -733,7 +753,11 @@ public:
 	bool IsDoFAccepted(PlayerTypes ePlayer) const;
 	void SetDoFAccepted(PlayerTypes ePlayer, bool bValue);
 
+#ifdef AUI_WARNING_FIXES
+	int GetDoFCounter(PlayerTypes ePlayer) const;
+#else
 	short GetDoFCounter(PlayerTypes ePlayer) const;
+#endif
 	void SetDoFCounter(PlayerTypes ePlayer, int iValue);
 	void ChangeDoFCounter(PlayerTypes ePlayer, int iChange);
 
@@ -754,7 +778,11 @@ public:
 	void SetDenouncedPlayer(PlayerTypes ePlayer, bool bValue);
 	bool IsDenouncingPlayer(PlayerTypes ePlayer) const;
 
+#ifdef AUI_WARNING_FIXES
+	int GetDenouncedPlayerCounter(PlayerTypes ePlayer) const;
+#else
 	short GetDenouncedPlayerCounter(PlayerTypes ePlayer) const;
+#endif
 	void SetDenouncedPlayerCounter(PlayerTypes ePlayer, int iValue);
 	void ChangeDenouncedPlayerCounter(PlayerTypes ePlayer, int iChange);
 
@@ -812,7 +840,11 @@ public:
 	void SetPlayerBrokenMilitaryPromise(PlayerTypes ePlayer, bool bValue);
 	bool IsPlayerIgnoredMilitaryPromise(PlayerTypes ePlayer);
 	void SetPlayerIgnoredMilitaryPromise(PlayerTypes ePlayer, bool bValue);
+#ifdef AUI_WARNING_FIXES
+	int GetPlayerMilitaryPromiseCounter(PlayerTypes ePlayer);
+#else
 	short GetPlayerMilitaryPromiseCounter(PlayerTypes ePlayer);
+#endif
 	void SetPlayerMilitaryPromiseCounter(PlayerTypes ePlayer, int iValue);
 	void ChangePlayerMilitaryPromiseCounter(PlayerTypes ePlayer, int iChange);
 
@@ -1134,6 +1166,19 @@ private:
 		DiplomacyAIData();
 
 		//Arrays
+#ifdef AUI_WARNING_FIXES
+		int m_aDiploLogStatementTurnCountScratchPad[NUM_DIPLO_LOG_STATEMENT_TYPES];
+		int m_aiMajorCivOpinion[MAX_MAJOR_CIVS];
+		int m_aeMajorCivApproach[MAX_MAJOR_CIVS];
+		int m_aeApproachScratchPad[REALLY_MAX_PLAYERS];
+		int m_aeMinorCivApproach[REALLY_MAX_PLAYERS - MAX_MAJOR_CIVS];
+		int m_aeApproachTowardsUsGuess[MAX_MAJOR_CIVS];
+		int m_aeApproachTowardsUsGuessCounter[MAX_MAJOR_CIVS];
+		int m_aeWantPeaceCounter[REALLY_MAX_PLAYERS];
+		int m_aePeaceTreatyWillingToOffer[MAX_MAJOR_CIVS];
+		int m_aePeaceTreatyWillingToAccept[MAX_MAJOR_CIVS];
+		int m_aiNumWondersBeatenTo[REALLY_MAX_PLAYERS];
+#else
 		short m_aDiploLogStatementTurnCountScratchPad[NUM_DIPLO_LOG_STATEMENT_TYPES];
 		char m_aiMajorCivOpinion[MAX_MAJOR_CIVS];
 		char m_aeMajorCivApproach[MAX_MAJOR_CIVS];
@@ -1145,9 +1190,33 @@ private:
 		char m_aePeaceTreatyWillingToOffer[MAX_MAJOR_CIVS];
 		char m_aePeaceTreatyWillingToAccept[MAX_MAJOR_CIVS];
 		short m_aiNumWondersBeatenTo[REALLY_MAX_PLAYERS];
+#endif
 		bool m_abMusteringForAttack[REALLY_MAX_PLAYERS];
 		bool m_abWantsResearchAgreementWithPlayer[MAX_MAJOR_CIVS];
 		bool m_abWantToRouteToMinor[REALLY_MAX_PLAYERS-MAX_MAJOR_CIVS];
+#ifdef AUI_WARNING_FIXES
+		int m_aeWarFace[REALLY_MAX_PLAYERS];
+		int m_aeWarState[REALLY_MAX_PLAYERS];
+		int m_aeWarProjection[REALLY_MAX_PLAYERS];
+		int m_aeLastWarProjection[REALLY_MAX_PLAYERS];
+		int m_aeWarGoal[REALLY_MAX_PLAYERS];
+		int m_aiPlayerNumTurnsAtWar[REALLY_MAX_PLAYERS];
+		int m_aiNumWarsFought[REALLY_MAX_PLAYERS];
+		int m_aePlayerMilitaryStrengthComparedToUs[REALLY_MAX_PLAYERS];
+		int m_aePlayerEconomicStrengthComparedToUs[REALLY_MAX_PLAYERS];
+		int m_aePlayerTargetValue[REALLY_MAX_PLAYERS];
+		int m_aePlayerLandDisputeLevel[REALLY_MAX_PLAYERS];
+		int m_aePlayerLastTurnLandDisputeLevel[REALLY_MAX_PLAYERS];
+		int m_aePlayerVictoryDisputeLevel[REALLY_MAX_PLAYERS];
+		int m_aePlayerWonderDisputeLevel[REALLY_MAX_PLAYERS];
+		int m_aePlayerMinorCivDisputeLevel[REALLY_MAX_PLAYERS];
+		int m_aeMilitaryAggressivePosture[REALLY_MAX_PLAYERS];
+		int m_aeLastTurnMilitaryAggressivePosture[REALLY_MAX_PLAYERS];
+		int m_aeExpansionAggressivePosture[REALLY_MAX_PLAYERS];
+		int m_aePlotBuyingAggressivePosture[REALLY_MAX_PLAYERS];
+		int m_aeMilitaryThreat[REALLY_MAX_PLAYERS];
+		int m_aeWarDamageLevel[REALLY_MAX_PLAYERS];
+#else
 		char m_aeWarFace[REALLY_MAX_PLAYERS];
 		char m_aeWarState[REALLY_MAX_PLAYERS];
 		char m_aeWarProjection[REALLY_MAX_PLAYERS];
@@ -1169,29 +1238,81 @@ private:
 		char m_aePlotBuyingAggressivePosture[REALLY_MAX_PLAYERS];
 		char m_aeMilitaryThreat[REALLY_MAX_PLAYERS];
 		char m_aeWarDamageLevel[REALLY_MAX_PLAYERS];
+#endif
 		int m_aiWarValueLost[REALLY_MAX_PLAYERS];
+#ifdef AUI_WARNING_FIXES
+		int m_aeWarmongerThreat[REALLY_MAX_PLAYERS];
+		int m_aiPersonalityMajorCivApproachBiases[NUM_MAJOR_CIV_APPROACHES];
+		int m_aiPersonalityMinorCivApproachBiases[NUM_MINOR_CIV_APPROACHES];
+#else
 		char m_aeWarmongerThreat[REALLY_MAX_PLAYERS];
 		char m_aiPersonalityMajorCivApproachBiases[NUM_MAJOR_CIV_APPROACHES];
 		char m_aiPersonalityMinorCivApproachBiases[NUM_MINOR_CIV_APPROACHES];
+#endif
 		DeclarationLogData m_aDeclarationsLog[MAX_DIPLO_LOG_STATEMENTS];
 
 		// Things a player has told the AI
 
 		bool m_abPlayerNoSettleRequest[MAX_MAJOR_CIVS];
+#ifdef AUI_WARNING_FIXES
+		int m_aiPlayerNoSettleRequestCounter[MAX_MAJOR_CIVS];
+#else
 		short m_aiPlayerNoSettleRequestCounter[MAX_MAJOR_CIVS];
+#endif
 
 		bool m_abPlayerStopSpyingRequest[MAX_MAJOR_CIVS];
+#ifdef AUI_WARNING_FIXES
+		int m_aiPlayerStopSpyingRequestCounter[MAX_MAJOR_CIVS];
+
+		int m_aiDemandCounter[MAX_MAJOR_CIVS];
+		int m_aiDemandTooSoonNumTurns[MAX_MAJOR_CIVS];
+#else
 		short m_aiPlayerStopSpyingRequestCounter[MAX_MAJOR_CIVS];
 
 		short m_aiDemandCounter[MAX_MAJOR_CIVS];
 		short m_aiDemandTooSoonNumTurns[MAX_MAJOR_CIVS];
+#endif
 
 		bool m_abDoFAccepted[MAX_MAJOR_CIVS];
+#ifdef AUI_WARNING_FIXES
+		int m_aiDoFCounter[MAX_MAJOR_CIVS];
+#else
 		short m_aiDoFCounter[MAX_MAJOR_CIVS];
+#endif
 
 		bool m_abDenouncedPlayer[MAX_MAJOR_CIVS];
 		bool m_abFriendDenouncedUs[MAX_MAJOR_CIVS];
 		bool m_abFriendDeclaredWarOnUs[MAX_MAJOR_CIVS];
+#ifdef AUI_WARNING_FIXES
+		int m_aiDenouncedPlayerCounter[MAX_MAJOR_CIVS];
+
+		int m_aiNumRequestsRefused[MAX_MAJOR_CIVS];
+
+		int m_aiNumCiviliansReturnedToMe[MAX_MAJOR_CIVS];
+		int m_aiNumLandmarksBuiltForMe[MAX_MAJOR_CIVS];
+		int m_aiResurrectedOnTurn[MAX_MAJOR_CIVS];
+		int m_aiNumTimesCultureBombed[MAX_MAJOR_CIVS];
+
+		int m_paiNegativeReligiousConversionPoints[MAX_MAJOR_CIVS];
+
+		int m_paiNegativeArchaeologyPoints[MAX_MAJOR_CIVS];
+
+		int m_aiNumTimesNuked[MAX_MAJOR_CIVS];
+		int m_aiNumTimesRobbedBy[MAX_MAJOR_CIVS];
+		int m_aiNumTimesIntrigueSharedBy[MAX_MAJOR_CIVS];
+
+		int m_aiBrokenExpansionPromiseValue[MAX_MAJOR_CIVS];
+		int m_aiIgnoredExpansionPromiseValue[MAX_MAJOR_CIVS];
+		int m_aiBrokenBorderPromiseValue[MAX_MAJOR_CIVS];
+		int m_aiIgnoredBorderPromiseValue[MAX_MAJOR_CIVS];
+
+		int m_aiDeclaredWarOnFriendValue[MAX_MAJOR_CIVS];
+		int m_aiNumCitiesLiberated[MAX_MAJOR_CIVS];
+
+		int m_aiTradeValue[MAX_MAJOR_CIVS];
+		int m_aiCommonFoeValue[MAX_MAJOR_CIVS];
+		int m_aiAssistValue[MAX_MAJOR_CIVS];
+#else
 		short m_aiDenouncedPlayerCounter[MAX_MAJOR_CIVS];
 
 		short m_aiNumRequestsRefused[MAX_MAJOR_CIVS];
@@ -1220,23 +1341,40 @@ private:
 		short m_aiTradeValue[MAX_MAJOR_CIVS];
 		short m_aiCommonFoeValue[MAX_MAJOR_CIVS];
 		short m_aiAssistValue[MAX_MAJOR_CIVS];
+#endif
 
 		// Player's response to AI statements
 
 		bool m_abPlayerMadeMilitaryPromise[MAX_MAJOR_CIVS];
 		bool m_abPlayerBrokenMilitaryPromise[MAX_MAJOR_CIVS];
 		bool m_abPlayerIgnoredMilitaryPromise[MAX_MAJOR_CIVS];
+#ifdef AUI_WARNING_FIXES
+		int m_aiPlayerMilitaryPromiseCounter[MAX_MAJOR_CIVS];
+
+		int m_aiPlayerMadeExpansionPromiseTurn[MAX_MAJOR_CIVS];
+#else
 		short m_aiPlayerMilitaryPromiseCounter[MAX_MAJOR_CIVS];
 
 		short m_aiPlayerMadeExpansionPromiseTurn[MAX_MAJOR_CIVS];
+#endif
 		bool m_abPlayerBrokenExpansionPromise[MAX_MAJOR_CIVS];
 		bool m_abPlayerIgnoredExpansionPromise[MAX_MAJOR_CIVS];
+#ifdef AUI_WARNING_FIXES
+		int m_aePlayerExpansionPromiseData[MAX_MAJOR_CIVS];
+
+		int m_aiPlayerMadeBorderPromiseTurn[MAX_MAJOR_CIVS];
+#else
 		char m_aePlayerExpansionPromiseData[MAX_MAJOR_CIVS];
 
 		short m_aiPlayerMadeBorderPromiseTurn[MAX_MAJOR_CIVS];
+#endif
 		bool m_abPlayerBrokenBorderPromise[MAX_MAJOR_CIVS];
 		bool m_abPlayerIgnoredBorderPromise[MAX_MAJOR_CIVS];
+#ifdef AUI_WARNING_FIXES
+		int m_aePlayerBorderPromiseData[MAX_MAJOR_CIVS];
+#else
 		char m_aePlayerBorderPromiseData[MAX_MAJOR_CIVS];
+#endif
 
 		bool m_abPlayerMadeAttackCityStatePromise[MAX_MAJOR_CIVS];
 		bool m_abPlayerBrokenAttackCityStatePromise[MAX_MAJOR_CIVS];
@@ -1267,6 +1405,22 @@ private:
 		bool m_abPlayerBrokenCoopWarPromise[MAX_MAJOR_CIVS];
 
 		// Evaluation of Other Players' Tendencies
+#ifdef AUI_WARNING_FIXES
+		int m_aiOtherPlayerTurnsSinceAttackedProtectedMinor[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerProtectedMinorAttacked[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerNumProtectedMinorsAttacked[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerTurnsSinceKilledProtectedMinor[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerProtectedMinorKilled[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerNumProtectedMinorsKilled[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerNumProtectedMinorsBullied[MAX_MAJOR_CIVS];
+
+		int m_aiOtherPlayerTurnsSinceSidedWithTheirProtectedMinor[MAX_MAJOR_CIVS];
+
+		int m_aiOtherPlayerNumMinorsAttacked[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerNumMinorsConquered[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerNumMajorsAttacked[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerNumMajorsConquered[MAX_MAJOR_CIVS];
+#else
 		short m_aiOtherPlayerTurnsSinceAttackedProtectedMinor[MAX_MAJOR_CIVS];
 		char m_aiOtherPlayerProtectedMinorAttacked[MAX_MAJOR_CIVS];
 		char m_aiOtherPlayerNumProtectedMinorsAttacked[MAX_MAJOR_CIVS];
@@ -1281,29 +1435,62 @@ private:
 		char m_aiOtherPlayerNumMinorsConquered[MAX_MAJOR_CIVS];
 		char m_aiOtherPlayerNumMajorsAttacked[MAX_MAJOR_CIVS];
 		char m_aiOtherPlayerNumMajorsConquered[MAX_MAJOR_CIVS];
+#endif
 
 		int m_aiOtherPlayerWarmongerAmount[MAX_MAJOR_CIVS];
 
+#ifdef AUI_WARNING_FIXES
+		int m_aiOtherPlayerTurnsSinceWeLikedTheirProposal[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerTurnsSinceWeDislikedTheirProposal[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerTurnsSinceTheySupportedOurProposal[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerTurnsSinceTheyFoiledOurProposal[MAX_MAJOR_CIVS];
+		int m_aiOtherPlayerTurnsSinceTheySupportedOurHosting[MAX_MAJOR_CIVS];
+#else
 		short m_aiOtherPlayerTurnsSinceWeLikedTheirProposal[MAX_MAJOR_CIVS];
 		short m_aiOtherPlayerTurnsSinceWeDislikedTheirProposal[MAX_MAJOR_CIVS];
 		short m_aiOtherPlayerTurnsSinceTheySupportedOurProposal[MAX_MAJOR_CIVS];
 		short m_aiOtherPlayerTurnsSinceTheyFoiledOurProposal[MAX_MAJOR_CIVS];
 		short m_aiOtherPlayerTurnsSinceTheySupportedOurHosting[MAX_MAJOR_CIVS];
+#endif
 
 		//2D Arrays
+#ifdef AUI_WARNING_FIXES
+		int* m_apaeOtherPlayerMajorCivOpinion[REALLY_MAX_PLAYERS];
+		int* m_apaeOtherPlayerLandDisputeLevel[REALLY_MAX_PLAYERS];
+		int* m_apaeOtherPlayerVictoryDisputeLevel[REALLY_MAX_PLAYERS];
+		int* m_apaeOtherPlayerWonderDisputeLevel[REALLY_MAX_PLAYERS];
+		int* m_apaeOtherPlayerMinorCivDisputeLevel[REALLY_MAX_PLAYERS];
+		int* m_apaeOtherPlayerWarDamageLevel[REALLY_MAX_PLAYERS];
+#else
 		char* m_apaeOtherPlayerMajorCivOpinion[REALLY_MAX_PLAYERS];
 		char* m_apaeOtherPlayerLandDisputeLevel[REALLY_MAX_PLAYERS];
 		char* m_apaeOtherPlayerVictoryDisputeLevel[REALLY_MAX_PLAYERS];
 		char* m_apaeOtherPlayerWonderDisputeLevel[REALLY_MAX_PLAYERS];
 		char* m_apaeOtherPlayerMinorCivDisputeLevel[REALLY_MAX_PLAYERS];
 		char* m_apaeOtherPlayerWarDamageLevel[REALLY_MAX_PLAYERS];
+#endif
 		int* m_apaiOtherPlayerWarValueLost[REALLY_MAX_PLAYERS];
 		int* m_apaiOtherPlayerLastRoundWarValueLost[REALLY_MAX_PLAYERS];
 		bool* m_apabSentAttackMessageToMinorCivProtector[REALLY_MAX_PLAYERS];
+#ifdef AUI_WARNING_FIXES
+		int* m_apaeOtherPlayerMilitaryThreat[REALLY_MAX_PLAYERS];
+#else
 		char* m_apaeOtherPlayerMilitaryThreat[REALLY_MAX_PLAYERS];
+#endif
 		DiploLogData* m_apaDiploStatementsLog[MAX_MAJOR_CIVS];
 
 		bool* m_apabWorkingAgainstPlayerAccepted[MAX_MAJOR_CIVS];
+#ifdef AUI_WARNING_FIXES
+		int* m_apaiWorkingAgainstPlayerCounter[MAX_MAJOR_CIVS];
+
+		int* m_apacCoopWarAcceptedState[MAX_MAJOR_CIVS];
+		int* m_apaiCoopWarCounter[MAX_MAJOR_CIVS];
+
+		int m_aaeOtherPlayerMajorCivOpinion[MAX_MAJOR_CIVS* MAX_MAJOR_CIVS];
+		int m_aaeOtherPlayerLandDisputeLevel[REALLY_MAX_PLAYERS* REALLY_MAX_PLAYERS];
+		int m_aaeOtherPlayerVictoryDisputeLevel[REALLY_MAX_PLAYERS];
+		int m_aaeOtherPlayerWarDamageLevel[REALLY_MAX_PLAYERS* REALLY_MAX_PLAYERS];
+#else
 		short* m_apaiWorkingAgainstPlayerCounter[MAX_MAJOR_CIVS];
 
 		char* m_apacCoopWarAcceptedState[MAX_MAJOR_CIVS];
@@ -1313,21 +1500,48 @@ private:
 		char m_aaeOtherPlayerLandDisputeLevel[REALLY_MAX_PLAYERS* REALLY_MAX_PLAYERS];
 		char m_aaeOtherPlayerVictoryDisputeLevel[REALLY_MAX_PLAYERS];
 		char m_aaeOtherPlayerWarDamageLevel[REALLY_MAX_PLAYERS* REALLY_MAX_PLAYERS];
+#endif
 		int m_aaiOtherPlayerWarValueLost[REALLY_MAX_PLAYERS* REALLY_MAX_PLAYERS];
 		int m_aaiOtherPlayerLastRoundWarValueLost[REALLY_MAX_PLAYERS* REALLY_MAX_PLAYERS];
+
 		bool m_aabSentAttackMessageToMinorCivProtector[REALLY_MAX_PLAYERS* REALLY_MAX_PLAYERS];
+#ifdef AUI_WARNING_FIXES
+		int m_aaeOtherPlayerMilitaryThreat[REALLY_MAX_PLAYERS* REALLY_MAX_PLAYERS];
+#else
 		char m_aaeOtherPlayerMilitaryThreat[REALLY_MAX_PLAYERS* REALLY_MAX_PLAYERS];
+#endif
 		DiploLogData m_aaDiploStatementsLog[MAX_MAJOR_CIVS* MAX_DIPLO_LOG_STATEMENTS];
 
 		bool m_aabWorkingAgainstPlayerAccepted[MAX_MAJOR_CIVS* MAX_MAJOR_CIVS];
+#ifdef AUI_WARNING_FIXES
+		int m_aaiWorkingAgainstPlayerCounter[MAX_MAJOR_CIVS* MAX_MAJOR_CIVS];
+
+		int m_aacCoopWarAcceptedState[MAX_MAJOR_CIVS* MAX_MAJOR_CIVS];
+		int m_aaiCoopWarCounter[MAX_MAJOR_CIVS* MAX_MAJOR_CIVS];
+#else
 		short m_aaiWorkingAgainstPlayerCounter[MAX_MAJOR_CIVS* MAX_MAJOR_CIVS];
 
 		char m_aacCoopWarAcceptedState[MAX_MAJOR_CIVS* MAX_MAJOR_CIVS];
 		short m_aaiCoopWarCounter[MAX_MAJOR_CIVS* MAX_MAJOR_CIVS];
+#endif
 	};
 	DiplomacyAIData* m_pDiploData;
 
 	// Scratch pad to keep track of Diplo Messages we've sent out in the past
+#ifdef AUI_WARNING_FIXES
+	int* m_paDiploLogStatementTurnCountScratchPad;
+
+	int* m_paeMajorCivOpinion;
+	int** m_ppaaeOtherPlayerMajorCivOpinion;
+
+	int* m_paeMajorCivApproach;
+	int* m_paeApproachScratchPad;
+	int* m_paeMinorCivApproach;
+	int* m_paeApproachTowardsUsGuess;
+	int* m_paeApproachTowardsUsGuessCounter;
+
+	int m_eDemandTargetPlayer;
+#else
 	short* m_paDiploLogStatementTurnCountScratchPad;
 
 	char* m_paeMajorCivOpinion;
@@ -1340,18 +1554,42 @@ private:
 	char* m_paeApproachTowardsUsGuessCounter;
 
 	char m_eDemandTargetPlayer;
+#endif
 	bool m_bDemandReady;
 
+#ifdef AUI_WARNING_FIXES
+	int* m_paeWantPeaceCounter;
+	int* m_paePeaceTreatyWillingToOffer;
+	int* m_paePeaceTreatyWillingToAccept;
+
+	int* m_paiNumWondersBeatenTo;
+#else
 	short* m_paeWantPeaceCounter;
 	char* m_paePeaceTreatyWillingToOffer;
 	char* m_paePeaceTreatyWillingToAccept;
 
 	short* m_paiNumWondersBeatenTo;
+#endif
 	bool* m_pabMusteringForAttack;
 
 	bool* m_pabWantsResearchAgreementWithPlayer;
 	bool* m_pabWantToRouteToMinor;
 
+#ifdef AUI_WARNING_FIXES
+	int* m_paeWarFace;
+	int* m_paeWarState;
+	int* m_paeWarProjection;
+	int* m_paeLastWarProjection;
+	int* m_paeWarGoal;
+	int* m_paiPlayerNumTurnsAtWar;
+	int* m_paiNumWarsFought;
+
+	int* m_paePlayerMilitaryStrengthComparedToUs;
+	int* m_paePlayerEconomicStrengthComparedToUs;
+	int* m_paePlayerTargetValue;
+
+	int* m_paeWarDamageLevel;
+#else
 	char* m_paeWarFace;
 	char* m_paeWarState;
 	char* m_paeWarProjection;
@@ -1365,12 +1603,36 @@ private:
 	char* m_paePlayerTargetValue;
 
 	char* m_paeWarDamageLevel;
+#endif
 	int* m_paiWarValueLost;
+#ifdef AUI_WARNING_FIXES
+	int** m_ppaaeOtherPlayerWarDamageLevel;
+#else
 	char** m_ppaaeOtherPlayerWarDamageLevel;
+#endif
 	int** m_ppaaiOtherPlayerWarValueLost;
 	int** m_ppaaiOtherPlayerLastRoundWarValueLost;
 	bool** m_ppaabSentAttackMessageToMinorCivProtector;
 
+#ifdef AUI_WARNING_FIXES
+	int* m_paeMilitaryAggressivePosture;
+	int* m_paeLastTurnMilitaryAggressivePosture;
+	int* m_paeExpansionAggressivePosture;
+	int* m_paePlotBuyingAggressivePosture;
+
+	int* m_paePlayerLandDisputeLevel;
+	int* m_paePlayerLastTurnLandDisputeLevel;
+	int* m_paePlayerVictoryDisputeLevel;
+	int* m_paePlayerWonderDisputeLevel;
+	int* m_paePlayerMinorCivDisputeLevel;
+	int** m_ppaaeOtherPlayerLandDisputeLevel;
+	int** m_ppaaeOtherPlayerVictoryDisputeLevel;
+
+	int* m_paeMilitaryThreat;
+	int** m_ppaaeOtherPlayerMilitaryThreat;
+
+	int* m_paeWarmongerThreat;
+#else
 	char* m_paeMilitaryAggressivePosture;
 	char* m_paeLastTurnMilitaryAggressivePosture;
 	char* m_paeExpansionAggressivePosture;
@@ -1388,24 +1650,67 @@ private:
 	char** m_ppaaeOtherPlayerMilitaryThreat;
 
 	char* m_paeWarmongerThreat;
+#endif
 
 	// Things a player has told the AI
 
 	bool* m_pabPlayerNoSettleRequestAccepted;
+#ifdef AUI_WARNING_FIXES
+	int* m_paiPlayerNoSettleRequestCounter;
+#else
 	short* m_paiPlayerNoSettleRequestCounter;
+#endif
 
 	bool* m_pabPlayerStopSpyingRequestAccepted;
+#ifdef AUI_WARNING_FIXES
+	int* m_paiPlayerStopSpyingRequestCounter;
+
+	int* m_paiDemandCounter;
+	int* m_paiDemandTooSoonNumTurns;
+#else
 	short* m_paiPlayerStopSpyingRequestCounter;
 
 	short* m_paiDemandCounter;
 	short* m_paiDemandTooSoonNumTurns;
+#endif
 
 	bool* m_pabDoFAccepted;
+#ifdef AUI_WARNING_FIXES
+	int* m_paiDoFCounter;
+#else
 	short* m_paiDoFCounter;
+#endif
 
 	bool* m_pabDenouncedPlayer;
 	bool* m_pabFriendDenouncedUs;
 	bool* m_pabFriendDeclaredWarOnUs;
+#ifdef AUI_WARNING_FIXES
+	int* m_paiDenouncedPlayerCounter;
+
+	int* m_paiNumRequestsRefused;
+
+	int* m_paiNumCiviliansReturnedToMe;
+	int* m_paiNumLandmarksBuiltForMe;
+	int* m_paiResurrectedOnTurn; // slewis - the "resurrected by" player liberated the city of an otherwise dead player and brought them back into the game on the given turn
+	int* m_paiNumTimesCultureBombed;
+	int* m_paiNegativeReligiousConversionPoints;
+	int* m_paiNegativeArchaeologyPoints;
+
+	int* m_paiNumTimesNuked;
+	int* m_paiNumTimesRobbedBy;
+	int* m_paiNumTimesIntrigueSharedBy;
+
+	int* m_paiBrokenExpansionPromiseValue;
+	int* m_paiIgnoredExpansionPromiseValue;
+	int* m_paiBrokenBorderPromiseValue;
+	int* m_paiIgnoredBorderPromiseValue;
+	int* m_paiDeclaredWarOnFriendValue;
+	int* m_paiTradeValue;
+	int* m_paiCommonFoeValue;
+	int* m_paiAssistValue;
+
+	int* m_paiNumCitiesLiberated;
+#else
 	short* m_paiDenouncedPlayerCounter;
 
 	short* m_paiNumRequestsRefused;
@@ -1431,29 +1736,53 @@ private:
 	short* m_paiAssistValue;
 
 	short* m_paiNumCitiesLiberated;
+#endif
 
 	bool** m_ppaabWorkingAgainstPlayerAccepted;
+#ifdef AUI_WARNING_FIXES
+	int** m_ppaaiWorkingAgainstPlayerCounter;
+
+	int** m_ppaacCoopWarAcceptedState;
+	int** m_ppaaiCoopWarCounter;
+#else
 	short** m_ppaaiWorkingAgainstPlayerCounter;
 
 	char** m_ppaacCoopWarAcceptedState;
 	short** m_ppaaiCoopWarCounter;
+#endif
 
 	// Player's repsonse to AI statements
 
 	bool* m_pabPlayerMadeMilitaryPromise;
 	bool* m_pabPlayerBrokenMilitaryPromise;
 	bool* m_pabPlayerIgnoredMilitaryPromise;
+#ifdef AUI_WARNING_FIXES
+	int* m_paiPlayerMilitaryPromiseCounter;
+
+	int* m_paiPlayerMadeExpansionPromiseTurn;
+#else
 	short* m_paiPlayerMilitaryPromiseCounter;
 
 	short* m_paiPlayerMadeExpansionPromiseTurn;
+#endif
 	bool* m_pabPlayerBrokenExpansionPromise;
 	bool* m_pabPlayerIgnoredExpansionPromise;
+#ifdef AUI_WARNING_FIXES
+	int* m_paePlayerExpansionPromiseData;
+
+	int* m_paiPlayerMadeBorderPromiseTurn;
+#else
 	char* m_paePlayerExpansionPromiseData;
 
 	short* m_paiPlayerMadeBorderPromiseTurn;
+#endif
 	bool* m_pabPlayerBrokenBorderPromise;
 	bool* m_pabPlayerIgnoredBorderPromise;
+#ifdef AUI_WARNING_FIXES
+	int* m_paePlayerBorderPromiseData;
+#else
 	char* m_paePlayerBorderPromiseData;
+#endif
 
 	bool* m_pabPlayerMadeAttackCityStatePromise;
 	bool* m_pabPlayerBrokenAttackCityStatePromise;
@@ -1499,6 +1828,29 @@ private:
 	int m_iChattiness;
 	int m_iMeanness;
 
+#ifdef AUI_WARNING_FIXES
+	int* m_paiPersonalityMajorCivApproachBiases;
+	int* m_paiPersonalityMinorCivApproachBiases;
+
+	// Evaluation of Other Players' Tendencies
+
+	int* m_paiOtherPlayerTurnsSinceAttackedProtectedMinor;
+	int* m_paiOtherPlayerProtectedMinorAttacked;
+	int* m_paiOtherPlayerNumProtectedMinorsAttacked;
+
+	int* m_paiOtherPlayerTurnsSinceKilledProtectedMinor;
+	int* m_paiOtherPlayerProtectedMinorKilled;
+	int* m_paiOtherPlayerNumProtectedMinorsKilled;
+
+	int* m_paiOtherPlayerNumProtectedMinorsBullied;
+
+	int* m_paiOtherPlayerTurnsSinceSidedWithTheirProtectedMinor;
+
+	int* m_paiOtherPlayerNumMinorsAttacked;
+	int* m_paiOtherPlayerNumMinorsConquered;
+	int* m_paiOtherPlayerNumMajorsAttacked;
+	int* m_paiOtherPlayerNumMajorsConquered;
+#else
 	char* m_paiPersonalityMajorCivApproachBiases;
 	char* m_paiPersonalityMinorCivApproachBiases;
 
@@ -1520,13 +1872,22 @@ private:
 	char* m_paiOtherPlayerNumMinorsConquered;
 	char* m_paiOtherPlayerNumMajorsAttacked;
 	char* m_paiOtherPlayerNumMajorsConquered;
+#endif
 	int*  m_paiOtherPlayerWarmongerAmount;
 
+#ifdef AUI_WARNING_FIXES
+	int* m_paiOtherPlayerTurnsSinceWeLikedTheirProposal;
+	int* m_paiOtherPlayerTurnsSinceWeDislikedTheirProposal;
+	int* m_paiOtherPlayerTurnsSinceTheySupportedOurProposal;
+	int* m_paiOtherPlayerTurnsSinceTheyFoiledOurProposal;
+	int* m_paiOtherPlayerTurnsSinceTheySupportedOurHosting;
+#else
 	short* m_paiOtherPlayerTurnsSinceWeLikedTheirProposal;
 	short* m_paiOtherPlayerTurnsSinceWeDislikedTheirProposal;
 	short* m_paiOtherPlayerTurnsSinceTheySupportedOurProposal;
 	short* m_paiOtherPlayerTurnsSinceTheyFoiledOurProposal;
 	short* m_paiOtherPlayerTurnsSinceTheySupportedOurHosting;
+#endif
 
 	// Memory of what we've talked about with people
 	DiploLogData** m_ppaDiploStatementsLog;

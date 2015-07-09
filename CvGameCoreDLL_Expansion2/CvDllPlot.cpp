@@ -355,7 +355,11 @@ int CvDllPlot::GetPlotIndex() const
 //------------------------------------------------------------------------------
 char CvDllPlot::GetContinentType() const
 {
+#ifdef AUI_WARNING_FIXES
+	return char(m_pPlot->GetContinentType());
+#else
 	return m_pPlot->GetContinentType();
+#endif
 }
 //------------------------------------------------------------------------------
 FAutoArchive& CvDllPlot::GetSyncArchive()

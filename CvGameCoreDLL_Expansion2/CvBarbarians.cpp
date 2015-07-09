@@ -12,8 +12,13 @@
 #include "CvTypes.h"
 
 //static 
+#ifdef AUI_WARNING_FIXES
+int* CvBarbarians::m_aiPlotBarbCampSpawnCounter = NULL;
+int* CvBarbarians::m_aiPlotBarbCampNumUnitsSpawned = NULL;
+#else
 short* CvBarbarians::m_aiPlotBarbCampSpawnCounter = NULL;
 short* CvBarbarians::m_aiPlotBarbCampNumUnitsSpawned = NULL;
+#endif
 FStaticVector<DirectionTypes, 6, true, c_eCiv5GameplayDLL, 0> CvBarbarians::m_aeValidBarbSpawnDirections;
 
 //	---------------------------------------------------------------------------
@@ -22,10 +27,6 @@ bool CvBarbarians::IsPlotValidForBarbCamp(CvPlot* pPlot)
 	int iRange = 4;
 	int iDY;
 
-	int iPlotX = pPlot->getX();
-	int iPlotY = pPlot->getY();
-
-	CvMap& kMap = GC.getMap();
 #ifdef AUI_HEXSPACE_DX_LOOPS
 	int iMaxDX, iDX;
 	CvPlot* pLoopPlot;
@@ -42,6 +43,10 @@ bool CvBarbarians::IsPlotValidForBarbCamp(CvPlot* pPlot)
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 #else
+	int iPlotX = pPlot->getX();
+	int iPlotY = pPlot->getY();
+
+	CvMap& kMap = GC.getMap();
 	for (int iDX = -(iRange); iDX <= iRange; iDX++)
 	{
 		for (iDY = -(iRange); iDY <= iRange; iDY++)
@@ -210,11 +215,19 @@ void CvBarbarians::MapInit(int iWorldNumPlots)
 	{
 		if (m_aiPlotBarbCampSpawnCounter == NULL)
 		{
+#ifdef AUI_WARNING_FIXES
+			m_aiPlotBarbCampSpawnCounter = FNEW(int[iWorldNumPlots], c_eCiv5GameplayDLL, 0);
+#else
 			m_aiPlotBarbCampSpawnCounter = FNEW(short[iWorldNumPlots], c_eCiv5GameplayDLL, 0);
+#endif
 		}
 		if (m_aiPlotBarbCampNumUnitsSpawned == NULL)
 		{
+#ifdef AUI_WARNING_FIXES
+			m_aiPlotBarbCampNumUnitsSpawned = FNEW(int[iWorldNumPlots], c_eCiv5GameplayDLL, 0);
+#else
 			m_aiPlotBarbCampNumUnitsSpawned = FNEW(short[iWorldNumPlots], c_eCiv5GameplayDLL, 0);
+#endif
 		}
 
 		// Default values
@@ -243,7 +256,11 @@ void CvBarbarians::Uninit()
 
 //	---------------------------------------------------------------------------
 /// Serialization Read
+#ifdef AUI_WARNING_FIXES
+void CvBarbarians::Read(FDataStream& kStream, uint /*uiParentVersion*/)
+#else
 void CvBarbarians::Read(FDataStream& kStream, uint uiParentVersion)
+#endif
 {
 	// Version number to maintain backwards compatibility
 	uint uiVersion = 0;
@@ -253,8 +270,15 @@ void CvBarbarians::Read(FDataStream& kStream, uint uiParentVersion)
 	int iWorldNumPlots = GC.getMap().numPlots();
 	MapInit(iWorldNumPlots);	// Map will have been initialized/unserialized by now so this is ok.
 
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> kWrapper1(iWorldNumPlots, m_aiPlotBarbCampSpawnCounter);
+	kStream >> kWrapper1;
+	ArrayWrapper<int> kWrapper2(iWorldNumPlots, m_aiPlotBarbCampNumUnitsSpawned);
+	kStream >> kWrapper2;
+#else
 	kStream >> ArrayWrapper<short>(iWorldNumPlots, m_aiPlotBarbCampSpawnCounter);
 	kStream >> ArrayWrapper<short>(iWorldNumPlots, m_aiPlotBarbCampNumUnitsSpawned);
+#endif
 }
 
 //	---------------------------------------------------------------------------
@@ -266,8 +290,15 @@ void CvBarbarians::Write(FDataStream& kStream)
 	kStream << uiVersion;
 
 	int iWorldNumPlots = GC.getMap().numPlots();
+#ifdef AUI_WARNING_FIXES
+	ArrayWrapper<int> kWrapper1(iWorldNumPlots, m_aiPlotBarbCampSpawnCounter);
+	kStream << kWrapper1;
+	ArrayWrapper<int> kWrapper2(iWorldNumPlots, m_aiPlotBarbCampNumUnitsSpawned);
+	kStream << kWrapper2;
+#else
 	kStream << ArrayWrapper<short>(iWorldNumPlots, m_aiPlotBarbCampSpawnCounter);
 	kStream << ArrayWrapper<short>(iWorldNumPlots, m_aiPlotBarbCampNumUnitsSpawned);
+#endif
 }
 
 //	--------------------------------------------------------------------------------

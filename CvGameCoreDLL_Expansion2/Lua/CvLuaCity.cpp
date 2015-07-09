@@ -2730,6 +2730,7 @@ int CvLuaCity::lGetHappiness(lua_State* L)
 {
 	CvCity* pkCity = GetInstance(L);
 
+#ifndef AUI_WARNING_FIXES
 	CvPlayerAI& kPlayer = GET_PLAYER(pkCity->getOwner());
 
 	const int numPolicyInfos = GC.getNumPolicyInfos();
@@ -2737,6 +2738,7 @@ int CvLuaCity::lGetHappiness(lua_State* L)
 
 	CvPlayerPolicies* pkPlayerPolicies = kPlayer.GetPlayerPolicies();
 	CvCityBuildings* pkCityBuildings = pkCity->GetCityBuildings();
+#endif
 
 	int iHappiness = pkCity->GetHappinessFromBuildings();
 
@@ -3295,7 +3297,9 @@ int CvLuaCity::lGetNumSpecialistsAllowedByBuilding(lua_State* L)
 int CvLuaCity::lGetSpecialistCount(lua_State* L)
 {
 	CvCity* pkCity = GetInstance(L);
+#ifndef AUI_WARNING_FIXES
 	const int iIndex = lua_tointeger(L, 2);
+#endif
 	const int iResult = pkCity->GetCityCitizens()->GetSpecialistCount(toValue<SpecialistTypes>(L, 2));
 
 	lua_pushinteger(L, iResult);
@@ -3306,7 +3310,9 @@ int CvLuaCity::lGetSpecialistCount(lua_State* L)
 int CvLuaCity::lGetSpecialistGreatPersonProgress(lua_State* L)
 {
 	CvCity* pkCity = GetInstance(L);
+#ifndef AUI_WARNING_FIXES
 	const int iIndex = lua_tointeger(L, 2);
+#endif
 	const int iResult = pkCity->GetCityCitizens()->GetSpecialistGreatPersonProgress(toValue<SpecialistTypes>(L, 2));
 
 	lua_pushinteger(L, iResult);
@@ -3318,7 +3324,9 @@ int CvLuaCity::lGetSpecialistGreatPersonProgress(lua_State* L)
 int CvLuaCity::lGetSpecialistGreatPersonProgressTimes100(lua_State* L)
 {
 	CvCity* pkCity = GetInstance(L);
+#ifndef AUI_WARNING_FIXES
 	const int iIndex = lua_tointeger(L, 2);
+#endif
 	const int iResult = pkCity->GetCityCitizens()->GetSpecialistGreatPersonProgressTimes100(toValue<SpecialistTypes>(L, 2));
 
 	lua_pushinteger(L, iResult);
@@ -3330,7 +3338,9 @@ int CvLuaCity::lGetSpecialistGreatPersonProgressTimes100(lua_State* L)
 int CvLuaCity::lChangeSpecialistGreatPersonProgressTimes100(lua_State* L)
 {
 	CvCity* pkCity = GetInstance(L);
+#ifndef AUI_WARNING_FIXES
 	const int iIndex = lua_tointeger(L, 2);
+#endif
 	const int iChange = lua_tointeger(L, 3);
 	pkCity->GetCityCitizens()->ChangeSpecialistGreatPersonProgressTimes100(toValue<SpecialistTypes>(L, 2), iChange);
 
@@ -3342,7 +3352,9 @@ int CvLuaCity::lChangeSpecialistGreatPersonProgressTimes100(lua_State* L)
 int CvLuaCity::lGetNumSpecialistsInBuilding(lua_State* L)
 {
 	CvCity* pkCity = GetInstance(L);
+#ifndef AUI_WARNING_FIXES
 	const int iIndex = lua_tointeger(L, 2);
+#endif
 	const int iResult = pkCity->GetCityCitizens()->GetNumSpecialistsInBuilding(toValue<BuildingTypes>(L, 2));
 
 	lua_pushinteger(L, iResult);

@@ -308,6 +308,21 @@ dxPRINTPROC dxPrintHook( dxPRINTPROC newPrinter=0 );    // returns old printer
 		inline bool Remark( int /*level*/, const char */*format=0*/, ... ){return false;}\
 		inline bool RemarkIf( bool /*bExpr*/, int /*level*/, const char* /*format=0*/, ... ){return false;}
 
+#ifdef AUI_WARNING_FIXES
+	inline void   SetRemarkGroupCutoffLevel(int, int){}
+	inline void   SetRemarkLevelAll(int){}
+	inline void   SetRemarkLevels(const char*){}
+	inline void   SetRemarkLogger(const char*){}
+	inline void   SetRemarkLogFile(const char*){}
+	inline void   SaveRemarkLogFile(const char*){}
+	inline void   SetRemarkSystemEnabled(bool){}
+
+	inline uint GetRemarkGroupCutoffLevel(int){return 0;}
+	inline int GetRemarkGroup(const char*){return -1;}
+
+	inline bool RemarkTo(char*, int, const char*, ... ){return false;}
+	inline bool RemarkX(int, const char*, ... ){return false;}
+#else
 	inline void   SetRemarkGroupCutoffLevel( int group, int level ){}
 	inline void   SetRemarkLevelAll( int level ){}
 	inline void   SetRemarkLevels( const char * pOption){}
@@ -321,6 +336,7 @@ dxPRINTPROC dxPrintHook( dxPRINTPROC newPrinter=0 );    // returns old printer
 
 	inline bool RemarkTo( char* group, int level, const char *format=0, ... ){return false;}
 	inline bool RemarkX( int level, const char *format=0, ... ){return false;}
+#endif
 #endif //REMARK_ENABLE
 
 

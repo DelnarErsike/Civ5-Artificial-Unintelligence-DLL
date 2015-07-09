@@ -1848,7 +1848,11 @@ bool CvPlayerEspionage::AttemptCoup(uint uiSpyIndex)
 		aiNewInfluenceValueTimes100[m_pPlayer->GetID()] = iInfluenceTemp;
 
 		// reduce the influence of all the other players
+#ifdef AUI_WARNING_FIXES
+		for (int ui = 0; ui < MAX_MAJOR_CIVS; ui++)
+#else
 		for(uint ui = 0; ui < MAX_MAJOR_CIVS; ui++)
+#endif
 		{
 			if(ui == m_pPlayer->GetID())
 			{

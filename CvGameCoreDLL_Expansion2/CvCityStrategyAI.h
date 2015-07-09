@@ -198,8 +198,13 @@ public:
 	// these functions must be called together. Reset clears the internal arrays, update evalutes the city, and GetBestYieldAverage... returns the value that the builder AI uses.
 	void ResetBestYields();
 	void UpdateBestYields();
+#ifdef AUI_WARNING_FIXES
+	unsigned int GetBestYieldAverageTimes100(YieldTypes eYield);
+	int GetYieldDeltaTimes100(YieldTypes eYield);
+#else
 	unsigned short GetBestYieldAverageTimes100(YieldTypes eYield);
 	short GetYieldDeltaTimes100(YieldTypes eYield);
+#endif
 	YieldTypes GetFocusYield();
 
 	// Public logging functions
@@ -243,9 +248,15 @@ private:
 	FFastVector<OrderData, true, c_eCiv5GameplayDLL> m_RushList;
 #endif
 
+#ifdef AUI_WARNING_FIXES
+	static unsigned int  m_acBestYields[NUM_YIELD_TYPES][NUM_CITY_PLOTS];
+	unsigned int m_asBestYieldAverageTimes100[NUM_YIELD_TYPES];
+	int m_asYieldDeltaTimes100[NUM_YIELD_TYPES];
+#else
 	static unsigned char  m_acBestYields[NUM_YIELD_TYPES][NUM_CITY_PLOTS];
 	unsigned short m_asBestYieldAverageTimes100[NUM_YIELD_TYPES];
 	short m_asYieldDeltaTimes100[NUM_YIELD_TYPES];
+#endif
 	YieldTypes m_eFocusYield;
 };
 

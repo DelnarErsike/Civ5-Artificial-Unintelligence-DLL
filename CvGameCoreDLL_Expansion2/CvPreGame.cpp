@@ -2466,7 +2466,11 @@ void setGameSpeed(GameSpeedTypes g)
 {
 	s_gameSpeed = g;
 
+#ifdef AUI_WARNING_FIXES
+	switch (static_cast<int>(s_gameSpeed))
+#else
 	switch(s_gameSpeed)
+#endif
 	{
 	case 0: // GAMESPEED_MARATHON
 	{

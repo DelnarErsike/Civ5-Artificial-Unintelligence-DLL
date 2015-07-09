@@ -74,7 +74,11 @@ void SyncPlots()
 					FMemoryStream memoryStream;
 					std::vector<std::pair<std::string, std::string> > callStacks;
 					archive.saveDelta(memoryStream, callStacks);
+#ifdef AUI_WARNING_FIXES
+					gDLL->sendPlotSyncCheck(authoritativePlayer, short(plot->getX()), short(plot->getY()), memoryStream, callStacks);
+#else
 					gDLL->sendPlotSyncCheck(authoritativePlayer, plot->getX(), plot->getY(), memoryStream, callStacks);
+#endif
 				}
 			}
 		}
@@ -1263,7 +1267,11 @@ CvPlot* CvPlot::getNeighboringPlot(DirectionTypes eDirection) const
 //	--------------------------------------------------------------------------------
 CvPlot* CvPlot::getNearestLandPlotInternal(int iDistance) const
 {
+#ifdef AUI_WARNING_FIXES
+	if(uint(iDistance) > GC.getMap().getGridHeight() && uint(iDistance) > GC.getMap().getGridWidth())
+#else
 	if(iDistance > GC.getMap().getGridHeight() && iDistance > GC.getMap().getGridWidth())
+#endif
 	{
 		return NULL;
 	}
@@ -7065,7 +7073,11 @@ void CvPlot::changeRiverCrossingCount(int iChange)
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+int* CvPlot::getYield()
+#else
 short* CvPlot::getYield()
+#endif
 {
 	return m_aiYield;
 }
@@ -9042,7 +9054,11 @@ bool CvPlot::changeBuildProgress(BuildTypes eBuild, int iChange, PlayerTypes ePl
 	{
 		if(NULL == m_paiBuildProgress)
 		{
+#ifdef AUI_WARNING_FIXES
+			m_paiBuildProgress = FNEW(int[GC.getNumBuildInfos()], c_eCiv5GameplayDLL, 0);
+#else
 			m_paiBuildProgress = FNEW(short[GC.getNumBuildInfos()], c_eCiv5GameplayDLL, 0);
+#endif
 			for(int iI = 0; iI < GC.getNumBuildInfos(); ++iI)
 			{
 				m_paiBuildProgress[iI] = 0;
@@ -9570,7 +9586,11 @@ void CvPlot::removeUnit(CvUnit* pUnit, bool bUpdate)
 		}
 	}
 
+#ifdef AUI_WARNING_FIXES
+	GC.getMap().plotManager().RemoveUnit(pUnit->GetIDInfo(), m_iX, m_iY, MAX_UNSIGNED_INT);
+#else
 	GC.getMap().plotManager().RemoveUnit(pUnit->GetIDInfo(), m_iX, m_iY, -1);
+#endif
 
 	if(bUpdate)
 	{
@@ -10014,7 +10034,11 @@ void CvPlot::read(FDataStream& kStream)
 	if(iCount > 0)
 	{
 		const int iNumBuildInfos = GC.getNumBuildInfos();
+#ifdef AUI_WARNING_FIXES
+		m_paiBuildProgress = FNEW(int[iNumBuildInfos], c_eCiv5GameplayDLL, 0);
+#else
 		m_paiBuildProgress = FNEW(short[iNumBuildInfos], c_eCiv5GameplayDLL, 0);
+#endif
 		ZeroMemory(m_paiBuildProgress, sizeof(short) * iNumBuildInfos);
 		
 		BuildArrayHelpers::Read(kStream, m_paiBuildProgress);
@@ -11132,13 +11156,21 @@ void CvPlot::SetBuilderAIScratchPadPlayer(PlayerTypes ePlayer)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+int CvPlot::GetBuilderAIScratchPadTurn() const
+#else
 short CvPlot::GetBuilderAIScratchPadTurn() const
+#endif
 {
 	return m_sBuilderAIScratchPadTurn;
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvPlot::SetBuilderAIScratchPadTurn(int sNewTurnValue)
+#else
 void CvPlot::SetBuilderAIScratchPadTurn(short sNewTurnValue)
+#endif
 {
 	m_sBuilderAIScratchPadTurn = sNewTurnValue;
 }
@@ -11156,31 +11188,51 @@ void CvPlot::SetBuilderAIScratchPadRoute(RouteTypes eRoute)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+int CvPlot::GetBuilderAIScratchPadValue() const
+#else
 short CvPlot::GetBuilderAIScratchPadValue() const
+#endif
 {
 	return m_sBuilderAIScratchPadValue;
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvPlot::SetBuilderAIScratchPadValue(int sNewValue)
+#else
 void CvPlot::SetBuilderAIScratchPadValue(short sNewValue)
+#endif
 {
 	m_sBuilderAIScratchPadValue = sNewValue;
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+uint CvPlot::GetPlotIndex() const
+#else
 int CvPlot::GetPlotIndex() const
+#endif
 {
 	return GC.getMap().plotNum(getX(),getY());
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+int CvPlot::GetContinentType() const
+#else
 char CvPlot::GetContinentType() const
+#endif
 {
 	return m_cContinentType;
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvPlot::SetContinentType(const int cContinent)
+#else
 void CvPlot::SetContinentType(const char cContinent)
+#endif
 {
 	m_cContinentType = cContinent;
 }

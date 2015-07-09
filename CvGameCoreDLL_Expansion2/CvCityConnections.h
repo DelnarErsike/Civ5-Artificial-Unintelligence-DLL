@@ -75,7 +75,11 @@ public:
 
 	//typedef FStaticVector< RouteInfo, SAFE_ESTIMATE_NUM_CITIES, true, c_eCiv5GameplayDLL, 0 > RouteInfosRow;
 	//FFastVector< RouteInfosRow, false, c_eCiv5GameplayDLL, 0 > m_aaRouteInfos;
+#ifdef AUI_WARNING_FIXES
+	FStaticVector<uint, SAFE_ESTIMATE_NUM_CITIES, true, c_eCiv5GameplayDLL, 0> m_aiCityPlotIDs;
+#else
 	FStaticVector<int, SAFE_ESTIMATE_NUM_CITIES, true, c_eCiv5GameplayDLL, 0> m_aiCityPlotIDs;
+#endif
 	FStaticVector<BuildingTypes, 10, true, c_eCiv5GameplayDLL, 0> m_aBuildingsAllowWaterRoutes;
 
 	//---------------------------------------PROTECTED MEMBER VARIABLES---------------------------------

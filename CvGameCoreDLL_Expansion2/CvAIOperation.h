@@ -216,7 +216,11 @@ public:
 
 	virtual bool CheckOnTarget();
 	virtual bool ArmyInPosition(CvArmyAI* pArmy);
+#ifdef AUI_WARNING_FIXES
+	virtual bool ArmyMoved(CvArmyAI* /*pArmy*/)
+#else
 	virtual bool ArmyMoved(CvArmyAI* pArmy)
+#endif
 	{
 		return false;
 	};

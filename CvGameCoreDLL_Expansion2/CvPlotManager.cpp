@@ -253,7 +253,11 @@ void CvPlotManager::AddUnit(const IDInfo& kInfo, int iX, int iY, uint uiLayerID)
 //	---------------------------------------------------------------------------
 void CvPlotManager::RemoveUnit(const IDInfo& kInfo, int iX, int iY, uint uiLayerID)
 {
+#ifdef AUI_WARNING_FIXES
+	if (uiLayerID != MAX_UNSIGNED_INT)
+#else
 	if (uiLayerID != -1)
+#endif
 	{
 		CvSparseIDInfoGrid* pkLayer = FindLayer(uiLayerID);
 		if (pkLayer)
@@ -263,7 +267,9 @@ void CvPlotManager::RemoveUnit(const IDInfo& kInfo, int iX, int iY, uint uiLayer
 	}
 	else
 	{
+#ifndef AUI_WARNING_FIXES
 		int iIndex = 0;
+#endif
 		for (CvSparseIDInfoGridVector::const_iterator itr = m_aLayers.begin(); itr != m_aLayers.end(); ++itr)
 		{
 			(*itr).GetGrid()->Remove(kInfo, iX, iY);

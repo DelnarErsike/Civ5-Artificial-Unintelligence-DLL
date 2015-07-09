@@ -123,13 +123,21 @@ bool CvLandmass::isLake() const
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+int CvLandmass::GetContinentType() const
+#else
 char CvLandmass::GetContinentType() const
+#endif
 {
 	return m_cContinentType;
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvLandmass::SetContinentType(const int cContinent)
+#else
 void CvLandmass::SetContinentType(const char cContinent)
+#endif
 {
 	m_cContinentType = cContinent;
 }
@@ -260,6 +268,16 @@ void CvMap::InitPlots()
 
 	int iNumPlots = numPlots();
 
+#ifdef AUI_WARNING_FIXES
+	m_pYields					= FNEW(int[NUM_YIELD_TYPES*iNumPlots], c_eCiv5GameplayDLL, 0);
+	m_pFoundValue				= FNEW(int[REALLY_MAX_PLAYERS*iNumPlots], c_eCiv5GameplayDLL, 0);
+	m_pPlayerCityRadiusCount	= FNEW(int[REALLY_MAX_PLAYERS*iNumPlots], c_eCiv5GameplayDLL, 0);
+	m_pVisibilityCount			= FNEW(int[REALLY_MAX_TEAMS*iNumPlots], c_eCiv5GameplayDLL, 0);
+	m_pRevealedOwner			= FNEW(int[REALLY_MAX_TEAMS*iNumPlots], c_eCiv5GameplayDLL, 0);
+	m_pRevealed					= FNEW(bool[REALLY_MAX_TEAMS*iNumPlots], c_eCiv5GameplayDLL, 0);
+	m_pRevealedImprovementType  = FNEW(int[REALLY_MAX_TEAMS*iNumPlots], c_eCiv5GameplayDLL, 0);
+	m_pRevealedRouteType		= FNEW(int[REALLY_MAX_TEAMS*iNumPlots], c_eCiv5GameplayDLL, 0);
+#else
 	m_pYields					= FNEW(short[NUM_YIELD_TYPES*iNumPlots], c_eCiv5GameplayDLL, 0);
 	m_pFoundValue				= FNEW(int[REALLY_MAX_PLAYERS*iNumPlots], c_eCiv5GameplayDLL, 0);
 	m_pPlayerCityRadiusCount	= FNEW(char[REALLY_MAX_PLAYERS*iNumPlots], c_eCiv5GameplayDLL, 0);
@@ -268,6 +286,7 @@ void CvMap::InitPlots()
 	m_pRevealed					= FNEW(bool[REALLY_MAX_TEAMS*iNumPlots], c_eCiv5GameplayDLL, 0);
 	m_pRevealedImprovementType  = FNEW(short[REALLY_MAX_TEAMS*iNumPlots], c_eCiv5GameplayDLL, 0);
 	m_pRevealedRouteType		= FNEW(short[REALLY_MAX_TEAMS*iNumPlots], c_eCiv5GameplayDLL, 0);
+#endif
 	m_pNoSettling				= FNEW(bool[MAX_MAJOR_CIVS*iNumPlots], c_eCiv5GameplayDLL, 0);
 	m_pResourceForceReveal		= FNEW(bool[REALLY_MAX_TEAMS*iNumPlots], c_eCiv5GameplayDLL, 0);
 
@@ -283,6 +302,15 @@ void CvMap::InitPlots()
 	memset(m_pResourceForceReveal, 0,REALLY_MAX_TEAMS*iNumPlots *sizeof(bool));
 
 
+#ifdef AUI_WARNING_FIXES
+	int* pYields = m_pYields;
+	int*   pFoundValue = m_pFoundValue;
+	int*  pPlayerCityRadiusCount = m_pPlayerCityRadiusCount;
+	int* pVisibilityCount = m_pVisibilityCount;
+	int*  pRevealedOwner = m_pRevealedOwner;
+	int* pRevealedImprovementType = m_pRevealedImprovementType;
+	int* pRevealedRouteType = m_pRevealedRouteType;
+#else
 	short* pYields					= m_pYields;
 	int*   pFoundValue				= m_pFoundValue;
 	char*  pPlayerCityRadiusCount   = m_pPlayerCityRadiusCount;
@@ -290,6 +318,7 @@ void CvMap::InitPlots()
 	char*  pRevealedOwner			= m_pRevealedOwner;
 	short* pRevealedImprovementType = m_pRevealedImprovementType;
 	short* pRevealedRouteType		= m_pRevealedRouteType;
+#endif
 	bool*  pNoSettling				= m_pNoSettling;
 	bool*  pResourceForceReveal		= m_pResourceForceReveal;
 

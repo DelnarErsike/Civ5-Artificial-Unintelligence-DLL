@@ -110,7 +110,11 @@ public:
 	virtual void Rewind() { Reset(); FMemoryStream::Rewind(); }
 
 protected:
+#ifdef AUI_WARNING_FIXES
+	void Reset() { Run = 0; Last = MAX_UNSIGNED_INT; }
+#else
 	void Reset() { Run = 0; Last = EOF; }
+#endif
 
 	// Members:
 	//--------

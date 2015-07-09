@@ -1899,7 +1899,11 @@ protected:
 	std::vector<int> m_aiSiphonLuxuryCount;
 	std::vector<int> m_aiGreatWorkYieldChange;
 
+#ifdef AUI_WARNING_FIXES
+	typedef std::pair<int, int> PlayerOptionEntry;
+#else
 	typedef std::pair<uint, int> PlayerOptionEntry;
+#endif
 	typedef std::vector< PlayerOptionEntry > PlayerOptionsVector;
 	FAutoVariable<PlayerOptionsVector, CvPlayer> m_aOptions;
 

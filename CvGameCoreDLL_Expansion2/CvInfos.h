@@ -1142,8 +1142,13 @@ private:
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 namespace BuildArrayHelpers
 {
+#ifdef AUI_WARNING_FIXES
+	void Read(FDataStream& kStream, int* paiBuildArray);
+	void Write(FDataStream& kStream, int* paiBuildArray, int iArraySize);
+#else
 void Read(FDataStream& kStream, short* paiBuildArray);
 void Write(FDataStream& kStream, short* paiBuildArray, int iArraySize);
+#endif
 }
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

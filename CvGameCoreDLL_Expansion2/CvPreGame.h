@@ -280,7 +280,9 @@ SlotStatus                                 slotStatus(PlayerTypes eID);
 unsigned int                               syncRandomSeed();
 int                                        targetScore();
 bool                                       transferredMap();                    // setupddata
+#ifndef AUI_WARNING_FIXES
 TeamTypes                                  teamType(PlayerTypes p);
+#endif
 const CvTurnTimerInfo&                     turnTimerInfo();
 TurnTimerTypes                             turnTimer();
 const std::string&                         versionString();
