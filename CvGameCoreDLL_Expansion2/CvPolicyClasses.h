@@ -477,15 +477,25 @@ public:
 
 	// Policy functions
 	std::vector<CvPolicyEntry*>& GetPolicyEntries();
+#ifdef AUI_WARNING_FIXES
+	uint GetNumPolicies() const;
+	CvPolicyEntry* GetPolicyEntry(uint index);
+#else
 	int GetNumPolicies();
 	CvPolicyEntry* GetPolicyEntry(int index);
+#endif
 
 	void DeletePoliciesArray();
 
 	// Policy Branch functions
 	std::vector<CvPolicyBranchEntry*>& GetPolicyBranchEntries();
+#ifdef AUI_WARNING_FIXES
+	uint GetNumPolicyBranches() const;
+	_Ret_maybenull_ CvPolicyBranchEntry* GetPolicyBranchEntry(uint index);
+#else
 	int GetNumPolicyBranches();
 	_Ret_maybenull_ CvPolicyBranchEntry* GetPolicyBranchEntry(int index);
+#endif
 
 	void DeletePolicyBranchesArray();
 

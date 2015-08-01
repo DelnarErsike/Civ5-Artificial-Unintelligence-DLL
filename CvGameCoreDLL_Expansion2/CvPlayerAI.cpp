@@ -124,7 +124,11 @@ void CvPlayerAI::AI_doTurnPost()
 		return;
 	}
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumVictoryInfos(); ++i)
+#else
 	for(int i = 0; i < GC.getNumVictoryInfos(); ++i)
+#endif
 	{
 		AI_launch((VictoryTypes)i);
 	}
@@ -304,7 +308,7 @@ void CvPlayerAI::AI_conquerCity(CvCity* pCity, PlayerTypes eOldOwner)
 	BuildingTypes eCourthouseBuildingType = NO_BUILDING;
 	BuildingClassTypes eCourthouseType = NO_BUILDINGCLASS;
 	// find courthouse
-	for (int eBuildingType = 0; eBuildingType < GC.getNumBuildingInfos(); eBuildingType++)
+	for (uint eBuildingType = 0; eBuildingType < GC.getNumBuildingInfos(); eBuildingType++)
 	{
 		const BuildingTypes eBuilding = static_cast<BuildingTypes>(eBuildingType);
 		CvBuildingEntry* buildingInfo = GC.getBuildingInfo(eBuilding);
@@ -803,7 +807,7 @@ void CvPlayerAI::AI_considerAnnex()
 	std::vector<BuildingTypes> aeCourthouseBuildingTypes;
 	std::vector<BuildingClassTypes> aeCourthouseTypes;
 	// find courthouse
-	for (int eBuildingType = 0; eBuildingType < GC.getNumBuildingInfos(); eBuildingType++)
+	for (uint eBuildingType = 0; eBuildingType < GC.getNumBuildingInfos(); eBuildingType++)
 	{
 		const BuildingTypes eBuilding = static_cast<BuildingTypes>(eBuildingType);
 		CvBuildingEntry* buildingInfo = GC.getBuildingInfo(eBuilding);
@@ -1866,7 +1870,7 @@ CvPlot* CvPlayerAI::FindBestMerchantTargetPlot(CvUnit* pGreatMerchant, bool bOnl
 			{
 				dTurnsMod *= 1.25;
 			}
-			for (int kK = 0; kK < GC.getNumResourceInfos(); kK++)
+			for (uint kK = 0; kK < GC.getNumResourceInfos(); kK++)
 			{
 				if (kPlayer.getNumResourceAvailable((ResourceTypes)kK, false) > 0)
 				{
@@ -2050,7 +2054,9 @@ CvPlot* CvPlayerAI::FindBestArtistTargetPlot(CvUnit* pGreatArtist, int& iResultS
 
 	iResultScore = 0;
 
+#ifndef AUI_WARNING_FIXES
 	CvPlotsVector& m_aiPlots = GetPlots();
+#endif
 
 	CvPlot* pBestPlot = NULL;
 	int iBestScore = 0;

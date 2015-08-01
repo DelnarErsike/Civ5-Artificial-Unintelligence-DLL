@@ -243,7 +243,11 @@ void CvTacticalAnalysisMap::RefreshDataForNextPlayer(CvPlayer* pPlayer)
 
 				AddTemporaryZones();
 
+#ifdef AUI_WARNING_FIXES
+				for (uint iI = 0; iI < GC.getMap().numPlots(); iI++)
+#else
 				for(int iI = 0; iI < GC.getMap().numPlots(); iI++)
+#endif
 				{
 					CvAssertMsg((iI < m_iNumPlots), "Plot to be accessed exceeds allocation!");
 
@@ -309,7 +313,11 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 	int iDistance;
 
 	// Look at every cell on the map
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getMap().numPlots(); iI++)
+#else
 	for(int iI = 0; iI < GC.getMap().numPlots(); iI++)
+#endif
 	{
 		bool bMarkedIt = false;   // Set true once we've found one that enemy can move past (worst case)
 
@@ -459,7 +467,11 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 // Clear all dynamic data flags from the map
 void CvTacticalAnalysisMap::ClearDynamicFlags()
 {
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getMap().numPlots(); iI++)
+#else
 	for(int iI = 0; iI < GC.getMap().numPlots(); iI++)
+#endif
 	{
 		// Erase this cell
 		m_pPlots[iI].SetWithinRangeOfTarget(false);
@@ -599,7 +611,11 @@ void CvTacticalAnalysisMap::AddTemporaryZones()
 bool CvTacticalAnalysisMap::PopulateCell(int iIndex, CvPlot* pPlot)
 {
 	CvUnit* pLoopUnit;
+#ifdef AUI_WARNING_FIXES
+	uint iUnitLoop;
+#else
 	int iUnitLoop;
+#endif
 	CvTacticalAnalysisCell& cell = m_pPlots[iIndex];
 
 	cell.Clear();

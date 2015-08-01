@@ -218,12 +218,20 @@ void CvProjectEntry::SetCreateSound(const char* szVal)
 // ARRAYS
 
 /// Resources consumed to construct
+#ifdef AUI_WARNING_FIXES
+int CvProjectEntry::GetResourceQuantityRequirement(uint i) const
+{
+	CvAssertMsg(i < GC.getNumResourceInfos(), "Index out of bounds");
+
+	if (i < GC.getNumResourceInfos() && m_piResourceQuantityRequirements)
+#else
 int CvProjectEntry::GetResourceQuantityRequirement(int i) const
 {
 	CvAssertMsg(i < GC.getNumResourceInfos(), "Index out of bounds");
 	CvAssertMsg(i > -1, "Index out of bounds");
 
 	if(i > -1 && i < GC.getNumResourceInfos() && m_piResourceQuantityRequirements)
+#endif
 	{
 		return  m_piResourceQuantityRequirements[i];
 	}
@@ -232,12 +240,20 @@ int CvProjectEntry::GetResourceQuantityRequirement(int i) const
 }
 
 /// Maximum number of these needed for victory condition
+#ifdef AUI_WARNING_FIXES
+int CvProjectEntry::GetVictoryThreshold(uint i) const
+{
+	CvAssertMsg(i < GC.getNumVictoryInfos(), "Index out of bounds");
+
+	if (i < GC.getNumVictoryInfos() && m_piVictoryThreshold)
+#else
 int CvProjectEntry::GetVictoryThreshold(int i) const
 {
 	CvAssertMsg(i < GC.getNumVictoryInfos(), "Index out of bounds");
 	CvAssertMsg(i > -1, "Index out of bounds");
 
 	if(i > -1 && i < GC.getNumVictoryInfos() && m_piVictoryThreshold)
+#endif
 	{
 		return  m_piVictoryThreshold[i];
 	}
@@ -246,12 +262,20 @@ int CvProjectEntry::GetVictoryThreshold(int i) const
 }
 
 /// Minimum number of these needed for victory condition
+#ifdef AUI_WARNING_FIXES
+int CvProjectEntry::GetVictoryMinThreshold(uint i) const
+{
+	CvAssertMsg(i < GC.getNumVictoryInfos(), "Index out of bounds");
+
+	if (i < GC.getNumVictoryInfos())
+#else
 int CvProjectEntry::GetVictoryMinThreshold(int i) const
 {
 	CvAssertMsg(i < GC.getNumVictoryInfos(), "Index out of bounds");
 	CvAssertMsg(i > -1, "Index out of bounds");
 
 	if(i > -1 && i < GC.getNumVictoryInfos())
+#endif
 	{
 		if(m_piVictoryMinThreshold && m_piVictoryMinThreshold[i] != 0)
 		{
@@ -265,12 +289,20 @@ int CvProjectEntry::GetVictoryMinThreshold(int i) const
 }
 
 /// Other projects required before this one can be built
+#ifdef AUI_WARNING_FIXES
+int CvProjectEntry::GetProjectsNeeded(uint i) const
+{
+	CvAssertMsg(i < GC.getNumProjectInfos(), "Index out of bounds");
+
+	if (i < GC.getNumProjectInfos() && m_piProjectsNeeded)
+#else
 int CvProjectEntry::GetProjectsNeeded(int i) const
 {
 	CvAssertMsg(i < GC.getNumProjectInfos(), "Index out of bounds");
 	CvAssertMsg(i > -1, "Index out of bounds");
 
 	if(i > -1 && i < GC.getNumProjectInfos() && m_piProjectsNeeded)
+#endif
 	{
 		return m_piProjectsNeeded[i];
 	}
@@ -300,7 +332,11 @@ std::vector<CvProjectEntry*>& CvProjectXMLEntries::GetProjectEntries()
 }
 
 /// Number of defined projects
+#ifdef AUI_WARNING_FIXES
+uint CvProjectXMLEntries::GetNumProjects() const
+#else
 int CvProjectXMLEntries::GetNumProjects()
+#endif
 {
 	return m_paProjectEntries.size();
 }
@@ -317,7 +353,11 @@ void CvProjectXMLEntries::DeleteArray()
 }
 
 /// Get a specific entry
+#ifdef AUI_WARNING_FIXES
+_Ret_maybenull_ CvProjectEntry* CvProjectXMLEntries::GetEntry(uint index)
+#else
 CvProjectEntry* CvProjectXMLEntries::GetEntry(int index)
+#endif
 {
 	return m_paProjectEntries[index];
 }

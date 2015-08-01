@@ -858,7 +858,14 @@ void CvMinorCivQuest::DoStartQuest(int iStartTurn)
 
 		m_iData1 = eWonder;
 
+#ifdef AUI_WARNING_FIXES
+		const char* strBuildingName;
+		CvBuildingEntry* pWonderInfo = GC.getBuildingInfo(eWonder);
+		if (pWonderInfo)
+			strBuildingName = pWonderInfo->GetDescriptionKey();
+#else
 		const char* strBuildingName = GC.getBuildingInfo(eWonder)->GetDescriptionKey();
+#endif
 
 		strMessage = Localization::Lookup("TXT_KEY_NOTIFICATION_QUEST_CONSTRUCT_WONDER");
 		strMessage << strBuildingName;
@@ -874,7 +881,14 @@ void CvMinorCivQuest::DoStartQuest(int iStartTurn)
 
 		m_iData1 = eUnit;
 
+#ifdef AUI_WARNING_FIXES
+		const char* strUnitName;
+		CvUnitEntry* pUnitInfo = GC.getUnitInfo(eUnit);
+		if (pUnitInfo)
+			strUnitName = pUnitInfo->GetDescriptionKey();
+#else
 		const char* strUnitName = GC.getUnitInfo(eUnit)->GetDescriptionKey();
+#endif
 
 		strMessage = Localization::Lookup("TXT_KEY_NOTIFICATION_QUEST_GREAT_PERSON");
 		strMessage << strUnitName;
@@ -2404,7 +2418,11 @@ void CvMinorCivAI::DoAddStartingResources(CvPlot* pCityPlot)
 		if (bAddUniqueLuxury)
 		{
 			FStaticVector< ResourceTypes, 64, true, c_eCiv5GameplayDLL > veUniqueLuxuries;
+#ifdef AUI_WARNING_FIXES
+			for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 			for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 			{
 				const ResourceTypes eResourceLoop = (ResourceTypes) iResourceLoop;
 				CvResourceInfo* pkResourceInfo = GC.getResourceInfo(eResourceLoop);
@@ -4711,7 +4729,11 @@ ResourceTypes CvMinorCivAI::GetNearbyResourceForQuest(PlayerTypes ePlayer)
 
 		// Loop through all Resources and see if they're useful
 		ResourceTypes eResource;
+#ifdef AUI_WARNING_FIXES
+		for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 		for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 		{
 			eResource = (ResourceTypes) iResourceLoop;
 
@@ -4791,7 +4813,11 @@ BuildingTypes CvMinorCivAI::GetBestWonderForQuest(PlayerTypes ePlayer)
 	bool bFoundWonderTooFarAlong;
 
 	// Loop through all Buildings and see if they're useful
+#ifdef AUI_WARNING_FIXES
+	for (uint iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+#else
 	for(int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+#endif
 	{
 		const BuildingTypes eBuilding = static_cast<BuildingTypes>(iBuildingLoop);
 		CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eBuilding);
@@ -4865,7 +4891,11 @@ UnitTypes CvMinorCivAI::GetBestGreatPersonForQuest(PlayerTypes ePlayer)
 	FStaticVector<UnitTypes, 8, true, c_eCiv5GameplayDLL, 0> veValidUnits;
 
 	// Loop through all Units and see if they're useful
+#ifdef AUI_WARNING_FIXES
+	for (uint iUnitLoop = 0; iUnitLoop < GC.getNumUnitInfos(); iUnitLoop++)
+#else
 	for(int iUnitLoop = 0; iUnitLoop < GC.getNumUnitInfos(); iUnitLoop++)
+#endif
 	{
 		const UnitTypes eUnit = static_cast<UnitTypes>(iUnitLoop);
 		CvUnitEntry* pkUnitInfo = GC.getUnitInfo(eUnit);
@@ -5558,7 +5588,11 @@ void CvMinorCivAI::DoUpdateAlliesResourceBonus(PlayerTypes eNewAlly, PlayerTypes
 	ResourceTypes eResource;
 	ResourceUsageTypes eUsage;
 	int iResourceQuantity;
+#ifdef AUI_WARNING_FIXES
+	for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 	for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 	{
 		eResource = (ResourceTypes) iResourceLoop;
 
@@ -5637,7 +5671,11 @@ void CvMinorCivAI::SetAlly(PlayerTypes eNewAlly)
 	CvAssertMsg(eNewAlly < MAX_MAJOR_CIVS, "ePlayer is expected to be within maximum bounds (invalid Index)");
 
 	CvMap& theMap = GC.getMap();
+#ifdef AUI_WARNING_FIXES
+	uint iNumPlots = GC.getMap().numPlots();
+#else
 	int iNumPlots = GC.getMap().numPlots();
+#endif
 
 	PlayerTypes eOldAlly = GetAlly();
 
@@ -5645,7 +5683,11 @@ void CvMinorCivAI::SetAlly(PlayerTypes eNewAlly)
 
 	if(eOldAlly != NO_PLAYER)
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint iI = 0; iI < iNumPlots; iI++)
+#else
 		for(int iI = 0; iI < iNumPlots; iI++)
+#endif
 		{
 			CvPlot* pPlot = theMap.plotByIndexUnchecked(iI);
 			if(pPlot->getOwner() == m_pPlayer->GetID())
@@ -5668,7 +5710,11 @@ void CvMinorCivAI::SetAlly(PlayerTypes eNewAlly)
 		CvPlayerAI& kNewAlly = GET_PLAYER(eNewAlly);
 
 		// share the visibility with my ally (and his team-mates)
+#ifdef AUI_WARNING_FIXES
+		for (uint iI = 0; iI < iNumPlots; iI++)
+#else
 		for(int iI = 0; iI < iNumPlots; iI++)
+#endif
 		{
 			CvPlot* pPlot = theMap.plotByIndexUnchecked(iI);
 			if(pPlot->getOwner() == m_pPlayer->GetID())
@@ -5677,7 +5723,11 @@ void CvMinorCivAI::SetAlly(PlayerTypes eNewAlly)
 			}
 		}
 
+#ifdef AUI_WARNING_FIXES
+		for (uint iPolicyLoop = 0; iPolicyLoop < GC.getNumPolicyInfos(); iPolicyLoop++)
+#else
 		for(int iPolicyLoop = 0; iPolicyLoop < GC.getNumPolicyInfos(); iPolicyLoop++)
+#endif
 		{
 			const PolicyTypes eLoopPolicy = static_cast<PolicyTypes>(iPolicyLoop);
 			CvPolicyEntry* pkPolicyInfo = GC.getPolicyInfo(eLoopPolicy);
@@ -6235,7 +6285,11 @@ void CvMinorCivAI::DoIntrusion()
 	}
 
 	// Look at how many Units each Major Civ has in the Minor's Territory
+#ifdef AUI_WARNING_FIXES
+	for (uint iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
+#else
 	for(int iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
+#endif
 	{
 		pLoopPlot = GC.getMap().plotByIndexUnchecked(iPlotLoop);
 
@@ -6986,7 +7040,11 @@ int CvMinorCivAI::GetHappinessPerLuxuryFriendshipBonus(PlayerTypes ePlayer, EraT
 	//antonjs: consider: optimize
 	int iNumLuxuries = 0;
 	ResourceTypes eResource;
+#ifdef AUI_WARNING_FIXES
+	for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 	for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 	{
 		eResource = (ResourceTypes) iResourceLoop;
 
@@ -7026,7 +7084,11 @@ int CvMinorCivAI::GetHappinessPerLuxuryAlliesBonus(PlayerTypes ePlayer, EraTypes
 	//antonjs: consider: optimize
 	int iNumLuxuries = 0;
 	ResourceTypes eResource;
+#ifdef AUI_WARNING_FIXES
+	for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 	for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 	{
 		eResource = (ResourceTypes) iResourceLoop;
 
@@ -9403,7 +9465,11 @@ int CvMinorCivAI::GetNumResourcesMajorLacks(PlayerTypes eMajor)
 
 	// Loop through all resources to see what this minor has
 	ResourceTypes eResource;
+#ifdef AUI_WARNING_FIXES
+	for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 	for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 	{
 		eResource = (ResourceTypes) iResourceLoop;
 
@@ -9439,7 +9505,11 @@ TechTypes CvMinorCivAI::GetGoodTechPlayerDoesntHave(PlayerTypes ePlayer, int iRo
 	CvPlayerAI& kPlayer = GET_PLAYER(ePlayer);
 	CvTeam kTeam = GET_TEAM(kPlayer.getTeam());
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iTechLoop = 0; iTechLoop < GC.getNumTechInfos(); iTechLoop++)
+#else
 	for(int iTechLoop = 0; iTechLoop < GC.getNumTechInfos(); iTechLoop++)
+#endif
 	{
 		const TechTypes eTech = static_cast<TechTypes>(iTechLoop);
 		CvTechEntry* pkTechInfo = GC.getTechInfo(eTech);
@@ -9724,7 +9794,11 @@ pair<CvString, CvString> CvMinorCivAI::GetStatusChangeNotificationStrings(Player
 			ResourceTypes eResource;
 			ResourceUsageTypes eUsage;
 			int iResourceQuantity;
+#ifdef AUI_WARNING_FIXES
+			for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 			for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 			{
 				eResource = (ResourceTypes) iResourceLoop;
 				iResourceQuantity = GetPlayer()->getNumResourceTotal(eResource);

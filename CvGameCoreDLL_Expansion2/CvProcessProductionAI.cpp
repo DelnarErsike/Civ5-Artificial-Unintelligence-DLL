@@ -29,7 +29,11 @@ void CvProcessProductionAI::Reset()
 	m_ProcessAIWeights.clear();
 
 	// Loop through reading each one and add an entry with 0 weight to our vector
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumProcessInfos(); i++)
+#else
 	for (int i = 0; i < GC.getNumProcessInfos(); i++)
+#endif
 	{
 		m_ProcessAIWeights.push_back(i, 0);
 	}
@@ -47,7 +51,11 @@ void CvProcessProductionAI::Read(FDataStream& kStream)
 	// Reset vector
 	m_ProcessAIWeights.clear();
 	m_ProcessAIWeights.resize(GC.getNumProcessInfos());
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumProcessInfos(); i++)
+#else
 	for(int i = 0; i < GC.getNumProcessInfos(); ++i)
+#endif
 		m_ProcessAIWeights.SetWeight(i, 0);
 
 	// Loop through reading each one and adding it to our vector
@@ -71,7 +79,11 @@ void CvProcessProductionAI::Write(FDataStream& kStream) const
 
 	// Loop through writing each entry
 	kStream << GC.getNumProcessInfos();
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumProcessInfos(); i++)
+#else
 	for(int i = 0; i < GC.getNumProcessInfos(); i++)
+#endif
 	{
 		CvInfosSerializationHelper::WriteHashed(kStream, GC.getProcessInfo((ProcessTypes)i));
 		kStream << m_ProcessAIWeights.GetWeight(i);
@@ -81,7 +93,11 @@ void CvProcessProductionAI::Write(FDataStream& kStream) const
 /// Establish weights for one flavor; can be called multiple times to layer strategies
 void CvProcessProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 {
+#ifdef AUI_WARNING_FIXES
+	uint iProcess;
+#else
 	int iProcess;
+#endif
 	CvProcessInfo* entry(NULL);
 #ifdef AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
 	ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
@@ -102,7 +118,7 @@ void CvProcessProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 				CvLuaArgsHandle args;
 				args->Push(m_pCity->getOwner());
 				args->Push(m_pCity->GetID());
-				args->Push(iProcess);
+				args->Push(int(iProcess));
 				args->Push(eFlavor);
 
 				int iResult = 0;

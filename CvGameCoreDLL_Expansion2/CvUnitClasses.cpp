@@ -1129,7 +1129,11 @@ int CvUnitEntry::GetCargoSpace() const
 {
 	int rtnValue = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iLoop = 0; iLoop < GC.getNumPromotionInfos(); iLoop++)
+#else
 	for(int iLoop = 0; iLoop < GC.getNumPromotionInfos(); iLoop++)
+#endif
 	{
 		const PromotionTypes ePromotion = static_cast<PromotionTypes>(iLoop);
 		CvPromotionEntry* pkPromotionInfo = GC.getPromotionInfo(ePromotion);
@@ -1175,7 +1179,7 @@ void CvUnitEntry::DoUpdatePower()
 	// ***************
 
 	int iTemp;
-	int iLoop;
+	uint iLoop;
 
 	// These promotions' strengths rely on stats that can only be determined after all promotions have been looped through
 
@@ -1194,7 +1198,7 @@ void CvUnitEntry::DoUpdatePower()
 	int iInterceptDefenseDamageMod = 0;
 	int iNumIntercepts = 1;
 
-	for(int iPromotionLoop = 0; iPromotionLoop < GC.getNumPromotionInfos(); iPromotionLoop++)
+	for (uint iPromotionLoop = 0; iPromotionLoop < GC.getNumPromotionInfos(); iPromotionLoop++)
 	{
 		CvPromotionEntry* kPromotion = GC.getPromotionInfo((PromotionTypes)iPromotionLoop);
 		if(kPromotion == NULL)
@@ -1462,10 +1466,10 @@ void CvUnitEntry::DoUpdatePower()
 					bool bIsClassAirClass = GetDomainType() == DOMAIN_AIR;
 					if (bIsClassAirClass)
 					{
-						for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
+						for (uint iI = 0; iI < GC.getNumUnitInfos(); iI++)
 						{
 							CvUnitEntry* pkUnitEntry = GC.getUnitInfo(static_cast<UnitTypes>(iI));
-							if (pkUnitEntry && pkUnitEntry->GetUnitCombatType() == iLoop && pkUnitEntry->GetDomainType() != DOMAIN_AIR)
+							if (pkUnitEntry && pkUnitEntry->GetUnitCombatType() == (UnitCombatTypes)iLoop && pkUnitEntry->GetDomainType() != DOMAIN_AIR)
 							{
 								bIsClassAirClass = false;
 								break;
@@ -1964,8 +1968,8 @@ std::vector<CvUnitEntry*>& CvUnitXMLEntries::GetUnitEntries()
 }
 
 /// Number of defined policies
-#ifdef AUI_CONSTIFY
-int CvUnitXMLEntries::GetNumUnits() const
+#ifdef AUI_WARNING_FIXES
+uint CvUnitXMLEntries::GetNumUnits() const
 #else
 int CvUnitXMLEntries::GetNumUnits()
 #endif
@@ -1986,7 +1990,11 @@ void CvUnitXMLEntries::DeleteArray()
 }
 
 /// Get a specific entry
+#ifdef AUI_WARNING_FIXES
+_Ret_maybenull_ CvUnitEntry* CvUnitXMLEntries::GetEntry(uint index)
+#else
 CvUnitEntry* CvUnitXMLEntries::GetEntry(int index)
+#endif
 {
 	return m_paUnitEntries[index];
 }

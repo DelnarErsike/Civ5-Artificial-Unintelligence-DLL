@@ -10,7 +10,11 @@
 #include "CvDllDeal.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllDeal::CvDllDeal(_In_ CvDeal* pDeal)
+#else
 CvDllDeal::CvDllDeal(CvDeal* pDeal)
+#endif
 	: m_pDeal(pDeal)
 	, m_uiRefCount(1)
 {

@@ -35,7 +35,11 @@ void CvTechAI::Reset()
 		m_TechAIWeights.clear();
 
 		// Loop through reading each one and add an entry with 0 weight to our vector
+#ifdef AUI_WARNING_FIXES
+		for (uint i = 0; i < m_pCurrentTechs->GetTechs()->GetNumTechs(); i++)
+#else
 		for(int i = 0; i < m_pCurrentTechs->GetTechs()->GetNumTechs(); i++)
+#endif
 		{
 			m_TechAIWeights.push_back(i, 0);
 		}
@@ -104,7 +108,11 @@ void CvTechAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropagati
 	paiTempWeights = (int*)_alloca(sizeof(int) * m_pCurrentTechs->GetTechs()->GetNumTechs());
 
 	// Loop through all our techs
+#ifdef AUI_WARNING_FIXES
+	for (uint iTech = 0; iTech < m_pCurrentTechs->GetTechs()->GetNumTechs(); iTech++)
+#else
 	for(int iTech = 0; iTech < m_pCurrentTechs->GetTechs()->GetNumTechs(); iTech++)
+#endif
 	{
 		const TechTypes eTech = static_cast<TechTypes>(iTech);
 		CvTechEntry* entry = m_pCurrentTechs->GetTechs()->GetEntry(iTech);
@@ -125,7 +133,11 @@ void CvTechAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropagati
 	WeightPrereqs(paiTempWeights, iPropagationPercent);
 
 	// Add these weights over previous ones
+#ifdef AUI_WARNING_FIXES
+	for (uint iTech = 0; iTech < m_pCurrentTechs->GetTechs()->GetNumTechs(); iTech++)
+#else
 	for(int iTech = 0; iTech < m_pCurrentTechs->GetTechs()->GetNumTechs(); iTech++)
+#endif
 	{
 		CvTechEntry* entry = m_pCurrentTechs->GetTechs()->GetEntry(iTech);
 		if(entry)
@@ -141,7 +153,11 @@ TechTypes CvTechAI::ChooseNextTech(CvPlayer *pPlayer, bool bFreeTech)
 {
 	RandomNumberDelegate fcn;
 	TechTypes rtnValue = NO_TECH;
+#ifdef AUI_WARNING_FIXES
+	uint iTechLoop;
+#else
 	int iTechLoop;
+#endif
 
 	// Use the synchronous random number generate
 	// Asynchronous one would be:
@@ -197,7 +213,11 @@ TechTypes CvTechAI::ChooseNextTech(CvPlayer *pPlayer, bool bFreeTech)
 TechTypes CvTechAI::RecommendNextTech(CvPlayer *pPlayer, TechTypes eIgnoreTech /* = NO_TECH */)
 {
 	TechTypes rtnValue = NO_TECH;
+#ifdef AUI_WARNING_FIXES
+	uint iTechLoop;
+#else
 	int iTechLoop;
+#endif
 
 	// Create a new vector holding only techs we can currently research
 	m_ResearchableTechs.clear();
@@ -208,7 +228,11 @@ TechTypes CvTechAI::RecommendNextTech(CvPlayer *pPlayer, TechTypes eIgnoreTech /
 		//if (m_pCurrentTechs->CanResearch((TechTypes) iTechLoop) &&
 		//	iTechLoop != eIgnoreTech &&
 		//	m_pCurrentTechs->GetTechs()->GetEntry(iTechLoop)->GetAdvisorType() != eIgnoreAdvisor)
+#ifdef AUI_WARNING_FIXES
+		if (m_pCurrentTechs->CanResearch((TechTypes)iTechLoop) && (TechTypes)iTechLoop != eIgnoreTech)
+#else
 		if(m_pCurrentTechs->CanResearch((TechTypes) iTechLoop) && iTechLoop != eIgnoreTech)
+#endif
 		{
 			m_ResearchableTechs.push_back(iTechLoop, m_TechAIWeights.GetWeight(iTechLoop));
 		}
@@ -350,7 +374,11 @@ bool CvTechAI::HaveAllInternetTechs()
 /// Add weights to techs that are prereqs for the ones already weighted in this strategy
 void CvTechAI::WeightPrereqs(int* paiTempWeights, int iPropagationPercent)
 {
+#ifdef AUI_WARNING_FIXES
+	uint iTechLoop;
+#else
 	int iTechLoop;
+#endif
 
 	// Loop through techs looking for ones that are just getting some new weight
 	for(iTechLoop = 0; iTechLoop < m_pCurrentTechs->GetTechs()->GetNumTechs(); iTechLoop++)

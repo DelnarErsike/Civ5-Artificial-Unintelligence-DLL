@@ -982,7 +982,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		double dTotalFlavor = 0;
 		double dTotalBaseFlavor = 0;
 		int iLoopEraDifference;
-		for (int iI = 0; iI < GC.getNumBuildingInfos(); iI++)
+		for (uint iI = 0; iI < GC.getNumBuildingInfos(); iI++)
 		{
 			const BuildingTypes eBuilding = static_cast<BuildingTypes>(iI);
 			CvBuildingEntry* pkBuilding = GC.getBuildingInfo(eBuilding);
@@ -2789,17 +2789,17 @@ int CvSiteEvaluatorForStart::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, Yi
 			double dTotalBaseFlavor = 0;
 			int iLoopEraDifference;
 			CvFlavorManager* pFlavorManager = pPlayer->GetFlavorManager();
-			for (int iI = 0; iI < GC.getNumBuildingInfos(); iI++)
+			for (uint iJ = 0; iJ < GC.getNumBuildingInfos(); iI++)
 			{
-				const BuildingTypes eBuilding = static_cast<BuildingTypes>(iI);
+				const BuildingTypes eBuilding = static_cast<BuildingTypes>(iJ);
 				CvBuildingEntry* pkBuilding = GC.getBuildingInfo(eBuilding);
 				iLoopEraDifference = 0;
 				if (pPlayer->canConstruct(eBuilding, false, false, false, NULL, true, &iLoopEraDifference) && pPlot->isValidBuildingLocation(eBuilding, true) && pkBuilding)
 				{
 					const CvBuildingClassInfo* pkBuildingClassInfo = &(pkBuilding->GetBuildingClassInfo());
-					for (int iJ = 0; iJ < GC.getNumFlavorTypes(); iJ++)
+					for (int iK = 0; iK < GC.getNumFlavorTypes(); iK++)
 					{
-						dLoopFlavor = pkBuilding->GetFlavorValue(iJ) / double(iLoopEraDifference + 1);
+						dLoopFlavor = pkBuilding->GetFlavorValue(iK) / double(iLoopEraDifference + 1);
 						if (pkBuildingClassInfo && (pkBuildingClassInfo->getMaxGlobalInstances() > 0 || pkBuildingClassInfo->getMaxTeamInstances() > 0 || pkBuildingClassInfo->getMaxPlayerInstances() > 0))
 						{
 							if (pPlayer->getNumCities() > 2)

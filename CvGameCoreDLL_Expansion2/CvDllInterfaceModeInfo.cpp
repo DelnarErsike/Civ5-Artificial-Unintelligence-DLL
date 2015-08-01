@@ -9,7 +9,11 @@
 #include "CvDllInterfaceModeInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllInterfaceModeInfo::CvDllInterfaceModeInfo(_In_ CvInterfaceModeInfo* pInterfaceModeInfo)
+#else
 CvDllInterfaceModeInfo::CvDllInterfaceModeInfo(CvInterfaceModeInfo* pInterfaceModeInfo)
+#endif
 	: m_pInterfaceModeInfo(pInterfaceModeInfo)
 	, m_uiRefCount(1)
 {

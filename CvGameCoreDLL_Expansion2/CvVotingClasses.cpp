@@ -159,7 +159,11 @@ EraTypes LeagueHelpers::GetNextGameEraForTrigger(EraTypes eThisEra)
 {
 	EraTypes eNextEra = (EraTypes) ((int)eThisEra + 1);
 
+#ifdef AUI_WARNING_FIXES
+	if (uint(eNextEra) >= GC.getNumEraInfos())
+#else
 	if (eNextEra >= GC.getNumEraInfos())
+#endif
 	{
 		eNextEra = NO_ERA;
 	}
@@ -1426,7 +1430,11 @@ void CvActiveResolution::DoEffects(PlayerTypes ePlayer)
 	if (GetEffects()->iGreatPersonTileImprovementCulture != 0)
 	{
 		// Loop through all Great Person tile improvements
+#ifdef AUI_WARNING_FIXES
+		for (uint i = 0; i < GC.getNumImprovementInfos(); i++)
+#else
 		for (int i = 0; i < GC.getNumImprovementInfos(); i++)
+#endif
 		{
 			CvImprovementEntry* pInfo = GC.getImprovementInfo((ImprovementTypes)i);
 			if (pInfo != NULL && pInfo->IsCreatedByGreatPerson())
@@ -1602,7 +1610,11 @@ void CvActiveResolution::RemoveEffects(PlayerTypes ePlayer)
 	if (GetEffects()->iGreatPersonTileImprovementCulture != 0)
 	{
 		// Loop through all Great Person tile improvements
+#ifdef AUI_WARNING_FIXES
+		for (uint i = 0; i < GC.getNumImprovementInfos(); i++)
+#else
 		for (int i = 0; i < GC.getNumImprovementInfos(); i++)
+#endif
 		{
 			CvImprovementEntry* pInfo = GC.getImprovementInfo((ImprovementTypes)i);
 			if (pInfo != NULL && pInfo->IsCreatedByGreatPerson())
@@ -2875,7 +2887,11 @@ std::vector<int> CvLeague::GetChoicesForDecision(ResolutionDecisionTypes eDecisi
 	case RESOLUTION_DECISION_CITY:
 		break;
 	case RESOLUTION_DECISION_ANY_LUXURY_RESOURCE:
+#ifdef AUI_WARNING_FIXES
+		for (uint i = 0; i < GC.getNumResourceInfos(); i++)
+#else
 		for (int i = 0; i < GC.getNumResourceInfos(); i++)
+#endif
 		{
 			CvResourceInfo* pInfo = GC.getResourceInfo((ResourceTypes)i);
 			if (pInfo && pInfo->getResourceUsage() == RESOURCEUSAGE_LUXURY)
@@ -2916,7 +2932,11 @@ std::vector<int> CvLeague::GetChoicesForDecision(ResolutionDecisionTypes eDecisi
 		}
 		break;
 	case RESOLUTION_DECISION_IDEOLOGY:
+#ifdef AUI_WARNING_FIXES
+		for (uint i = 0; i < GC.getNumPolicyBranchInfos(); i++)
+#else
 		for (int i = 0; i < GC.getNumPolicyBranchInfos(); i++)
+#endif
 		{
 			CvPolicyBranchEntry* pInfo = GC.getPolicyBranchInfo((PolicyBranchTypes)i);
 			if (pInfo != NULL)
@@ -2943,7 +2963,11 @@ CvString CvLeague::GetTextForChoice(ResolutionDecisionTypes eDecision, int iChoi
 std::vector<ResolutionTypes> CvLeague::GetInactiveResolutions() const
 {
 	std::vector<ResolutionTypes> v;
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumResolutionInfos(); i++)
+#else
 	for (int i = 0; i < GC.getNumResolutionInfos(); i++)
+#endif
 	{
 		ResolutionTypes e = (ResolutionTypes)i;
 		CvResolutionEntry* pInfo = GC.getResolutionInfo(e);
@@ -3644,7 +3668,11 @@ int CvLeague::GetProjectBuildingCostPerPlayer(BuildingTypes eRewardBuilding) con
 	int iCost = 0;
 
 	// Is it part of an international project?
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumLeagueProjectInfos(); i++)
+#else
 	for (int i = 0; i < GC.getNumLeagueProjectInfos(); i++)
+#endif
 	{
 		LeagueProjectTypes eProject = (LeagueProjectTypes)i;
 		CvLeagueProjectEntry* pProjectInfo = GC.getLeagueProjectInfo(eProject);
@@ -5130,7 +5158,11 @@ CvString CvLeague::GetLeagueSplashNextEraDetails(LeagueSpecialSessionTypes eGove
 	if (pThisSessionInfo != NULL)
 	{
 		EraTypes eNextEra = LeagueHelpers::GetNextGameEraForTrigger(pThisSessionInfo->GetEraTrigger());
+#ifdef AUI_WARNING_FIXES
+		for (uint i = 0; i < GC.getNumLeagueSpecialSessionInfos(); i++)
+#else
 		for (int i = 0; i < GC.getNumLeagueSpecialSessionInfos(); i++)
+#endif
 		{
 			LeagueSpecialSessionTypes e = (LeagueSpecialSessionTypes)i;
 			CvLeagueSpecialSessionEntry* p = GC.getLeagueSpecialSessionInfo(e);
@@ -5216,7 +5248,11 @@ void CvLeague::CheckProjectAchievements()
 	{
 		if (member->ePlayer != NO_PLAYER && GET_PLAYER(member->ePlayer).isAlive() && GET_PLAYER(member->ePlayer).isHuman() && GET_PLAYER(member->ePlayer).isLocalPlayer())
 		{
+#ifdef AUI_WARNING_FIXES
+			uint iHighestContributorProjects = 0;
+#else
 			int iHighestContributorProjects = 0;
+#endif
 
 			for (ProjectList::const_iterator project = m_vProjects.begin(); project != m_vProjects.end(); ++project)
 			{
@@ -6721,7 +6757,11 @@ void CvGameLeagues::DoTurn()
 			LeagueSpecialSessionTypes eSpecialSession = NO_LEAGUE_SPECIAL_SESSION;
 			if (eGameEra > GetLastEraTrigger())
 			{
+#ifdef AUI_WARNING_FIXES
+				for (uint i = 0; i < GC.getNumLeagueSpecialSessionInfos(); i++)
+#else
 				for (int i = 0; i < GC.getNumLeagueSpecialSessionInfos(); i++)
+#endif
 				{
 					CvLeagueSpecialSessionEntry* pInfo = GC.getLeagueSpecialSessionInfo((LeagueSpecialSessionTypes)i);
 					if (pInfo != NULL)
@@ -6881,7 +6921,11 @@ void CvGameLeagues::FoundLeague(PlayerTypes eFounder)
 			// Find which game era trigger this league begins at (must match with a special session)
 			EraTypes eEarliestEraTrigger = NO_ERA;
 			EraTypes eLatestEraTrigger = NO_ERA;
+#ifdef AUI_WARNING_FIXES
+			for (uint i = 0; i < GC.getNumLeagueSpecialSessionInfos(); i++)
+#else
 			for (int i = 0; i < GC.getNumLeagueSpecialSessionInfos(); i++)
+#endif
 			{
 				CvLeagueSpecialSessionEntry* pInfo = GC.getLeagueSpecialSessionInfo((LeagueSpecialSessionTypes)i);
 				if (pInfo != NULL)
@@ -6908,7 +6952,11 @@ void CvGameLeagues::FoundLeague(PlayerTypes eFounder)
 			// Find which special session info this league begins at
 			LeagueSpecialSessionTypes eGoverningSpecialSession = NO_LEAGUE_SPECIAL_SESSION;
 			bool bBeginAsUnitedNations = false;
+#ifdef AUI_WARNING_FIXES
+			for (uint i = 0; i < GC.getNumLeagueSpecialSessionInfos(); i++)
+#else
 			for (int i = 0; i < GC.getNumLeagueSpecialSessionInfos(); i++)
+#endif
 			{
 				LeagueSpecialSessionTypes e = (LeagueSpecialSessionTypes)i;
 				CvLeagueSpecialSessionEntry* pInfo = GC.getLeagueSpecialSessionInfo(e);
@@ -9220,7 +9268,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		}
 
 		// Do we have a policy that benefits from CS trade routes?
-		int iPolicy;
+		uint iPolicy;
 		CvPolicyEntry* entry;
 		int iDivider = 1;
 		for (iPolicy = 0; iPolicy < GetPlayer()->GetPlayerPolicies()->GetPolicies()->GetNumPolicies(); iPolicy++)
@@ -9252,7 +9300,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		}
 
 		// Can we build any buildings (or do we have any) that increase our CS trade route yield? (eg. Germany's Hanse)
-		for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+		for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
 		{
 			BuildingTypes eBuilding = (BuildingTypes)m_pPlayer->getCivilizationInfo().getCivilizationBuildings(iI);
 			if(eBuilding != NO_BUILDING)
@@ -10083,7 +10131,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		}
 
 		// Do we have any policies that alter sciency or artsy Great Person rate?
-		int iPolicy;
+		uint iPolicy;
 		CvPolicyEntry* entry;
 		double dDivider;
 		for (iPolicy = 0; iPolicy < GetPlayer()->GetPlayerPolicies()->GetPolicies()->GetNumPolicies(); iPolicy++)

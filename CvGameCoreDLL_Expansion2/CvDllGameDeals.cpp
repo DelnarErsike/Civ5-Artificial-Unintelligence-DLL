@@ -11,7 +11,11 @@
 #include "CvDllDeal.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllGameDeals::CvDllGameDeals(_In_ CvGameDeals* pGameDeals)
+#else
 CvDllGameDeals::CvDllGameDeals(CvGameDeals* pGameDeals)
+#endif
 	: m_pGameDeals(pGameDeals)
 	, m_uiRefCount(1)
 {

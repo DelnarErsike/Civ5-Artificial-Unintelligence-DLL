@@ -150,7 +150,13 @@ void CvCityAI::AI_chooseProduction(bool bInterruptWonders)
 			pLog = LOGFILEMGR.GetLog(kOwner.GetCitySpecializationAI()->GetLogFileName(playerName), FILogFile::kDontTimeStamp);
 			strBaseString.Format("%03d, ", GC.getGame().getElapsedGameTurns());
 			strBaseString += playerName + ", ";
+#ifdef AUI_WARNING_FIXES
+			CvBuildingEntry* pWonderInfo = GC.getBuildingInfo((BuildingTypes)buildable.m_iIndex);
+			if (pWonderInfo)
+				strOutBuf.Format("%s, WONDER - Started %s, Turns: %d", getName().GetCString(), pWonderInfo->GetDescription(), buildable.m_iTurnsToConstruct);
+#else
 			strOutBuf.Format("%s, WONDER - Started %s, Turns: %d", getName().GetCString(), GC.getBuildingInfo((BuildingTypes)buildable.m_iIndex)->GetDescription(), buildable.m_iTurnsToConstruct);
+#endif
 			strBaseString += strOutBuf;
 			pLog->Msg(strBaseString);
 		}

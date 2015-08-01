@@ -938,7 +938,11 @@ CvUnit* CvMilitaryAI::BuyEmergencyUnit(UnitAITypes eUnitType, CvCity* pCity)
 bool CvMilitaryAI::BuyEmergencyBuilding(CvCity* pCity)
 {
 	// Loop through adding the available buildings
+#ifdef AUI_WARNING_FIXES
+	for (uint iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
+#else
 	for(int iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
+#endif
 	{
 		const BuildingTypes eBldg = static_cast<BuildingTypes>(iBldgLoop);
 		CvBuildingEntry* pkBuildingInfo = GC.GetGameBuildings()->GetEntry(eBldg);
@@ -2447,7 +2451,11 @@ void CvMilitaryAI::ScanForBarbarians()
 {
 	AI_PERF_FORMAT("Military-AI-perf.csv", ("ScanForBarbarians, Turn %03d, %s", GC.getGame().getElapsedGameTurns(), m_pPlayer->getCivilizationShortDescription()) );
 
+#ifdef AUI_WARNING_FIXES
+	uint iPlotLoop;
+#else
 	int iPlotLoop;
+#endif
 	CvPlot* pPlot;
 
 	m_iBarbarianCampCount = 0;
@@ -3909,7 +3917,7 @@ UnitHandle CvMilitaryAI::FindBestUnitToScrap(bool bLand, bool bDeficitForcedDisb
 				if(pUpgradeUnitInfo != NULL)
 				{
 #ifdef AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
-					for (int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+					for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
 #else
 					for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos() && !bSkipThisOne; iResourceLoop++)
 #endif
@@ -4527,7 +4535,11 @@ CvPlot *CvMilitaryAI::GetBestAirSweepTarget(CvUnit* pFighter) const
 int CvMilitaryAI::GetPowerOfStrongestBuildableUnit(DomainTypes eDomain)
 {
 	int iRtnValue = 0;
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumUnitInfos(); iI++)
+#else
 	for(int iI = 0; iI < GC.getNumUnitInfos(); iI++)
+#endif
 	{
 		const UnitTypes eUnit = static_cast<UnitTypes>(iI);
 		CvUnitEntry* pkUnitEntry = GC.getUnitInfo(eUnit);

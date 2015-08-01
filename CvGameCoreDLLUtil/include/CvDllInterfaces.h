@@ -1625,7 +1625,11 @@ public:
 	virtual int DLLCALL getActiveSlotCount() = 0;
 	virtual int DLLCALL readActiveSlotCountFromSaveGame(FDataStream& loadFrom, bool bReadVersion) = 0;
 	virtual StorageLocation DLLCALL LoadFileStorage() = 0;
+#ifdef AUI_WARNING_FIXES
+	virtual void DLLCALL SetLoadFileName(_In_z_ const char* szFileName, StorageLocation eStorage) = 0;
+#else
 	virtual void DLLCALL SetLoadFileName(const char* szFileName, StorageLocation eStorage) = 0;
+#endif
 
 	virtual ICvEnumerator* DLLCALL GetDLCAllowed() = 0;
 	virtual ICvEnumerator* DLLCALL GetDLCAvailable(PlayerTypes p) = 0;

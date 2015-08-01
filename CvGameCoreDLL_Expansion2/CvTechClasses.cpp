@@ -556,7 +556,11 @@ std::vector<CvTechEntry*>& CvTechXMLEntries::GetTechEntries()
 }
 
 /// Number of defined techs
+#ifdef AUI_WARNING_FIXES
+uint CvTechXMLEntries::GetNumTechs() const
+#else
 int CvTechXMLEntries::GetNumTechs()
+#endif
 {
 	return m_paTechEntries.size();
 }
@@ -573,7 +577,11 @@ void CvTechXMLEntries::DeleteArray()
 }
 
 /// Get a specific entry
+#ifdef AUI_WARNING_FIXES
+_Ret_maybenull_ CvTechEntry* CvTechXMLEntries::GetEntry(uint index)
+#else
 CvTechEntry* CvTechXMLEntries::GetEntry(int index)
+#endif
 {
 	return m_paTechEntries[index];
 }
@@ -656,7 +664,11 @@ void CvPlayerTechs::Uninit()
 /// Reset tech status array to all false
 void CvPlayerTechs::Reset()
 {
+#ifdef AUI_WARNING_FIXES
+	uint iI;
+#else
 	int iI;
+#endif
 	CvBuildingXMLEntries* pkGameBuildings = GC.GetGameBuildings();
 
 	for(iI = 0; iI < m_pTechs->GetNumTechs(); iI++)
@@ -743,10 +755,18 @@ void CvPlayerTechs::Reset()
 					if(pkImprovementEntry->IsSpecificCivRequired() && pkImprovementEntry->GetRequiredCivilization() == m_pPlayer->getCivilizationType())
 					{
 						// Find corresponding build
+#ifdef AUI_WARNING_FIXES
+						for (uint jJ = 0; jJ < GC.getNumBuildInfos(); jJ++)
+#else
 						for(int jJ = 0; jJ < GC.getNumBuildInfos(); jJ++)
+#endif
 						{
 							CvBuildInfo* pkBuildEntry = GC.getBuildInfo((BuildTypes)jJ);
+#ifdef AUI_WARNING_FIXES
+							if (pkBuildEntry && (uint)pkBuildEntry->getImprovement() == iI)
+#else
 							if(pkBuildEntry && pkBuildEntry->getImprovement() == iI)
+#endif
 							{
 								int iTech = pkBuildEntry->getTechPrereq();
 								if(iTech != NO_TECH)
@@ -762,8 +782,12 @@ void CvPlayerTechs::Reset()
 		}
 
 		// Player Traits
+#ifdef AUI_WARNING_FIXES
+		for (uint iTraitLoop = 0; iTraitLoop < GC.getNumTraitInfos(); iTraitLoop++)
+#else
 		int iNumTraits = GC.getNumTraitInfos();
 		for(int iTraitLoop = 0; iTraitLoop < iNumTraits; iTraitLoop++)
+#endif
 		{
 			TraitTypes eTraitLoop = (TraitTypes) iTraitLoop;
 			// Do we have this trait?
@@ -970,7 +994,11 @@ void CvPlayerTechs::SetLocalePriorities()
 {
 	int iLoop;
 	CvCity* pCity;
+#ifdef AUI_WARNING_FIXES
+	uint iI;
+#else
 	int iI;
+#endif
 
 	for(iI = 0; iI < m_pTechs->GetNumTechs(); iI++)
 	{
@@ -1003,7 +1031,11 @@ void CvPlayerTechs::SetLocalePriorities()
 						// Loop through the build types to find one that we can use
 						ImprovementTypes eCorrectImprovement = NO_IMPROVEMENT;
 						BuildTypes eCorrectBuild = NO_BUILD;
+#ifdef AUI_WARNING_FIXES
+						uint iBuildIndex;
+#else
 						int iBuildIndex;
+#endif
 						for(iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
 						{
 							const BuildTypes eBuild = static_cast<BuildTypes>(iBuildIndex);
@@ -1036,9 +1068,15 @@ void CvPlayerTechs::SetLocalePriorities()
 						if(!m_pPlayer->canBuild(pLoopPlot, eCorrectBuild, false, false))
 						{
 							// Find the tech associated with this build and increment its multiplier
+#ifdef AUI_WARNING_FIXES
+							uint iTech = (uint)GC.getBuildInfo(eCorrectBuild)->getTechPrereq();
+							CvAssert(iTech < m_pTechs->GetNumTechs());		// Just assert on a value off the top end, a -1 is ok to just skip silently
+							if (iTech < m_pTechs->GetNumTechs())
+#else
 							int iTech = GC.getBuildInfo(eCorrectBuild)->getTechPrereq();
 							CvAssert(iTech < m_pTechs->GetNumTechs());		// Just assert on a value off the top end, a -1 is ok to just skip silently
 							if (iTech >= 0 && iTech < m_pTechs->GetNumTechs())
+#endif
 							{
 								m_piLocaleTechPriority[iTech]++;
 								m_peLocaleTechResources[iTech] = eResource;
@@ -1207,9 +1245,14 @@ bool CvPlayerTechs::CanResearch(TechTypes eTech, bool bTrade) const
 /// Can we pick this as a Free Tech (ex. from a Wonder)?
 bool CvPlayerTechs::CanResearchForFree(TechTypes eTech) const
 {
+#ifdef AUI_WARNING_FIXES
+	CvAssertMsg(uint(eTech) < GC.getNumTechInfos(), "eTech is expected to be within maximum bounds (invalid Index)");
+	if (uint(eTech) >= GC.getNumTechInfos()) return false;
+#else
 	CvAssertMsg(eTech >= 0, "eTech is expected to be non-negative (invalid Index)");
 	CvAssertMsg(eTech < GC.getNumTechInfos(), "eTech is expected to be within maximum bounds (invalid Index)");
 	if(eTech < 0 || eTech >= GC.getNumTechInfos()) return false;
+#endif
 
 	// We can pick any tech that we are able to research
 	return CanResearch(eTech);
@@ -1253,7 +1296,11 @@ bool CvPlayerTechs::IsCurrentResearchRepeat() const
 /// Accessor: Is there anything left to research?
 bool CvPlayerTechs::IsNoResearchAvailable() const
 {
+#ifdef AUI_WARNING_FIXES
+	uint iI;
+#else
 	int iI;
+#endif
 
 	if(GetCurrentResearch() != NO_TECH)
 	{
@@ -1279,7 +1326,11 @@ void CvPlayerTechs::CheckForTechAchievement() const
 		//Check for Catherine Achievement
 		if((CvString)m_pPlayer->getLeaderTypeKey() == "LEADER_CATHERINE")
 		{
+#ifdef AUI_WARNING_FIXES
+			for (uint iI = 0; iI < GC.getNumTechInfos(); iI++)
+#else
 			for(int iI = 0; iI < GC.getNumTechInfos(); iI++)
+#endif
 			{
 				const TechTypes eTech = static_cast<TechTypes>(iI);
 				CvTechEntry* pkTechInfo = GC.getTechInfo(eTech);
@@ -1314,7 +1365,11 @@ void CvPlayerTechs::CheckForTechAchievement() const
 		//Check for all achievements
 		if(m_pPlayer->GetPlayerTechs()->IsCurrentResearchRepeat())
 		{
+#ifdef AUI_WARNING_FIXES
+			for (uint iI = 0; iI < GC.getNumTechInfos() - 1; iI++)
+#else
 			for(int iI = 0; iI < GC.getNumTechInfos() - 1; iI++)
+#endif
 			{
 				const TechTypes eTech = static_cast<TechTypes>(iI);
 				CvTechEntry* pkTechInfo = GC.getTechInfo(eTech);
@@ -1415,7 +1470,11 @@ int CvPlayerTechs::GetNumTechsCanBeResearched() const
 {
 	int rtnValue = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iTechLoop = 0; iTechLoop < GetTechs()->GetNumTechs(); iTechLoop++)
+#else
 	for(int iTechLoop = 0; iTechLoop < GetTechs()->GetNumTechs(); iTechLoop++)
+#endif
 	{
 		if(CanResearch((TechTypes)iTechLoop))
 		{
@@ -1479,7 +1538,11 @@ int CvPlayerTechs::GetMedianTechResearch() const
 	vector<int> aiTechCosts;
 	int iRtnValue = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iTechLoop = 0; iTechLoop < GC.getNumTechInfos(); iTechLoop++)
+#else
 	for(int iTechLoop = 0; iTechLoop < GC.getNumTechInfos(); iTechLoop++)
+#endif
 	{
 		TechTypes eTech = (TechTypes)iTechLoop;
 
@@ -1658,7 +1721,11 @@ void CvTeamTechs::Uninit()
 /// Reset tech status arrays
 void CvTeamTechs::Reset()
 {
+#ifdef AUI_WARNING_FIXES
+	uint iI;
+#else
 	int iI;
+#endif
 
 	m_eLastTechAcquired = NO_TECH;
 
@@ -1768,12 +1835,21 @@ void CvTeamTechs::Read(FDataStream& kStream)
 	kStream >> m_eLastTechAcquired;
 
 	// Read the number of techs
+#ifdef AUI_WARNING_FIXES
+	uint iNumSavedTechs;
+	kStream >> iNumSavedTechs;
+
+	if (iNumSavedTechs)
+	{
+		uint iNumActiveTechs = m_pTechs->GetNumTechs();
+#else
 	int iNumSavedTechs;
 	kStream >> iNumSavedTechs;
 
 	if(iNumSavedTechs)
 	{
 		int iNumActiveTechs = m_pTechs->GetNumTechs();
+#endif
 
 		// Next is an array of the tech IDs that were available when the save was made.
 		CvAssert(m_pTechs == GC.GetGameTechs());	// The hash to indices conversion will convert the hash to the index in the main game techs array, so these better be the same.
@@ -1802,10 +1878,17 @@ void CvTeamTechs::Write(FDataStream& kStream)
 	if(m_pTechs != NULL && m_pTechs->GetNumTechs())
 	{
 		// Write out an array of all the active tech's hash types so we can re-map on loading if need be.
+#ifdef AUI_WARNING_FIXES
+		uint iNumTechs = m_pTechs->GetNumTechs();
+		kStream << iNumTechs;
+
+		for (uint i = 0; i < iNumTechs; ++i)
+#else
 		int iNumTechs = m_pTechs->GetNumTechs();
 		kStream << (int)iNumTechs;
 
 		for(int i = 0; i < iNumTechs; ++i)
+#endif
 			CvInfosSerializationHelper::WriteHashed(kStream, m_pTechs->GetEntry(i));
 
 		kStream << ArrayWrapper<bool>(iNumTechs, m_pabHasTech);
@@ -1885,7 +1968,11 @@ int CvTeamTechs::GetNumTechsKnown() const
 {
 	int iNumTechs = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iTechLoop = 0; iTechLoop < GC.getNumTechInfos(); iTechLoop++)
+#else
 	for(int iTechLoop = 0; iTechLoop < GC.getNumTechInfos(); iTechLoop++)
+#endif
 	{
 		if(HasTech((TechTypes) iTechLoop))
 		{
@@ -1899,9 +1986,14 @@ int CvTeamTechs::GetNumTechsKnown() const
 /// Has this team researched all techs once?
 bool CvTeamTechs::HasResearchedAllTechs() const
 {
+#ifdef AUI_WARNING_FIXES
+	uint iNumTechs = 0;
+	for (uint iTechLoop = 0; iTechLoop < GC.getNumTechInfos(); iTechLoop++)
+#else
 	int iNumTechs = 0;
 
 	for(int iTechLoop = 0; iTechLoop < GC.getNumTechInfos(); iTechLoop++)
+#endif
 	{
 		if(HasTech((TechTypes) iTechLoop) || GetTechCount((TechTypes)iTechLoop) > 0)
 		{

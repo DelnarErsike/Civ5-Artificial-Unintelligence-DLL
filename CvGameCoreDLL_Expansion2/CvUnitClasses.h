@@ -306,13 +306,14 @@ public:
 	// Accessor functions
 
 	std::vector<CvUnitEntry*>& GetUnitEntries();
-#ifdef AUI_CONSTIFY
-	int GetNumUnits() const;
+#ifdef AUI_WARNING_FIXES
+	uint GetNumUnits() const;
+	_Ret_maybenull_ CvUnitEntry* GetEntry(uint index);
 #else
 	int GetNumUnits();
-#endif
 
 	_Ret_maybenull_ CvUnitEntry* GetEntry(int index);
+#endif
 
 	void DeleteArray();
 

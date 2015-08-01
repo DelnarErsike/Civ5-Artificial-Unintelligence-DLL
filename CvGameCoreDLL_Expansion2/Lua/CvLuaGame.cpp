@@ -1037,7 +1037,11 @@ int CvLuaGame::lGetNumWorldWonders(lua_State* L)
 		CvPlayerAI& kLoopPlayer = GET_PLAYER(eLoopPlayer);
 
 		// Loop through all buildings, see if they're a world wonder
+#ifdef AUI_WARNING_FIXES
+		for (uint iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+#else
 		for(int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+#endif
 		{
 			const BuildingTypes eBuilding = static_cast<BuildingTypes>(iBuildingLoop);
 			CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eBuilding);
@@ -2092,7 +2096,11 @@ int CvLuaGame::lGetUnitUpgradesTo(lua_State* L)
 		return 0;
 	}
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iUnitClassLoop = 0; iUnitClassLoop < GC.getNumUnitClassInfos(); iUnitClassLoop++)
+#else
 	for(int iUnitClassLoop = 0; iUnitClassLoop < GC.getNumUnitClassInfos(); iUnitClassLoop++)
+#endif
 	{
 		CvUnitClassInfo* pkUnitClassInfo = GC.getUnitClassInfo((UnitClassTypes) iUnitClassLoop);
 		if(pkUnitClassInfo != NULL)

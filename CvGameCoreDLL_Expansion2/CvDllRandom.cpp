@@ -12,7 +12,11 @@
 #include "CvDllCity.h"
 #include "CvDllUnit.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllRandom::CvDllRandom(_In_ CvRandom* pRandom)
+#else
 CvDllRandom::CvDllRandom(CvRandom* pRandom)
+#endif
 	: m_pRandom(pRandom)
 	, m_uiRefCount(1)
 {
@@ -99,7 +103,11 @@ void CvDllRandom::CopyFrom(ICvRandom1* pOther)
 //------------------------------------------------------------------------------
 unsigned short CvDllRandom::Get(unsigned short usNum, const char* pszLog)
 {
+#ifdef AUI_USE_SFMT_RNG
+	return (unsigned short)m_pRandom->get(usNum, pszLog);
+#else
 	return m_pRandom->get(usNum, pszLog);
+#endif
 }
 //------------------------------------------------------------------------------
 float CvDllRandom::GetFloat()
@@ -109,7 +117,11 @@ float CvDllRandom::GetFloat()
 //------------------------------------------------------------------------------
 unsigned long CvDllRandom::GetSeed() const
 {
+#ifdef AUI_USE_SFMT_RNG
+	return m_pRandom->getSeed().first;
+#else
 	return m_pRandom->getSeed();
+#endif
 }
 //------------------------------------------------------------------------------
 void CvDllRandom::Read(FDataStream& kStream)

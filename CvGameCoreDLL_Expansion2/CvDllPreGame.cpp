@@ -1088,7 +1088,11 @@ StorageLocation CvDllPreGame::LoadFileStorage()
 	return CvPreGame::loadFileStorage();
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvDllPreGame::SetLoadFileName(_In_z_ const char* szFileName, StorageLocation eStorage)
+#else
 void CvDllPreGame::SetLoadFileName(const char* szFileName, StorageLocation eStorage)
+#endif
 {
 	CvString strFileName = szFileName;
 	CvPreGame::setLoadFileName(strFileName, eStorage);

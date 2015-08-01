@@ -1475,7 +1475,11 @@ void CvTacticalAI::EstablishTacticalPriorities()
 	m_MovePriorityList.clear();
 
 	// Loop through each possible tactical move
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumTacticalMoveInfos(); iI++)
+#else
 	for(int iI = 0; iI < GC.getNumTacticalMoveInfos(); iI++)
+#endif
 	{
 		const TacticalAIMoveTypes eTacticalAIMove = static_cast<TacticalAIMoveTypes>(iI);
 		CvTacticalMoveXMLEntry* pkTacticalMoveInfo = GC.getTacticalMoveInfo(eTacticalAIMove);
@@ -1611,7 +1615,9 @@ void CvTacticalAI::EstablishBarbarianPriorities()
 /// Make lists of everything we might want to target with the tactical AI this turn
 void CvTacticalAI::FindTacticalTargets()
 {
+#ifndef AUI_WARNING_FIXES
 	int iI;
+#endif
 	CvPlot* pLoopPlot;
 	CvTacticalTarget newTarget;
 	bool bValidPlot;
@@ -1624,7 +1630,11 @@ void CvTacticalAI::FindTacticalTargets()
 	bool bBarbsAllowedYet = GC.getGame().getGameTurn() >= GC.getGame().GetBarbarianReleaseTurn();
 
 	// Look at every tile on map
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getMap().numPlots(); iI++)
+#else
 	for(iI = 0; iI < GC.getMap().numPlots(); iI++)
+#endif
 	{
 		pLoopPlot = GC.getMap().plotByIndexUnchecked(iI);
 		bValidPlot = false;
@@ -2706,7 +2716,12 @@ void CvTacticalAI::PlotDestroyUnitMoves(AITacticalTargetType targetType, bool bM
 						{
 							CvString strLogString, strTemp, strPlayerName;
 							strPlayerName = GET_PLAYER(pDefender->getOwner()).getCivilizationShortDescription();
+#ifdef AUI_WARNING_FIXES
+							CvUnitEntry* pkUnitInfo = GC.getUnitInfo(pDefender->getUnitType());
+							strTemp = (pkUnitInfo != NULL) ? pkUnitInfo->GetDescription() : "Unknown Unit Type";
+#else
 							strTemp = GC.getUnitInfo(pDefender->getUnitType())->GetDescription();
+#endif
 							switch(targetType)
 							{
 							case AI_TACTICAL_TARGET_HIGH_PRIORITY_UNIT:
@@ -4623,7 +4638,7 @@ void CvTacticalAI::PlotSingleHexOperationMoves(CvAIEscortedOperation* pOperation
 						if(pPlot->getNumUnits() == 0)
 						{
 #ifdef AUI_TACTICAL_PARATROOPERS_PARADROP
-							int iEscortTurns = MAX_INT;
+							iEscortTurns = MAX_INT;
 							int iCivilianTurns = MAX_INT;
 							if(pEscort->GeneratePath(pPlot, 0, false, &iEscortTurns) && pCivilian->GeneratePath(pPlot, 0, false, &iCivilianTurns))
 							{
@@ -6609,7 +6624,7 @@ void CvTacticalAI::IdentifyPriorityTargets()
 #endif
 				}
 #ifdef AUI_ASTAR_PARADROP
-				else if(CanReachInXTurns(pEnemyUnit, pLoopCity->plot(), 1, false, true))
+				else if(CanReachInXTurns(pEnemyUnit, pLoopCity->plot(), 1, true, true))
 #else
 				else if(CanReachInXTurns(pEnemyUnit, pLoopCity->plot(), 1))
 #endif
@@ -6693,7 +6708,11 @@ void CvTacticalAI::IdentifyPriorityBarbarianTargets()
 	CvPlot* pLoopPlot;
 	CvTacticalTarget* pTarget;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getMap().numPlots(); iI++)
+#else
 	for(int iI = 0; iI < GC.getMap().numPlots(); iI++)
+#endif
 	{
 		pLoopPlot = GC.getMap().plotByIndexUnchecked(iI);
 		if(pLoopPlot->getImprovementType() == GC.getBARBARIAN_CAMP_IMPROVEMENT())
@@ -6723,7 +6742,7 @@ void CvTacticalAI::IdentifyPriorityBarbarianTargets()
 						}
 					}
 #ifdef AUI_ASTAR_PARADROP
-					else if (CanReachInXTurns(pEnemyUnit, pLoopPlot, 1, false, true))
+					else if (CanReachInXTurns(pEnemyUnit, pLoopPlot, 1, true, true))
 #else
 					else if(CanReachInXTurns(pEnemyUnit, pLoopPlot, 1))
 #endif
@@ -7607,7 +7626,7 @@ void CvTacticalAI::ExecuteAttack(CvCity* pTargetCity, bool bInflictWhatWeTake, b
 			{
 				const CvPlot* pAttackPlot = GetBestRepositionPlot(pUnit, pTargetPlot, 0, bMustSurviveAttack, &vpQueuedAttacksPlotList);
 				if (pAttackPlot)
-					for (int iI = 0; iI < (pUnit->isBlitz() ? pUnit->baseMoves() : pUnit->getNumAttacks()); iI++)
+					for (int iJ = 0; iJ < (pUnit->isBlitz() ? pUnit->baseMoves() : pUnit->getNumAttacks()); iJ++)
 						vpQueuedAttacksPlotList.push_back(pAttackPlot);
 			}
 		}
@@ -7638,7 +7657,7 @@ void CvTacticalAI::ExecuteAttack(CvCity* pTargetCity, bool bInflictWhatWeTake, b
 			{
 				const CvPlot* pAttackPlot = GetBestRepositionPlot(pUnit, pTargetPlot, 0, bMustSurviveAttack, &vpQueuedAttacksPlotList);
 				if (pAttackPlot)
-					for (int iI = 0; iI < (pUnit->isBlitz() ? pUnit->baseMoves() : pUnit->getNumAttacks()); iI++)
+					for (int iJ = 0; iJ < (pUnit->isBlitz() ? pUnit->baseMoves() : pUnit->getNumAttacks()); iJ++)
 						vpQueuedAttacksPlotList.push_back(pAttackPlot);
 			}
 		}
@@ -7919,7 +7938,7 @@ void CvTacticalAI::ExecuteAttack(CvUnit* pTargetUnit, bool bMustSurviveAttack)
 			{
 				const CvPlot* pAttackPlot = GetBestRepositionPlot(pUnit, pTargetPlot, 0, bMustSurviveAttack, &vpQueuedAttacksPlotList);
 				if (pAttackPlot)
-					for (int iI = 0; iI < (pUnit->isBlitz() ? pUnit->baseMoves() : pUnit->getNumAttacks()); iI++)
+					for (int iJ = 0; iJ < (pUnit->isBlitz() ? pUnit->baseMoves() : pUnit->getNumAttacks()); iJ++)
 						vpQueuedAttacksPlotList.push_back(pAttackPlot);
 			}
 		}
@@ -7950,7 +7969,7 @@ void CvTacticalAI::ExecuteAttack(CvUnit* pTargetUnit, bool bMustSurviveAttack)
 			{
 				const CvPlot* pAttackPlot = GetBestRepositionPlot(pUnit, pTargetPlot, 0, bMustSurviveAttack, &vpQueuedAttacksPlotList);
 				if (pAttackPlot)
-					for (int iI = 0; iI < (pUnit->isBlitz() ? pUnit->baseMoves() : pUnit->getNumAttacks()); iI++)
+					for (int iJ = 0; iJ < (pUnit->isBlitz() ? pUnit->baseMoves() : pUnit->getNumAttacks()); iJ++)
 						vpQueuedAttacksPlotList.push_back(pAttackPlot);
 			}
 		}
@@ -8041,7 +8060,7 @@ void CvTacticalAI::ExecuteAttack(CvUnit* pTargetUnit, bool bMustSurviveAttack)
 	if (pTargetUnit->isBarbarian())
 	{
 		// Ranged units
-		bool bUnitActivated = true;
+		bUnitActivated = true;
 		while (bUnitActivated)
 		{
 			bUnitActivated = false;
@@ -9184,11 +9203,19 @@ void CvTacticalAI::ExecuteBarbarianCivilianEscortMove()
 					pCivilian->finishMoves();
 					UnitProcessed(pCivilian->GetID());
 				}
+#ifdef AUI_WARNING_FIXES
+				else if (pCurrent)
+#else
 				else
+#endif
 				{
 					if(pCurrent->getNumUnits() > 1)
 					{
+#ifdef AUI_WARNING_FIXES
+						for (uint iJ = 0; iJ < pCurrent->getNumUnits(); iJ++)
+#else
 						for(int iJ = 0; iJ < pCurrent->getNumUnits(); iJ++)
+#endif
 						{
 							pLoopUnit = pCurrent->getUnitByIndex(iJ);
 							if(pLoopUnit->GetID() != pCivilian->GetID() &&
@@ -12830,8 +12857,8 @@ bool CvTacticalAI::CheckAndExecuteParadrop(UnitHandle pUnit, CvPlot* pTarget, in
 			if (GC.getLogging() && GC.getAILogging())
 			{
 				CvString strLogString;
-				CvString strTemp;
-				strTemp = GC.getUnitInfo(pUnit->getUnitType())->GetDescription();
+				CvUnitEntry* pkUnitInfo = GC.getUnitInfo(pUnit->getUnitType());
+				CvString strTemp = (pkUnitInfo != NULL) ? pkUnitInfo->GetDescription() : "Unknown Unit Type";
 				strLogString.Format("Paradropped %s to target plot, X: %d, Y: %d", strTemp.GetCString(), pTarget->getX(), pTarget->getY());
 				LogTacticalMessage(strLogString);
 			}
@@ -12851,8 +12878,8 @@ bool CvTacticalAI::CheckAndExecuteParadrop(UnitHandle pUnit, CvPlot* pTarget, in
 						if (GC.getLogging() && GC.getAILogging())
 						{
 							CvString strLogString;
-							CvString strTemp;
-							strTemp = GC.getUnitInfo(pUnit->getUnitType())->GetDescription();
+							CvUnitEntry* pkUnitInfo = GC.getUnitInfo(pUnit->getUnitType());
+							CvString strTemp = (pkUnitInfo != NULL) ? pkUnitInfo->GetDescription() : "Unknown Unit Type";
 							strLogString.Format("Paradropped %s near target plot, X: %d, Y: %d", strTemp.GetCString(), pAdjacentPlot->getX(), pAdjacentPlot->getY());
 							LogTacticalMessage(strLogString);
 						}
@@ -13074,8 +13101,8 @@ int CvTacticalAI::ComputeExpectedDamage(const CvUnit* pAttacker, const CvPlot* p
 			iAttackerStrength /= 100;
 			int iDefenderStrength = pInterceptor->GetMaxRangedCombatStrength(pAttacker, /*pCity*/ NULL, false, false);
 
-			int iDealtDamage = pAttacker->getCombatDamage(iAttackerStrength, iDefenderStrength, pAttacker->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
-			int iSelfDamage = pInterceptor->getCombatDamage(iDefenderStrength, iAttackerStrength, pInterceptor->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
+			iDealtDamage = pAttacker->getCombatDamage(iAttackerStrength, iDefenderStrength, pAttacker->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
+			iSelfDamage = pInterceptor->getCombatDamage(iDefenderStrength, iAttackerStrength, pInterceptor->getDamage(), /*bIncludeRand*/ false, /*bAttackerIsCity*/ false, /*bDefenderIsCity*/ false);
 
 			// Will both units be killed by this? :o If so, take drastic corrective measures
 			if (iDealtDamage >= pInterceptor->GetCurrHitPoints() && iSelfDamage >= pAttacker->GetCurrHitPoints())
@@ -13114,9 +13141,9 @@ int CvTacticalAI::ComputeExpectedDamage(const CvUnit* pAttacker, const CvPlot* p
 					{
 						iInterceptChance = (100 - pAttacker->evasionProbability()) * pInterceptor->currInterceptionProbability();
 						iInterceptDamage = pInterceptor->GetInterceptionDamage(pAttacker, false);
+						if (piInterceptionChance)
+							*piInterceptionChance = (100 - pAttacker->evasionProbability()) * pInterceptor->currInterceptionProbability();
 					}
-					if (piInterceptionChance)
-						*piInterceptionChance = (100 - pAttacker->evasionProbability()) * pInterceptor->currInterceptionProbability();
 					if (piSelfDamageIfIntercepted)
 						*piSelfDamageIfIntercepted = iSelfDamage + iInterceptDamage;
 					if (piDamageIfIntercepted)
@@ -13174,9 +13201,9 @@ int CvTacticalAI::ComputeExpectedDamage(const CvUnit* pAttacker, const CvPlot* p
 						{
 							iInterceptChance = (100 - pAttacker->evasionProbability()) * pInterceptor->currInterceptionProbability();
 							iInterceptDamage = pInterceptor->GetInterceptionDamage(pAttacker, false);
+							if (piInterceptionChance)
+								*piInterceptionChance = (100 - pAttacker->evasionProbability()) * pInterceptor->currInterceptionProbability();
 						}
-						if (piInterceptionChance)
-							*piInterceptionChance = (100 - pAttacker->evasionProbability()) * pInterceptor->currInterceptionProbability();
 						if (piSelfDamageIfIntercepted)
 							*piSelfDamageIfIntercepted = iSelfDamage + iInterceptDamage;
 						if (piDamageIfIntercepted)
@@ -14164,7 +14191,6 @@ CvPlot* CvTacticalAI::FindBarbarianGankTradeRouteTarget(UnitHandle pUnit)
 	{
 		iBestValue = MAX_INT;
 		const int iNumPlots = GC.getMap().numPlots();
-		CvPlot* pPlot;
 		for (int iI = 0; iI < iNumPlots; iI++)
 		{
 			pPlot = GC.getMap().plotByIndex(iI);

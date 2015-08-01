@@ -40,7 +40,11 @@ public:
 	void AddFlavorWeights(FlavorTypes eFlavor, int iWeight, int iPropagationPercent);
 
 	// Choose a player's next policy purchase
+#ifdef AUI_WARNING_FIXES
+	uint ChooseNextPolicy(CvPlayer* pPlayer);
+#else
 	int ChooseNextPolicy(CvPlayer* pPlayer);
+#endif
 
 	// Ideology
 	void DoChooseIdeology(CvPlayer* pPlayer);
@@ -90,7 +94,11 @@ private:
 	CvWeightedVector<int, SAFE_ESTIMATE_NUM_POLICIES, true> m_PolicyAIWeights;
 
 	// First NUM_POLICY_BRANCH_TYPE entries are branches; policies start after that
+#ifdef AUI_WARNING_FIXES
+	CvWeightedVector<uint, SAFE_ESTIMATE_NUM_POLICIES, true> m_AdoptablePolicies;
+#else
 	CvWeightedVector<int, SAFE_ESTIMATE_NUM_POLICIES, true> m_AdoptablePolicies;
+#endif
 
 	// Locally cached GlobalAIDefines
 	int m_iPolicyWeightPropagationLevels;

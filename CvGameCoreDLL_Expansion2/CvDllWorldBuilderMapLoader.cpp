@@ -54,7 +54,11 @@ const CvWorldBuilderMapLoaderMapInfo& CvDllWorldBuilderMapLoader::GetCurrentMapI
 	return CvWorldBuilderMapLoader::GetCurrentMapInfo();
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+bool CvDllWorldBuilderMapLoader::Preload(_In_z_ const wchar_t* wszFilename, bool bScenario)
+#else
 bool CvDllWorldBuilderMapLoader::Preload(const wchar_t* wszFilename, bool bScenario)
+#endif
 {
 	return CvWorldBuilderMapLoader::Preload(wszFilename, bScenario);
 }
@@ -79,7 +83,11 @@ bool CvDllWorldBuilderMapLoader::InitMap()
 	return CvWorldBuilderMapLoader::InitMap();
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+bool CvDllWorldBuilderMapLoader::Save(_In_z_ const wchar_t* wszFilename, const char* szMapName)
+#else
 bool CvDllWorldBuilderMapLoader::Save(const wchar_t* wszFilename, const char* szMapName)
+#endif
 {
 	return CvWorldBuilderMapLoader::Save(wszFilename, szMapName);
 }
@@ -119,7 +127,11 @@ void CvDllWorldBuilderMapLoader::MapPlayerToSlot(uint uiPlayer, PlayerTypes ePla
 	CvWorldBuilderMapLoader::MapPlayerToSlot(uiPlayer, ePlayerSlot);
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+unsigned int CvDllWorldBuilderMapLoader::PreviewPlayableCivCount(_In_z_ const wchar_t* wszFilename)
+#else
 unsigned int CvDllWorldBuilderMapLoader::PreviewPlayableCivCount(const wchar_t* wszFilename)
+#endif
 {
 	return CvWorldBuilderMapLoader::PreviewPlayableCivCount(wszFilename);
 }

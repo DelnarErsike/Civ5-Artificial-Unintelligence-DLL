@@ -644,7 +644,11 @@ void CvBuilderTaskingAI::UpdateRoutePlots(void)
 	// updating plots that are part of the road network
 	CvCityConnections* pCityConnections = m_pPlayer->GetCityConnections();
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumBuildInfos(); i++)
+#else
 	for(int i = 0; i < GC.getNumBuildInfos(); i++)
+#endif
 	{
 		BuildTypes eBuild = (BuildTypes)i;
 		CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
@@ -776,7 +780,7 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 	}
 
 #ifdef AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
-	for (int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+	for (uint iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
 	{
 		CvBuildInfo* pkBuild = GC.getBuildInfo((BuildTypes)iBuildIndex);
 		if (pkBuild)
@@ -1133,7 +1137,11 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 	// loop through the build types to find one that we can use
 	BuildTypes eBuild;
 	BuildTypes eOriginalBuild;
+#ifdef AUI_WARNING_FIXES
+	uint iBuildIndex;
+#else
 	int iBuildIndex;
+#endif
 	for(iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
 	{
 		eBuild = (BuildTypes)iBuildIndex;
@@ -1194,7 +1202,11 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 		{
 			BuildTypes eExistingBuild = NO_BUILD;
 			BuildTypes eBuild2 = NO_BUILD;
+#ifdef AUI_WARNING_FIXES
+			for (uint iBuildIndex2 = 0; iBuildIndex2 < GC.getNumBuildInfos(); iBuildIndex2++)
+#else
 			for(int iBuildIndex2 = 0; iBuildIndex2 < GC.getNumBuildInfos(); iBuildIndex2++)
+#endif
 			{
 				eBuild2 = (BuildTypes)iBuildIndex2;
 				CvBuildInfo* pkBuild2 = GC.getBuildInfo(eBuild2);
@@ -1427,7 +1439,11 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 	// loop through the build types to find one that we can use
 	BuildTypes eBuild;
 	BuildTypes eOriginalBuildType;
+#ifdef AUI_WARNING_FIXES
+	uint iBuildIndex;
+#else
 	int iBuildIndex;
+#endif
 #ifdef AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
 	int iLoopScore;
 	int iBestUniqueImprovementWeight = 0;
@@ -1789,7 +1805,11 @@ void CvBuilderTaskingAI::AddImprovingMinorPlotsDirectives(CvUnit* pUnit, CvPlot*
 	// loop through the build types to find one that we can use
 	BuildTypes eBuild;
 	BuildTypes eOriginalBuildType;
+#ifdef AUI_WARNING_FIXES
+	uint iBuildIndex;
+#else
 	int iBuildIndex;
+#endif
 	for (iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
 	{
 		eBuild = (BuildTypes)iBuildIndex;
@@ -1859,7 +1879,11 @@ void CvBuilderTaskingAI::AddImprovingMinorPlotsDirectives(CvUnit* pUnit, CvPlot*
 		{
 			if (m_pPlayer->getSiphonLuxuryCount(pPlot->getOwner()) <= 0)
 			{
+#ifdef AUI_WARNING_FIXES
+				for (uint iI = 0; iI < GC.getNumResourceInfos(); iI++)
+#else
 				for (int iI = 0; iI < GC.getNumResourceInfos(); iI++)
+#endif
 				{
 					int iResouceCount = GET_PLAYER(pPlot->getOwner()).getResourceInOwnedPlots((ResourceTypes)iI);
 					if (iResouceCount > 0)
@@ -2015,7 +2039,11 @@ void CvBuilderTaskingAI::AddRouteDirectives(CvUnit* pUnit, CvPlot* pPlot, int iM
 	else
 	{
 		RouteTypes eRoute = pPlot->GetBuilderAIScratchPadRoute();
+#ifdef AUI_WARNING_FIXES
+		for (uint i = 0; i < GC.getNumBuildInfos(); i++)
+#else
 		for(int i = 0; i < GC.getNumBuildInfos(); i++)
+#endif
 		{
 			BuildTypes eBuild = (BuildTypes)i;
 			CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
@@ -2200,7 +2228,11 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 #endif
 
 	BuildTypes eChopBuild = NO_BUILD;
+#ifdef AUI_WARNING_FIXES
+	for (uint iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+#else
 	for(int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+#endif
 	{
 		BuildTypes eBuild = (BuildTypes)iBuildIndex;
 		CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
@@ -2421,7 +2453,11 @@ void CvBuilderTaskingAI::AddRemoveUselessRoadDirectives(CvUnit* pUnit, CvPlot* p
 	}
 
 	BuildTypes eRemoveRouteBuild = NO_BUILD;
+#ifdef AUI_WARNING_FIXES
+	for (uint iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+#else
 	for(int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+#endif
 	{
 		BuildTypes eBuild = (BuildTypes)iBuildIndex;
 		CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
@@ -3407,7 +3443,11 @@ int CvBuilderTaskingAI::ScorePlot()
 
 BuildTypes CvBuilderTaskingAI::GetBuildTypeFromImprovement(ImprovementTypes eImprovement)
 {
+#ifdef AUI_WARNING_FIXES
+	for (uint iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+#else
 	for(int iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
+#endif
 	{
 		BuildTypes eBuild = (BuildTypes)iBuildIndex;
 		CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
@@ -3423,7 +3463,11 @@ BuildTypes CvBuilderTaskingAI::GetBuildTypeFromImprovement(ImprovementTypes eImp
 
 BuildTypes CvBuilderTaskingAI::GetRepairBuild(void)
 {
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumBuildInfos(); i++)
+#else
 	for(int i = 0; i < GC.getNumBuildInfos(); i++)
+#endif
 	{
 		BuildTypes eBuild = (BuildTypes)i;
 		CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
@@ -3455,7 +3499,11 @@ BuildTypes CvBuilderTaskingAI::GetFalloutRemove(void)
 		return NO_BUILD;
 	}
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iBuild = 0; iBuild < GC.getNumBuildInfos(); iBuild++)
+#else
 	for(int iBuild = 0; iBuild < GC.getNumBuildInfos(); iBuild++)
+#endif
 	{
 		BuildTypes eBuild = (BuildTypes)iBuild;
 		CvBuildInfo* pBuildInfo = GC.getBuildInfo(eBuild);

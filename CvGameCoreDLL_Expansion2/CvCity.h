@@ -95,7 +95,11 @@ public:
 	int findBaseYieldRateRank(YieldTypes eYield);
 	int findYieldRateRank(YieldTypes eYield);
 
+#ifdef AUI_WARNING_FIXES
+	UnitTypes allUpgradesAvailable(UnitTypes eUnit, uint iUpgradeCount = 0) const;
+#else
 	UnitTypes allUpgradesAvailable(UnitTypes eUnit, int iUpgradeCount = 0) const;
+#endif
 	bool isWorldWondersMaxed() const;
 	bool isTeamWondersMaxed() const;
 	bool isNationalWondersMaxed() const;

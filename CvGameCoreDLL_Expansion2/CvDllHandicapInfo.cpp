@@ -9,7 +9,11 @@
 #include "CvDllHandicapInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllHandicapInfo::CvDllHandicapInfo(_In_ CvHandicapInfo* pHandicapInfo)
+#else
 CvDllHandicapInfo::CvDllHandicapInfo(CvHandicapInfo* pHandicapInfo)
+#endif
 	: m_pHandicapInfo(pHandicapInfo)
 	, m_uiRefCount(1)
 {

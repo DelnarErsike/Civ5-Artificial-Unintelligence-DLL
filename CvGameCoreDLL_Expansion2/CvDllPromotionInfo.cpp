@@ -10,7 +10,11 @@
 #include "CvDllContext.h"
 
 
+#ifdef AUI_WARNING_FIXES
+CvDllPromotionInfo::CvDllPromotionInfo(_In_ CvPromotionEntry* pPromotionInfo)
+#else
 CvDllPromotionInfo::CvDllPromotionInfo(CvPromotionEntry* pPromotionInfo)
+#endif
 	: m_pPromotionInfo(pPromotionInfo)
 	, m_uiRefCount(1)
 {

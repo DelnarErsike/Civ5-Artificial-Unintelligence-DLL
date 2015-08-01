@@ -336,7 +336,11 @@ int CvLuaEnums::pRegister(lua_State* L)
 	CvNotificationXMLEntries* pkNotifications = GC.GetNotificationEntries();
 	if (pkNotifications)
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint i = 0; i < pkNotifications->GetNumNotifications(); ++i)
+#else
 		for (int i = 0; i < pkNotifications->GetNumNotifications(); ++i)
+#endif
 		{
 			CvNotificationEntry* pkEntry = pkNotifications->GetEntry(i);		
 			if (pkEntry)
@@ -1055,7 +1059,11 @@ void CvLuaEnums::EnumEnd(lua_State* L)
 	lua_pop(L, 1);
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvLuaEnums::RegisterDynamicEnums(lua_State* L, _In_z_ const char* szTableName, _In_z_ const char* szIdField, _In_z_ const char* szNameField, _In_opt_z_ const char* szCountName)
+#else
 void CvLuaEnums::RegisterDynamicEnums(lua_State* L, const char* szTableName, const char* szIdField, const char* szNameField, const char* szCountName)
+#endif
 {
 	Database::Connection& db = *GC.GetGameDatabase();
 	Database::Results kResults;

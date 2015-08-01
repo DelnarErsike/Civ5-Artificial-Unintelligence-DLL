@@ -54,7 +54,11 @@ public:
 	    HAS_ANY_ROUTE   = 0x1,
 	    HAS_WATER_ROUTE = 0x2,
 	    HAS_BEST_ROUTE  = 0x4,
+#ifdef AUI_VC120_FORMALITIES
+	} _RouteState;
+#else
 	};
+#endif
 
 	struct RouteInfo
 	{
@@ -97,7 +101,11 @@ protected:
 	    NO_CONNECTION = 0x0,
 	    CONNECTION = 0x1,
 	    CONNECTION_LAST_TURN = 0x2
+#ifdef AUI_VC120_FORMALITIES
+	} _PlotRouteState;
+#else
 	};
+#endif
 
 	struct PlotRouteInfo
 	{

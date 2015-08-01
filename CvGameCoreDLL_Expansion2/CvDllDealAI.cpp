@@ -13,7 +13,11 @@
 #include "CvDllPlayer.h"
 #include "CvDealAI.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllDealAI::CvDllDealAI(_In_ CvDealAI* pDealAI)
+#else
 CvDllDealAI::CvDllDealAI(CvDealAI* pDealAI)
+#endif
 	: m_pDealAI(pDealAI)
 	, m_uiRefCount(1)
 {

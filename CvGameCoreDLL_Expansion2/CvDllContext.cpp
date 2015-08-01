@@ -170,12 +170,20 @@ HANDLE CvDllGameContext::Debug_GetHeap() const
 	return s_hHeap;
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+_Check_return_ void* CvDllGameContext::Allocate(size_t bytes)
+#else
 void* CvDllGameContext::Allocate(size_t bytes)
+#endif
 {
 	return HeapAlloc(s_hHeap, 0, bytes);
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvDllGameContext::Free(_In_ void* p)
+#else
 void CvDllGameContext::Free(void* p)
+#endif
 {
 	HeapFree(s_hHeap, 0, p);
 }
@@ -885,10 +893,17 @@ bool CvDllGameContext::RandomNumberGeneratorSyncCheck(PlayerTypes ePlayer, ICvRa
 		char formatBuf[128] = {"\0"};
 		std::string rngLogMessage = "Game Random Number Generators are out of sync : local.seed=";
 #ifdef AUI_WARNING_FIXES
+#ifdef AUI_USE_SFMT_RNG
+		_itoa_s(localSimRandomNumberGenerator.getSeed().first, formatBuf, 128, 10);
+		rngLogMessage += formatBuf;
+		rngLogMessage += ", remote.seed=";
+		_itoa_s(pkRandom->getSeed().first, formatBuf, 128, 10);
+#else
 		_itoa_s(localSimRandomNumberGenerator.getSeed(), formatBuf, 128, 10);
 		rngLogMessage += formatBuf;
 		rngLogMessage += ", remote.seed=";
 		_itoa_s(pkRandom->getSeed(), formatBuf, 128, 10);
+#endif
 		rngLogMessage += formatBuf;
 		rngLogMessage += "\n\tlocal.callCount=";
 		_itoa_s(localSimRandomNumberGenerator.getCallCount(), formatBuf, 128, 10);
@@ -903,9 +918,15 @@ bool CvDllGameContext::RandomNumberGeneratorSyncCheck(PlayerTypes ePlayer, ICvRa
 		_itoa_s(pkRandom->getResetCount(), formatBuf, 128, 10);
 		rngLogMessage += formatBuf;
 #else
+#ifdef AUI_USE_SFMT_RNG
+		rngLogMessage += _itoa_s(localSimRandomNumberGenerator.getSeed().first, formatBuf, 10);
+		rngLogMessage += ", remote.seed=";
+		rngLogMessage += _itoa_s(pkRandom->getSeed().first, formatBuf, 10);
+#else
 		rngLogMessage += _itoa_s(localSimRandomNumberGenerator.getSeed(), formatBuf, 10);
 		rngLogMessage += ", remote.seed=";
 		rngLogMessage += _itoa_s(pkRandom->getSeed(), formatBuf, 10);
+#endif
 		rngLogMessage += "\n\tlocal.callCount=";
 		rngLogMessage += _itoa_s(localSimRandomNumberGenerator.getCallCount(), formatBuf, 10);
 		rngLogMessage += ", remote.callCount=";
@@ -1178,7 +1199,11 @@ bool CvDllGameContext::RandomNumberGeneratorSyncCheck(PlayerTypes ePlayer, ICvRa
 		if(m_isHost)
 		{
 			CvRandom & rng = auto_ptr<ICvGame1> pGame = GameCore::GetGame();\n.getJonRand();
+#ifdef AUI_USE_SFMT_RNG
+			rng.syncInternals(m_simRandomNumberGenerator);
+#else
 			rng.reset(m_simRandomNumberGenerator.getSeed());
+#endif
 		}
 		// brute force approach
 		// JAR : todo - this is the solution of last resort if
@@ -1193,7 +1218,11 @@ bool CvDllGameContext::RandomNumberGeneratorSyncCheck(PlayerTypes ePlayer, ICvRa
 unsigned int CvDllGameContext::CreateRandomNumberGenerator()
 {
 	uint index = m_uiRngCounter++;
+#ifdef AUI_WARNING_FIXES
+	std::pair<uint, CvRandom*> entry(index, new(_aligned_malloc(sizeof(CvRandom), 16)) CvRandom());
+#else
 	std::pair<uint, CvRandom*> entry(index, FNEW(CvRandom, c_eCiv5GameplayDLL, 0));
+#endif
 
 	m_RandomNumberGenerators.push_back(entry);
 	return index;
@@ -1223,7 +1252,12 @@ void CvDllGameContext::DestroyRandomNumberGenerator(unsigned int index)
 
 	if(it != m_RandomNumberGenerators.end())
 	{
+#ifdef AUI_WARNING_FIXES
+		it->second->~CvRandom();
+		_aligned_free(it->second);
+#else
 		delete(*it).second;
+#endif
 		m_RandomNumberGenerators.erase(it);
 	}
 }

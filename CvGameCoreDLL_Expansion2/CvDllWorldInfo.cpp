@@ -10,7 +10,11 @@
 #include "CvDllContext.h"
 
 
+#ifdef AUI_WARNING_FIXES
+CvDllWorldInfo::CvDllWorldInfo(_In_ CvWorldInfo* pWorldInfo)
+#else
 CvDllWorldInfo::CvDllWorldInfo(CvWorldInfo* pWorldInfo)
+#endif
 	: m_pWorldInfo(pWorldInfo)
 	, m_uiRefCount(1)
 {

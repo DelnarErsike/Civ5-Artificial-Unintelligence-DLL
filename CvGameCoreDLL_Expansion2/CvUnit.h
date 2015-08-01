@@ -1400,7 +1400,11 @@ protected:
 	{
 	    UNITFLAG_EVALUATING_MISSION = 0x1,
 	    UNITFLAG_ALREADY_GOT_GOODY_UPGRADE = 0x2
+#ifdef AUI_VC120_FORMALITIES
+	} _Flags;
+#else
 	};
+#endif
 
 	FAutoArchiveClassContainer<CvUnit> m_syncArchive;
 

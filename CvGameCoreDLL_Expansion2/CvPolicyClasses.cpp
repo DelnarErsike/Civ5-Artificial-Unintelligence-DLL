@@ -1961,7 +1961,11 @@ std::vector<CvPolicyEntry*>& CvPolicyXMLEntries::GetPolicyEntries()
 }
 
 /// Number of defined policies
+#ifdef AUI_WARNING_FIXES
+uint CvPolicyXMLEntries::GetNumPolicies() const
+#else
 int CvPolicyXMLEntries::GetNumPolicies()
+#endif
 {
 	return m_paPolicyEntries.size();
 }
@@ -1978,7 +1982,11 @@ void CvPolicyXMLEntries::DeletePoliciesArray()
 }
 
 /// Get a specific entry
+#ifdef AUI_WARNING_FIXES
+CvPolicyEntry* CvPolicyXMLEntries::GetPolicyEntry(uint index)
+#else
 CvPolicyEntry* CvPolicyXMLEntries::GetPolicyEntry(int index)
+#endif
 {
 	return m_paPolicyEntries[index];
 }
@@ -1990,7 +1998,11 @@ std::vector<CvPolicyBranchEntry*>& CvPolicyXMLEntries::GetPolicyBranchEntries()
 }
 
 /// Number of defined PolicyBranches
+#ifdef AUI_WARNING_FIXES
+uint CvPolicyXMLEntries::GetNumPolicyBranches() const
+#else
 int CvPolicyXMLEntries::GetNumPolicyBranches()
+#endif
 {
 	return m_paPolicyBranchEntries.size();
 }
@@ -2007,7 +2019,11 @@ void CvPolicyXMLEntries::DeletePolicyBranchesArray()
 }
 
 /// Get a specific entry
+#ifdef AUI_WARNING_FIXES
+_Ret_maybenull_ CvPolicyBranchEntry* CvPolicyXMLEntries::GetPolicyBranchEntry(uint index)
+#else
 CvPolicyBranchEntry* CvPolicyXMLEntries::GetPolicyBranchEntry(int index)
+#endif
 {
 	return m_paPolicyBranchEntries[index];
 }
@@ -2099,7 +2115,11 @@ void CvPlayerPolicies::Uninit()
 /// Reset policy status array to all false
 void CvPlayerPolicies::Reset()
 {
+#ifdef AUI_WARNING_FIXES
+	uint iI;
+#else
 	int iI;
+#endif
 
 	for(iI = 0; iI < m_pPolicies->GetNumPolicies(); iI++)
 	{
@@ -2318,7 +2338,11 @@ void CvPlayerPolicies::SetPolicy(PolicyTypes eIndex, bool bNewValue)
 				bBranchFinished = true;
 
 				// Is the branch this policy is in finished?
+#ifdef AUI_WARNING_FIXES
+				for (uint iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#else
 				for(int iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#endif
 				{
 					const PolicyTypes eLoopPolicy = static_cast<PolicyTypes>(iPolicyLoop);
 
@@ -2396,7 +2420,11 @@ int CvPlayerPolicies::GetNumPoliciesOwned() const
 {
 	int rtnValue = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for(int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if(m_pabHasPolicy[i])
@@ -2413,7 +2441,11 @@ int CvPlayerPolicies::GetNumPoliciesOwnedInBranch(PolicyBranchTypes eBranch) con
 {
 	int rtnValue = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for (int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if (m_pabHasPolicy[i] && m_pPolicies->GetPolicyEntry(i)->GetPolicyBranchType() == eBranch)
@@ -2594,7 +2626,11 @@ int CvPlayerPolicies::GetYieldModifier(YieldTypes eYieldType)
 {
 	int rtnValue = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for(int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if(m_pabHasPolicy[i] && !IsPolicyBlocked((PolicyTypes)i))
@@ -2611,7 +2647,11 @@ int CvPlayerPolicies::GetBuildingClassYieldModifier(BuildingClassTypes eBuilding
 {
 	int rtnValue = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for(int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if(m_pabHasPolicy[i] && !IsPolicyBlocked((PolicyTypes)i))
@@ -2628,7 +2668,11 @@ int CvPlayerPolicies::GetBuildingClassYieldChange(BuildingClassTypes eBuildingCl
 {
 	int rtnValue = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for(int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if(m_pabHasPolicy[i] && !IsPolicyBlocked((PolicyTypes)i))
@@ -2645,7 +2689,11 @@ int CvPlayerPolicies::GetImprovementCultureChange(ImprovementTypes eImprovement)
 {
 	int rtnValue = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for(int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if(m_pabHasPolicy[i] && !IsPolicyBlocked((PolicyTypes)i))
@@ -2662,7 +2710,11 @@ int CvPlayerPolicies::GetBuildingClassProductionModifier(BuildingClassTypes eBui
 {
 	int rtnValue = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for(int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if(m_pabHasPolicy[i] && !IsPolicyBlocked((PolicyTypes)i))
@@ -2679,7 +2731,11 @@ int CvPlayerPolicies::GetBuildingClassTourismModifier(BuildingClassTypes eBuildi
 {
 	int rtnValue = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for(int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if(m_pabHasPolicy[i] && !IsPolicyBlocked((PolicyTypes)i))
@@ -2694,7 +2750,11 @@ int CvPlayerPolicies::GetBuildingClassTourismModifier(BuildingClassTypes eBuildi
 /// Does any policy owned give benefit for garrisons?
 bool CvPlayerPolicies::HasPolicyEncouragingGarrisons() const
 {
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for(int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if(m_pabHasPolicy[i] && !IsPolicyBlocked((PolicyTypes)i))
@@ -2725,7 +2785,11 @@ bool CvPlayerPolicies::HasPolicyEncouragingGarrisons() const
 /// Does any policy owned give a Reformation belief?
 bool CvPlayerPolicies::HasPolicyGrantingReformationBelief() const
 {
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for (int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if (m_pabHasPolicy[i] && !IsPolicyBlocked((PolicyTypes)i))
@@ -2748,6 +2812,15 @@ CvString CvPlayerPolicies::GetWeLoveTheKingString()
 
 	// Policies are arranged from least to most advanced in XML
 	//   So loop from back to front until we find a string
+#ifdef AUI_WARNING_FIXES
+	for (uint i = m_pPolicies->GetNumPolicies(); i > 0; i--)
+	{
+		// Do we have this policy?
+		if (m_pabHasPolicy[i - 1] && !IsPolicyBlocked((PolicyTypes)(i - 1)))
+		{
+			// Does it have a string for us?
+			CvString str = m_pPolicies->GetPolicyEntry(i - 1)->GetWeLoveTheKing();
+#else
 	for(int i = m_pPolicies->GetNumPolicies() - 1; i >= 0; i--)
 	{
 		// Do we have this policy?
@@ -2755,6 +2828,7 @@ CvString CvPlayerPolicies::GetWeLoveTheKingString()
 		{
 			// Does it have a string for us?
 			CvString str = m_pPolicies->GetPolicyEntry(i)->GetWeLoveTheKing();
+#endif
 			if(str.length() > 0)
 			{
 				rtnValue = str;
@@ -2772,7 +2846,11 @@ std::vector<BuildingTypes> CvPlayerPolicies::GetFreeBuildingsOnConquest()
 	std::vector<BuildingTypes> freeBuildings;
 	freeBuildings.reserve(m_pPolicies->GetNumPolicies());
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for (int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if (m_pabHasPolicy[i] && !IsPolicyBlocked((PolicyTypes)i))
@@ -2793,7 +2871,11 @@ int CvPlayerPolicies::GetTourismFromUnitCreation(UnitClassTypes eUnitClass) cons
 {
 	int iTourism = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#else
 	for (int i = 0; i < m_pPolicies->GetNumPolicies(); i++)
+#endif
 	{
 		// Do we have this policy?
 		if (m_pabHasPolicy[i] && !IsPolicyBlocked((PolicyTypes)i))
@@ -2979,7 +3061,11 @@ bool CvPlayerPolicies::CanAdoptPolicy(PolicyTypes eIndex, bool bIgnoreCost) cons
 	}
 
 	// Disabled by another Policy?
+#ifdef AUI_WARNING_FIXES
+	for (uint iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#else
 	for(int iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#endif
 	{
 		const PolicyTypes eDisablePolicy =static_cast<PolicyTypes>(iPolicyLoop);
 
@@ -3241,7 +3327,11 @@ int CvPlayerPolicies::GetNumPolicyBranchesUnlocked() const
 {
 	int iCount = 0;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
+#else
 	for(int iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
+#endif
 	{
 		if(IsPolicyBranchUnlocked((PolicyBranchTypes) iBranchLoop))
 		{
@@ -3273,7 +3363,11 @@ void CvPlayerPolicies::DoSwitchToPolicyBranch(PolicyBranchTypes eBranchType)
 	}
 
 	// Does THIS Branch block any other branch?
+#ifdef AUI_WARNING_FIXES
+	uint iBranchLoop;
+#else
 	int iBranchLoop;
+#endif
 	for(iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
 	{
 		const PolicyBranchTypes eDisableBranch = static_cast<PolicyBranchTypes>(iBranchLoop);
@@ -3314,7 +3408,11 @@ void CvPlayerPolicies::DoSwitchToPolicyBranch(PolicyBranchTypes eBranchType)
 			bUnlockBranch = true;
 
 			// Loop through all Policies we have and make sure they don't interfere with us
+#ifdef AUI_WARNING_FIXES
+			for (uint iOtherBranchLoop = 0; iOtherBranchLoop < m_pPolicies->GetNumPolicyBranches(); iOtherBranchLoop++)
+#else
 			for(int iOtherBranchLoop = 0; iOtherBranchLoop < m_pPolicies->GetNumPolicyBranches(); iOtherBranchLoop++)
+#endif
 			{
 				const PolicyBranchTypes eOtherBranch = static_cast<PolicyBranchTypes>(iOtherBranchLoop);
 				CvPolicyBranchEntry* pkOtherPolicyBranchInfo = GC.getPolicyBranchInfo(eOtherBranch);
@@ -3383,7 +3481,11 @@ void CvPlayerPolicies::SetPolicyBranchBlocked(PolicyBranchTypes eBranchType, boo
 			if(iPolicyEffectChange != 0)
 			{
 				// Set Policies in this branch as blocked
+#ifdef AUI_WARNING_FIXES
+				for (uint iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#else
 				for(int iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#endif
 				{
 					const PolicyTypes ePolicy = static_cast<PolicyTypes>(iPolicyLoop);
 					CvPolicyEntry* pkPolicyInfo = GC.getPolicyInfo(ePolicy);
@@ -3458,7 +3560,11 @@ void CvPlayerPolicies::DoSwitchIdeologies(PolicyBranchTypes eNewBranchType)
 void CvPlayerPolicies::ClearPolicyBranch(PolicyBranchTypes eBranchType)
 {
 	// count the policies within the branch
+#ifdef AUI_WARNING_FIXES
+	for (uint iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#else
 	for(int iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#endif
 	{
 		const PolicyTypes eLoopPolicy = static_cast<PolicyTypes>(iPolicyLoop);
 		CvPolicyEntry* pkLoopPolicyInfo = GC.getPolicyInfo(eLoopPolicy);
@@ -3479,7 +3585,11 @@ int CvPlayerPolicies::GetNumPolicyBranchesFinished() const
 	int iNumBranchesFinished = 0;
 
 	PolicyBranchTypes eLoopBranch;
+#ifdef AUI_WARNING_FIXES
+	for (uint iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
+#else
 	for(int iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
+#endif
 	{
 		eLoopBranch = (PolicyBranchTypes) iBranchLoop;
 
@@ -3572,7 +3682,11 @@ bool CvPlayerPolicies::WillFinishBranchIfAdopted(PolicyTypes eType) const
 	if(eBranchType != NO_POLICY_BRANCH_TYPE)
 	{
 		// Is the branch this policy is in finished?
+#ifdef AUI_WARNING_FIXES
+		for (uint iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#else
 		for(int iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#endif
 		{
 			const PolicyTypes eLoopPolicy = static_cast<PolicyTypes>(iPolicyLoop);
 
@@ -3656,7 +3770,11 @@ int CvPlayerPolicies::GetNumPoliciesCanBeAdopted()
 	int iNumPoliciesToAcquire = 0;
 
 	// count the branch openers
+#ifdef AUI_WARNING_FIXES
+	for (uint iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
+#else
 	for(int iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
+#endif
 	{
 		PolicyBranchTypes eBranchType = (PolicyBranchTypes)iBranchLoop;
 		if (IsPolicyBranchUnlocked(eBranchType) || CanUnlockPolicyBranch(eBranchType))
@@ -3674,7 +3792,11 @@ int CvPlayerPolicies::GetNumPoliciesCanBeAdopted()
 	}
 
 	// count the policies within the branch
+#ifdef AUI_WARNING_FIXES
+	for (uint iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#else
 	for(int iPolicyLoop = 0; iPolicyLoop < GetPolicies()->GetNumPolicies(); iPolicyLoop++)
+#endif
 	{
 		const PolicyTypes eLoopPolicy = static_cast<PolicyTypes>(iPolicyLoop);
 		CvPolicyEntry* pkLoopPolicyInfo = GC.getPolicyInfo(eLoopPolicy);
@@ -3706,7 +3828,11 @@ void CvPlayerPolicies::DoNewPolicyPickedForHistory(PolicyTypes ePolicy)
 	// Are we a free branch policy?
 	if(eNewBranch == NO_POLICY_BRANCH_TYPE)
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
+#else
 		for(int iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
+#endif
 		{
 			const PolicyBranchTypes eLoopBranch = static_cast<PolicyBranchTypes>(iBranchLoop);
 			CvPolicyBranchEntry* pkPolicyBranchInfo = GC.getPolicyBranchInfo(eLoopBranch);
@@ -3763,14 +3889,22 @@ PolicyBranchTypes CvPlayerPolicies::GetDominantPolicyBranchForTitle() const
 	std::vector<int> viPolicyBranchCounts;
 
 	// Init vector
+#ifdef AUI_WARNING_FIXES
+	uint iBranchLoop;
+#else
 	int iBranchLoop;
+#endif
 	for(iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
 	{
 		viPolicyBranchCounts.push_back(0);
 	}
 
 	// Get count of each branch
+#ifdef AUI_WARNING_FIXES
+	for (uint iPolicyLoop = 0; iPolicyLoop < GC.getNumPolicyInfos(); iPolicyLoop++)
+#else
 	for(int iPolicyLoop = 0; iPolicyLoop < GC.getNumPolicyInfos(); iPolicyLoop++)
+#endif
 	{
 		const PolicyTypes eLoopPolicy = static_cast<PolicyTypes>(iPolicyLoop);
 		CvPolicyEntry* pkPolicyInfo = GC.getPolicyInfo(eLoopPolicy);
@@ -3867,7 +4001,11 @@ PolicyBranchTypes CvPlayerPolicies::GetLateGamePolicyTree() const
 	PolicyBranchTypes eOurChoice = NO_POLICY_BRANCH_TYPE;
 
 	PolicyBranchTypes eLoopBranch;
+#ifdef AUI_WARNING_FIXES
+	for (uint iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
+#else
 	for(int iBranchLoop = 0; iBranchLoop < m_pPolicies->GetNumPolicyBranches(); iBranchLoop++)
+#endif
 	{
 		eLoopBranch = (PolicyBranchTypes) iBranchLoop;
 
@@ -3910,7 +4048,11 @@ bool CvPlayerPolicies::IsTimeToChooseIdeology() const
 		{
 			// Find a building that triggers an ideology
 			// Loop through all building classes
+#ifdef AUI_WARNING_FIXES
+			for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#else
 			for(int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#endif
 			{
 				const BuildingTypes eBuilding = static_cast<BuildingTypes>(pkInfo->getCivilizationBuildings(iI));
 				CvBuildingEntry* pkBuildingInfo = NULL;
@@ -3942,10 +4084,17 @@ std::vector<PolicyTypes> CvPlayerPolicies::GetAvailableTenets(PolicyBranchTypes 
 	std::vector<PolicyTypes> availableTenets;
 
 	CvPolicyXMLEntries* pkPolicies = GC.GetGamePolicies();
+#ifdef AUI_WARNING_FIXES
+	const uint iNumPolicies = pkPolicies->GetNumPolicies();
+
+	availableTenets.reserve(iNumPolicies);
+	for (uint iI = 0; iI < iNumPolicies; iI++)
+#else
 	const int iNumPolicies = pkPolicies->GetNumPolicies();
 
 	availableTenets.reserve(iNumPolicies);
 	for(int iI = 0; iI < iNumPolicies; iI++)
+#endif
 	{
 		const PolicyTypes eTenet(static_cast<PolicyTypes>(iI));
 		CvPolicyEntry* pEntry = pkPolicies->GetPolicyEntry(eTenet);
@@ -3964,9 +4113,13 @@ PolicyTypes CvPlayerPolicies::GetTenet(PolicyBranchTypes eBranch, int iLevel, in
 	int iNumFound = 0;
 
 	CvPolicyXMLEntries* pkPolicies = GC.GetGamePolicies();
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < pkPolicies->GetNumPolicies(); iI++)
+#else
 	const int iNumPolicies = pkPolicies->GetNumPolicies();
 
 	for(int iI = 0; iI < iNumPolicies; iI++)
+#endif
 	{
 		const PolicyTypes eTenet(static_cast<PolicyTypes>(iI));
 		CvPolicyEntry* pEntry = pkPolicies->GetPolicyEntry(eTenet);
@@ -3989,9 +4142,13 @@ int CvPlayerPolicies::GetNumTenetsOfLevel(PolicyBranchTypes eBranch, int iLevel)
 	int iNumFound = 0;
 
 	CvPolicyXMLEntries* pkPolicies = GC.GetGamePolicies();
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < pkPolicies->GetNumPolicies(); iI++)
+#else
 	const int iNumPolicies = pkPolicies->GetNumPolicies();
 
 	for(int iI = 0; iI < iNumPolicies; iI++)
+#endif
 	{
 		const PolicyTypes eTenet(static_cast<PolicyTypes>(iI));
 		CvPolicyEntry* pEntry = pkPolicies->GetPolicyEntry(eTenet);
@@ -4014,7 +4171,11 @@ bool CvPlayerPolicies::CanGetAdvancedTenet() const
 	}
 		
 	CvPolicyXMLEntries* pkPolicies = GC.GetGamePolicies();
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumPolicyInfos(); iI++)
+#else
 	for(int iI = 0; iI < GC.getNumPolicyInfos(); iI++)
+#endif
 	{
 		const PolicyTypes eTenet(static_cast<PolicyTypes>(iI));
 		CvPolicyEntry* pEntry = pkPolicies->GetPolicyEntry(eTenet);
@@ -4043,8 +4204,13 @@ void CvPlayerPolicies::DoPolicyAI()
 		while(m_pPlayer->getJONSCulture() >= m_pPlayer->getNextPolicyCost() || m_pPlayer->GetNumFreePolicies() > 0 || m_pPlayer->GetNumFreeTenets() > 0)
 		{
 			// Choose the policy we want next (or a branch)
+#ifdef AUI_WARNING_FIXES
+			uint iNextPolicy = m_pPolicyAI->ChooseNextPolicy(m_pPlayer);
+			if (iNextPolicy == (uint)NO_POLICY)
+#else
 			int iNextPolicy = m_pPolicyAI->ChooseNextPolicy(m_pPlayer);
 			if (iNextPolicy == NO_POLICY)
+#endif
 				break;
 
 			// These actions should spend our number of free policies or our culture, otherwise we'll loop forever

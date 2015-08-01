@@ -9,7 +9,11 @@
 #include "CvDllGameSpeedInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllGameSpeedInfo::CvDllGameSpeedInfo(_In_ CvGameSpeedInfo* pGameSpeedInfo)
+#else
 CvDllGameSpeedInfo::CvDllGameSpeedInfo(CvGameSpeedInfo* pGameSpeedInfo)
+#endif
 	: m_pGameSpeedInfo(pGameSpeedInfo)
 	, m_uiRefCount(1)
 {

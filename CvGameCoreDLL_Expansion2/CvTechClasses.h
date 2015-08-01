@@ -177,8 +177,13 @@ public:
 
 	// Accessor functions
 	std::vector<CvTechEntry*>& GetTechEntries();
+#ifdef AUI_WARNING_FIXES
+	uint GetNumTechs() const;
+	_Ret_maybenull_ CvTechEntry* GetEntry(uint index);
+#else
 	int GetNumTechs();
 	_Ret_maybenull_ CvTechEntry* GetEntry(int index);
+#endif
 
 	void DeleteArray();
 

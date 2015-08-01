@@ -10,7 +10,11 @@
 #include "CvDllContext.h"
 
 
+#ifdef AUI_WARNING_FIXES
+CvDllVictoryInfo::CvDllVictoryInfo(_In_ CvVictoryInfo* pVictoryInfo)
+#else
 CvDllVictoryInfo::CvDllVictoryInfo(CvVictoryInfo* pVictoryInfo)
+#endif
 	: m_pVictoryInfo(pVictoryInfo)
 	, m_uiRefCount(1)
 {

@@ -9,7 +9,11 @@
 #include "CvDllResourceInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllResourceInfo::CvDllResourceInfo(_In_ CvResourceInfo* pResourceInfo)
+#else
 CvDllResourceInfo::CvDllResourceInfo(CvResourceInfo* pResourceInfo)
+#endif
 	: m_pResourceInfo(pResourceInfo)
 	, m_uiRefCount(1)
 {

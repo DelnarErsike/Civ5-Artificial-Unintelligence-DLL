@@ -10,7 +10,11 @@
 #include "CvDllContext.h"
 
 
+#ifdef AUI_WARNING_FIXES
+CvDllUnitCombatClassInfo::CvDllUnitCombatClassInfo(_In_ CvBaseInfo* pUnitCombatClassInfo)
+#else
 CvDllUnitCombatClassInfo::CvDllUnitCombatClassInfo(CvBaseInfo* pUnitCombatClassInfo)
+#endif
 	: m_pUnitCombatClassInfo(pUnitCombatClassInfo)
 	, m_uiRefCount(1)
 {

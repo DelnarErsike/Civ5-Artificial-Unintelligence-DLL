@@ -260,8 +260,13 @@ public:
 
 	// Accessor functions
 	std::vector<CvImprovementEntry*>& GetImprovementEntries();
+#ifdef AUI_WARNING_FIXES
+	uint GetNumImprovements() const;
+	_Ret_maybenull_ CvImprovementEntry* GetEntry(uint index);
+#else
 	int GetNumImprovements();
 	_Ret_maybenull_ CvImprovementEntry* GetEntry(int index);
+#endif
 	CvImprovementEntry* GetImprovementForResource(int eResource);
 
 	// Binary cache functions

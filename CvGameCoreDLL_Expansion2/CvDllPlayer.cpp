@@ -18,7 +18,11 @@
 #include "CvMinorCivAI.h"
 
 
+#ifdef AUI_WARNING_FIXES
+CvDllPlayer::CvDllPlayer(_In_ CvPlayerAI* pPlayer)
+#else
 CvDllPlayer::CvDllPlayer(CvPlayerAI* pPlayer)
+#endif
 	: m_pPlayer(pPlayer)
 	, m_uiRefCount(1)
 {

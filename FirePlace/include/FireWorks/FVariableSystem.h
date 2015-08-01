@@ -46,7 +46,11 @@ class FVariableDebug;
 #define FVARTYPE FVariableDebug
 #endif	//	FINAL_RELEASE
 
+#ifdef AUI_VC120_FORMALITIES
+typedef std::tr1::unordered_map< FString, FVARTYPE*, FStringHashTraits > FVariableHash;
+#else
 typedef STDEXT::hash_map< FString, FVARTYPE*, FStringHashTraits > FVariableHash;
+#endif
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // CLASS:	FVariableCallback

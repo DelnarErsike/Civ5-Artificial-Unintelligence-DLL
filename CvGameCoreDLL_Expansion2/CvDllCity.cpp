@@ -11,7 +11,11 @@
 #include "CvDllContext.h"
 #include "CvDllPlot.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllCity::CvDllCity(_In_ CvCity* pCity)
+#else
 CvDllCity::CvDllCity(CvCity* pCity)
+#endif
 	: m_pCity(pCity)
 	, m_uiRefCount(1)
 {

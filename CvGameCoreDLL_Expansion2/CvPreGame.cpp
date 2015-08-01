@@ -1399,7 +1399,7 @@ void loadFromIni(FIGameIniParser& iniParser)
 	{
 		StringToBools(szHolder, &iNumBools, &pbBools);
 #ifdef AUI_FAST_COMP
-		iNumBools = FASTMIN(iNumBools, GC.getNumVictoryInfos());
+		iNumBools = FASTMIN(iNumBools, (int)GC.getNumVictoryInfos());
 #else
 		iNumBools = std::min(iNumBools, GC.getNumVictoryInfos());
 #endif
@@ -2442,7 +2442,11 @@ void setEra(EraTypes e)
 
 void setEra(const CvString& e)
 {
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumEraInfos(); i++)
+#else
 	for(int i = 0; i < GC.getNumEraInfos(); i++)
+#endif
 	{
 		const EraTypes eEra = static_cast<EraTypes>(i);
 		CvEraInfo* pkEraInfo = GC.getEraInfo(eEra);
@@ -2502,7 +2506,11 @@ void setGameSpeed(GameSpeedTypes g)
 
 void setGameSpeed(const CvString& g)
 {
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumGameSpeedInfos(); i++)
+#else
 	for(int i = 0; i < GC.getNumGameSpeedInfos(); i++)
+#endif
 	{
 		const GameSpeedTypes eGameSpeed = static_cast<GameSpeedTypes>(i);
 		CvGameSpeedInfo* pkGameSpeedInfo = GC.getGameSpeedInfo(eGameSpeed);
@@ -2846,7 +2854,11 @@ void setQuickHandicap(HandicapTypes h)
 
 void setQuickHandicap(const CvString& h)
 {
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumHandicapInfos(); i++)
+#else
 	for(int i = 0; i < GC.getNumHandicapInfos(); i++)
+#endif
 	{
 		const HandicapTypes eHandicap = static_cast<HandicapTypes>(i);
 		CvHandicapInfo* pkHandicapInfo = GC.getHandicapInfo(eHandicap);

@@ -2170,8 +2170,12 @@ bool CvGameDeals::FinalizeDeal(PlayerTypes eFromPlayer, PlayerTypes eToPlayer, b
 								if(((CvString)GET_PLAYER(eAcceptedFromPlayer).getLeaderTypeKey() == "LEADER_HARUN_AL_RASHID"))
 								{
 									//OutputDebugString("\nStep1");
+#ifdef AUI_WARNING_FIXES
+									for (uint iJ = 0; iJ < GC.getNumBuildingInfos(); iJ++)
+#else
 									int iJ;
 									for(iJ = 0; iJ < GC.getNumBuildingInfos(); iJ++)
+#endif
 									{
 										CvBuildingEntry* pkBuildingEntry = GC.getBuildingInfo((BuildingTypes)iJ);
 										if(pkBuildingEntry)

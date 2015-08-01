@@ -11,7 +11,11 @@
 #include "CvDiplomacyAI.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllDiplomacyAI::CvDllDiplomacyAI(_In_ CvDiplomacyAI* pDiplomacyAI)
+#else
 CvDllDiplomacyAI::CvDllDiplomacyAI(CvDiplomacyAI* pDiplomacyAI)
+#endif
 	: m_pDiplomacyAI(pDiplomacyAI)
 	, m_uiRefCount(1)
 {

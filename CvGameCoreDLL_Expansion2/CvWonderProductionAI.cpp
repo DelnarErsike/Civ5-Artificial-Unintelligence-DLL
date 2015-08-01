@@ -69,7 +69,11 @@ void CvWonderProductionAI::Reset()
 	// Loop through reading each one and adding it to our vector
 	if(m_pBuildings)
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint i = 0; i < m_pBuildings->GetNumBuildings(); i++)
+#else
 		for(int i = 0; i < m_pBuildings->GetNumBuildings(); i++)
+#endif
 		{
 			m_WonderAIWeights.push_back(i, 0);
 		}
@@ -103,7 +107,11 @@ void CvWonderProductionAI::Read(FDataStream& kStream)
 	// Loop through reading each one and adding it to our vector
 	if(m_pBuildings)
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint i = 0; i < m_pBuildings->GetNumBuildings(); i++)
+#else
 		for(int i = 0; i < m_pBuildings->GetNumBuildings(); i++)
+#endif
 		{
 			m_WonderAIWeights.push_back(i, 0);
 		}
@@ -209,7 +217,11 @@ void CvWonderProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 	ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
 #endif
 	// Loop through all buildings (even though we're only go to do anything on wonders)
+#ifdef AUI_WARNING_FIXES
+	for (uint iBldg = 0; iBldg < m_pBuildings->GetNumBuildings(); iBldg++)
+#else
 	for(int iBldg = 0; iBldg < m_pBuildings->GetNumBuildings(); iBldg++)
+#endif
 	{
 		CvBuildingEntry* entry = m_pBuildings->GetEntry(iBldg);
 		if(entry)
@@ -246,7 +258,7 @@ void CvWonderProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 					CvLuaArgsHandle args;
 					args->Push(m_pCity->getOwner());
 					args->Push(m_pCity->GetID());
-					args->Push(iBldg);
+					args->Push(int(iBldg));
 					args->Push(eFlavor);
 
 					int iResult = 0;
@@ -294,7 +306,11 @@ int CvWonderProductionAI::GetWeight(BuildingTypes eBldg)
 			}
 		}
 
+#ifdef AUI_WARNING_FIXES
+		for (uint iI = 0; iI < GC.getNumUnitInfos(); iI++)
+#else
 		for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
+#endif
 		{
 			int iNumFreeUnits = entry->GetNumFreeUnits(iI);
 			if (iNumFreeUnits > 0)
@@ -343,7 +359,11 @@ int CvWonderProductionAI::GetWeight(BuildingTypes eBldg)
 /// Recommend highest-weighted wonder, also return total weight of all buildable wonders
 BuildingTypes CvWonderProductionAI::ChooseWonder(bool bUseAsyncRandom, bool bAdjustForOtherPlayers, int& iWonderWeight)
 {
+#ifdef AUI_WARNING_FIXES
+	uint iBldgLoop;
+#else
 	int iBldgLoop;
+#endif
 	int iWeight;
 	int iTurnsRequired;
 #if !defined(AUI_WONDER_PRODUCTION_FIX_CONSIDER_PRODUCTION_MODIFIERS) && !defined(AUI_PER_CITY_WONDER_PRODUCTION_AI)
@@ -560,7 +580,11 @@ BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncR
 #endif
 #endif
 {
+#ifdef AUI_WARNING_FIXES
+	uint iBldgLoop;
+#else
 	int iBldgLoop;
+#endif
 	int iWeight;
 #ifndef AUI_PER_CITY_WONDER_PRODUCTION_AI
 	int iCityLoop;

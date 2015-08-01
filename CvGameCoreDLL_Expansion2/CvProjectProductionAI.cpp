@@ -28,7 +28,11 @@ void CvProjectProductionAI::Reset()
 	m_ProjectAIWeights.clear();
 
 	// Loop through reading each one and add an entry with 0 weight to our vector
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.GetGameProjects()->GetNumProjects(); i++)
+#else
 	for(int i = 0; i < GC.GetGameProjects()->GetNumProjects(); i++)
+#endif
 	{
 		m_ProjectAIWeights.push_back(i, 0);
 	}
@@ -47,7 +51,11 @@ void CvProjectProductionAI::Read(FDataStream& kStream)
 	m_ProjectAIWeights.clear();
 
 	// Loop through reading each one and adding it to our vector
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.GetGameProjects()->GetNumProjects(); i++)
+#else
 	for(int i = 0; i < GC.GetGameProjects()->GetNumProjects(); i++)
+#endif
 	{
 		kStream >> iWeight;
 		m_ProjectAIWeights.push_back(i, iWeight);
@@ -62,7 +70,11 @@ void CvProjectProductionAI::Write(FDataStream& kStream) const
 	kStream << uiVersion;
 
 	// Loop through writing each entry
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.GetGameProjects()->GetNumProjects(); i++)
+#else
 	for(int i = 0; i < GC.GetGameProjects()->GetNumProjects(); i++)
+#endif
 	{
 		kStream << m_ProjectAIWeights.GetWeight(i);
 	}
@@ -71,7 +83,11 @@ void CvProjectProductionAI::Write(FDataStream& kStream) const
 /// Establish weights for one flavor; can be called multiple times to layer strategies
 void CvProjectProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 {
+#ifdef AUI_WARNING_FIXES
+	uint iProject;
+#else
 	int iProject;
+#endif
 	CvProjectEntry* entry(NULL);
 #ifdef AUI_PROJECT_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
 	ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
@@ -92,7 +108,7 @@ void CvProjectProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 				CvLuaArgsHandle args;
 				args->Push(m_pCity->getOwner());
 				args->Push(m_pCity->GetID());
-				args->Push(iProject);
+				args->Push(int(iProject));
 				args->Push(eFlavor);
 
 				int iResult = 0;
@@ -123,7 +139,11 @@ ProjectTypes CvProjectProductionAI::RecommendProject()
 	if(!m_pCity)
 		return NO_PROJECT;
 
+#ifdef AUI_WARNING_FIXES
+	uint iProjectLoop;
+#else
 	int iProjectLoop;
+#endif
 	int iWeight;
 	int iTurnsLeft;
 

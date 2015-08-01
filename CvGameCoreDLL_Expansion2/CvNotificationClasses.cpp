@@ -59,7 +59,11 @@ std::vector<CvNotificationEntry*>& CvNotificationXMLEntries::GetNotificationEntr
 }
 
 /// Number of defined notification
+#ifdef AUI_WARNING_FIXES
+uint CvNotificationXMLEntries::GetNumNotifications() const
+#else
 int CvNotificationXMLEntries::GetNumNotifications()
+#endif
 {
 	return m_paNotificationEntries.size();
 }
@@ -76,7 +80,11 @@ void CvNotificationXMLEntries::DeleteArray()
 }
 
 /// Get a specific entry
+#ifdef AUI_WARNING_FIXES
+_Ret_maybenull_ CvNotificationEntry* CvNotificationXMLEntries::GetEntry(int index)
+#else
 CvNotificationEntry* CvNotificationXMLEntries::GetEntry(int index)
+#endif
 {
 	FAssert(index < static_cast<int>(m_paNotificationEntries.size()));
 
@@ -86,7 +94,11 @@ CvNotificationEntry* CvNotificationXMLEntries::GetEntry(int index)
 }
 
 // Get an entry by ID (hash)
+#ifdef AUI_WARNING_FIXES
+_Ret_maybenull_ CvNotificationEntry* CvNotificationXMLEntries::GetByID(uint hHash)
+#else
 CvNotificationEntry* CvNotificationXMLEntries::GetByID(uint hHash)
+#endif
 {
 	EntryHashTable::iterator itr = m_mEntries.find(hHash);
 	if (itr != m_mEntries.end())
@@ -95,7 +107,11 @@ CvNotificationEntry* CvNotificationXMLEntries::GetByID(uint hHash)
 }
 
 // Get an entry by name
+#ifdef AUI_WARNING_FIXES
+_Ret_maybenull_ CvNotificationEntry* CvNotificationXMLEntries::GetByString(const char* pszName)
+#else
 CvNotificationEntry* CvNotificationXMLEntries::GetByString(const char* pszName)
+#endif
 {
 	if (pszName && pszName[0] != 0)
 		return GetByID(FString::Hash(pszName));

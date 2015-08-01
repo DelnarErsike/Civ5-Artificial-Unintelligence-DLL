@@ -537,7 +537,11 @@ int CvTreasury::CalculateUnitCost(int& iFreeUnits, int& iPaidUnits, int& iBaseUn
 	}
 
 	// Discounts for units of certain UnitCombat classes
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumUnitCombatClassInfos(); iI++)
+#else
 	for(int iI = 0; iI < GC.getNumUnitCombatClassInfos(); iI++)
+#endif
 	{
 		const UnitCombatTypes eUnitCombatClass = static_cast<UnitCombatTypes>(iI);
 		CvBaseInfo* pkUnitCombatClassInfo = GC.getUnitCombatClassInfo(eUnitCombatClass);

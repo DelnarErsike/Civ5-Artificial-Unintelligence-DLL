@@ -82,7 +82,11 @@ std::vector<CvEmphasisEntry*>& CvEmphasisXMLEntries::GetEmphasisEntries()
 }
 
 /// Number of defined policies
+#ifdef AUI_WARNING_FIXES
+uint CvEmphasisXMLEntries::GetNumEmphases() const
+#else
 int CvEmphasisXMLEntries::GetNumEmphases()
+#endif
 {
 	return m_paEmphasisEntries.size();
 }
@@ -99,7 +103,11 @@ void CvEmphasisXMLEntries::DeleteArray()
 }
 
 /// Get a specific entry
+#ifdef AUI_WARNING_FIXES
+_Ret_maybenull_ CvEmphasisEntry* CvEmphasisXMLEntries::GetEntry(uint index)
+#else
 CvEmphasisEntry* CvEmphasisXMLEntries::GetEntry(int index)
+#endif
 {
 	return m_paEmphasisEntries[index];
 }
@@ -151,7 +159,11 @@ void CvCityEmphases::Reset()
 	CvAssertMsg(m_pbEmphasize == NULL, "m_pbEmphasize not NULL!!!");
 	CvAssertMsg(GC.getNumEmphasisInfos() > 0,  "GC.getNumEmphasizeInfos() is not greater than zero but an array is being allocated in CvCityEmphases::Reset");
 	m_pbEmphasize = FNEW(bool[GC.getNumEmphasisInfos()], c_eCiv5GameplayDLL, 0);
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumEmphasisInfos(); iI++)
+#else
 	for(int iI = 0; iI < GC.getNumEmphasisInfos(); iI++)
+#endif
 	{
 		m_pbEmphasize[iI] = false;
 	}
@@ -208,6 +220,11 @@ void CvCityEmphases::SetEmphasize(EmphasizeTypes eIndex, bool bNewValue)
 		m_pbEmphasize[eIndex] = bNewValue;
 
 		CvEmphasisEntry* pkEmphasis = GC.getEmphasisInfo(eIndex);
+
+#ifdef AUI_WARNING_FIXES
+		if (!pkEmphasis)
+			return;
+#endif
 
 		if(pkEmphasis->IsAvoidGrowth())
 		{

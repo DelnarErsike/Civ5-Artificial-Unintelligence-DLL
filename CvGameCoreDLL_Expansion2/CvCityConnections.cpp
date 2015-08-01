@@ -53,7 +53,11 @@ void CvCityConnections::Init(CvPlayer* pPlayer)
 	ResizeRouteInfo(m_uiRouteInfosDimension);
 
 	m_aBuildingsAllowWaterRoutes.clear();
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.GetGameBuildings()->GetNumBuildings(); i++)
+#else
 	for(int i = 0; i < GC.GetGameBuildings()->GetNumBuildings(); i++)
+#endif
 	{
 		const BuildingTypes eBuilding = static_cast<BuildingTypes>(i);
 		CvBuildingEntry* pkBuildingInfo = pkBuildingEntries->GetEntry(eBuilding);

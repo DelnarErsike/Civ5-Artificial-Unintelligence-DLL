@@ -684,9 +684,15 @@ public:
 	bool isInvisibleVisible(TeamTypes eTeam, InvisibleTypes eInvisible) const;
 	void changeInvisibleVisibilityCount(TeamTypes eTeam, InvisibleTypes eInvisible, int iChange);
 
+#ifdef AUI_WARNING_FIXES
+	uint getNumUnits() const;
+	uint GetNumCombatUnits() const;
+	CvUnit* getUnitByIndex(uint iIndex) const;
+#else
 	int getNumUnits() const;
 	int GetNumCombatUnits();
 	CvUnit* getUnitByIndex(int iIndex) const;
+#endif
 	int getUnitIndex(CvUnit* pUnit) const;
 	void addUnit(CvUnit* pUnit, bool bUpdate = true);
 	void removeUnit(CvUnit* pUnit, bool bUpdate = true);

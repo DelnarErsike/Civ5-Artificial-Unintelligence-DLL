@@ -921,7 +921,11 @@ CvReligionBeliefs::CvReligionBeliefs(const CvReligionBeliefs& source)
 	m_ReligionBeliefs = source.m_ReligionBeliefs;
 
 	m_paiBuildingClassEnabled = FNEW(int[GC.getNumBuildingClassInfos()], c_eCiv5GameplayDLL, 0);
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#else
 	for(int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#endif
 	{
 		CvBuildingClassInfo* pkBuildingClassInfo = GC.getBuildingClassInfo((BuildingClassTypes)iI);
 		if(!pkBuildingClassInfo)
@@ -973,7 +977,11 @@ void CvReligionBeliefs::Reset()
 	m_ReligionBeliefs.clear();
 
 	m_paiBuildingClassEnabled = FNEW(int[GC.getNumBuildingClassInfos()], c_eCiv5GameplayDLL, 0);
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#else
 	for(int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#endif
 	{
 		CvBuildingClassInfo* pkBuildingClassInfo = GC.getBuildingClassInfo((BuildingClassTypes)iI);
 		if(!pkBuildingClassInfo)
@@ -1024,7 +1032,11 @@ void CvReligionBeliefs::AddBelief(BeliefTypes eBelief)
 	m_eObsoleteEra = belief->GetObsoleteEra();
 	m_eResourceRevealed = belief->GetResourceRevealed();
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#else
 	for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#endif
 	{
 		if (belief->IsBuildingClassEnabled(iI))
 		{

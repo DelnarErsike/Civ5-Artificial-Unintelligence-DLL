@@ -100,7 +100,11 @@ void InitializeArray(T*& pArray, const char* szTableName, T default = (T)0);
 	const char* GetErrorMessage() const;
 
 private:
+#ifdef AUI_VC120_FORMALITIES
+	typedef std::tr1::unordered_map<std::string, Database::Results*> ResultsMap;
+#else
 	typedef stdext::hash_map<std::string, Database::Results*> ResultsMap;
+#endif
 	ResultsMap m_storedResults;
 };
 

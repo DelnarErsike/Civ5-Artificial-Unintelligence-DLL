@@ -9,7 +9,11 @@
 #include "CvDllImprovementInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllImprovementInfo::CvDllImprovementInfo(_In_ CvImprovementEntry* pImprovementInfo)
+#else
 CvDllImprovementInfo::CvDllImprovementInfo(CvImprovementEntry* pImprovementInfo)
+#endif
 	: m_pImprovementInfo(pImprovementInfo)
 	, m_uiRefCount(1)
 {

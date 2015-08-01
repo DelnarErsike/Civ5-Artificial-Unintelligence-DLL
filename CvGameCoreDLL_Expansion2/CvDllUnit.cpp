@@ -12,7 +12,11 @@
 #include "CvDllPlot.h"
 #include "CvDllUnitInfo.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllUnit::CvDllUnit(_In_ CvUnit* pUnit)
+#else
 CvDllUnit::CvDllUnit(CvUnit* pUnit)
+#endif
 	: m_pUnit(pUnit)
 	, m_uiRefCount(1)
 {
@@ -204,7 +208,11 @@ void CvDllUnit::GetPosition(int& iX, int& iY) const
 	iY = m_pUnit->getY();
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+bool CvDllUnit::CanSwapWithUnitHere(_In_ ICvPlot1* pPlot) const
+#else
 bool CvDllUnit::CanSwapWithUnitHere(ICvPlot1* pPlot) const
+#endif
 {
 	CvPlot* pkPlot = (NULL != pPlot)? static_cast<CvDllPlot*>(pPlot)->GetInstance() : NULL;
 	FAssert(pkPlot != NULL);
@@ -214,7 +222,11 @@ bool CvDllUnit::CanSwapWithUnitHere(ICvPlot1* pPlot) const
 		return false;
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+bool CvDllUnit::CanEmbarkOnto(_In_ ICvPlot1* pOriginPlot, _In_ ICvPlot1* pTargetPlot, bool bOverrideEmbarkedCheck) const
+#else
 bool CvDllUnit::CanEmbarkOnto(ICvPlot1* pOriginPlot, ICvPlot1* pTargetPlot, bool bOverrideEmbarkedCheck) const
+#endif
 {
 	CvPlot* pkOriginPlot = (NULL != pOriginPlot)? static_cast<CvDllPlot*>(pOriginPlot)->GetInstance() : NULL;
 	CvPlot* pkTargetPlot = (NULL != pTargetPlot)? static_cast<CvDllPlot*>(pTargetPlot)->GetInstance() : NULL;
@@ -227,7 +239,11 @@ bool CvDllUnit::CanEmbarkOnto(ICvPlot1* pOriginPlot, ICvPlot1* pTargetPlot, bool
 		return false;
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+bool CvDllUnit::CanDisembarkOnto(_In_ ICvPlot1* pOriginPlot, _In_ ICvPlot1* pTargetPlot, bool bOverrideEmbarkedCheck) const
+#else
 bool CvDllUnit::CanDisembarkOnto(ICvPlot1* pOriginPlot, ICvPlot1* pTargetPlot, bool bOverrideEmbarkedCheck) const
+#endif
 {
 	CvPlot* pkOriginPlot = (NULL != pOriginPlot)? static_cast<CvDllPlot*>(pOriginPlot)->GetInstance() : NULL;
 	CvPlot* pkTargetPlot = (NULL != pTargetPlot)? static_cast<CvDllPlot*>(pTargetPlot)->GetInstance() : NULL;

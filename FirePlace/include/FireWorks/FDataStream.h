@@ -20,6 +20,9 @@
 #include "FFastVector.h"
 #include "FArray.h"
 #include "FEndian.h"
+#ifdef AUI_SIMD_ADDITIONS
+#include <emmintrin.h>
+#endif
 
 class YouMustImplementASerializeOperatorForThisTypeError;
 class FStringA;
@@ -143,6 +146,16 @@ protected:
 	void Write(int, const float values[]);
 	void Write(int, const double values[]);
 	void Write(int, const GUID values[]);
+#ifdef AUI_SIMD_ADDITIONS
+	void Write(const __m128i& m128i)
+	{
+		Write(4, m128i.m128i_u32);
+	}
+	void Write(const __m128d& m128d)
+	{
+		Write(2, m128d.m128d_f64);
+	}
+#endif
 
 		// Reading
 	unsigned int ReadString(FStringA& szName);
@@ -202,7 +215,20 @@ protected:
 	void Read(int, WCHAR values[]);
 	void Read(int, float values[]);
 	void Read(int, double values[]);
-
+#ifdef AUI_SIMD_ADDITIONS
+	void Read(__m128i& m128i)
+	{
+		UINT32 PArray[4];
+		Read(4, PArray);
+		m128i = _mm_set_epi32(PArray[3], PArray[2], PArray[1], PArray[0]);
+	}
+	void Read(__m128d& m128d)
+	{
+		double PArray[2];
+		Read(2, PArray);
+		m128d = _mm_set_pd(PArray[1], PArray[0]);
+	}
+#endif
 
 
 protected:

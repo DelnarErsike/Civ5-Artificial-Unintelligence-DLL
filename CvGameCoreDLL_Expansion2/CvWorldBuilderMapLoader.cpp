@@ -177,7 +177,11 @@ const CvWorldBuilderMapLoaderMapInfo& CvWorldBuilderMapLoader::GetCurrentMapInfo
 	return sg_kMapInfo;
 }
 
+#ifdef AUI_WARNING_FIXES
+bool CvWorldBuilderMapLoader::Preload(_In_z_ const wchar_t* wszFilename, bool bScenario)
+#else
 bool CvWorldBuilderMapLoader::Preload(const wchar_t* wszFilename, bool bScenario)
+#endif
 {
 	InitTypeDesc();
 
@@ -319,7 +323,11 @@ void CvWorldBuilderMapLoader::SetupPlayers()
 		const CvWorldBuilderMap::Player& kPlayer = sg_kSave.GetPlayer(i);
 
 		CivilizationTypes eCivType = NO_CIVILIZATION;
+#ifdef AUI_WARNING_FIXES
+		for (uint iCiv = 0; iCiv < GC.getNumCivilizationInfos(); ++iCiv)
+#else
 		for(int iCiv = 0; iCiv < GC.getNumCivilizationInfos(); ++iCiv)
+#endif
 		{
 			CvCivilizationInfo* pkCivilization = GC.getCivilizationInfo((CivilizationTypes)iCiv);
 			if(pkCivilization != NULL && strcmp(kPlayer.m_szCivType, pkCivilization->GetType()) == 0)
@@ -332,7 +340,11 @@ void CvWorldBuilderMapLoader::SetupPlayers()
 		CvPreGame::setCivilization(ePlayer, eCivType);
 
 		PlayerColorTypes eColorType = NO_PLAYERCOLOR;
+#ifdef AUI_WARNING_FIXES
+		for (uint iColor = 0; iColor < GC.GetNumPlayerColorInfos(); ++iColor)
+#else
 		for(int iColor = 0; iColor < GC.GetNumPlayerColorInfos(); ++iColor)
+#endif
 		{
 			CvPlayerColorInfo* pkColor = GC.GetPlayerColorInfo((PlayerColorTypes)iColor);
 			if(pkColor != NULL && strcmp(kPlayer.m_szTeamColor, pkColor->GetType()) == 0)
@@ -347,7 +359,11 @@ void CvWorldBuilderMapLoader::SetupPlayers()
 		if(!(eStatus == SS_TAKEN && CvPreGame::overrideScenarioHandicap()))
 		{
 			HandicapTypes eHandicap = NO_HANDICAP;
+#ifdef AUI_WARNING_FIXES
+			for (uint iHandicap = 0; iHandicap < GC.getNumHandicapInfos(); ++iHandicap)
+#else
 			for(int iHandicap = 0; iHandicap < GC.getNumHandicapInfos(); ++iHandicap)
+#endif
 			{
 				CvHandicapInfo* pkHandicap = GC.getHandicapInfo((HandicapTypes)iHandicap);
 				if(pkHandicap != NULL && strcmp(kPlayer.m_szHandicap, pkHandicap->GetType()) == 0)
@@ -387,7 +403,11 @@ void CvWorldBuilderMapLoader::SetupPlayers()
 		}
 	}
 
+#ifdef AUI_WARNING_FIXES
+	const byte uiCityStateCount = std::min(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
+#else
 	const uint uiCityStateCount = std::min(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
+#endif
 
 	if(uiCityStateCount > 0)
 		CvPreGame::setNumMinorCivs(uiCityStateCount);
@@ -406,7 +426,11 @@ void CvWorldBuilderMapLoader::SetupPlayers()
 		const CvWorldBuilderMap::Player& kPlayer = sg_kSave.GetCityState(i);
 
 		MinorCivTypes eCivType = NO_MINORCIV;
+#ifdef AUI_WARNING_FIXES
+		for (uint iCiv = 0; iCiv < GC.getNumMinorCivInfos(); ++iCiv)
+#else
 		for(int iCiv = 0; iCiv < GC.getNumMinorCivInfos(); ++iCiv)
+#endif
 		{
 			CvMinorCivInfo* pkCivilization = GC.getMinorCivInfo((MinorCivTypes)iCiv);
 			if(pkCivilization != NULL && strcmp(kPlayer.m_szCivType, pkCivilization->GetType()) == 0)
@@ -419,7 +443,11 @@ void CvWorldBuilderMapLoader::SetupPlayers()
 		CvPreGame::setMinorCivType(ePlayer, eCivType);
 
 		PlayerColorTypes eColorType = NO_PLAYERCOLOR;
+#ifdef AUI_WARNING_FIXES
+		for (uint iColor = 0; iColor < GC.GetNumPlayerColorInfos(); ++iColor)
+#else
 		for(int iColor = 0; iColor < GC.GetNumPlayerColorInfos(); ++iColor)
+#endif
 		{
 			CvPlayerColorInfo* pkColor = GC.GetPlayerColorInfo((PlayerColorTypes)iColor);
 			if(pkColor != NULL && strcmp(kPlayer.m_szTeamColor, pkColor->GetType()) == 0)
@@ -432,7 +460,11 @@ void CvWorldBuilderMapLoader::SetupPlayers()
 		CvPreGame::setPlayerColor(ePlayer, eColorType);
 
 		HandicapTypes eHandicap = NO_HANDICAP;
+#ifdef AUI_WARNING_FIXES
+		for (uint iHandicap = 0; iHandicap < GC.getNumHandicapInfos(); ++iHandicap)
+#else
 		for(int iHandicap = 0; iHandicap < GC.getNumHandicapInfos(); ++iHandicap)
+#endif
 		{
 			CvHandicapInfo* pkHandicap = GC.getHandicapInfo((HandicapTypes)iHandicap);
 			if(pkHandicap != NULL && strcmp(kPlayer.m_szHandicap, pkHandicap->GetType()) == 0)
@@ -459,8 +491,12 @@ void SetPlayerInitialItems(CvPlayer& kGameplayPlayer, const CvWorldBuilderMap::P
 
 	kGameplayPlayer.setJONSCulture(kSavedPlayer.m_uiCulture);
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iPolicy = 0; iPolicy < GC.getNumPolicyInfos(); ++iPolicy)
+#else
 	const int iPolicyCount = GC.getNumPolicyInfos();
 	for(int iPolicy = 0; iPolicy < iPolicyCount; ++iPolicy)
+#endif
 	{
 		const PolicyTypes ePolicy = (PolicyTypes)iPolicy;
 		if(kSavedPlayer.m_kPolicies[iPolicy])
@@ -517,8 +553,12 @@ void SetPlayerInitialItems(CvPlayer& kGameplayPlayer, const CvWorldBuilderMap::P
 		CvTeam& kTeam = GET_TEAM(eTeam);
 
 		int iStartingEra = 0;
+#ifdef AUI_WARNING_FIXES
+		for (uint iEra = 0; iEra < GC.getNumEraInfos(); ++iEra)
+#else
 		const int iEraCount = GC.getNumEraInfos();
 		for(int iEra = 0; iEra < iEraCount; ++iEra)
+#endif
 		{
 			const EraTypes eEra = (EraTypes)iEra;
 			const CvEraInfo* pkEra = GC.getEraInfo(eEra);
@@ -531,8 +571,12 @@ void SetPlayerInitialItems(CvPlayer& kGameplayPlayer, const CvWorldBuilderMap::P
 
 		if(iStartingEra > 0)
 		{
+#ifdef AUI_WARNING_FIXES
+			for (uint iTech = 0; iTech < GC.getNumTechInfos(); ++iTech)
+#else
 			const int iTechCount = GC.getNumTechInfos();
 			for(int iTech = 0; iTech < iTechCount; ++iTech)
+#endif
 			{
 				const TechTypes eTech = (TechTypes)iTech;
 				const CvTechEntry* pkTech = GC.getTechInfo(eTech);
@@ -545,8 +589,12 @@ void SetPlayerInitialItems(CvPlayer& kGameplayPlayer, const CvWorldBuilderMap::P
 
 void SetTeamInitialItems(CvTeam& kGameplayTeam, const CvWorldBuilderMap::Team& kSavedTeam)
 {
+#ifdef AUI_WARNING_FIXES
+	for (uint iTech = 0; iTech < GC.getNumTechInfos(); ++iTech)
+#else
 	const int iTechCount = GC.getNumTechInfos();
 	for(int iTech = 0; iTech < iTechCount; ++iTech)
+#endif
 	{
 		const TechTypes eTech = (TechTypes)iTech;
 		if(kSavedTeam.m_kTechs[iTech])
@@ -1314,14 +1362,22 @@ bool CvWorldBuilderMapLoader::InitMap()
 	return true;
 }
 
+#ifdef AUI_WARNING_FIXES
+bool CvWorldBuilderMapLoader::Load(_In_z_ const wchar_t* wszFilename)
+#else
 bool CvWorldBuilderMapLoader::Load(const wchar_t* wszFilename)
+#endif
 {
 	InitTypeDesc();
 
 	return sg_kSave.Load(wszFilename, sg_kMapTypeDesc) && InitMap();
 }
 
+#ifdef AUI_WARNING_FIXES
+bool CvWorldBuilderMapLoader::Save(_In_z_ const wchar_t* wszFilename, const char* szMapName)
+#else
 bool CvWorldBuilderMapLoader::Save(const wchar_t* wszFilename, const char* szMapName)
+#endif
 {
 	InitTypeDesc();
 
@@ -1937,7 +1993,11 @@ int CvWorldBuilderMapLoader::GetMapPlayerCount()
 	return MAX_CIV_PLAYERS;
 }
 
+#ifdef AUI_WARNING_FIXES
+uint CvWorldBuilderMapLoader::PreviewPlayableCivCount(_In_z_ const wchar_t* wszFilename)
+#else
 uint CvWorldBuilderMapLoader::PreviewPlayableCivCount(const wchar_t* wszFilename)
+#endif
 {
 	return CvWorldBuilderMap::PreviewPlayableCivCount(wszFilename);
 }
@@ -1983,8 +2043,12 @@ int CvWorldBuilderMapLoader::GetMapPreview(lua_State* L)
 
 		const char* szDefaultSpeed = sg_kTempMap.GetDefaultGameSpeed();
 		GameSpeedTypes eDefaultSpeed = (GameSpeedTypes)GC.getSTANDARD_GAMESPEED();
+#ifdef AUI_WARNING_FIXES
+		for (uint i = 0; i < GC.getNumGameSpeedInfos(); ++i)
+#else
 		const int iSpeedCount = GC.getNumGameSpeedInfos();
 		for(int i = 0; i < iSpeedCount; ++i)
+#endif
 		{
 			const GameSpeedTypes eSpeed = (GameSpeedTypes)i;
 			const CvGameSpeedInfo* pkSpeed = GC.getGameSpeedInfo(eSpeed);
@@ -2006,7 +2070,11 @@ int CvWorldBuilderMapLoader::GetMapPreview(lua_State* L)
 			if(kPlayer.m_bPlayable)
 			{
 				bool bFound = false;
+#ifdef AUI_WARNING_FIXES
+				for (uint iEra = 0; iEra < GC.getNumEraInfos(); ++iEra)
+#else
 				for(int iEra = 0; iEra < GC.getNumEraInfos(); ++iEra)
+#endif
 				{
 					CvEraInfo* pkEraInfo = GC.getEraInfo((EraTypes)iEra);
 					if(pkEraInfo != NULL && strcmp(pkEraInfo->GetType(), kPlayer.m_szEra) == 0)

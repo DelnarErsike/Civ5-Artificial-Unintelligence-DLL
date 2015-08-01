@@ -26,7 +26,11 @@ UnitClassTypes CvGameQueries::GetLeastAdvancedUnitClassNobodyHas(bool bUseRandom
 
 	bool bValid;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumUnitClassInfos(); i++)
+#else
 	for (int i = 0; i < GC.getNumUnitClassInfos(); i++)
+#endif
 	{
 		const UnitClassTypes eUnitClass = static_cast<UnitClassTypes>(i);
 		CvUnitClassInfo* pkUnitClassInfo = GC.getUnitClassInfo(eUnitClass);

@@ -5288,7 +5288,11 @@ bool CvDiplomacyAI::IsLuxuryRequest(PlayerTypes ePlayer, CvDeal* pDeal, int& iWe
 
 	ResourceTypes eLuxuryToAskFor = NO_RESOURCE;
 
+#ifdef AUI_WARNING_FIXES
+	uint iResourceLoop;
+#else
 	int iResourceLoop;
+#endif
 
 	// See if the other player has a Resource to trade
 	for(iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)

@@ -267,7 +267,11 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 #ifndef AUI_DANGER_PLOTS_REMADE
 	int iCitadelValue = GetDangerValueOfCitadel();
 #endif
+#ifdef AUI_WARNING_FIXES
+	uint iPlotLoop;
+#else
 	int iPlotLoop;
+#endif
 	CvPlot* pPlot, *pAdjacentPlot;
 	for(iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
 	{
@@ -2224,7 +2228,6 @@ int CvDangerPlotContents::GetCitadelDamage(PlayerTypes ePlayer) const
 			int iCitadelRange = 1;
 			CvPlot* pLoopPlot;
 
-			ImprovementTypes eImprovement;
 			int iDamage;
 
 			for (int iDY = -iCitadelRange; iDY <= iCitadelRange; iDY++)

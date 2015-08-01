@@ -257,7 +257,12 @@ void CvDllNetMessageHandler::ResponseDoCommand(PlayerTypes ePlayer, int iUnitID,
 
 	if(pkUnit != NULL)
 	{
+#ifdef AUI_WARNING_FIXES
+		CvCommandInfo* pCommandInfo = GC.getCommandInfo(eCommand);
+		if (bAlt && pCommandInfo && pCommandInfo->getAll())
+#else
 		if(bAlt && GC.getCommandInfo(eCommand)->getAll())
+#endif
 		{
 			const UnitTypes eUnitType = pkUnit->getUnitType();
 
@@ -797,7 +802,11 @@ void CvDllNetMessageHandler::ResponseIdeologyChoice(PlayerTypes ePlayer, PolicyB
 	kPlayer.GetPlayerPolicies()->SetPolicyBranchUnlocked(eChoice, true, false);
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvDllNetMessageHandler::ResponseRenameCity(PlayerTypes ePlayer, int iCityID, _In_z_ const char* szName)
+#else
 void CvDllNetMessageHandler::ResponseRenameCity(PlayerTypes ePlayer, int iCityID, const char* szName)
+#endif
 {
 	CvPlayerAI& kPlayer = GET_PLAYER(ePlayer);
 	CvCity* pkCity = kPlayer.getCity(iCityID);
@@ -808,7 +817,11 @@ void CvDllNetMessageHandler::ResponseRenameCity(PlayerTypes ePlayer, int iCityID
 	}
 }
 //------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+void CvDllNetMessageHandler::ResponseRenameUnit(PlayerTypes ePlayer, int iUnitID, _In_z_ const char* szName)
+#else
 void CvDllNetMessageHandler::ResponseRenameUnit(PlayerTypes ePlayer, int iUnitID, const char* szName)
+#endif
 {
 	CvPlayerAI& kPlayer = GET_PLAYER(ePlayer);
 	CvUnit* pkUnit = kPlayer.getUnit(iUnitID);
@@ -957,7 +970,11 @@ void CvDllNetMessageHandler::ResponseSwapUnits(PlayerTypes ePlayer, int iUnitID,
 			CvPlot* pkOriginationPlot = pkUnit->plot();
 
 			// Find unit to move out
+#ifdef AUI_WARNING_FIXES
+			for (uint iI = 0; iI < pkTargetPlot->getNumUnits(); iI++)
+#else
 			for(int iI = 0; iI < pkTargetPlot->getNumUnits(); iI++)
+#endif
 			{
 				CvUnit* pkUnit2 = pkTargetPlot->getUnitByIndex(iI);
 

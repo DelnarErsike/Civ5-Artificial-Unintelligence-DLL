@@ -9,7 +9,11 @@
 #include "CvDllEraInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllEraInfo::CvDllEraInfo(_In_ CvEraInfo* pEraInfo)
+#else
 CvDllEraInfo::CvDllEraInfo(CvEraInfo* pEraInfo)
+#endif
 	: m_pEraInfo(pEraInfo)
 	, m_uiRefCount(1)
 {

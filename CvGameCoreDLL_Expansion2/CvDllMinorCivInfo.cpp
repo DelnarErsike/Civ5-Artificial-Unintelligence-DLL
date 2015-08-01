@@ -11,7 +11,11 @@
 
 #include "CvMinorCivAI.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllMinorCivInfo::CvDllMinorCivInfo(_In_ CvMinorCivInfo* pMinorCivInfo)
+#else
 CvDllMinorCivInfo::CvDllMinorCivInfo(CvMinorCivInfo* pMinorCivInfo)
+#endif
 	: m_pMinorCivInfo(pMinorCivInfo)
 	, m_uiRefCount(1)
 {

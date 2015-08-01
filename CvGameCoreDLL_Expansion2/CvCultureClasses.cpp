@@ -294,7 +294,11 @@ PlayerTypes CvGameCulture::GetGreatWorkController(int iIndex) const
 		CvCity* pCity = NULL;
 		for (pCity = GET_PLAYER(ePlayer).firstCity(&iCityLoop); pCity != NULL; pCity = GET_PLAYER(ePlayer).nextCity(&iCityLoop))
 		{
+#ifdef AUI_WARNING_FIXES
+			for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 			for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 			{
 				CvCivilizationInfo& playerCivilizationInfo = GET_PLAYER(ePlayer).getCivilizationInfo();
 				BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)iBuildingClassLoop);
@@ -341,7 +345,11 @@ int CvGameCulture::GetGreatWorkCurrentThemingBonus (int iIndex) const
 		CvCity* pCity = NULL;
 		for (pCity = GET_PLAYER(ePlayer).firstCity(&iCityLoop); pCity != NULL; pCity = GET_PLAYER(ePlayer).nextCity(&iCityLoop))
 		{
+#ifdef AUI_WARNING_FIXES
+			for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 			for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 			{
 				BuildingClassTypes eBuildingClass = (BuildingClassTypes)iBuildingClassLoop;
 				CvCivilizationInfo& playerCivilizationInfo = GET_PLAYER(ePlayer).getCivilizationInfo();
@@ -459,7 +467,7 @@ bool CvGameCulture::CanSwapGreatWorks(PlayerTypes ePlayer1, int iWork1, PlayerTy
 	CvCity* pCity = NULL;
 	for (pCity = kPlayer1.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer1.nextCity(&iCityLoop))
 	{
-		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		for (uint iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
 		{
 			CvCityBuildings* pCityBuildings = pCity->GetCityBuildings();
 			if (pCityBuildings->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
@@ -484,7 +492,7 @@ bool CvGameCulture::CanSwapGreatWorks(PlayerTypes ePlayer1, int iWork1, PlayerTy
 NextPlayer:
 	for (pCity = kPlayer2.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer2.nextCity(&iCityLoop))
 	{
-		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		for (uint iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
 		{
 			CvCityBuildings* pCityBuildings = pCity->GetCityBuildings();
 			if (pCityBuildings->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
@@ -527,7 +535,7 @@ void CvGameCulture::SwapGreatWorksNoCheck(PlayerTypes ePlayer1, int iWork1, Play
 	CvCity* pCity = NULL;
 	for (pCity = kPlayer1.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer1.nextCity(&iCityLoop))
 	{
-		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		for (uint iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
 		{
 			pCityBuildings1 = pCity->GetCityBuildings();
 			if (pCityBuildings1->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
@@ -556,7 +564,7 @@ void CvGameCulture::SwapGreatWorksNoCheck(PlayerTypes ePlayer1, int iWork1, Play
 NextPlayer:
 	for (pCity = kPlayer2.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer2.nextCity(&iCityLoop))
 	{
-		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		for (uint iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
 		{
 			pCityBuildings2 = pCity->GetCityBuildings();
 			if (pCityBuildings2->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
@@ -785,7 +793,7 @@ bool CvGameCulture::SwapGreatWorks (PlayerTypes ePlayer1, int iWork1, PlayerType
 	CvCityBuildings* pCityBuildings2 = NULL;
 	for (pCity = kPlayer1.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer1.nextCity(&iCityLoop))
 	{
-		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		for (uint iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
 		{
 			pCityBuildings1 = pCity->GetCityBuildings();
 			if (pCityBuildings1->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
@@ -814,7 +822,7 @@ bool CvGameCulture::SwapGreatWorks (PlayerTypes ePlayer1, int iWork1, PlayerType
 NextPlayer:
 	for (pCity = kPlayer2.firstCity(&iCityLoop); pCity != NULL; pCity = kPlayer2.nextCity(&iCityLoop))
 	{
-		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		for (uint iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
 		{
 			pCityBuildings2 = pCity->GetCityBuildings();
 			if (pCityBuildings2->GetNumBuilding((BuildingTypes)iBuildingLoop) > 0)
@@ -1224,7 +1232,11 @@ bool CvPlayerCulture::ControlsGreatWork (int iIndex)
 
 	for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 		for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 		{
 			CvCivilizationInfo& playerCivilizationInfo = m_pPlayer->getCivilizationInfo();
 			BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)iBuildingClassLoop);
@@ -1260,7 +1272,11 @@ bool CvPlayerCulture::GetGreatWorkLocation(int iSearchIndex, int &iReturnCityID,
 
 	for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 		for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 		{
 			CvCivilizationInfo& playerCivilizationInfo = m_pPlayer->getCivilizationInfo();
 			BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)iBuildingClassLoop);
@@ -1326,7 +1342,7 @@ void CvPlayerCulture::DoSwapGreatWorks()
 	for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 	{
 #ifdef AUI_DO_SWAP_GREAT_WORKS_REMADE
-		for (int iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
+		for (uint iBuildingLoop = 0; iBuildingLoop < GC.getNumBuildingInfos(); iBuildingLoop++)
 		{
 			BuildingTypes eBuilding = (BuildingTypes)iBuildingLoop;
 			if (pLoopCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0)
@@ -1557,12 +1573,12 @@ void CvPlayerCulture::SortGreatWorkArray(GreatWorksVector& kWorks)
 	int iDifferentPlayerCount = 0;
 	for (int iI = 0; iI < MAX_PLAYERS; iI++)
 	{
-		if (aiNumSeenFromPlayers[MAX_PLAYERS] > 0)
+		if (aiNumSeenFromPlayers[iI] > 0)
 			iDifferentPlayerCount += 1;
 	}
 	for (int iI = 0; iI < iNumEras; iI++)
 	{
-		if (aiNumSeenFromEras[iNumEras] > 0)
+		if (aiNumSeenFromEras[iI] > 0)
 			iDifferentEraCount += 1;
 	}
 
@@ -3519,7 +3535,11 @@ void CvPlayerCulture::DoTurn()
 		CvCity* pLoopCity = NULL;
 		for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 		{
+#ifdef AUI_WARNING_FIXES
+			for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 			for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 			{
 				CvCivilizationInfo& playerCivilizationInfo = m_pPlayer->getCivilizationInfo();
 				BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)iBuildingClassLoop);
@@ -3575,7 +3595,11 @@ void CvPlayerCulture::DoTurn()
 			int iNumWorksInBroadcastTowers = 0;
 			for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 			{
+#ifdef AUI_WARNING_FIXES
+				for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 				for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 				{
 					CvCivilizationInfo& playerCivilizationInfo = m_pPlayer->getCivilizationInfo();
 					BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)iBuildingClassLoop);
@@ -3694,7 +3718,11 @@ int CvPlayerCulture::GetInfluencePerTurn(PlayerTypes ePlayer) const
 			for (pLoopCity = GET_PLAYER(ePlayer).firstCity(&iLoopCity); pLoopCity != NULL; pLoopCity = GET_PLAYER(ePlayer).nextCity(&iLoopCity))
 			{
 				// Buildings
+#ifdef AUI_WARNING_FIXES
+				for (uint jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#else
 				for(int jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#endif
 				{
 					BuildingClassTypes eBuildingClass = (BuildingClassTypes)jJ;
 
@@ -5413,7 +5441,11 @@ int CvCityCulture::GetNumAvailableGreatWorkSlots(GreatWorkSlotType eSlotType) co
 void CvCityCulture::ClearGreatWorks()
 {
 	CvPlayer &kCityPlayer = GET_PLAYER(m_pCity->getOwner());
+#ifdef AUI_WARNING_FIXES
+	for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 	for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 	{
 		CvCivilizationInfo& playerCivilizationInfo = kCityPlayer.getCivilizationInfo();
 		BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)iBuildingClassLoop);
@@ -5442,7 +5474,11 @@ GreatWorkSlotType CvCityCulture::GetSlotTypeFirstAvailableCultureBuilding() cons
 	GreatWorkSlotType eRtnValue = NO_GREAT_WORK_SLOT;
 	CvPlayer &kCityPlayer = GET_PLAYER(m_pCity->getOwner());
 
+#ifdef AUI_WARNING_FIXES
+	for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 	for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 	{
 		CvCivilizationInfo& playerCivilizationInfo = kCityPlayer.getCivilizationInfo();
 		BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)iBuildingClassLoop);
@@ -5510,7 +5546,11 @@ int CvCityCulture::GetBaseTourismBeforeModifiers()
 		}
 
 		// Buildings
+#ifdef AUI_WARNING_FIXES
+		for (uint jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#else
 		for(int jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#endif
 		{
 			BuildingClassTypes eBuildingClass = (BuildingClassTypes)jJ;
 
@@ -5534,7 +5574,11 @@ int CvCityCulture::GetBaseTourismBeforeModifiers()
 	}
 
 	// Tech enhanced Tourism
+#ifdef AUI_WARNING_FIXES
+	for (uint jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#else
 	for(int jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#endif
 	{
 		BuildingClassTypes eBuildingClass = (BuildingClassTypes)jJ;
 
@@ -5604,7 +5648,11 @@ int CvCityCulture::GetBaseTourism()
 	
 
 	int iBuildingMod = 0;
+#ifdef AUI_WARNING_FIXES
+	for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 	for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 	{
 		CvCivilizationInfo& playerCivilizationInfo = kPlayer.getCivilizationInfo();
 		BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)iBuildingClassLoop);
@@ -5787,7 +5835,11 @@ CvString CvCityCulture::GetTourismTooltip()
 		}
 		szRtnValue += GetLocalizedText("TXT_KEY_CO_CITY_TOURISM_FAITH_BUILDINGS", iSacredSitesTourism);
 
+#ifdef AUI_WARNING_FIXES
+		for (uint jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#else
 		for(int jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#endif
 		{
 			BuildingClassTypes eBuildingClass = (BuildingClassTypes)jJ;
 
@@ -5816,7 +5868,11 @@ CvString CvCityCulture::GetTourismTooltip()
 	}
 
 	// Tech enhanced Tourism
+#ifdef AUI_WARNING_FIXES
+	for (uint jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#else
 	for(int jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#endif
 	{
 		BuildingClassTypes eBuildingClass = (BuildingClassTypes)jJ;
 
@@ -5847,7 +5903,11 @@ CvString CvCityCulture::GetTourismTooltip()
 	}
 
 	int iBuildingMod = 0;
+#ifdef AUI_WARNING_FIXES
+	for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 	for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 	{
 		CvCivilizationInfo& playerCivilizationInfo = kCityPlayer.getCivilizationInfo();
 		BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)iBuildingClassLoop);
@@ -6358,7 +6418,11 @@ void CvCityCulture::LogGreatWorks(FILogFile* pLog)
 {
 	CvString strMsg;
 	strMsg = m_pCity->getName() + ", ";
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#else
 	for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#endif
 	{
 		BuildingClassTypes eBldgClass = (BuildingClassTypes)iI;
 		

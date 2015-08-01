@@ -498,7 +498,7 @@ void CvFlavorManager::RandomizeWeights()
 #ifdef AUI_FLAVOR_MANAGER_RANDOMIZE_WEIGHTS_APPLY_RANDOM_ON_GS_FLAVOR_TWICE
 		// modifications for flavors that govern grand strategy get applied twice
 		bApplyTwice = false;
-		for (int iGrandStrategiesLoop = 0; iGrandStrategiesLoop < GC.getNumAIGrandStrategyInfos(); iGrandStrategiesLoop++)
+		for (uint iGrandStrategiesLoop = 0; iGrandStrategiesLoop < GC.getNumAIGrandStrategyInfos(); iGrandStrategiesLoop++)
 		{
 			CvAIGrandStrategyXMLEntry* pGrandStrategy = GC.getAIGrandStrategyInfo((AIGrandStrategyTypes)iGrandStrategiesLoop);
 			if (pGrandStrategy && pGrandStrategy->GetFlavorValue(iI) != 0)

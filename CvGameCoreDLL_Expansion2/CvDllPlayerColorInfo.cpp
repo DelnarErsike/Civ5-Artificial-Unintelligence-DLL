@@ -9,7 +9,11 @@
 #include "CvDllPlayerColorInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllPlayerColorInfo::CvDllPlayerColorInfo(_In_ CvPlayerColorInfo* pPlayerColorInfo)
+#else
 CvDllPlayerColorInfo::CvDllPlayerColorInfo(CvPlayerColorInfo* pPlayerColorInfo)
+#endif
 	: m_pPlayerColorInfo(pPlayerColorInfo)
 	, m_uiRefCount(1)
 {

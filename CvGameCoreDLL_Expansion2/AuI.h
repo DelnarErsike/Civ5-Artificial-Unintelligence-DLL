@@ -38,8 +38,12 @@
 #define AUI_WARNING_FIXES
 /// Changes the scopes of certain functions to fall in line with other functions of the same type (eg. CvUnit::CanFallBackFromMelee() is public instead of protected)
 #define AUI_SCOPE_FIXES
+/// Adds a few extra functions that can be used for 128-bit SSE types like __m128i and __m128d
+#define AUI_SIMD_ADDITIONS
 /// Caches certain modifiers that were not cached before to help with performance and stability
 #define AUI_CACHED_MODIFIERS
+/// Replaces Firaxis' low-quality Linear Congruential Random Number Generator with a higher-quality SIMD-oriented Fast Mersenne Twister Random Number Generator
+#define AUI_USE_SFMT_RNG
 /// Civilizations that are marked as coastal get the same coastal bias as maritime city-states
 #define AUI_STARTPOSITIONER_COASTAL_CIV_WATER_BIAS
 /// When calculating the founding value of a tile, tailor the SiteEvaluation function to the current player instead of the first one

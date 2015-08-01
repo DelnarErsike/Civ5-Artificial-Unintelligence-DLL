@@ -9,7 +9,11 @@
 #include "CvDllTerrainInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllTerrainInfo::CvDllTerrainInfo(_In_ CvTerrainInfo* pTerrainInfo)
+#else
 CvDllTerrainInfo::CvDllTerrainInfo(CvTerrainInfo* pTerrainInfo)
+#endif
 	: m_pTerrainInfo(pTerrainInfo)
 	, m_uiRefCount(1)
 {

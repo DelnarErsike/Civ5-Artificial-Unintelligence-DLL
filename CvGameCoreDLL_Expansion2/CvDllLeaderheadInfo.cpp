@@ -9,7 +9,11 @@
 #include "CvDllLeaderHeadInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllLeaderHeadInfo::CvDllLeaderHeadInfo(_In_ CvLeaderHeadInfo* pLeaderHeadInfo)
+#else
 CvDllLeaderHeadInfo::CvDllLeaderHeadInfo(CvLeaderHeadInfo* pLeaderHeadInfo)
+#endif
 	: m_pLeaderHeadInfo(pLeaderHeadInfo)
 	, m_uiRefCount(1)
 {

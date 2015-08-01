@@ -287,7 +287,11 @@ public:
 	int* GetResourceYieldChangeArray(int i) const;
 	int GetFeatureYieldChange(int i, int j) const;
 	int* GetFeatureYieldChangeArray(int i) const;
+#ifdef AUI_WARNING_FIXES
+	int GetSpecialistYieldChange(uint i, int j) const;
+#else
 	int GetSpecialistYieldChange(int i, int j) const;
+#endif
 	int* GetSpecialistYieldChangeArray(int i) const;
 	int GetResourceYieldModifier(int i, int j) const;
 	int* GetResourceYieldModifierArray(int i) const;
@@ -518,8 +522,13 @@ public:
 
 	// Accessor functions
 	std::vector<CvBuildingEntry*>& GetBuildingEntries();
+#ifdef AUI_WARNING_FIXES
+	uint GetNumBuildings() const;
+	_Ret_maybenull_ CvBuildingEntry* GetEntry(uint index);
+#else
 	int GetNumBuildings();
 	_Ret_maybenull_ CvBuildingEntry* GetEntry(int index);
+#endif
 
 	void DeleteArray();
 

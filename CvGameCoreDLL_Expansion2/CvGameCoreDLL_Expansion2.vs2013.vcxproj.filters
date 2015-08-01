@@ -484,6 +484,9 @@
     <ClCompile Include="CvWorldBuilderMapLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SFMT\SFMT.cpp">
+      <Filter>SFMT</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AuI.h">
@@ -1008,6 +1011,21 @@
     <ClInclude Include="CvGameCoreDLL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SFMT\SFMT.h">
+      <Filter>SFMT</Filter>
+    </ClInclude>
+    <ClInclude Include="SFMT\SFMT-common.h">
+      <Filter>SFMT</Filter>
+    </ClInclude>
+    <ClInclude Include="SFMT\SFMT-params.h">
+      <Filter>SFMT</Filter>
+    </ClInclude>
+    <ClInclude Include="SFMT\SFMT-sse2-msc.h">
+      <Filter>SFMT</Filter>
+    </ClInclude>
+    <ClInclude Include="SFMT\SFMT-params607.h">
+      <Filter>SFMT</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CvGameCoreDLL.rc" />
@@ -1024,6 +1042,9 @@
     </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{aa8e4138-673a-409c-ba90-b1b6d7c07380}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SFMT">
+      <UniqueIdentifier>{b23a9e7c-f1e9-457a-8732-e8c023fcc598}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

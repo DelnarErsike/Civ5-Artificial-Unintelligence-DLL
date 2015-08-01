@@ -56,7 +56,11 @@ typedef enum eMPoolType
 	c_eMPoolTypeCurve,				 // curve resources
 	c_eDebugSafetyNet,               // used for tracking debug info
 	c_eMPoolTypeUserStart		     // user types should start here; FirePlace stuff should all come before
+#ifdef AUI_VC120_FORMALITIES
+} _eMPoolType;
+#else
 };
+#endif
 
 enum eMPoolTag
 {

@@ -316,6 +316,11 @@ void CvGameReligions::SpreadReligion()
 /// Spread religious pressure to one city
 void CvGameReligions::SpreadReligionToOneCity(CvCity* pCity)
 {
+#ifdef AUI_WARNING_FIXES
+	if (!pCity)
+		return;
+#endif
+
 	// Used to calculate how many trade routes are applying pressure to this city. This resets the value so we get a true count every turn.
 	pCity->GetCityReligions()->ResetNumTradeRoutePressure();
 
@@ -661,7 +666,11 @@ ReligionTypes CvGameReligions::GetReligionToFound(PlayerTypes ePlayer)
 		int iValue = 0;
 		if (LuaSupport::CallAccumulator(pkScriptSystem, "GetReligionToFound", args.get(), iValue)) 
 		{
+#ifdef AUI_WARNING_FIXES
+			if (uint(iValue) < GC.getNumReligionInfos() && iValue != RELIGION_PANTHEON)
+#else
 			if (iValue >= 0 && iValue < GC.getNumReligionInfos() && iValue != RELIGION_PANTHEON)
+#endif
 			{
 				eCivReligion = (ReligionTypes)iValue;
 			}
@@ -678,7 +687,11 @@ ReligionTypes CvGameReligions::GetReligionToFound(PlayerTypes ePlayer)
 	}
 
 	// Need to "borrow" from another civ.  Loop through all religions looking for one that is eligible
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumReligionInfos(); iI++)
+#else
 	for(int iI = 0; iI < GC.getNumReligionInfos(); iI++)
+#endif
 	{
 		ReligionTypes eReligion = (ReligionTypes)iI;
 		CvReligionEntry* pEntry = GC.getReligionInfo(eReligion);
@@ -706,7 +719,11 @@ ReligionTypes CvGameReligions::GetReligionToFound(PlayerTypes ePlayer)
 	}
 
 	// Will have to use a religion that someone else prefers
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumReligionInfos(); iI++)
+#else
 	for(int iI = 0; iI < GC.getNumReligionInfos(); iI++)
+#endif
 	{
 		ReligionTypes eReligion = (ReligionTypes)iI;
 		CvReligionEntry* pEntry = GC.getReligionInfo(eReligion);
@@ -2372,7 +2389,11 @@ bool CvPlayerReligions::CanAffordFaithPurchase() const
 	CvCity* pCapital = m_pPlayer->getCapitalCity();
 	if(pCapital)
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint iI = 0; iI < GC.getNumUnitInfos(); iI++)
+#else
 		for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
+#endif
 		{
 			const UnitTypes eUnit = static_cast<UnitTypes>(iI);
 			CvUnitEntry* pkUnitInfo = GC.getUnitInfo(eUnit);
@@ -2399,7 +2420,11 @@ bool CvPlayerReligions::CanAffordFaithPurchase() const
 				}
 			}
 		}
+#ifdef AUI_WARNING_FIXES
+		for (uint iI = 0; iI < GC.getNumBuildingInfos(); iI++)
+#else
 		for (int iI = 0; iI < GC.getNumBuildingInfos(); iI++)
+#endif
 		{
 			const BuildingTypes eBuilding = static_cast<BuildingTypes>(iI);
 			CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eBuilding);
@@ -2799,7 +2824,11 @@ bool CvCityReligions::IsDefendedAgainstSpread(ReligionTypes eReligion)
 	CvPlot* pCityPlot = m_pCity->plot();
 	if(pCityPlot)
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint iUnitLoop = 0; iUnitLoop < pCityPlot->getNumUnits(); iUnitLoop++)
+#else
 		for(int iUnitLoop = 0; iUnitLoop < pCityPlot->getNumUnits(); iUnitLoop++)
+#endif
 		{
 			pLoopUnit = pCityPlot->getUnitByIndex(iUnitLoop);
 			CvUnitEntry* pkEntry = GC.getUnitInfo(pLoopUnit->getUnitType());
@@ -2820,7 +2849,11 @@ bool CvCityReligions::IsDefendedAgainstSpread(ReligionTypes eReligion)
 
 		if(pAdjacentPlot != NULL)
 		{
+#ifdef AUI_WARNING_FIXES
+			for (uint iUnitLoop = 0; iUnitLoop < pAdjacentPlot->getNumUnits(); iUnitLoop++)
+#else
 			for(int iUnitLoop = 0; iUnitLoop < pAdjacentPlot->getNumUnits(); iUnitLoop++)
+#endif
 			{
 				pLoopUnit = pAdjacentPlot->getUnitByIndex(iUnitLoop);
 				CvUnitEntry* pkEntry = GC.getUnitInfo(pLoopUnit->getUnitType());
@@ -3672,7 +3705,11 @@ void CvCityReligions::RecomputeFollowers(CvReligiousFollowChangeReason eReason, 
 		ReligionInCityList::iterator itLargestRemainder = NULL;
 		int iLargestRemainder = 0;
 
+#ifdef AUI_WARNING_FIXES
+		for (it = m_ReligionStatus.begin(); it != m_ReligionStatus.end() && it; ++it)
+#else
 		for (it = m_ReligionStatus.begin(); it != m_ReligionStatus.end(); it++)
+#endif
 		{
 			if (it->m_iTemp > iLargestRemainder)
 			{
@@ -3736,7 +3773,11 @@ void CvCityReligions::SimulateFollowers()
 		ReligionInCityList::iterator itLargestRemainder = NULL;
 		int iLargestRemainder = 0;
 
+#ifdef AUI_WARNING_FIXES
+		for (it = m_SimulatedStatus.begin(); it != m_SimulatedStatus.end() && it; ++it)
+#else
 		for (it = m_SimulatedStatus.begin(); it != m_SimulatedStatus.end(); it++)
+#endif
 		{
 			if (it->m_iTemp > iLargestRemainder)
 			{
@@ -5290,7 +5331,13 @@ void CvReligionAI::DoFaithPurchases()
 			if(GC.getLogging())
 			{
 				strLogMsg += ", Saving for Great Person, ";
+#ifdef AUI_WARNING_FIXES
+				CvUnitEntry* pGPInfo = GC.getUnitInfo(eGPType);
+				if (pGPInfo)
+					strLogMsg += pGPInfo->GetDescription();
+#else
 				strLogMsg += GC.getUnitInfo(eGPType)->GetDescription();
+#endif
 			}				
 		}
 
@@ -5446,7 +5493,11 @@ bool CvReligionAI::BuyAnyAvailableNonFaithBuilding()
 	CvCity* pLoopCity;
 	for(pLoopCity = GET_PLAYER(ePlayer).firstCity(&iLoop); pLoopCity != NULL; pLoopCity = GET_PLAYER(ePlayer).nextCity(&iLoop))
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#else
 		for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#endif
 		{
 			BuildingTypes eBuilding = (BuildingTypes)m_pPlayer->getCivilizationInfo().getCivilizationBuildings(iI);
 			if(eBuilding != NO_BUILDING)
@@ -5522,7 +5573,11 @@ bool CvReligionAI::BuyOtherReligionHappinessBuilding(ReligionTypes eAvoidReligio
 	{
 		if (pLoopCity->GetCityReligions()->GetReligiousMajority() != eAvoidReligion)
 		{
+#ifdef AUI_WARNING_FIXES
+			for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#else
 			for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#endif
 			{
 				BuildingTypes eBuilding = (BuildingTypes)m_pPlayer->getCivilizationInfo().getCivilizationBuildings(iI);
 				if (eBuilding != NO_BUILDING)
@@ -5556,7 +5611,11 @@ bool CvReligionAI::CanBuyOtherReligionHappinessBuilding(ReligionTypes eAvoidReli
 	{
 		if (pLoopCity->GetCityReligions()->GetReligiousMajority() != eAvoidReligion)
 		{
+#ifdef AUI_WARNING_FIXES
+			for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#else
 			for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#endif
 			{
 				BuildingTypes eBuilding = (BuildingTypes)m_pPlayer->getCivilizationInfo().getCivilizationBuildings(iI);
 				if (eBuilding != NO_BUILDING)
@@ -5697,9 +5756,14 @@ int CvReligionAI::ScoreBelief(CvBeliefEntry* pEntry)
 #endif
 
 	// Loop through each plot on map
+#ifdef AUI_WARNING_FIXES
+	CvPlot* pPlot;
+	for (uint iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
+#else
 	int iPlotLoop;
 	CvPlot* pPlot;
 	for(iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
+#endif
 	{
 		pPlot = GC.getMap().plotByIndexUnchecked(iPlotLoop);
 
@@ -5914,7 +5978,11 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 			int iMaxYieldChange = 0;
 			int iCurrentYieldChange = 0;
 			bool bIsReduce = false;
+#ifdef AUI_WARNING_FIXES
+			for (uint jJ = 0; jJ < GC.getNumImprovementInfos(); jJ++)
+#else
 			for (int jJ = 0; jJ < GC.getNumImprovementInfos(); jJ++)
+#endif
 			{
 				if (pPlot->canHaveImprovement((ImprovementTypes)jJ, m_pPlayer->getTeam()))
 				{
@@ -6094,7 +6162,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 	int iHappiness = pEntry->GetHappinessPerCity();
 	if (pCity->plot()->isRiver())
 		iHappiness += pEntry->GetRiverHappiness();
-	for(int jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+	for (uint jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
 	{
 		iHappiness += pEntry->GetBuildingClassHappiness(jJ);
 	}
@@ -6115,7 +6183,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 		adExtraYields[iI] += (pCity->GetCityCitizens()->GetTotalSpecialistCount() > 0 ? pEntry->GetYieldChangeAnySpecialist(iI) : pEntry->GetYieldChangeAnySpecialist(iI) / 2.0);
 
 		// Building class yield change
-		for(int jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+		for (uint jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
 		{
 			CvBuildingClassInfo* pkBuildingClassInfo = GC.getBuildingClassInfo((BuildingClassTypes)jJ);
 			if(!pkBuildingClassInfo)
@@ -6156,7 +6224,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 		// Production per follower
 		if (pEntry->GetMaxYieldModifierPerFollower(iI) > 0)
 		{
-			adExtraYieldMods[NUM_YIELD_TYPES] += FASTMIN(pEntry->GetMaxYieldModifierPerFollower(iI), pCity->getPopulation());
+			adExtraYieldMods[iI] += FASTMIN(pEntry->GetMaxYieldModifierPerFollower(iI), pCity->getPopulation());
 		}
 	}
 
@@ -6603,7 +6671,11 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 	// FOLLOWER BELIEFS
 	//-----------------
 	// Unlocks a building
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#else
 	for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#endif
 	{
 		if (pEntry->IsBuildingClassEnabled(iI))
 		{
@@ -6656,7 +6728,7 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 
 	// Unlocks units?
 #ifdef AUI_RELIGION_FIX_SCORE_BELIEF_FOR_PLAYER_UNLOCKS_UNITS_DISREGARD_OLD_ERAS
-	for (int i = (int)m_pPlayer->GetCurrentEra(); i < GC.getNumEraInfos(); i++)
+	for (uint i = (uint)m_pPlayer->GetCurrentEra(); i < GC.getNumEraInfos(); i++)
 #else
 	for(int i = 0; i < GC.getNumEraInfos(); i++)
 #endif
@@ -7936,7 +8008,11 @@ BuildingClassTypes CvReligionAI::FaithBuildingAvailable(ReligionTypes eReligion)
 
 	if (pMyReligion)
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#else
 		for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#endif
 		{
 			if (pMyReligion->m_Beliefs.IsBuildingClassEnabled((BuildingClassTypes)iI))
 			{
@@ -7973,7 +8049,11 @@ bool CvReligionAI::CanBuyNonFaithBuilding() const
 	CvCity* pLoopCity;
 	for(pLoopCity = GET_PLAYER(ePlayer).firstCity(&iLoop); pLoopCity != NULL; pLoopCity = GET_PLAYER(ePlayer).nextCity(&iLoop))
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#else
 		for (int iI = 0; iI < GC.getNumBuildingClassInfos(); iI++)
+#endif
 		{
 			BuildingTypes eBuilding = (BuildingTypes)m_pPlayer->getCivilizationInfo().getCivilizationBuildings(iI);
 			if(eBuilding != NO_BUILDING)
@@ -8007,7 +8087,11 @@ UnitTypes CvReligionAI::GetDesiredFaithGreatPerson() const
 	ReligionTypes eReligion = GetReligionToSpread();
 
 	// Loop through all Units and see if they're possible
+#ifdef AUI_WARNING_FIXES
+	for (uint iUnitLoop = 0; iUnitLoop < GC.getNumUnitInfos(); iUnitLoop++)
+#else
 	for(int iUnitLoop = 0; iUnitLoop < GC.getNumUnitInfos(); iUnitLoop++)
+#endif
 	{
 		const UnitTypes eUnit = static_cast<UnitTypes>(iUnitLoop);
 		CvUnitEntry* pkUnitInfo = GC.getUnitInfo(eUnit);

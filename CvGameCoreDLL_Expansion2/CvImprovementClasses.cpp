@@ -1062,13 +1062,21 @@ std::vector<CvImprovementEntry*>& CvImprovementXMLEntries::GetImprovementEntries
 }
 
 /// Number of defined projects
+#ifdef AUI_WARNING_FIXES
+uint CvImprovementXMLEntries::GetNumImprovements() const
+#else
 int CvImprovementXMLEntries::GetNumImprovements()
+#endif
 {
 	return m_paImprovementEntries.size();
 }
 
 /// Get a specific entry
+#ifdef AUI_WARNING_FIXES
+_Ret_maybenull_ CvImprovementEntry* CvImprovementXMLEntries::GetEntry(uint index)
+#else
 CvImprovementEntry* CvImprovementXMLEntries::GetEntry(int index)
+#endif
 {
 	return m_paImprovementEntries[index];
 }

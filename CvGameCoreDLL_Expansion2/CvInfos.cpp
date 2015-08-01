@@ -1033,6 +1033,10 @@ int CvActionInfo::getCommandData() const
 	{
 		return m_iOriginalIndex;
 	}
+#ifdef AUI_WARNING_FIXES
+	else
+		return getAutomateType();
+#else
 	else if(ACTIONSUBTYPE_COMMAND == m_eSubType)
 	{
 		return GC.getCommandInfo((CommandTypes)m_iOriginalIndex)->getAutomate();
@@ -1043,6 +1047,7 @@ int CvActionInfo::getCommandData() const
 	}
 
 	return -1;
+#endif
 }
 //------------------------------------------------------------------------------
 int CvActionInfo::getAutomateType() const
@@ -2148,7 +2153,11 @@ void CvCivilizationInfo::setArtStylePrefix(const char* szVal)
 ReligionTypes CvCivilizationInfo::GetReligion() const
 {
 	// Only one per civ supported now
+#ifdef AUI_WARNING_FIXES
+	for (uint iI = 0; iI < GC.getNumReligionInfos(); iI++)
+#else
 	for(int iI = 0; iI < GC.getNumReligionInfos(); iI++)
+#endif
 	{
 		if(m_pbReligions[iI])
 		{

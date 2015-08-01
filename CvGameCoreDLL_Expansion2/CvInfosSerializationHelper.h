@@ -484,6 +484,10 @@ template<typename TType>
 bool ReadAndRemapDataArray(FDataStream& kStream, int iSrcCount, TType* pvDest, int iDestCount, const int* piaRemap)
 {
 	TType* pvBuffer = (TType*)_malloca(iSrcCount * sizeof(TType));
+#ifdef AUI_WARNING_FIXES
+	if (!pvBuffer)
+		return false;
+#endif
 	kStream.ReadIt(iSrcCount * sizeof(TType), (void*)pvBuffer);
 
 	bool bRemapSuccess = true;

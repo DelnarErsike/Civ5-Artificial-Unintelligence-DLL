@@ -1218,9 +1218,9 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 	if (eOtherPlayer != NO_PLAYER)
 	{
 		pOtherPlayer = &GET_PLAYER(eOtherPlayer);
-		if (!pOtherPlayer)
-			return 0;
 	}
+	if (!pOtherPlayer)
+		return 0;
 	CvCity* pLoopCity = NULL;
 	int iLoop;
 	if (bFromMe)
@@ -1366,7 +1366,7 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 			else
 			{
 				int iResourcesUsedByBuildings = 0;
-				for (int iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
+				for (uint iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
 				{
 					const BuildingTypes eLoopBuilding = static_cast<BuildingTypes>(iBldgLoop);
 					CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eLoopBuilding);
@@ -1415,7 +1415,7 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 			{
 				iResourceQuantity = FASTMIN(FASTMAX((int)NUM_DIRECTION_TYPES, GetPlayer()->getNumCities()), iResourceQuantity);
 				int iResourcesUsedByBuildings = 0;
-				for (int iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
+				for (uint iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
 				{
 					const BuildingTypes eLoopBuilding = static_cast<BuildingTypes>(iBldgLoop);
 					CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eLoopBuilding);
@@ -1581,14 +1581,18 @@ void CvDealAI::GetDealHappinessValues(CvDeal* pDeal, int* piOurHappinessGain, in
 	if (eOtherPlayer != NO_PLAYER)
 	{
 		pOtherPlayer = &GET_PLAYER(eOtherPlayer);
-		if (!pOtherPlayer)
-			return;
 	}
+	if (!pOtherPlayer)
+		return;
 
 	int iOurLuxuryResourceCount = 0;
 	int iTheirLuxuryResourceCount = 0;
 	ResourceTypes eResource;
+#ifdef AUI_WARNING_FIXES
+	for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 	for (int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 	{
 		eResource = (ResourceTypes)iResourceLoop;
 		
@@ -1624,7 +1628,7 @@ void CvDealAI::GetDealHappinessValues(CvDeal* pDeal, int* piOurHappinessGain, in
 		if (it->m_eItemType != TRADE_ITEM_RESOURCES)
 			continue;
 
-		ResourceTypes eResource = (ResourceTypes)it->m_iData1;
+		eResource = (ResourceTypes)it->m_iData1;
 		const CvResourceInfo* pkResourceInfo = GC.getResourceInfo(eResource);
 		CvAssert(pkResourceInfo != NULL);
 		if (pkResourceInfo == NULL)
@@ -1740,7 +1744,11 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 	int iOurLuxuryResourceCount = 0;
 	int iTheirLuxuryResourceCount = 0;
 	ResourceTypes eResource;
+#ifdef AUI_WARNING_FIXES
+	for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 	for (int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 	{
 		eResource = (ResourceTypes)iResourceLoop;
 
@@ -1816,7 +1824,7 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 					iGoldValueOfImprovedPlots += goldPerPlot * 25;
 				}
 #endif
-				ResourceTypes eResource = pLoopPlot->getNonObsoleteResourceType(GetPlayer()->getTeam());
+				eResource = pLoopPlot->getNonObsoleteResourceType(GetPlayer()->getTeam());
 				if(eResource != NO_RESOURCE)
 				{
 					const CvResourceInfo* pkResourceInfo = GC.getResourceInfo(eResource);
@@ -1898,7 +1906,9 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 						// Strategic Resource
 						else if(eUsage == RESOURCEUSAGE_STRATEGIC)
 						{
+#ifndef AUI_DEALAI_TWEAKED_CITY_VALUE
 							int iNumTurns = 60; // okay, this is a reasonable estimate
+#endif
 							iGoldValueOfResourcePlots += (iResourceQuantity * iNumTurns * 150 / 100);
 						}
 					}
@@ -3425,7 +3435,11 @@ void CvDealAI::DoAddResourceToThem(CvDeal* pDeal, PlayerTypes eThem, bool bDontC
 
 			int iItemValue;
 
+#ifdef AUI_WARNING_FIXES
+			uint iResourceLoop;
+#else
 			int iResourceLoop;
+#endif
 			ResourceTypes eResource;
 			int iResourceQuantity;
 
@@ -3533,7 +3547,11 @@ void CvDealAI::DoAddResourceToUs(CvDeal* pDeal, PlayerTypes eThem, bool bDontCha
 
 			ResourceTypes eResource;
 			int iResourceQuantity;
+#ifdef AUI_WARNING_FIXES
+			for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 			for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 			{
 				eResource = (ResourceTypes) iResourceLoop;
 				iResourceQuantity = GET_PLAYER(eMyPlayer).getNumResourceAvailable(eResource, false);
@@ -4410,7 +4428,11 @@ void CvDealAI::DoAddItemsToDealForPeaceTreaty(PlayerTypes eOtherPlayer, CvDeal* 
 	ResourceUsageTypes eUsage;
 	ResourceTypes eResource;
 	int iResourceQuantity;
+#ifdef AUI_WARNING_FIXES
+	for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 	for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 	{
 		eResource = (ResourceTypes) iResourceLoop;
 
@@ -4672,7 +4694,11 @@ bool CvDealAI::IsMakeOfferForLuxuryResource(PlayerTypes eOtherPlayer, CvDeal* pD
 		return false;
 	}
 
+#ifdef AUI_WARNING_FIXES
+	uint iResourceLoop;
+#else
 	int iResourceLoop;
+#endif
 	ResourceTypes eResource;
 
 	// See if the other player has a Resource to trade

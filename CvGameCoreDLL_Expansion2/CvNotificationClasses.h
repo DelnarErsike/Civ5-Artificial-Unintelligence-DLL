@@ -56,7 +56,11 @@ public:
 
 	// Accessor functions
 	EntryArray& GetNotificationEntries();
+#ifdef AUI_WARNING_FIXES
+	uint GetNumNotifications() const;
+#else
 	int GetNumNotifications();
+#endif
 	_Ret_maybenull_ CvNotificationEntry* GetEntry(int index);
 	_Ret_maybenull_ CvNotificationEntry* GetByID(uint hHash);
 	_Ret_maybenull_ CvNotificationEntry* GetByString(const char* pszName);

@@ -62,7 +62,11 @@ void CvAdvisorRecommender::UpdateCityRecommendations(CvCity* pCity)
 	int iWeight;
 
 	// buildings
+#ifdef AUI_WARNING_FIXES
+	for (uint iBuildingLoop = 0; iBuildingLoop < GC.GetGameBuildings()->GetNumBuildings(); iBuildingLoop++)
+#else
 	for(int iBuildingLoop = 0; iBuildingLoop < GC.GetGameBuildings()->GetNumBuildings(); iBuildingLoop++)
+#endif
 	{
 		BuildingTypes eBuilding = (BuildingTypes)iBuildingLoop;
 		if(!pCity->canConstruct(eBuilding))
@@ -79,7 +83,11 @@ void CvAdvisorRecommender::UpdateCityRecommendations(CvCity* pCity)
 	}
 
 	// units
+#ifdef AUI_WARNING_FIXES
+	for (uint iUnitLoop = 0; iUnitLoop < GC.GetGameUnits()->GetNumUnits(); iUnitLoop++)
+#else
 	for(int iUnitLoop = 0; iUnitLoop < GC.GetGameUnits()->GetNumUnits(); iUnitLoop++)
+#endif
 	{
 		UnitTypes eUnit = (UnitTypes)iUnitLoop;
 		if(!pCity->canTrain(eUnit))
@@ -95,7 +103,11 @@ void CvAdvisorRecommender::UpdateCityRecommendations(CvCity* pCity)
 	}
 
 	// projects
+#ifdef AUI_WARNING_FIXES
+	for (uint iProjectLoop = 0; iProjectLoop < GC.GetGameProjects()->GetNumProjects(); iProjectLoop++)
+#else
 	for(int iProjectLoop = 0; iProjectLoop < GC.GetGameProjects()->GetNumProjects(); iProjectLoop++)
+#endif
 	{
 		ProjectTypes eProject = (ProjectTypes)iProjectLoop;
 		if(!pCity->canCreate(eProject))
@@ -209,7 +221,11 @@ void CvAdvisorRecommender::UpdateTechRecommendations(PlayerTypes ePlayer)
 	CvTechAI* pPlayerTechAI = pPlayerTechs->GetTechAI();
 
 	RandomNumberDelegate fcn;
+#ifdef AUI_WARNING_FIXES
+	uint iTechLoop;
+#else
 	int iTechLoop;
+#endif
 
 	// Use the synchronous random number generate
 	// Asynchronous one would be:

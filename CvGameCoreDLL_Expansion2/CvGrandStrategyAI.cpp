@@ -566,7 +566,11 @@ int CvGrandStrategyAI::GetConquestPriority()
 		if(iNumPlayersMet > 0)
 		{
 			// Check every plot for ownership
+#ifdef AUI_WARNING_FIXES
+			for (uint iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
+#else
 			for(int iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
+#endif
 			{
 				if(GC.getMap().plotByIndexUnchecked(iPlotLoop)->isOwned())
 				{
@@ -2098,7 +2102,7 @@ int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
 {
 #ifdef AUI_GS_GET_PERSONALITY_AND_GRAND_STRATEGY_USE_COMPARE_TO_LOWEST_RATIO
 	double dLowestRatio = 1.0;
-	for (int iI = 0; iI < GC.getNumAIGrandStrategyInfos(); iI++)
+	for (uint iI = 0; iI < GC.getNumAIGrandStrategyInfos(); iI++)
 	{
 #ifdef AUI_FAST_COMP
 		dLowestRatio = FASTMIN(dLowestRatio, GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iI));
@@ -2314,7 +2318,7 @@ double CvGrandStrategyAI::GetGrandStrategyPriorityRatio(AIGrandStrategyTypes eGr
 bool CvGrandStrategyAI::IsGrandStrategySignificant(AIGrandStrategyTypes eGrandStrategy) const
 {
 	double dGSRatioTotal = 0;
-	for (int iI = 0; iI < GC.getNumAIGrandStrategyInfos(); iI++)
+	for (uint iI = 0; iI < GC.getNumAIGrandStrategyInfos(); iI++)
 	{
 		dGSRatioTotal += GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iI);
 	}
@@ -2679,7 +2683,7 @@ void CvGrandStrategyAI::LogGrandStrategies(const FStaticVector< int, 5, true, c_
 		{
 			strBaseString = "Player, Turn, ";
 			// Loop through Grand Strategies
-			for (int iGrandStrategyLoop = 0; iGrandStrategyLoop < GC.getNumAIGrandStrategyInfos(); iGrandStrategyLoop++)
+			for (uint iGrandStrategyLoop = 0; iGrandStrategyLoop < GC.getNumAIGrandStrategyInfos(); iGrandStrategyLoop++)
 			{
 				eGrandStrategy = (AIGrandStrategyTypes)iGrandStrategyLoop;
 				CvAIGrandStrategyXMLEntry* pEntry = GC.getAIGrandStrategyInfo(eGrandStrategy);
@@ -2695,7 +2699,7 @@ void CvGrandStrategyAI::LogGrandStrategies(const FStaticVector< int, 5, true, c_
 		strBaseString = playerName + ", ";
 		strTemp.Format("%03d, ", GC.getGame().getElapsedGameTurns());
 		strBaseString += strTemp;
-		for (int iGrandStrategyLoop = 0; iGrandStrategyLoop < GC.getNumAIGrandStrategyInfos(); iGrandStrategyLoop++)
+		for (uint iGrandStrategyLoop = 0; iGrandStrategyLoop < GC.getNumAIGrandStrategyInfos(); iGrandStrategyLoop++)
 		{
 			eGrandStrategy = (AIGrandStrategyTypes)iGrandStrategyLoop;
 
@@ -2773,7 +2777,11 @@ void CvGrandStrategyAI::LogGuessOtherPlayerGrandStrategy(const FStaticVector< in
 		int iPriority;
 
 		// Loop through Grand Strategies
+#ifdef AUI_WARNING_FIXES
+		for (uint iGrandStrategyLoop = 0; iGrandStrategyLoop < GC.getNumAIGrandStrategyInfos(); iGrandStrategyLoop++)
+#else
 		for(int iGrandStrategyLoop = 0; iGrandStrategyLoop < GC.getNumAIGrandStrategyInfos(); iGrandStrategyLoop++)
+#endif
 		{
 			// Get the leading info for this line
 			strBaseString.Format("%03d, ", GC.getGame().getElapsedGameTurns());

@@ -9,7 +9,11 @@
 #include "CvDllPlayerOptionInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllPlayerOptionInfo::CvDllPlayerOptionInfo(_In_ CvPlayerOptionInfo* pPlayerOptionInfo)
+#else
 CvDllPlayerOptionInfo::CvDllPlayerOptionInfo(CvPlayerOptionInfo* pPlayerOptionInfo)
+#endif
 	: m_pPlayerOptionInfo(pPlayerOptionInfo)
 	, m_uiRefCount(1)
 {

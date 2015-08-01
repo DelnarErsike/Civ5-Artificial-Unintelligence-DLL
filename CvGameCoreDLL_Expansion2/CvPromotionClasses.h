@@ -175,6 +175,27 @@ public:
 	void SetSound(const char* szVal);
 
 	// Arrays
+#ifdef AUI_WARNING_FIXES
+	int GetTerrainAttackPercent(uint i) const;
+	int GetTerrainDefensePercent(uint i) const;
+	int GetFeatureAttackPercent(uint i) const;
+	int GetFeatureDefensePercent(uint i) const;
+	int GetUnitCombatModifierPercent(uint i) const;
+	int GetUnitClassModifierPercent(uint i) const;
+	int GetDomainModifierPercent(uint i) const;
+	int GetFeaturePassableTech(uint i) const;
+	int GetUnitClassAttackModifier(uint i) const;
+	int GetUnitClassDefenseModifier(uint i) const;
+
+	bool GetTerrainDoubleMove(uint i) const;
+	bool GetFeatureDoubleMove(uint i) const;
+	bool GetTerrainImpassable(uint i) const;
+	int  GetTerrainPassableTech(uint i) const;
+	bool GetFeatureImpassable(uint i) const;
+	bool GetUnitCombatClass(uint i) const;
+	bool GetCivilianUnitType(uint i) const;
+	bool IsPostCombatRandomPromotion(uint i) const;
+#else
 	int GetTerrainAttackPercent(int i) const;
 	int GetTerrainDefensePercent(int i) const;
 	int GetFeatureAttackPercent(int i) const;
@@ -194,6 +215,7 @@ public:
 	bool GetUnitCombatClass(int i) const;
 	bool GetCivilianUnitType(int i) const;
 	bool IsPostCombatRandomPromotion(int i) const;
+#endif
 
 protected:
 	int m_iLayerAnimationPath;
@@ -369,8 +391,13 @@ public:
 
 	// Accessor functions
 	std::vector<CvPromotionEntry*>& GetPromotionEntries();
+#ifdef AUI_WARNING_FIXES
+	uint GetNumPromotions() const;
+	_Ret_maybenull_ CvPromotionEntry* GetEntry(uint index);
+#else
 	int GetNumPromotions();
 	_Ret_maybenull_ CvPromotionEntry* GetEntry(int index);
+#endif
 
 	// Binary cache functions
 	void DeleteArray();

@@ -9,7 +9,11 @@
 #include "CvDllCivilizationInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllCivilizationInfo::CvDllCivilizationInfo(_In_ CvCivilizationInfo* pCivilizationInfo)
+#else
 CvDllCivilizationInfo::CvDllCivilizationInfo(CvCivilizationInfo* pCivilizationInfo)
+#endif
 	: m_pCivilizationInfo(pCivilizationInfo)
 	, m_uiRefCount(1)
 {

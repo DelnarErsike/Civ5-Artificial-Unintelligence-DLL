@@ -9,7 +9,11 @@
 #include "CvDllTeam.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllTeam::CvDllTeam(_In_ CvTeam* pTeam)
+#else
 CvDllTeam::CvDllTeam(CvTeam* pTeam)
+#endif
 	: m_pTeam(pTeam)
 	, m_uiRefCount(1)
 {
@@ -172,7 +176,11 @@ int CvDllTeam::GetTechs(TechTypes* pkTechArray, uint uiArraySize) const
 	CvTeamTechs* pkTeamTechs = m_pTeam->GetTeamTechs();
 	if (pkTeamTechs)
 	{
+#ifdef AUI_WARNING_FIXES
+		for (uint iTechLoop = 0; iTechLoop < GC.getNumTechInfos() && uiArraySize--; iTechLoop++)
+#else
 		for (int iTechLoop = 0; iTechLoop < GC.getNumTechInfos() && uiArraySize--; iTechLoop++)
+#endif
 		{
 			if (pkTeamTechs->HasTech((TechTypes) iTechLoop) || pkTeamTechs->GetTechCount((TechTypes)iTechLoop) > 0)
 			{

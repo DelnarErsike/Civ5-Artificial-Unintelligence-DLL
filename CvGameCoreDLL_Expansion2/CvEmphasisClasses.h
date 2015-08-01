@@ -66,8 +66,13 @@ public:
 
 	// Accessor functions
 	std::vector<CvEmphasisEntry*>& GetEmphasisEntries();
+#ifdef AUI_WARNING_FIXES
+	uint GetNumEmphases() const;
+	_Ret_maybenull_ CvEmphasisEntry* GetEntry(uint index);
+#else
 	int GetNumEmphases();
 	_Ret_maybenull_ CvEmphasisEntry* GetEntry(int index);
+#endif
 
 	void DeleteArray();
 

@@ -12,7 +12,11 @@
 #include "CvDllMap.h"
 #include "CvDllPlot.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllMap::CvDllMap(_In_ CvMap* pMap)
+#else
 CvDllMap::CvDllMap(CvMap* pMap)
+#endif
 	: m_pMap(pMap)
 	, m_uiRefCount(1)
 {

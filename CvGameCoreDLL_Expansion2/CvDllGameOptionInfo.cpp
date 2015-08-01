@@ -9,7 +9,11 @@
 #include "CvDllGameOptionInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllGameOptionInfo::CvDllGameOptionInfo(_In_ CvGameOptionInfo* pGameOptionInfo)
+#else
 CvDllGameOptionInfo::CvDllGameOptionInfo(CvGameOptionInfo* pGameOptionInfo)
+#endif
 	: m_pGameOptionInfo(pGameOptionInfo)
 	, m_uiRefCount(1)
 {

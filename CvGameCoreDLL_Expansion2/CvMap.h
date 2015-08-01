@@ -161,7 +161,11 @@ public:
 #endif
 	}
 
+#ifdef AUI_WARNING_FIXES
+	inline uint numPlots() const
+#else
 	inline int numPlots() const
+#endif
 	{
 		return m_iGridSize;
 	}
@@ -202,11 +206,19 @@ public:
 		return m_iGridHeight;
 	}
 
+#ifdef AUI_WARNING_FIXES
+	uint getLandPlots() const;
+	void changeLandPlots(int iChange);
+
+	uint getOwnedPlots() const;
+	void changeOwnedPlots(int iChange);
+#else
 	int getLandPlots();
 	void changeLandPlots(int iChange);
 
 	int getOwnedPlots();
 	void changeOwnedPlots(int iChange);
+#endif
 
 	int getTopLatitude();
 	int getBottomLatitude();
@@ -239,11 +251,19 @@ public:
 	void changeNumResourcesOnLand(ResourceTypes eIndex, int iChange);
 
 	/// Plot accessors
+#ifdef AUI_WARNING_FIXES
+	__forceinline CvPlot* plotByIndex(uint iIndex) const
+	{
+		return (iIndex < numPlots() ? &(m_pMapPlots[iIndex]) : NULL);
+	}
+	__forceinline CvPlot* plotByIndexUnchecked(uint iIndex) const
+#else
 	__forceinline CvPlot* plotByIndex(int iIndex) const
 	{
 		return (((iIndex >= 0) && (iIndex < (numPlots()))) ? &(m_pMapPlots[iIndex]) : NULL);
 	}
 	__forceinline CvPlot* plotByIndexUnchecked(int iIndex) const
+#endif
 	{
 		return &m_pMapPlots[iIndex];
 	}
@@ -339,13 +359,15 @@ protected:
 	uint m_iGridWidth;
 	uint m_iGridHeight;
 	uint m_iGridSize; // not serialized as it is always w*h
+	uint m_iLandPlots;
+	uint m_iOwnedPlots;
 #else
 	int m_iGridWidth;
 	int m_iGridHeight;
 	int m_iGridSize; // not serialized as it is always w*h
-#endif
 	int m_iLandPlots;
 	int m_iOwnedPlots;
+#endif
 	int m_iTopLatitude;
 	int m_iBottomLatitude;
 	int m_iNumNaturalWonders;

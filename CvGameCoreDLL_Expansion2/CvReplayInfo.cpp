@@ -80,7 +80,11 @@ void CvReplayInfo::createInfo()
 	}
 
 	m_listVictoryTypes.clear();
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumVictoryInfos(); i++)
+#else
 	for(int i = 0; i < GC.getNumVictoryInfos(); i++)
+#endif
 	{
 		VictoryTypes eVictory = (VictoryTypes)i;
 		if(game.isVictoryValid(eVictory))

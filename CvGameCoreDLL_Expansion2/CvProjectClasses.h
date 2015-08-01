@@ -48,10 +48,17 @@ public:
 	void SetCreateSound(const char* szVal);
 
 	// Arrays
+#ifdef AUI_WARNING_FIXES
+	int GetResourceQuantityRequirement(uint i) const;
+	int GetVictoryThreshold(uint i) const;
+	int GetVictoryMinThreshold(uint i) const;
+	int GetProjectsNeeded(uint i) const;
+#else
 	int GetResourceQuantityRequirement(int i) const;
 	int GetVictoryThreshold(int i) const;
 	int GetVictoryMinThreshold(int i) const;
 	int GetProjectsNeeded(int i) const;
+#endif
 
 protected:
 	int m_iVictoryPrereq;
@@ -99,8 +106,13 @@ public:
 
 	// Accessor functions
 	std::vector<CvProjectEntry*>& GetProjectEntries();
+#ifdef AUI_WARNING_FIXES
+	uint GetNumProjects() const;
+	_Ret_maybenull_ CvProjectEntry* GetEntry(uint index);
+#else
 	int GetNumProjects();
 	_Ret_maybenull_ CvProjectEntry* GetEntry(int index);
+#endif
 
 	void DeleteArray();
 

@@ -198,7 +198,11 @@ void CvUnitMission::PushMission(UnitHandle hUnit, MissionTypes eMission, int iDa
 				int iNumResource = 0;
 
 				// Update the amount of a Resource used up by popped Build
+#ifdef AUI_WARNING_FIXES
+				for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 				for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 				{
 					iNumResource = 0;
 
@@ -288,7 +292,11 @@ void CvUnitMission::PopMission(UnitHandle hUnit)
 		int iNumResource;
 
 		// Update the amount of a Resource used up by popped Build
+#ifdef AUI_WARNING_FIXES
+		for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#else
 		for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#endif
 		{
 			iNumResource = 0;
 
@@ -587,7 +595,11 @@ void CvUnitMission::ContinueMission(UnitHandle hUnit, int iSteps, int iETA)
 					}
 
 					// Find unit to move out
+#ifdef AUI_WARNING_FIXES
+					for (uint iI = 0; iI < pTargetPlot->getNumUnits(); iI++)
+#else
 					for(int iI = 0; iI < pTargetPlot->getNumUnits(); iI++)
+#endif
 					{
 						CvUnit* pUnit2 = pTargetPlot->getUnitByIndex(iI);
 

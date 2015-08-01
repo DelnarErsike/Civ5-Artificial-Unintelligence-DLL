@@ -16,6 +16,10 @@
 #include <vector>
 #endif//_DEBUG
 
+#ifdef AUI_USE_SFMT_RNG
+#include "SFMT\SFMT.h"
+#endif
+
 class CvRandom
 {
 
@@ -25,6 +29,17 @@ public:
 	CvRandom(const CvRandom& source);
 	virtual ~CvRandom();
 
+#ifdef AUI_USE_SFMT_RNG
+	void init(uint32_t ulSeed);
+	void uninit();
+	void reset(uint32_t ulSeed = 0);
+
+	unsigned int get(unsigned int uiNum, const char* pszLog = NULL);  //  Returns value from 0 to num-1 inclusive.
+
+#ifdef AUI_BINOM_RNG
+	unsigned int getBinom(unsigned int uiNum, const char* pszLog = NULL); // Returns value from 0 to num-1 inclusive in binomial distribution
+#endif
+#else
 	void init(unsigned long ulSeed);
 	void uninit();
 	void reset(unsigned long ulSeed = 0);
@@ -34,11 +49,17 @@ public:
 #ifdef AUI_BINOM_RNG
 	unsigned short getBinom(unsigned short usNum, const char* pszLog = NULL); // Returns value from 0 to num-1 inclusive in binomial distribution
 #endif
+#endif
 
 	float getFloat();
 
+#ifdef AUI_USE_SFMT_RNG
+	void reseed(unsigned int uiNewSeed);
+	std::pair<unsigned long, unsigned long> getSeed() const;
+#else
 	void reseed(unsigned long ulNewValue);
 	unsigned long getSeed() const;
+#endif
 	unsigned long getCallCount() const;
 	unsigned long getResetCount() const;
 
@@ -48,6 +69,9 @@ public:
 
 	bool operator==(const CvRandom& rhs) const;
 	bool operator!=(const CvRandom& rhs) const;
+#ifdef AUI_USE_SFMT_RNG
+	void syncInternals(const CvRandom& rhs);
+#endif
 
 	// for OOS debugging
 	const std::vector<std::string>& getResolvedCallStacks() const;
@@ -62,6 +86,9 @@ protected:
 
 protected:
 
+#ifdef AUI_USE_SFMT_RNG
+	SFMersenneTwister m_MersenneTwister;
+#endif
 	unsigned long m_ulRandomSeed;
 
 	// for OOS checks/debugging
@@ -83,4 +110,8 @@ protected:
 
 FDataStream& operator<<(FDataStream& saveTo, const CvRandom& readFrom);
 FDataStream& operator>>(FDataStream& loadFrom, CvRandom& writeTo);
+#ifdef AUI_USE_SFMT_RNG
+FDataStream& operator<<(FDataStream& saveTo, const SFMersenneTwister& readFrom);
+FDataStream& operator>>(FDataStream& loadFrom, SFMersenneTwister& writeTo);
+#endif
 #endif

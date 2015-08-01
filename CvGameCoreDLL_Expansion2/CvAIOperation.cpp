@@ -1170,6 +1170,10 @@ bool CvAIOperation::BuyFinalUnit()
 		OperationSlot thisSlot = m_viListOfUnitsWeStillNeedToBuild.back();
 		CvArmyAI* pArmy = GET_PLAYER(m_eOwner).getArmyAI(thisSlot.m_iArmyID);
 		CvMultiUnitFormationInfo* thisFormation = GC.getMultiUnitFormationInfo(pArmy->GetFormationIndex());
+#ifdef AUI_WARNING_FIXES
+		if (!thisFormation)
+			return false;
+#endif
 		const CvFormationSlotEntry& thisSlotEntry = thisFormation->getFormationSlotEntry(thisSlot.m_iSlotID);
 
 		CvUnit* pUnit = GET_PLAYER(m_eOwner).GetMilitaryAI()->BuyEmergencyUnit((UnitAITypes)thisSlotEntry.m_primaryUnitType, pCity);
@@ -1664,6 +1668,10 @@ static CvUnit* GetClosestUnit(CvOperationSearchUnitList& kSearchList, CvPlot* pk
 		for (CvOperationSearchUnitList::iterator itr = kSearchList.begin(); itr != kSearchList.end(); ++itr)
 		{
 			CvUnit *pkLoopUnit = (*itr).GetUnit();
+#ifdef AUI_WARNING_FIXES
+			if (!pkLoopUnit)
+				continue;
+#endif
 			int iDistance = (*itr).GetDistance();
 
 			int iPathDistance = MAX_INT;
@@ -2845,7 +2853,11 @@ bool CvAIOperationDestroyBarbarianCamp::ShouldAbort()
 /// Find the barbarian camp we want to eliminate
 CvPlot* CvAIOperationDestroyBarbarianCamp::FindBestTarget()
 {
+#ifdef AUI_WARNING_FIXES
+	uint iPlotLoop;
+#else
 	int iPlotLoop;
+#endif
 	CvPlot* pBestPlot = NULL;
 	CvPlot* pPlot;
 	int iBestPlotDistance = MAX_INT;
@@ -3621,22 +3633,25 @@ bool CvAIOperationFoundCity::ArmyInPosition(CvArmyAI* pArmy)
 #ifdef AUI_OPERATION_FOUND_CITY_SETTLER_REROLLS
 		// We've succeeded in a boldness reroll
 	case AI_OPERATION_STATE_RECRUITING_UNITS:
-		pNewTarget = FindBestTarget(pSettler, true);
-		if (pNewTarget)
+		if (pSettler)
 		{
-			m_bEscorted = false;
+			pNewTarget = FindBestTarget(pSettler, true);
+			if (pNewTarget)
+			{
+				m_bEscorted = false;
 
-			// Clear the list of units we need
-			m_viListOfUnitsWeStillNeedToBuild.clear();
+				// Clear the list of units we need
+				m_viListOfUnitsWeStillNeedToBuild.clear();
 
-			// Change the muster point
-			pArmy->SetGoalPlot(pNewTarget);
-			SetMusterPlot(pSettler->plot());
-			pArmy->SetXY(GetMusterPlot()->getX(), GetMusterPlot()->getY());
+				// Change the muster point
+				pArmy->SetGoalPlot(pNewTarget);
+				SetMusterPlot(pSettler->plot());
+				pArmy->SetXY(GetMusterPlot()->getX(), GetMusterPlot()->getY());
 
-			// Send the settler directly to the target
-			pArmy->SetArmyAIState(ARMYAISTATE_MOVING_TO_DESTINATION);
-			m_eCurrentState = AI_OPERATION_STATE_MOVING_TO_TARGET;
+				// Send the settler directly to the target
+				pArmy->SetArmyAIState(ARMYAISTATE_MOVING_TO_DESTINATION);
+				m_eCurrentState = AI_OPERATION_STATE_MOVING_TO_TARGET;
+			}
 		}
 #endif
 
@@ -4484,7 +4499,12 @@ bool CvAIOperationNavalBombardment::ArmyInPosition(CvArmyAI* pArmy)
 /// Find the barbarian camp we want to eliminate
 CvPlot* CvAIOperationNavalBombardment::FindBestTarget()
 {
+#ifdef AUI_WARNING_FIXES
+	uint iPlotLoop;
+	int iDirectionLoop;
+#else
 	int iPlotLoop, iDirectionLoop;
+#endif
 	CvPlot* pBestPlot = NULL;
 	CvPlot* pPlot;
 	CvPlot* pAdjacentPlot;
@@ -4776,7 +4796,11 @@ static CvPlot* GetReachablePlot(UnitHandle pUnit, WeightedPlotVector& aPlots, in
 /// Find the nearest enemy naval unit to eliminate
 CvPlot* CvAIOperationNavalSuperiority::FindBestTarget()
 {
+#ifdef AUI_WARNING_FIXES
+	uint iPlotLoop, iUnitLoop;
+#else
 	int iPlotLoop, iUnitLoop;
+#endif
 	CvPlot* pPlot;
 	CvPlot* pBestPlot = NULL;
 	CvUnit* pInitialUnit;

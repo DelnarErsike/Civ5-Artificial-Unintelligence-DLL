@@ -458,7 +458,11 @@ int getLandPlotsScore(int iLandPlots);
 int getTechScore(TechTypes eTech);
 int getWonderScore(BuildingClassTypes eWonderClass);
 
+#ifdef AUI_WARNING_FIXES
+ImprovementTypes finalImprovementUpgrade(ImprovementTypes eImprovement, uint iCount = 0);
+#else
 ImprovementTypes finalImprovementUpgrade(ImprovementTypes eImprovement, int iCount = 0);
+#endif
 
 bool isTechRequiredForUnit(TechTypes eTech, UnitTypes eUnit);
 bool isTechRequiredForBuilding(TechTypes eTech, BuildingTypes eBuilding);

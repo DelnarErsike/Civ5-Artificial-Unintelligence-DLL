@@ -19,6 +19,7 @@
 // include this after all other headers!
 #include "LintFree.h"
 
+#ifndef AUI_USE_SFMT_RNG
 #define RANDOM_A      (1103515245)
 #define RANDOM_C      (12345)
 //#define RANDOM_A      (214013)
@@ -27,6 +28,7 @@
 
 #ifdef AUI_BINOM_RNG
 #define BINOM_SHIFT   (30)
+#endif
 #endif
 
 CvRandom::CvRandom() :
@@ -71,11 +73,18 @@ CvRandom::CvRandom(const CvRandom& source) :
 	, m_resolvedCallStacks(source.m_resolvedCallStacks)
 #endif//_debug
 {
+#ifdef AUI_USE_SFMT_RNG
+	m_MersenneTwister = source.m_MersenneTwister;
+#endif
 }
 
 bool CvRandom::operator==(const CvRandom& source) const
 {
+#ifdef AUI_USE_SFMT_RNG
+	return (m_MersenneTwister == source.m_MersenneTwister);
+#else
 	return(m_ulRandomSeed == source.m_ulRandomSeed);
+#endif
 }
 
 bool CvRandom::operator!=(const CvRandom& source) const
@@ -83,13 +92,28 @@ bool CvRandom::operator!=(const CvRandom& source) const
 	return !(*this == source);
 }
 
+#ifdef AUI_USE_SFMT_RNG
+void CvRandom::syncInternals(const CvRandom& rhs)
+{
+	m_ulRandomSeed = rhs.m_ulRandomSeed;
+	m_ulCallCount = rhs.m_ulCallCount;
+	m_ulResetCount = rhs.m_ulResetCount;
+	m_bSynchronous = rhs.m_bSynchronous;
+	m_MersenneTwister = rhs.m_MersenneTwister;
+}
+#endif
+
 CvRandom::~CvRandom()
 {
 	uninit();
 }
 
 
+#ifdef AUI_USE_SFMT_RNG
+void CvRandom::init(uint32_t ulSeed)
+#else
 void CvRandom::init(unsigned long ulSeed)
+#endif
 {
 	//--------------------------------
 	// Init saved data
@@ -107,24 +131,48 @@ void CvRandom::uninit()
 
 // FUNCTION: reset()
 // Initializes data members that are serialized.
+#ifdef AUI_USE_SFMT_RNG
+void CvRandom::reset(uint32_t uiSeed)
+#else
 void CvRandom::reset(unsigned long ulSeed)
+#endif
 {
 	//--------------------------------
 	// Uninit class
 	uninit();
 
 	recordCallStack();
+#ifdef AUI_USE_SFMT_RNG
+	m_MersenneTwister.sfmt_init_gen_rand(uiSeed);
+	m_ulCallCount = 0;
+	m_ulRandomSeed = uiSeed;
+#else
 	m_ulRandomSeed = ulSeed;
+#endif
 	m_ulResetCount++;
 }
 
+#ifdef AUI_USE_SFMT_RNG
+unsigned int CvRandom::get(unsigned int uiNum, const char* pszLog)
+#else
 unsigned short CvRandom::get(unsigned short usNum, const char* pszLog)
+#endif
 {
+#ifdef AUI_USE_SFMT_RNG
+	unsigned int uiRtnValue = 0;
+	if (uiNum > 1)
+	{
+		recordCallStack();
+		m_ulCallCount++;
+		uiRtnValue = m_MersenneTwister.sfmt_genrand_uint32() % uiNum;
+	}
+#else
 	recordCallStack();
 	m_ulCallCount++;
 
 	unsigned long ulNewSeed = ((RANDOM_A * m_ulRandomSeed) + RANDOM_C);
 	unsigned short us = ((unsigned short)((((ulNewSeed >> RANDOM_SHIFT) & MAX_UNSIGNED_SHORT) * ((unsigned long)usNum)) / (MAX_UNSIGNED_SHORT + 1)));
+#endif
 
 	if(GC.getLogging())
 	{
@@ -140,11 +188,19 @@ unsigned short CvRandom::get(unsigned short usNum, const char* pszLog)
 			CvGame& kGame = GC.getGame();
 			if(kGame.getTurnSlice() > 0 || ((iRandLogging & RAND_LOGGING_PREGAME_FLAG) != 0))
 			{
+#ifdef AUI_USE_SFMT_RNG
+				FILogFile* pLog = LOGFILEMGR.GetLog("RandCalls.csv", FILogFile::kDontTimeStamp, "Game Turn, Turn Slice, Range, Value, Initial Seed, Call Count, Instance, Type, Location\n");
+#else
 				FILogFile* pLog = LOGFILEMGR.GetLog("RandCalls.csv", FILogFile::kDontTimeStamp, "Game Turn, Turn Slice, Range, Value, Seed, Instance, Type, Location\n");
+#endif
 				if(pLog)
 				{
 					char szOut[1024] = {0};
+#ifdef AUI_USE_SFMT_RNG
+					sprintf_s(szOut, "%d, %d, %u, %u, %u, %u, %8x, %s, %s\n", kGame.getGameTurn(), kGame.getTurnSlice(), uiNum, uiRtnValue, m_ulRandomSeed, m_ulCallCount, (uint)this, m_bSynchronous ? "sync" : "async", (pszLog != NULL) ? pszLog : "Unknown");
+#else
 					sprintf_s(szOut, "%d, %d, %u, %u, %u, %8x, %s, %s\n", kGame.getGameTurn(), kGame.getTurnSlice(), (uint)usNum, (uint)us, getSeed(), (uint)this, m_bSynchronous?"sync":"async", (pszLog != NULL)?pszLog:"Unknown");
+#endif
 					pLog->Msg(szOut);
 
 #if !defined(FINAL_RELEASE)
@@ -176,25 +232,48 @@ unsigned short CvRandom::get(unsigned short usNum, const char* pszLog)
 		}
 	}
 
+#ifdef AUI_USE_SFMT_RNG
+	return uiRtnValue;
+#else
 	m_ulRandomSeed = ulNewSeed;
 	return us;
+#endif
 }
 
 #ifdef AUI_BINOM_RNG
+#ifdef AUI_USE_SFMT_RNG
+unsigned int CvRandom::getBinom(unsigned int uiNum, const char* pszLog)
+#else
 unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
+#endif
 {
-	recordCallStack();
-	m_ulCallCount++;
-	
-	unsigned short usRet = 0;
-	unsigned long ulNewSeed = (RANDOM_A * m_ulRandomSeed) + RANDOM_C;
-	unsigned short usCounter;
-	for (usCounter = 1; usCounter < usNum; usCounter++) // starts at 1 because the generation is not inclusive (so we need one less cycle than normal)
+#ifdef AUI_USE_SFMT_RNG
+	unsigned int uiRtnValue = 0;
+	if (uiNum > 1)
 	{
-		// no need to worry about masking with MAX_UNSIGNED_SHORT, max cycle number takes care of it
-		usRet += (ulNewSeed >> BINOM_SHIFT) & 1; // need the shift so results only repeat after 2^BINOM_SHIFT iterations
-		ulNewSeed = (RANDOM_A * ulNewSeed) + RANDOM_C;
+		recordCallStack();
+		m_ulCallCount += uiNum;
+		for (unsigned int uiCounter = 1; uiCounter < uiNum; uiCounter++)
+		{
+			uiRtnValue += m_MersenneTwister.sfmt_genrand_uint32() & 1;
+		}
 	}
+#else
+	unsigned short usRet = 0;
+	unsigned long ulNewSeed = m_ulRandomSeed;
+	if (uiNum > 1)
+	{
+		recordCallStack();
+		m_ulCallCount += uiNum;
+		ulNewSeed = (RANDOM_A * m_ulRandomSeed) + RANDOM_C;
+		for (unsigned short usCounter = 1; usCounter < usNum; usCounter++) // starts at 1 because the generation is not inclusive (so we need one less cycle than normal)
+		{
+			// no need to worry about masking with MAX_UNSIGNED_SHORT, max cycle number takes care of it
+			usRet += (ulNewSeed >> BINOM_SHIFT) & 1; // need the shift so results only repeat after 2^BINOM_SHIFT iterations
+			ulNewSeed = (RANDOM_A * ulNewSeed) + RANDOM_C;
+		}
+	}
+#endif
 
 	if (GC.getLogging())
 	{
@@ -210,11 +289,19 @@ unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
 			CvGame& kGame = GC.getGame();
 			if (kGame.getTurnSlice() > 0 || ((iRandLogging & RAND_LOGGING_PREGAME_FLAG) != 0))
 			{
-				FILogFile* pLog = LOGFILEMGR.GetLog("RandCalls.csv", FILogFile::kDontTimeStamp, "Game Turn, Turn Slice, Range, Value, Seed, Instance, Type, Location\n");
+#ifdef AUI_USE_SFMT_RNG
+				FILogFile* pLog = LOGFILEMGR.GetLog("RandBinomCalls.csv", FILogFile::kDontTimeStamp, "Game Turn, Turn Slice, Range, Value, Initial Seed, Call Count, Instance, Type, Location\n");
+#else
+				FILogFile* pLog = LOGFILEMGR.GetLog("RandBinomCalls.csv", FILogFile::kDontTimeStamp, "Game Turn, Turn Slice, Range, Value, Initial Seed, Instance, Type, Location\n");
+#endif
 				if (pLog)
 				{
 					char szOut[1024] = { 0 };
+#ifdef AUI_USE_SFMT_RNG
+					sprintf_s(szOut, "%d, %d, %u, %u, %u, %u, %8x, %s, %s\n", kGame.getGameTurn(), kGame.getTurnSlice(), uiNum, uiRtnValue, m_ulRandomSeed, m_ulCallCount, (uint)this, m_bSynchronous ? "sync" : "async", (pszLog != NULL) ? pszLog : "Unknown");
+#else
 					sprintf_s(szOut, "%d, %d, %u, %u, %u, %8x, %s, %s\n", kGame.getGameTurn(), kGame.getTurnSlice(), (uint)usNum, (uint)usRet, getSeed(), (uint)this, m_bSynchronous ? "sync" : "async", (pszLog != NULL) ? pszLog : "Unknown");
+#endif
 					pLog->Msg(szOut);
 
 #if !defined(FINAL_RELEASE)
@@ -246,29 +333,54 @@ unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
 		}
 	}
 
+#ifdef AUI_USE_SFMT_RNG
+	return uiRtnValue;
+#else
 	m_ulRandomSeed = ulNewSeed;
 	return usRet;
+#endif
 }
 #endif
 
 float CvRandom::getFloat()
 {
+#ifdef AUI_USE_SFMT_RNG
+	return 1.0f;
+#else
 	return (((float)(get(MAX_UNSIGNED_SHORT))) / ((float)MAX_UNSIGNED_SHORT));
+#endif
 }
 
 
+#ifdef AUI_USE_SFMT_RNG
+void CvRandom::reseed(unsigned int uiNewSeed)
+#else
 void CvRandom::reseed(unsigned long ulNewValue)
+#endif
 {
 	recordCallStack();
 	m_ulResetCount++;
+#ifdef AUI_USE_SFMT_RNG
+	m_ulCallCount = 0;
+	m_MersenneTwister.sfmt_init_gen_rand(uiNewSeed);
+	m_ulRandomSeed = uiNewSeed;
+#else
 	m_ulRandomSeed = ulNewValue;
+#endif
 }
 
 
+#ifdef AUI_USE_SFMT_RNG
+std::pair<unsigned long, unsigned long> CvRandom::getSeed() const
+{
+	return std::pair<unsigned long, unsigned long>(m_ulCallCount, m_ulRandomSeed);
+}
+#else
 unsigned long CvRandom::getSeed() const
 {
 	return m_ulRandomSeed;
 }
+#endif
 
 unsigned long CvRandom::getCallCount() const
 {
@@ -288,6 +400,9 @@ void CvRandom::read(FDataStream& kStream)
 	uint uiVersion;
 	kStream >> uiVersion;
 
+#ifdef AUI_USE_SFMT_RNG
+	kStream >> m_MersenneTwister;
+#endif
 	kStream >> m_ulRandomSeed;
 	kStream >> m_ulCallCount;
 	kStream >> m_ulResetCount;
@@ -311,6 +426,9 @@ void CvRandom::write(FDataStream& kStream) const
 	uint uiVersion = 1;
 	kStream << uiVersion;
 
+#ifdef AUI_USE_SFMT_RNG
+	kStream << m_MersenneTwister;
+#endif
 	kStream << m_ulRandomSeed;
 	kStream << m_ulCallCount;
 	kStream << m_ulResetCount;
@@ -410,3 +528,35 @@ FDataStream& operator>>(FDataStream& loadFrom, CvRandom& writeTo)
 	writeTo.read(loadFrom);
 	return loadFrom;
 }
+#ifdef AUI_USE_SFMT_RNG
+FDataStream& operator<<(FDataStream& saveTo, const SFMersenneTwister& readFrom)
+{
+	saveTo << readFrom.m_sfmt.idx;
+	const w128_t * pstate = readFrom.m_sfmt.state;
+	for (uint uiI = 0; uiI < SFMT_N; uiI++)
+	{
+		const int* iArray = pstate[uiI].si.m128i_i32;
+		saveTo << iArray[0];
+		saveTo << iArray[1];
+		saveTo << iArray[2];
+		saveTo << iArray[3];
+	}
+	return saveTo;
+}
+
+FDataStream& operator>>(FDataStream& loadFrom, SFMersenneTwister& writeTo)
+{
+	loadFrom >> writeTo.m_sfmt.idx;
+	ALIGN16 w128_t * pstate = writeTo.m_sfmt.state;
+	int iP1, iP2, iP3, iP4;
+	for (uint uiI = 0; uiI < SFMT_N; uiI++)
+	{
+		loadFrom >> iP1;
+		loadFrom >> iP2;
+		loadFrom >> iP3;
+		loadFrom >> iP4;
+		pstate[uiI].si = _mm_set_epi32(iP4, iP3, iP2, iP1);
+	}
+	return loadFrom;
+}
+#endif

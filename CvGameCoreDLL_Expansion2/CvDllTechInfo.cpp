@@ -9,7 +9,11 @@
 #include "CvDllTechInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllTechInfo::CvDllTechInfo(_In_ CvTechEntry* pTechInfo)
+#else
 CvDllTechInfo::CvDllTechInfo(CvTechEntry* pTechInfo)
+#endif
 	: m_pTechInfo(pTechInfo)
 	, m_uiRefCount(1)
 {

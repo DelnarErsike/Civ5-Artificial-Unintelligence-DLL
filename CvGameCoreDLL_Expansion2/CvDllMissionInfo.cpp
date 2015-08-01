@@ -9,7 +9,11 @@
 #include "CvDllMissionInfo.h"
 #include "CvDllContext.h"
 
+#ifdef AUI_WARNING_FIXES
+CvDllMissionInfo::CvDllMissionInfo(_In_ CvMissionInfo* pMissionInfo)
+#else
 CvDllMissionInfo::CvDllMissionInfo(CvMissionInfo* pMissionInfo)
+#endif
 	: m_pMissionInfo(pMissionInfo)
 	, m_uiRefCount(1)
 {

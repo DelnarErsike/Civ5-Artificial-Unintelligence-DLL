@@ -696,7 +696,11 @@ bool CvDllDatabaseUtility::UpdatePlayableCivilizationCounts()
 	int numAIPlayableCivilizations = 0;
 
 	// Check Playables
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumCivilizationInfos(); ++i)
+#else
 	for(int i = 0; i < GC.getNumCivilizationInfos(); ++i)
+#endif
 	{
 		CvCivilizationInfo* pkCivilization = GC.getCivilizationInfo((CivilizationTypes) i);
 		if(pkCivilization)
@@ -740,7 +744,11 @@ bool CvDllDatabaseUtility::SetGlobalActionInfo()
 	}
 	actionInfos.clear();
 
+#ifdef AUI_WARNING_FIXES
+	const uint iNumMissionTypes = CvTypes::getNUM_MISSION_TYPES();
+#else
 	const int iNumMissionTypes = CvTypes::getNUM_MISSION_TYPES();
+#endif
 
 	//Verify action counts
 	if(!(NUM_INTERFACEMODE_TYPES > 0))
@@ -796,8 +804,13 @@ bool CvDllDatabaseUtility::SetGlobalActionInfo()
 
 
 	//Gather all available infos, checking for NULL entries as they may have been removed.
+#ifdef AUI_WARNING_FIXES
+	uint iTotalActionInfoCount = 0;
+	uint i = 0;
+#else
 	int iTotalActionInfoCount = 0;
 	int i = 0;
+#endif
 	for(i=0; i<NUM_COMMAND_TYPES; i++)
 	{
 		CvCommandInfo* commandInfo = GC.getCommandInfo((CommandTypes)i);
