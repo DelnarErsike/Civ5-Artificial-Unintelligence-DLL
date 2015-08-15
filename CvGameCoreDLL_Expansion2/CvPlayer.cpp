@@ -7456,8 +7456,10 @@ bool CvPlayer::canConstruct(BuildingTypes eBuilding, bool bContinue, bool bTestV
 	}
 
 #ifdef AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
+	// If tech requirements aren't met, piWithinEras is set to 1 + the difference between the tech prerequisite's era and the player's era (minimum of 1) instead of the function returning false
 	if (piWithinEras)
 	{
+		bool bHasTech = true;
 		TechTypes ePrereqTech = (TechTypes)pBuildingInfo.GetPrereqAndTech();
 		if (ePrereqTech != NO_TECH)
 		{
@@ -7465,10 +7467,14 @@ bool CvPlayer::canConstruct(BuildingTypes eBuilding, bool bContinue, bool bTestV
 			if (pPrereqTech)
 			{
 #ifdef AUI_FAST_COMP
-				*piWithinEras = FASTMAX(pPrereqTech->GetEra() - GetCurrentEra(), *piWithinEras);
+				*piWithinEras = FASTMAX(pPrereqTech->GetEra() - GetCurrentEra() + 1, *piWithinEras);
 #else
-				*piWithinEras = MAX(pPrereqTech->GetEra() - GetCurrentEra(), *piWithinEras);
+				*piWithinEras = MAX(pPrereqTech->GetEra() - GetCurrentEra() + 1, *piWithinEras);
 #endif
+				if (!(currentTeam.GetTeamTechs()->HasTech(ePrereqTech)))
+				{
+					bHasTech = false;
+				}
 			}
 		}
 		for (iJ = 0; iJ < GC.getNUM_BUILDING_AND_TECH_PREREQS(); iJ++)
@@ -7480,13 +7486,21 @@ bool CvPlayer::canConstruct(BuildingTypes eBuilding, bool bContinue, bool bTestV
 				if (pPrereqTech)
 				{
 #ifdef AUI_FAST_COMP
-					*piWithinEras = FASTMAX(pPrereqTech->GetEra() - GetCurrentEra(), *piWithinEras);
+					*piWithinEras = FASTMAX(pPrereqTech->GetEra() - GetCurrentEra() + 1, *piWithinEras);
 #else
-					*piWithinEras = MAX(pPrereqTech->GetEra() - GetCurrentEra(), *piWithinEras);
+					*piWithinEras = MAX(pPrereqTech->GetEra() - GetCurrentEra() + 1, *piWithinEras);
 #endif
+					if (!(currentTeam.GetTeamTechs()->HasTech(ePrereqTech)))
+					{
+						bHasTech = false;
+					}
 				}
 			}
 		}
+		if (bHasTech)
+			*piWithinEras = 0;
+		else if (*piWithinEras == 0)
+			*piWithinEras = 1;
 	}
 	else
 	{

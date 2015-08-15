@@ -986,14 +986,15 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		{
 			const BuildingTypes eBuilding = static_cast<BuildingTypes>(iI);
 			CvBuildingEntry* pkBuilding = GC.getBuildingInfo(eBuilding);
-			iLoopEraDifference = 0;
+			iLoopEraDifference = 1;
 			if (pPlot->isValidBuildingLocation(eBuilding, true) && pPlayer->canConstruct(eBuilding, false, false, false, NULL, true, &iLoopEraDifference) && 
 				pPlot->IsBuildingLocalResourceValid(eBuilding, pPlayer->getTeam()) && pkBuilding)
 			{
+				iLoopEraDifference++;
 				const CvBuildingClassInfo* pkBuildingClassInfo = &(pkBuilding->GetBuildingClassInfo());
 				for (int iJ = 0; iJ < GC.getNumFlavorTypes(); iJ++)
 				{
-					dLoopFlavor = pkBuilding->GetFlavorValue(iJ) / double(iLoopEraDifference + 1);
+					dLoopFlavor = pkBuilding->GetFlavorValue(iJ) / (double)iLoopEraDifference;
 					if (pkBuildingClassInfo)
 					{
 						if (pkBuildingClassInfo->getDefaultBuildingIndex() != eBuilding)

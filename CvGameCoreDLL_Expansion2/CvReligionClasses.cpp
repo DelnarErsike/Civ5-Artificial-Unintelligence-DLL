@@ -6215,10 +6215,10 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 			if (eBuilding != NO_BUILDING)
 			{
 #ifdef AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
+				iEras = 1;
 				if (m_pPlayer->canConstruct(eBuilding, false, true, true, NULL, true, &iEras))
 				{
-					if (iEras < 1)
-						iEras = 1;
+					iEras++;
 					adExtraYields[iI] += (pCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0 ? pEntry->GetBuildingClassYieldChange(jJ, iI) : pEntry->GetBuildingClassYieldChange(jJ, iI) / 2.0) / (double)iEras;
 					if (pkBuildingClassInfo->getMaxGlobalInstances() != -1)
 					{
