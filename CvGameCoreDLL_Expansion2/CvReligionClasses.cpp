@@ -5872,7 +5872,11 @@ int CvReligionAI::ScoreBelief(CvBeliefEntry* pEntry)
 #endif
 
 	// Randomizer is 3rd degree polynomial, so large changes are unlikely
+#ifdef AUI_BINOM_RNG
 	dRtnValue *= 1 + pow((double)GC.getGame().getJonRandNumBinom(257, "Belief score randomizer.") / 128.0 - 1.0, 3.0);
+#else
+	dRtnValue *= 1 + pow((double)GC.getGame().getJonRandNum(257, "Belief score randomizer.") / 128.0 - 1.0, 3.0);
+#endif
 
 	// Divide by 2 if a Pantheon belief (to deemphasize these to Byzantine bonus belief)
 	if (pEntry->IsPantheonBelief())
@@ -5934,7 +5938,7 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 			return 0;
 	}
 	
-	int iReduceFactor = 0;
+	double dReduceFactor = 0;
 
 	double adExtraYields[NUM_YIELD_TYPES] = {};
 
@@ -5966,7 +5970,7 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 
 			// Dirty code to account for forest or jungle that will be cut later due to resource; effect is -75%
 			if ((eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE) && eResource != NO_RESOURCE && GC.getResourceInfo(eResource)->getResourceUsage() != RESOURCEUSAGE_BONUS)
-				++iReduceFactor;
+				++dReduceFactor;
 		}
 
 		// Resource
@@ -5999,7 +6003,7 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 				}
 			}
 			if (bIsReduce)
-				++iReduceFactor;
+				++dReduceFactor;
 			adExtraYields[iI] += iMaxYieldChange;
 		}
 
@@ -6011,27 +6015,27 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 		}
 	}
 
-	iReduceFactor /= NUM_YIELD_TYPES;
+	dReduceFactor /= NUM_YIELD_TYPES;
 
 	int iNewPlotValue = pForCity->GetCityCitizens()->GetPlotValue(pPlot, true, adExtraYields);
 	double dRtnValue = iNewPlotValue - pForCity->GetCityCitizens()->GetPlotValue(pPlot, true);
 	int iLowestWorkedPlotValue;
 	pForCity->GetCityCitizens()->GetBestCityPlotWithValue(iLowestWorkedPlotValue, false, true);
 	if (iNewPlotValue <= iLowestWorkedPlotValue)
-		++iReduceFactor;
+		++dReduceFactor;
 
-	if (iReduceFactor == 0)
+	if (dReduceFactor == 0)
 	{
 		dRtnValue *= GC.getRELIGION_BELIEF_SCORE_WORKED_PLOT_MULTIPLIER();
 	}
-	else if (iReduceFactor == 1)
+	else if (dReduceFactor <= 1)
 	{
 		dRtnValue *= GC.getRELIGION_BELIEF_SCORE_OWNED_PLOT_MULTIPLIER();
 	}
 	else
 	{
 		dRtnValue *= GC.getRELIGION_BELIEF_SCORE_UNOWNED_PLOT_MULTIPLIER();
-		dRtnValue /= iReduceFactor;
+		dRtnValue /= dReduceFactor;
 	}
 
 	return dRtnValue;
@@ -6145,7 +6149,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 		for (int jJ = 0; jJ < NUM_DIRECTION_TYPES; jJ++)
 		{
 			CvPlot* pLoopPlot = plotDirection(pCity->plot()->getX(), pCity->plot()->getY(), (DirectionTypes)jJ);
-			if (pLoopPlot && m_pPlayer->IsPlotUnderImmediateThreat(*pLoopPlot, pCity->getOwner()))
+			if (pLoopPlot && m_pPlayer->IsPlotUnderImmediateThreat(*pLoopPlot))
 				iNumUnitsAffected += pLoopPlot->getNumDefenders(pCity->getOwner());
 		}
 		dRtnValue += (NUM_DIRECTION_TYPES + 1) / 2.0 * (1.0 + (double)pEntry->GetFriendlyHealChange() / (double)GC.getFRIENDLY_HEAL_RATE()) / log10(GC.getFLAVOR_MAX_VALUE() + 1.0 - iFlavorDefense)
@@ -6170,7 +6174,9 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 	double adExtraYields[NUM_YIELD_TYPES] = {};
 	double adExtraYieldMods[NUM_YIELD_TYPES] = {};
 
+#ifdef AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
 	int iEras;
+#endif
 	for (int iI = 0; iI < NUM_YIELD_TYPES; iI++)
 	{
 		// City yield change
@@ -6208,6 +6214,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 			BuildingTypes eBuilding = (BuildingTypes)m_pPlayer->getCivilizationInfo().getCivilizationBuildings(jJ);
 			if (eBuilding != NO_BUILDING)
 			{
+#ifdef AUI_PLAYER_CAN_CONSTRUCT_AI_HELPERS
 				if (m_pPlayer->canConstruct(eBuilding, false, true, true, NULL, true, &iEras))
 				{
 					if (iEras < 1)
@@ -6216,6 +6223,14 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 					if (pkBuildingClassInfo->getMaxGlobalInstances() != -1)
 					{
 						adExtraYields[iI] += (pCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0 ? pEntry->GetYieldChangeWorldWonder(iI) : pEntry->GetYieldChangeWorldWonder(iI) / 2.0) / (double)iEras;
+#else
+				if (m_pPlayer->canConstruct(eBuilding, false, true, true))
+				{
+					adExtraYields[iI] += (pCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0 ? pEntry->GetBuildingClassYieldChange(jJ, iI) : pEntry->GetBuildingClassYieldChange(jJ, iI) / 2.0);
+					if (pkBuildingClassInfo->getMaxGlobalInstances() != -1)
+					{
+						adExtraYields[iI] += (pCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0 ? pEntry->GetYieldChangeWorldWonder(iI) : pEntry->GetYieldChangeWorldWonder(iI) / 2.0);
+#endif
 					}
 				}
 			}

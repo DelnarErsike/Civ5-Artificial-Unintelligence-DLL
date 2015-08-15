@@ -24652,7 +24652,10 @@ int CvPlayer::GetPlotDangerFromCitadel(const CvPlot& kPlot, const PlayerTypes eP
 //	--------------------------------------------------------------------------------
 bool CvPlayer::IsPlotUnderImmediateThreat(const CvPlot& kPlot, const PlayerTypes ePlayer) const
 {
-	return m_pDangerPlots->IsUnderImmediateThreat(kPlot, ePlayer);
+	if (ePlayer == NO_PLAYER)
+		return m_pDangerPlots->IsUnderImmediateThreat(kPlot, GetID());
+	else
+		return m_pDangerPlots->IsUnderImmediateThreat(kPlot, ePlayer);
 }
 
 //	--------------------------------------------------------------------------------

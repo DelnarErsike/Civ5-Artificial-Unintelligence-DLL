@@ -1387,7 +1387,7 @@ public:
 	int GetPlotDanger(const CvPlot& kPlot, const PlayerTypes ePlayer) const;
 	int GetPlotDangerFromCitadel(const CvPlot& kPlot, const PlayerTypes ePlayer) const;
 	bool IsPlotUnderImmediateThreat(const CvPlot& kPlot, const CvUnit* pUnit) const;
-	bool IsPlotUnderImmediateThreat(const CvPlot& kPlot, const PlayerTypes ePlayer) const;
+	bool IsPlotUnderImmediateThreat(const CvPlot& kPlot, const PlayerTypes ePlayer = NO_PLAYER) const;
 	bool CouldAttackHere(const CvPlot& kPlot, const CvUnit* pUnit) const;
 	bool CouldAttackHere(const CvPlot& kPlot, const CvCity* pCity) const;
 #else

@@ -4204,7 +4204,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 		double dExtraYields[NUM_YIELD_TYPES] = {};
 		for (CvCity* pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; m_pPlayer->nextCity(&iLoop))
 		{
-			int iCSTradeRouteProductionModifier = pLoopCity->GetCityBuildings()->GetCityStateTradeRouteProductionModifier();
+			int iCSTradeRouteProductionModifier = pLoopCity->GetCityBuildings()->GetProductionModifierPerCityStateTradeRoute();
 			if (iCSTradeRouteProductionModifier != 0)
 			{
 				dExtraYields[YIELD_PRODUCTION] = pLoopCity->getRawProductionDifferenceTimes100(true, false, iCSTradeRouteProductionModifier) -

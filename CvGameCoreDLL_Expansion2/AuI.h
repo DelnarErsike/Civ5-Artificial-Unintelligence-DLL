@@ -58,6 +58,10 @@
 #define AUI_CACHE_DOUBLE
 /// Enables the Binomial Random Number Generator
 #define AUI_BINOM_RNG
+#ifdef AUI_BINOM_RNG
+/// Generated ridges use the binomial RNG for directional bias strength and ridge weakness
+#define AUI_FRACTAL_RIDGE_USE_BINOM_RNG
+#endif
 /// Minor Civ tracking (especially useful for cases with no minor civs or lots of minor civs relative to major civs)
 #define AUI_MINOR_CIV_RATIO
 /// Turns the "Has met Major Civ" check inside GS priority checks into a public function of CvGrandStrategyAI
@@ -866,10 +870,12 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 // #define AUI_RELIGION_FIX_BEST_CITY_HELPER_GREAT_PERSON
 /// Tweaks the amount a pantheon belief's score is divided (to compensate for higher scoring of certain plots)
 #define AUI_RELIGION_SCORE_BELIEF_TWEAK_PANTHEON_DIVIDER (6.0)
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
 /// Applies a myriad of tweaks to the ScoreBeliefAtPlot() function (consolidation of lots of small, but important, changes)
 #define AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REMADE
 /// Remakes the ScoreBeliefAtCity() function
 #define AUI_RELIGION_SCORE_BELIEF_AT_CITY_REMADE
+#endif
 #ifndef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REMADE
 /// Increases plot search distance, but scales the belief score of a plot based on distance to the closest friendly city
 #define AUI_RELIGION_SCORE_BELIEF_SCALE_PLOTS_WITH_DISTANCE (4)

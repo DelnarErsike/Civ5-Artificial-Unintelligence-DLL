@@ -1521,7 +1521,7 @@ void CvCityStrategyAI::DoTurn()
 	}
 }
 
-#ifdef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
+#if defined(AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED) || defined(AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH)
 // Near carbon-copy of ChooseProduction
 void CvCityStrategyAI::ConstructRushList(YieldTypes eCurrency, BuildingTypes eIgnoreBldg, UnitTypes eIgnoreUnit)
 {
