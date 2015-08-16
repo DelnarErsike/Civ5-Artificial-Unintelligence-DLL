@@ -452,24 +452,24 @@ void CvFractal::ridgeBuilder(CvRandom& random, int iNumVoronoiSeeds, int iRidgeF
 		thisVoronoiSeed.m_iHexspaceY = random.get(m_iFracY, "Ridge Gen 1");
 		thisVoronoiSeed.m_iHexspaceX =  xToHexspaceX(random.get(m_iFracX, "Ridge Gen 2"), thisVoronoiSeed.m_iHexspaceY);
 #ifdef AUI_FRACTAL_RIDGE_USE_BINOM_RNG
-#ifdef AUI_USE_SFMT_RNG
+#if defined(AUI_USE_SFMT_RNG) || defined(AUI_WARNING_FIXES)
 		thisVoronoiSeed.m_iWeakness = FASTMAX(0, int(random.getBinom(7, "Ridge Gen 3")) - 3); // ??? do we want to parameterize this???
 #else
 		thisVoronoiSeed.m_iWeakness = FASTMAX(0,random.getBinom(7, "Ridge Gen 3")-3); // ??? do we want to parameterize this???
 #endif
-#elif defined(AUI_USE_SFMT_RNG)
+#elif defined(AUI_USE_SFMT_RNG) || defined(AUI_WARNING_FIXES)
 		thisVoronoiSeed.m_iWeakness = FASTMAX(0, int(random.get(7, "Ridge Gen 3")) - 3); // ??? do we want to parameterize this???
 #else
 		thisVoronoiSeed.m_iWeakness = std::max(0,random.get(7, "Ridge Gen 3")-3); // ??? do we want to parameterize this???
 #endif
 		thisVoronoiSeed.m_eBiasDirection = random.get(NUM_DIRECTION_TYPES, "Ridge Gen 4");
 #ifdef AUI_FRACTAL_RIDGE_USE_BINOM_RNG
-#ifdef AUI_USE_SFMT_RNG
+#if defined(AUI_USE_SFMT_RNG) || defined(AUI_WARNING_FIXES)
 		thisVoronoiSeed.m_iDirectionalBiasStrength = FASTMAX(0, int(random.getBinom(8, "Ridge Gen 5")) - 4); // ??? do we want to parameterize this???
 #else
 		thisVoronoiSeed.m_iDirectionalBiasStrength = FASTMAX(0,random.getBinom(8, "Ridge Gen 5") - 4); // ??? do we want to parameterize this???
 #endif
-#elif defined(AUI_USE_SFMT_RNG)
+#elif defined(AUI_USE_SFMT_RNG) || defined(AUI_WARNING_FIXES)
 		thisVoronoiSeed.m_iDirectionalBiasStrength = FASTMAX(0, int(random.get(8, "Ridge Gen 5")) - 4); // ??? do we want to parameterize this???
 #else
 		thisVoronoiSeed.m_iDirectionalBiasStrength = std::max(0,random.get(8, "Ridge Gen 5") - 4); // ??? do we want to parameterize this???

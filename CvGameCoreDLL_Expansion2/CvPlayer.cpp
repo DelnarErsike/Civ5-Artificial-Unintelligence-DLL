@@ -13465,11 +13465,7 @@ void CvPlayer::DoResolveWorkedPlotConflicts()
 
 		FFastVector<CvCity*, true, c_eCiv5GameplayDLL> vpPossibleWorkingCities;
 		vpPossibleWorkingCities.reserve(NUM_DIRECTION_TYPES);
-#ifdef AUI_WARNING_FIXES
 		for (uint iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
-#else
-		for (int iPlotLoop = 0; iPlotLoop < GC.getMap().numPlots(); iPlotLoop++)
-#endif
 		{
 			CvPlot* pLoopPlot = GC.getMap().plotByIndexUnchecked(iPlotLoop);
 			if (pLoopPlot && pLoopPlot->getOwner() == GetID())
@@ -13515,6 +13511,8 @@ void CvPlayer::DoResolveWorkedPlotConflicts()
 						{
 							pLoopPlot->setWorkingCityOverride(pBestCity);
 							pBestCity->GetCityCitizens()->DoTurn(false);
+							if (pOriginalWorkedCity)
+								pOriginalWorkedCity->GetCityCitizens()->DoTurn(false);
 						}
 					}
 				}

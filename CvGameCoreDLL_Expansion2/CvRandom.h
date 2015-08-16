@@ -33,22 +33,20 @@ public:
 	void init(uint32_t ulSeed);
 	void uninit();
 	void reset(uint32_t ulSeed = 0);
-
-	unsigned int get(unsigned int uiNum, const char* pszLog = NULL);  //  Returns value from 0 to num-1 inclusive.
-
-#ifdef AUI_BINOM_RNG
-	unsigned int getBinom(unsigned int uiNum, const char* pszLog = NULL); // Returns value from 0 to num-1 inclusive in binomial distribution
-#endif
 #else
 	void init(unsigned long ulSeed);
 	void uninit();
 	void reset(unsigned long ulSeed = 0);
+#endif
 
+#if defined(AUI_USE_SFMT_RNG) || defined(AUI_WARNING_FIXES)
+	unsigned int get(unsigned int uiNum, const char* pszLog = NULL);  //  Returns value from 0 to num-1 inclusive.
+#else
 	unsigned short get(unsigned short usNum, const char* pszLog = NULL);  //  Returns value from 0 to num-1 inclusive.
+#endif
 
 #ifdef AUI_BINOM_RNG
-	unsigned short getBinom(unsigned short usNum, const char* pszLog = NULL); // Returns value from 0 to num-1 inclusive in binomial distribution
-#endif
+	unsigned int getBinom(unsigned int uiNum, const char* pszLog = NULL); // Returns value from 0 to num-1 inclusive in binomial distribution
 #endif
 
 	float getFloat();

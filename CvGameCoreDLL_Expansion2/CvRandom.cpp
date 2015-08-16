@@ -152,7 +152,7 @@ void CvRandom::reset(unsigned long ulSeed)
 	m_ulResetCount++;
 }
 
-#ifdef AUI_USE_SFMT_RNG
+#if defined(AUI_USE_SFMT_RNG) || defined(AUI_WARNING_FIXES)
 unsigned int CvRandom::get(unsigned int uiNum, const char* pszLog)
 #else
 unsigned short CvRandom::get(unsigned short usNum, const char* pszLog)
@@ -171,7 +171,11 @@ unsigned short CvRandom::get(unsigned short usNum, const char* pszLog)
 	m_ulCallCount++;
 
 	unsigned long ulNewSeed = ((RANDOM_A * m_ulRandomSeed) + RANDOM_C);
+#ifdef AUI_WARNING_FIXES
+	unsigned short us = ((unsigned short)((((ulNewSeed >> RANDOM_SHIFT) & MAX_UNSIGNED_SHORT) * (uiNum)) / (MAX_UNSIGNED_SHORT + 1)));
+#else
 	unsigned short us = ((unsigned short)((((ulNewSeed >> RANDOM_SHIFT) & MAX_UNSIGNED_SHORT) * ((unsigned long)usNum)) / (MAX_UNSIGNED_SHORT + 1)));
+#endif
 #endif
 
 	if(GC.getLogging())
@@ -198,6 +202,8 @@ unsigned short CvRandom::get(unsigned short usNum, const char* pszLog)
 					char szOut[1024] = {0};
 #ifdef AUI_USE_SFMT_RNG
 					sprintf_s(szOut, "%d, %d, %u, %u, %u, %u, %8x, %s, %s\n", kGame.getGameTurn(), kGame.getTurnSlice(), uiNum, uiRtnValue, m_ulRandomSeed, m_ulCallCount, (uint)this, m_bSynchronous ? "sync" : "async", (pszLog != NULL) ? pszLog : "Unknown");
+#elif defined(AUI_WARNING_FIXES)
+					sprintf_s(szOut, "%d, %d, %u, %u, %u, %8x, %s, %s\n", kGame.getGameTurn(), kGame.getTurnSlice(), uiNum, (uint)us, getSeed(), (uint)this, m_bSynchronous ? "sync" : "async", (pszLog != NULL) ? pszLog : "Unknown");
 #else
 					sprintf_s(szOut, "%d, %d, %u, %u, %u, %8x, %s, %s\n", kGame.getGameTurn(), kGame.getTurnSlice(), (uint)usNum, (uint)us, getSeed(), (uint)this, m_bSynchronous?"sync":"async", (pszLog != NULL)?pszLog:"Unknown");
 #endif
@@ -236,16 +242,16 @@ unsigned short CvRandom::get(unsigned short usNum, const char* pszLog)
 	return uiRtnValue;
 #else
 	m_ulRandomSeed = ulNewSeed;
+#ifdef AUI_WARNING_FIXES
+	return (uint)us;
+#else
 	return us;
+#endif
 #endif
 }
 
 #ifdef AUI_BINOM_RNG
-#ifdef AUI_USE_SFMT_RNG
 unsigned int CvRandom::getBinom(unsigned int uiNum, const char* pszLog)
-#else
-unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
-#endif
 {
 #ifdef AUI_USE_SFMT_RNG
 	unsigned int uiRtnValue = 0;
@@ -253,7 +259,7 @@ unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
 	{
 		recordCallStack();
 		m_ulCallCount += uiNum;
-		for (unsigned int uiCounter = 1; uiCounter < uiNum; uiCounter++)
+		for (unsigned int uiI = 1; uiI < uiNum; uiI++)  // starts at 1 because the generation is not inclusive (so we need one less cycle than normal)
 		{
 			uiRtnValue += m_MersenneTwister.sfmt_genrand_uint32() & 1;
 		}
@@ -266,7 +272,7 @@ unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
 		recordCallStack();
 		m_ulCallCount += uiNum;
 		ulNewSeed = (RANDOM_A * m_ulRandomSeed) + RANDOM_C;
-		for (unsigned short usCounter = 1; usCounter < usNum; usCounter++) // starts at 1 because the generation is not inclusive (so we need one less cycle than normal)
+		for (unsigned int uiI = 1; uiI < uiNum; uiI++) // starts at 1 because the generation is not inclusive (so we need one less cycle than normal)
 		{
 			// no need to worry about masking with MAX_UNSIGNED_SHORT, max cycle number takes care of it
 			usRet += (ulNewSeed >> BINOM_SHIFT) & 1; // need the shift so results only repeat after 2^BINOM_SHIFT iterations
@@ -299,6 +305,8 @@ unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
 					char szOut[1024] = { 0 };
 #ifdef AUI_USE_SFMT_RNG
 					sprintf_s(szOut, "%d, %d, %u, %u, %u, %u, %8x, %s, %s\n", kGame.getGameTurn(), kGame.getTurnSlice(), uiNum, uiRtnValue, m_ulRandomSeed, m_ulCallCount, (uint)this, m_bSynchronous ? "sync" : "async", (pszLog != NULL) ? pszLog : "Unknown");
+#elif defined(AUI_WARNING_FIXES)
+					sprintf_s(szOut, "%d, %d, %u, %u, %u, %8x, %s, %s\n", kGame.getGameTurn(), kGame.getTurnSlice(), uiNum, (uint)usRet, getSeed(), (uint)this, m_bSynchronous ? "sync" : "async", (pszLog != NULL) ? pszLog : "Unknown");
 #else
 					sprintf_s(szOut, "%d, %d, %u, %u, %u, %8x, %s, %s\n", kGame.getGameTurn(), kGame.getTurnSlice(), (uint)usNum, (uint)usRet, getSeed(), (uint)this, m_bSynchronous ? "sync" : "async", (pszLog != NULL) ? pszLog : "Unknown");
 #endif
@@ -337,7 +345,8 @@ unsigned short CvRandom::getBinom(unsigned short usNum, const char* pszLog)
 	return uiRtnValue;
 #else
 	m_ulRandomSeed = ulNewSeed;
-	return usRet;
+
+	return (uint)usRet;
 #endif
 }
 #endif

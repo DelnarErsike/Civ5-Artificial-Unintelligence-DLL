@@ -6222,7 +6222,7 @@ void CvCity::processBuilding(BuildingTypes eBuilding, int iChange, bool bFirst, 
 		m_pCityBuildings->ChangeMissionaryExtraSpreads(pBuildingInfo->GetExtraMissionarySpreads() * iChange);
 		m_pCityBuildings->ChangeLandmarksTourismPercent(pBuildingInfo->GetLandmarksTourismPercent() * iChange);
 #ifdef AUI_CACHED_MODIFIERS
-		m_pCityBuildings->ChangeProductionModifierPerCityStateTradeRoute(pBuildingInfo->GetCityStateTradeRouteProductionModifier());
+		m_pCityBuildings->ChangeProductionModifierPerCityStateTradeRoute(pBuildingInfo->GetCityStateTradeRouteProductionModifier() * iChange);
 #endif
 		m_pCityBuildings->ChangeGreatWorksTourismModifier(pBuildingInfo->GetGreatWorksTourismModifier() * iChange);
 		ChangeWonderProductionModifier(pBuildingInfo->GetWonderProductionModifier() * iChange);
