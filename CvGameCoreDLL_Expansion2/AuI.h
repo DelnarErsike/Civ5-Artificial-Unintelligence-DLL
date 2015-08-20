@@ -1293,6 +1293,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TRADE_UNBIASED_PRIORITIZE
 /// If a tile is unowned and not an ocean tile, extra danger is added to the trade route (bit of a cheat with unrevealed tiles to count them, too, but it's negligible)
 #define AUI_TRADE_SCORE_TRADE_ROUTE_UNOWNED_TILE_EXTRA_DANGER (1)
+#ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
+/// Uses the centralized yield evaluation from CityCitizens for scoring yields
+#define AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+#endif
 
 // Trait Classes Stuff
 /// Scales the threshold wonder competitiveness for choosing an engineer with game turn instead of having it be two binary checks

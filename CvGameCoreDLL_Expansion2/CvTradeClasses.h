@@ -66,10 +66,32 @@ public:
 
 	void DoTurn (void);
 
+#ifdef AUI_CONSTIFY
+	bool CanCreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType, bool bIgnoreExisting, bool bCheckPath = true) const;
+	bool CanCreateTradeRoute(PlayerTypes eOriginPlayer, PlayerTypes eDestPlayer, DomainTypes eDomainRestriction) const;
+#else
 	bool CanCreateTradeRoute (CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType, bool bIgnoreExisting, bool bCheckPath = true);
 	bool CanCreateTradeRoute(PlayerTypes eOriginPlayer, PlayerTypes eDestPlayer, DomainTypes eDomainRestriction);
+#endif
 	bool CreateTradeRoute (CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType, int& iRouteID);
 
+#ifdef AUI_CONSTIFY
+	bool IsValidTradeRoutePath (CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain) const;
+	CvPlot* GetPlotAdjacentToWater(CvPlot* pTarget, CvPlot* pOrigin) const;
+
+	bool IsDestinationExclusive(const TradeConnection& kTradeConnection) const;
+	bool IsConnectionInternational(const TradeConnection& kTradeConnection) const;
+
+	bool IsCityConnectedToPlayer(CvCity* pCity, PlayerTypes eOtherPlayer, bool bOnlyOwnedByCityOwner) const;
+	bool IsPlayerConnectedToPlayer(PlayerTypes eFirstPlayer, PlayerTypes eSecondPlayer) const;
+	int CountNumPlayerConnectionsToPlayer(PlayerTypes eFirstPlayer, PlayerTypes eSecondPlayer) const;
+
+	bool IsCityConnectedToCity (CvCity* pFirstCity, CvCity* pSecondCity) const;
+	bool IsCityConnectedFromCityToCity (CvCity* pOriginCity, CvCity* pDestCity) const;
+
+	int GetNumTimesOriginCity (CvCity* pCity, bool bOnlyInternational) const;
+	int GetNumTimesDestinationCity (CvCity* pCity, bool bOnlyInternational) const;
+#else
 	bool IsValidTradeRoutePath (CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain);
 	CvPlot* GetPlotAdjacentToWater (CvPlot* pTarget, CvPlot* pOrigin);
 
@@ -85,13 +107,21 @@ public:
 
 	int GetNumTimesOriginCity (CvCity* pCity, bool bOnlyInternational);
 	int GetNumTimesDestinationCity (CvCity* pCity, bool bOnlyInternational);
+#endif
 
 	void CopyPathIntoTradeConnection (CvAStarNode* pNode, TradeConnection* pTradeConnection);
 
+#ifdef AUI_CONSTIFY
+	int GetDomainModifierTimes100 (DomainTypes eDomain) const;
+
+	int GetEmptyTradeRouteIndex(void) const;
+	bool IsTradeRouteIndexEmpty(int iIndex) const;
+#else
 	int GetDomainModifierTimes100 (DomainTypes eDomain);
 
 	int GetEmptyTradeRouteIndex (void);
 	bool IsTradeRouteIndexEmpty (int iIndex);
+#endif
 	bool EmptyTradeRoute (int iIndex);
 
 	void ClearAllCityTradeRoutes (CvPlot* pPlot); // called when a city is captured or traded
@@ -101,6 +131,16 @@ public:
 
 	void DoAutoWarPlundering(TeamTypes eTeam1, TeamTypes eTeam2); // when war is declared, both sides plunder each others trade routes for cash!
 
+#ifdef AUI_CONSTIFY
+	int GetNumTradeRoutesInPlot(CvPlot* pPlot) const;
+
+	int GetIndexFromID(int iID) const;
+	PlayerTypes GetOwnerFromID(int iID) const;
+	PlayerTypes GetDestFromID(int iID) const;
+
+	int GetIndexFromUnitID(int iUnitID, PlayerTypes eOwner) const;
+	bool IsUnitIDUsed (int iUnitID) const;
+#else
 	int GetNumTradeRoutesInPlot (CvPlot* pPlot);
 
 	int GetIndexFromID (int iID);
@@ -109,16 +149,25 @@ public:
 	
 	int GetIndexFromUnitID(int iUnitID, PlayerTypes eOwner);
 	bool IsUnitIDUsed (int iUnitID);
+#endif
 
 	static CvCity* GetOriginCity(const TradeConnection& kTradeConnection);
 	static CvCity* GetDestCity(const TradeConnection& kTradeConnection);
 
 	void ResetTechDifference ();
 	void BuildTechDifference ();
+#ifdef AUI_CONSTIFY
+	int GetTechDifference(PlayerTypes ePlayer, PlayerTypes ePlayer2) const;
+#else
 	int GetTechDifference (PlayerTypes ePlayer, PlayerTypes ePlayer2);
+#endif
 
 	void CreateVis (int iIndex); // Create the trade unit vis unit
+#ifdef AUI_WARNING_FIXES
+	CvUnit* GetVis(uint iIndex) const;
+#else
 	CvUnit* GetVis(int iIndex);
+#endif
 	// trade unit movement
 	bool MoveUnit (int iIndex); // move a trade unit along its path for all its movement points
 	bool StepUnit (int iIndex); // move a trade unit a single step along its path (called by MoveUnit)
@@ -164,6 +213,19 @@ public:
 	void DoTurn(void);
 	void MoveUnits(void);
 
+#ifdef AUI_CONSTIFY
+	int GetTradeConnectionBaseValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer) const;
+	int GetTradeConnectionGPTValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer, bool bOriginCity) const;
+	int GetTradeConnectionResourceValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer) const;
+	int GetTradeConnectionYourBuildingValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer) const;
+	int GetTradeConnectionTheirBuildingValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer) const;
+	int GetTradeConnectionExclusiveValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield) const;
+	int GetTradeConnectionPolicyValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield) const;
+	int GetTradeConnectionOtherTraitValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer) const;
+	int GetTradeConnectionDomainValueModifierTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield) const;
+	int GetTradeConnectionRiverValueModifierTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer) const;
+	int GetTradeConnectionValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer) const;
+#else
 	int GetTradeConnectionBaseValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer);
 	int GetTradeConnectionGPTValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer, bool bOriginCity);
 	int GetTradeConnectionResourceValueTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer);
@@ -175,8 +237,21 @@ public:
 	int GetTradeConnectionDomainValueModifierTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield);
 	int GetTradeConnectionRiverValueModifierTimes100(const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer);
 	int GetTradeConnectionValueTimes100 (const TradeConnection& kTradeConnection, YieldTypes eYield, bool bAsOriginPlayer);
+#endif
 	void UpdateTradeConnectionValues (void); // updates the all the values for the trade routes that go to and from this player
 
+#ifdef AUI_CONSTIFY
+	int GetTradeValuesAtCityTimes100(const CvCity* const pCity, YieldTypes eYield) const;
+
+	int GetAllTradeValueTimes100(YieldTypes eYield) const;
+	int GetAllTradeValueFromPlayerTimes100(YieldTypes eYield, PlayerTypes ePlayer) const;
+
+	bool IsConnectedToPlayer(PlayerTypes eOtherPlayer) const;
+
+	bool CanCreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType, bool bIgnoreExisting, bool bCheckPath = true) const;
+	bool CanCreateTradeRoute(PlayerTypes eOtherPlayer, DomainTypes eDomain) const;
+	bool CanCreateTradeRoute(DomainTypes eDomain) const;
+#else
 	int GetTradeValuesAtCityTimes100 (const CvCity* const pCity, YieldTypes eYield);
 
 	int GetAllTradeValueTimes100 (YieldTypes eYield);
@@ -187,10 +262,29 @@ public:
 	bool CanCreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType, bool bIgnoreExisting, bool bCheckPath = true);
 	bool CanCreateTradeRoute(PlayerTypes eOtherPlayer, DomainTypes eDomain);
 	bool CanCreateTradeRoute(DomainTypes eDomain);
+#endif
 
 	bool CreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType);
 
 	TradeConnection* GetTradeConnection(CvCity* pOriginCity, CvCity* pDestCity);
+#ifdef AUI_CONSTIFY
+	int GetNumberOfCityStateTradeRoutes() const;
+
+	bool IsPreviousTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType) const;
+
+	int GetNumPotentialConnections(CvCity* pFromCity, DomainTypes eDomain) const;
+
+	std::vector<int> GetTradeUnitsAtPlot(const CvPlot* pPlot, bool bFailAtFirstFound, bool bExcludingMe, bool bOnlyWar) const;
+	std::vector<int> GetTradePlotsAtPlot(const CvPlot* pPlot, bool bFailAtFirstFound, bool bExcludingMe, bool bOnlyWar) const;
+
+	std::vector<int> GetOpposingTradeUnitsAtPlot(const CvPlot* pPlot, bool bFailAtFirstFound) const; // returns the ID of trade connections with units at that plot
+	bool ContainsOpposingPlayerTradeUnit(const CvPlot* pPlot) const;
+
+	std::vector<int> GetEnemyTradeUnitsAtPlot(const CvPlot* pPlot, bool bFailAtFirstFound) const; // returns the ID of trade connections with units at that plot
+	bool ContainsEnemyTradeUnit(const CvPlot* pPlot) const;
+	std::vector<int> GetEnemyTradePlotsAtPlot(const CvPlot* pPlot, bool bFailAtFirstFound) const; // returns the ID of trade connections that go through that plot
+	bool ContainsEnemyTradePlot(const CvPlot* pPlot) const;
+#else
 	int GetNumberOfCityStateTradeRoutes();
 
 	bool IsPreviousTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType);
@@ -207,9 +301,20 @@ public:
 	bool ContainsEnemyTradeUnit(const CvPlot* pPlot);
 	std::vector<int> GetEnemyTradePlotsAtPlot(const CvPlot* pPlot, bool bFailAtFirstFound); // returns the ID of trade connections that go through that plot
 	bool ContainsEnemyTradePlot(const CvPlot* pPlot);
+#endif
 
 	bool PlunderTradeRoute(int iTradeConnectionID);
 
+#ifdef AUI_CONSTIFY
+	int GetTradeRouteRange(DomainTypes eDomain, CvCity* pOriginCity) const;
+	int GetTradeRouteSpeed(DomainTypes eDomain) const;
+
+	uint GetNumTradeRoutesPossible() const;
+	int GetNumTradeRoutesUsed(bool bContinueTraining) const;
+	int GetNumTradeRoutesRemaining(bool bContinueTraining) const;
+
+	int GetNumDifferentTradingPartners() const;
+#else
 	int GetTradeRouteRange (DomainTypes eDomain, CvCity* pOriginCity);
 	int GetTradeRouteSpeed (DomainTypes eDomain);
 
@@ -218,6 +323,7 @@ public:
 	int GetNumTradeRoutesRemaining (bool bContinueTraining);
 
 	int GetNumDifferentTradingPartners (void);
+#endif
 
 	void UpdateTradeConnectionWasPlundered();
 	void AddTradeConnectionWasPlundered(const TradeConnection kTradeConnection);
@@ -225,8 +331,13 @@ public:
 
 	static UnitTypes GetTradeUnit (DomainTypes eDomain);
 
+#ifdef AUI_CONSTIFY
+	std::vector<CvString> GetPlotToolTips(CvPlot* pPlot) const;
+	std::vector<CvString> GetPlotMouseoverToolTips(CvPlot* pPlot) const;
+#else
 	std::vector<CvString> GetPlotToolTips (CvPlot* pPlot);
 	std::vector<CvString> GetPlotMouseoverToolTips (CvPlot* pPlot);
+#endif
 
 	TradeConnectionList m_aRecentlyExpiredConnections;
 	TradeConnectionWasPlunderedList m_aTradeConnectionWasPlundered;
@@ -250,7 +361,11 @@ public:
 
 	void GetAvailableTR(TradeConnectionList& aTradeConnectionList);
 	void PrioritizeTradeRoutes(TradeConnectionList& aTradeConnectionList);
+#ifdef AUI_CONSTIFY
+	int	ScoreInternationalTR(const TradeConnection& kTradeConnection) const;
+#else
 	int	ScoreInternationalTR (const TradeConnection& kTradeConnection);
+#endif
 #ifdef AUI_TRADE_UNBIASED_PRIORITIZE
 	int ScoreFoodTR (const TradeConnection& kTradeConnection) const;
 	int ScoreProductionTR (const TradeConnection& kTradeConnection) const;
