@@ -76,7 +76,11 @@ public:
 	void DoUpdateIndustrialRouteToCapital();
 
 	void SetRouteToCapitalConnected(bool bValue);
+#ifdef AUI_CONSTIFY
+	bool IsRouteToCapitalConnected() const;
+#else
 	bool IsRouteToCapitalConnected(void);
+#endif
 
 	void createGreatGeneral(UnitTypes eGreatPersonUnit);
 	void createGreatAdmiral(UnitTypes eGreatPersonUnit);
@@ -772,7 +776,11 @@ public:
 	bool isValidBuildingLocation(BuildingTypes eIndex) const;
 
 	void SetThreatValue(int iThreatValue);
+#ifdef AUI_CONSTIFY
+	int getThreatValue() const;
+#else
 	int getThreatValue(void);
+#endif
 
 	void clearOrderQueue();
 	void pushOrder(OrderTypes eOrder, int iData1, int iData2, bool bSave, bool bPop, bool bAppend, bool bRush=false);

@@ -87,7 +87,7 @@ void CvGameTrade::DoTurn (void)
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-bool CvGameTrade::CanCreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType, bool bIgnoreExisting, bool bCheckPath /*= true*/) const
+bool CvGameTrade::CanCreateTradeRoute(const CvCity* pOriginCity, const CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType, bool bIgnoreExisting, bool bCheckPath /*= true*/) const
 #else
 bool CvGameTrade::CanCreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType, bool bIgnoreExisting, bool bCheckPath /*= true*/)
 #endif
@@ -444,7 +444,7 @@ bool CvGameTrade::CreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, Domai
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-bool CvGameTrade::IsValidTradeRoutePath(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain) const
+bool CvGameTrade::IsValidTradeRoutePath(const CvCity* pOriginCity, const CvCity* pDestCity, DomainTypes eDomain) const
 #else
 bool CvGameTrade::IsValidTradeRoutePath (CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain)
 #endif
@@ -579,7 +579,7 @@ bool CvGameTrade::IsConnectionInternational	(const TradeConnection& kConnection)
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-bool CvGameTrade::IsCityConnectedToPlayer(CvCity* pCity, PlayerTypes eOtherPlayer, bool bOnlyOwnedByCityOwner) const
+bool CvGameTrade::IsCityConnectedToPlayer(const CvCity* pCity, PlayerTypes eOtherPlayer, bool bOnlyOwnedByCityOwner) const
 #else
 bool CvGameTrade::IsCityConnectedToPlayer (CvCity* pCity, PlayerTypes eOtherPlayer, bool bOnlyOwnedByCityOwner)
 #endif
@@ -621,7 +621,11 @@ bool CvGameTrade::IsCityConnectedToPlayer (CvCity* pCity, PlayerTypes eOtherPlay
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+void CvGameTrade::CopyPathIntoTradeConnection (CvAStarNode* pNode, TradeConnection* pTradeConnection) const
+#else
 void CvGameTrade::CopyPathIntoTradeConnection (CvAStarNode* pNode, TradeConnection* pTradeConnection)
+#endif
 {
 	// beyond the origin player's trade range
 	int iPathSteps = 0;
@@ -736,7 +740,7 @@ int CvGameTrade::CountNumPlayerConnectionsToPlayer (PlayerTypes eFirstPlayer, Pl
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-bool CvGameTrade::IsCityConnectedToCity(CvCity* pFirstCity, CvCity* pSecondCity) const
+bool CvGameTrade::IsCityConnectedToCity(const CvCity* pFirstCity, const CvCity* pSecondCity) const
 #else
 bool CvGameTrade::IsCityConnectedToCity (CvCity* pFirstCity, CvCity* pSecondCity)
 #endif
@@ -774,7 +778,7 @@ bool CvGameTrade::IsCityConnectedToCity (CvCity* pFirstCity, CvCity* pSecondCity
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-bool CvGameTrade::IsCityConnectedFromCityToCity(CvCity* pOriginCity, CvCity* pDestCity) const
+bool CvGameTrade::IsCityConnectedFromCityToCity(const CvCity* pOriginCity, const CvCity* pDestCity) const
 #else
 bool CvGameTrade::IsCityConnectedFromCityToCity (CvCity* pOriginCity, CvCity* pDestCity)
 #endif
@@ -808,7 +812,7 @@ bool CvGameTrade::IsCityConnectedFromCityToCity (CvCity* pOriginCity, CvCity* pD
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-int CvGameTrade::GetNumTimesOriginCity(CvCity* pCity, bool bOnlyInternational) const
+int CvGameTrade::GetNumTimesOriginCity(const CvCity* pCity, bool bOnlyInternational) const
 #else
 int CvGameTrade::GetNumTimesOriginCity (CvCity* pCity, bool bOnlyInternational)
 #endif
@@ -851,7 +855,7 @@ int CvGameTrade::GetNumTimesOriginCity (CvCity* pCity, bool bOnlyInternational)
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-int CvGameTrade::GetNumTimesDestinationCity(CvCity* pCity, bool bOnlyInternational) const
+int CvGameTrade::GetNumTimesDestinationCity(const CvCity* pCity, bool bOnlyInternational) const
 #else
 int CvGameTrade::GetNumTimesDestinationCity (CvCity* pCity, bool bOnlyInternational)
 #endif
@@ -894,7 +898,7 @@ int CvGameTrade::GetNumTimesDestinationCity (CvCity* pCity, bool bOnlyInternatio
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-int CvGameTrade::GetEmptyTradeRouteIndex(void) const
+int CvGameTrade::GetEmptyTradeRouteIndex() const
 #else
 int CvGameTrade::GetEmptyTradeRouteIndex (void)
 #endif
@@ -2761,7 +2765,7 @@ bool CvPlayerTrade::IsConnectedToPlayer(PlayerTypes eOtherPlayer)
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-bool CvPlayerTrade::CanCreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType, bool bIgnoreExisting, bool bCheckPath /* = true */) const
+bool CvPlayerTrade::CanCreateTradeRoute(const CvCity* pOriginCity, const CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType, bool bIgnoreExisting, bool bCheckPath /* = true */) const
 #else
 bool CvPlayerTrade::CanCreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType, bool bIgnoreExisting, bool bCheckPath /* = true */)
 #endif
@@ -2953,7 +2957,11 @@ bool CvPlayerTrade::CreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, Dom
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+TradeConnection* CvPlayerTrade::GetTradeConnection(const CvCity* pOriginCity, const CvCity* pDestCity)
+#else
 TradeConnection* CvPlayerTrade::GetTradeConnection(CvCity* pOriginCity, CvCity* pDestCity)
+#endif
 {
 	int iOriginX = pOriginCity->getX();
 	int iOriginY = pOriginCity->getY();
@@ -3007,7 +3015,7 @@ int CvPlayerTrade::GetNumberOfCityStateTradeRoutes()
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-bool CvPlayerTrade::IsPreviousTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType) const
+bool CvPlayerTrade::IsPreviousTradeRoute(const CvCity* pOriginCity, const CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType) const
 #else
 bool CvPlayerTrade::IsPreviousTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, DomainTypes eDomain, TradeConnectionType eConnectionType)
 #endif
@@ -3035,7 +3043,7 @@ bool CvPlayerTrade::IsPreviousTradeRoute(CvCity* pOriginCity, CvCity* pDestCity,
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-int CvPlayerTrade::GetNumPotentialConnections(CvCity* pFromCity, DomainTypes eDomain) const
+int CvPlayerTrade::GetNumPotentialConnections(const CvCity* pFromCity, DomainTypes eDomain) const
 #else
 int CvPlayerTrade::GetNumPotentialConnections (CvCity* pFromCity, DomainTypes eDomain)
 #endif
@@ -3516,7 +3524,7 @@ bool CvPlayerTrade::PlunderTradeRoute(int iTradeConnectionID)
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-int CvPlayerTrade::GetTradeRouteRange(DomainTypes eDomain, CvCity* pOriginCity) const
+int CvPlayerTrade::GetTradeRouteRange(DomainTypes eDomain, const CvCity* pOriginCity) const
 #else
 int CvPlayerTrade::GetTradeRouteRange (DomainTypes eDomain, CvCity* pOriginCity)
 #endif
@@ -4441,10 +4449,11 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	}
 #endif
 
-	CvPlayerTrade* pPlayerTrade = m_pPlayer->GetTrade();
 #ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
-	CvPlayerTrade* pOtherPlayerTrade = kOtherPlayer.GetTrade();
+	const CvPlayerTrade* pPlayerTrade = m_pPlayer->GetTrade();
+	const CvPlayerTrade* pOtherPlayerTrade = kOtherPlayer.GetTrade();
 #else
+	CvPlayerTrade* pPlayerTrade = m_pPlayer->GetTrade();
 	CvPlayerTrade* pOtherPlayerTrade = GET_PLAYER(kTradeConnection.m_eDestOwner).GetTrade();
 #endif
 	int iDangerSum = 1; // can't be zero because we divide by zero!

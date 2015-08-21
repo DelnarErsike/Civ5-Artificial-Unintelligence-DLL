@@ -1898,7 +1898,11 @@ void CvCity::SetRouteToCapitalConnected(bool bValue)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+bool CvCity::IsRouteToCapitalConnected() const
+#else
 bool CvCity::IsRouteToCapitalConnected(void)
+#endif
 {
 	return m_bRouteToCapitalConnectedThisTurn;
 }
@@ -12186,7 +12190,11 @@ void CvCity::SetThreatValue(int iThreatValue)
 
 //	--------------------------------------------------------------------------------
 /// Getting the danger value threat amount
+#ifdef AUI_CONSTIFY
+int CvCity::getThreatValue() const
+#else
 int CvCity::getThreatValue(void)
+#endif
 {
 	VALIDATE_OBJECT
 	return m_iThreatValue;

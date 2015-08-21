@@ -75,68 +75,70 @@ public:
 	typedef FastDelegate2<int, int, int> CvAPointFunc;
 	typedef FastDelegate4<int, int, int, int, int> CvAHeuristic;
 	typedef FastDelegate3<CvAStarNode*, CvAStarNode*, int, int> CvAStarFunc;
-	typedef FastDelegate1<CvAStarNode*, int> CvANumExtraChildren;
-	typedef FastDelegate2<CvAStarNode*, int, CvAStarNode*> CvAGetExtraChild;
+	typedef FastDelegate3<const CvAStarNode*, const CvAStarNode*, int, int> CvAStarCostFunc;
+	typedef FastDelegate3<const CvAStarNode*, CvAStarNode*, int, int> CvAStarAddFunc;
+	typedef FastDelegate1<const CvAStarNode*, int> CvANumExtraChildren;
+	typedef FastDelegate2<const CvAStarNode*, int, CvAStarNode*> CvAGetExtraChild;
 	typedef FastDelegate0<void> CvABeginOrEnd;
 
 	//--------------------------------------- A* FUNCTIONS -------------------------------------------
-	int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data);
-	int PathValid(CvAStarNode* parent, CvAStarNode* node, int data);
-	int PathDestValid(int iToX, int iToY);
+	int PathAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int PathValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int PathDestValid(int iToX, int iToY) const;
 	int PathDest(int iToX, int iToyY) const;
 	int PathHeuristic(int iFromX, int iFromY, int iToX, int iToY) const;
-	int PathCost(CvAStarNode* parent, CvAStarNode* node, int data);
+	int PathCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const;
 
-	int IgnoreUnitsDestValid(int iToX, int iToY);
-	int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data);
-	int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data);
-	int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data);
+	int IgnoreUnitsDestValid(int iToX, int iToY) const;
+	int IgnoreUnitsCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const;
+	int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int IgnoreUnitsPathAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const;
 
 	int StepDestValid(int iToX, int iToY) const;
 	int StepHeuristic(int iFromX, int iFromY, int iToX, int iToY) const;
-	int StepValid(CvAStarNode* parent, CvAStarNode* node, int data);
-	int StepValidAnyArea(CvAStarNode* parent, CvAStarNode* node, int data);
-	int StepCost(CvAStarNode* parent, CvAStarNode* node, int data) const;
-	int StepAdd(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int StepValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int StepValidAnyArea(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int StepCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const;
+	int StepAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const;
 
 	int RouteValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
-	int RouteGetNumExtraChildren(CvAStarNode* node) const;
-	CvAStarNode* RouteGetExtraChild(CvAStarNode* node, int iIndex) const;
+	int RouteGetNumExtraChildren(const CvAStarNode* node) const;
+	CvAStarNode* RouteGetExtraChild(const CvAStarNode* node, int iIndex) const;
 
 	int WaterRouteValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
 
 	int AreaValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
-	int JoinArea(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int JoinArea(const CvAStarNode* parent, CvAStarNode* node, int data) const;
 
 	int LandmassValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
-	int JoinLandmass(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int JoinLandmass(const CvAStarNode* parent, CvAStarNode* node, int data) const;
 
 	int InfluenceDestValid(int iToX, int iToY);
 	int InfluenceHeuristic(int iFromX, int iFromY, int iToX, int iToY) const;
 	int InfluenceValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
-	int InfluenceCost(CvAStarNode* parent, CvAStarNode* node, int data);
-	int InfluenceAdd(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int InfluenceCost(const CvAStarNode* parent, const CvAStarNode* node, int data);
+	int InfluenceAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const;
 
-	int BuildRouteCost(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int BuildRouteCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const;
 	int BuildRouteValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
 
-	int UIPathAdd(CvAStarNode* parent, CvAStarNode* node, int data);
-	int UIPathValid(CvAStarNode* parent, CvAStarNode* node, int data);
+	int UIPathAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int UIPathValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
 
-	int AttackPathAdd(CvAStarNode* parent, CvAStarNode* node, int data);
-	int AttackPathDest(int iToX, int iToY);
-	int AttackFortifiedPathDest(int iToX, int iToY);
-	int AttackCityPathDest(int iToX, int iToY);
-	int AttackPathDestEval(int iToX, int iToY, bool bOnlyFortified, bool bOnlyCity);
+	int AttackPathAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int AttackPathDest(int iToX, int iToY) const;
+	int AttackFortifiedPathDest(int iToX, int iToY) const;
+	int AttackCityPathDest(int iToX, int iToY) const;
+	int AttackPathDestEval(int iToX, int iToY, bool bOnlyFortified, bool bOnlyCity) const;
 
-	int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int data);
-	int FindValidDestinationDest(int iToX, int iToY);
-	int FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int data);
+	int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int FindValidDestinationDest(int iToX, int iToY) const;
+	int FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
 
 	int TradeRouteHeuristic(int iFromX, int iFromY, int iToX, int iToY) const;
-	int TradeRouteLandPathCost(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int TradeRouteLandPathCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const;
 	int TradeRouteLandValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
-	int TradeRouteWaterPathCost(CvAStarNode* parent, CvAStarNode* node, int data) const;
+	int TradeRouteWaterPathCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const;
 	int TradeRouteWaterValid(CvAStarNode* parent, CvAStarNode* node, int data) const;
 
 	void UnitPathInitialize();
@@ -160,7 +162,7 @@ public:
 
 	// Initializes the CvAStar class. iSize = Dimensions of Pathing Grid(ie. [iSize][iSize]
 #ifdef AUI_ASTAR_USE_DELEGATES
-	void Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvANumExtraChildren NumExtraChildrenFunc, CvAGetExtraChild GetExtraChildFunc, CvABeginOrEnd InitializeFunc, CvABeginOrEnd UninitializeFunc);
+	void Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarCostFunc CostFunc, CvAStarFunc ValidFunc, CvAStarAddFunc NotifyChildFunc, CvAStarAddFunc NotifyListFunc, CvANumExtraChildren NumExtraChildrenFunc, CvAGetExtraChild GetExtraChildFunc, CvABeginOrEnd InitializeFunc, CvABeginOrEnd UninitializeFunc);
 #else
 	void Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvANumExtraChildren NumExtraChildrenFunc, CvAGetExtraChild GetExtraChildFunc, CvABegin InitializeFunc, CvAEnd UninitializeFunc, const void* pData);
 #endif
@@ -171,7 +173,7 @@ public:
 	bool GeneratePath(int iXstart, int iYstart, int iXdest, int iYdest, int iInfo = 0, bool bReuse = false);
 
 	// Gets the last node in the path (from the origin) - Traverse the parents to get full path (linked list starts at destination)
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 	inline CvAStarNode* GetLastNode() const
 #else
 	inline CvAStarNode* GetLastNode()
@@ -188,7 +190,7 @@ public:
 	}
 #endif
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 	inline bool IsPathStart(int iX, int iY) const
 #else
 	inline bool IsPathStart(int iX, int iY)
@@ -212,7 +214,7 @@ public:
 		return FALSE;
 	}
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 	inline int GetStartX() const
 #else
 	inline int GetStartX()
@@ -221,7 +223,7 @@ public:
 		return m_iXstart;
 	}
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 	inline int GetStartY() const
 #else
 	inline int GetStartY()
@@ -230,7 +232,7 @@ public:
 		return m_iYstart;
 	}
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 	inline int GetDestX() const
 #else
 	inline int GetDestX()
@@ -239,7 +241,7 @@ public:
 		return m_iXdest;
 	}
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 	inline int GetDestY() const
 #else
 	inline int GetDestY()
@@ -248,7 +250,7 @@ public:
 		return m_iYdest;
 	}
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 	inline int GetInfo() const
 #else
 	inline int GetInfo()
@@ -347,7 +349,11 @@ public:
 		return bOldState;
 	}
 
+#ifdef AUI_CONSTIFY
+	inline CvAPointFunc GetIsPathDestFunc() const
+#else
 	inline CvAPointFunc GetIsPathDestFunc()
+#endif
 	{
 		return udIsPathDest;
 	}
@@ -357,7 +363,11 @@ public:
 		udIsPathDest = newIsPathDestFunc;
 	}
 
+#ifdef AUI_CONSTIFY
+	inline CvAPointFunc GetDestValidFunc() const
+#else
 	inline CvAPointFunc GetDestValidFunc()
+#endif
 	{
 		return udDestValid;
 	}
@@ -367,7 +377,11 @@ public:
 		udDestValid = newDestValidFunc;
 	}
 
+#ifdef AUI_CONSTIFY
+	inline CvAHeuristic GetHeuristicFunc() const
+#else
 	inline CvAHeuristic GetHeuristicFunc()
+#endif
 	{
 		return udHeuristic;
 	}
@@ -377,17 +391,31 @@ public:
 		udHeuristic = newHeuristicFunc;
 	}
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+	inline CvAStarCostFunc GetCostFunc() const
+#elif defined(AUI_CONSTIFY)
+	inline CvAStarFunc GetCostFunc() const
+#else
 	inline CvAStarFunc GetCostFunc()
+#endif
 	{
 		return udCost;
 	}
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+	inline void SetCostFunc(CvAStarCostFunc newCostFunc)
+#else
 	inline void SetCostFunc(CvAStarFunc newCostFunc)
+#endif
 	{
 		udCost = newCostFunc;
 	}
 
+#ifdef AUI_CONSTIFY
+	inline CvAStarFunc GetValidFunc() const
+#else
 	inline CvAStarFunc GetValidFunc()
+#endif
 	{
 		return udValid;
 	}
@@ -397,27 +425,51 @@ public:
 		udValid = newValidFunc;
 	}
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+	inline CvAStarAddFunc GetNotifyChildFunc() const
+#elif defined(AUI_CONSTIFY)
+	inline CvAStarFunc GetNotifyChildFunc() const
+#else
 	inline CvAStarFunc GetNotifyChildFunc()
+#endif
 	{
 		return udNotifyChild;
 	}
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+	inline void SetNotifyChildFunc(CvAStarAddFunc newNotifyChildFunc)
+#else
 	inline void SetNotifyChildFunc(CvAStarFunc newNotifyChildFunc)
+#endif
 	{
 		udNotifyChild = newNotifyChildFunc;
 	}
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+	inline CvAStarAddFunc GetNotifyListFunc() const
+#elif defined(AUI_CONSTIFY)
+	inline CvAStarFunc GetNotifyListFunc() const
+#else
 	inline CvAStarFunc GetNotifyListFunc()
+#endif
 	{
 		return udNotifyList;
 	}
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+	inline void SetNotifyListFunc(CvAStarAddFunc newNotifyListFunc)
+#else
 	inline void SetNotifyListFunc(CvAStarFunc newNotifyListFunc)
+#endif
 	{
 		udNotifyList = newNotifyListFunc;
 	}
 
+#ifdef AUI_CONSTIFY
+	inline CvANumExtraChildren GetNumExtraChildrenFunc() const
+#else
 	inline CvANumExtraChildren GetNumExtraChildrenFunc()
+#endif
 	{
 		return udNumExtraChildrenFunc;
 	}
@@ -427,7 +479,11 @@ public:
 		udNumExtraChildrenFunc = newNumExtraChildrenFunc;
 	}
 
+#ifdef AUI_CONSTIFY
+	inline CvAGetExtraChild GetExtraChildGetterFunc() const
+#else
 	inline CvAGetExtraChild GetExtraChildGetterFunc()
+#endif
 	{
 		return udGetExtraChildFunc;
 	}
@@ -477,7 +533,7 @@ protected:
 	void Push(CvAStarNode* node);
 	CvAStarNode* Pop();
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 	inline int xRange(int iX) const;
 	inline int yRange(int iY) const;
 	inline bool isValid(int iX, int iY) const;
@@ -499,10 +555,19 @@ protected:
 	CvAPointFunc udIsPathDest;					// Determines if this node is the destination of the path
 	CvAPointFunc udDestValid;				    // Determines destination is valid
 	CvAHeuristic udHeuristic;				    // Determines heuristic cost
+#ifdef AUI_ASTAR_USE_DELEGATES
+	CvAStarCostFunc udCost;						    // Called when cost value is need
+#else
 	CvAStarFunc udCost;						    // Called when cost value is need
+#endif
 	CvAStarFunc udValid;					    // Called to check validity of a coordinate
+#ifdef AUI_ASTAR_USE_DELEGATES
+	CvAStarAddFunc udNotifyChild;				    // Called when child is added/checked (LinkChild)
+	CvAStarAddFunc udNotifyList;				    // Called when node is added to Open/Closed list
+#else
 	CvAStarFunc udNotifyChild;				    // Called when child is added/checked (LinkChild)
 	CvAStarFunc udNotifyList;				    // Called when node is added to Open/Closed list
+#endif
 	CvANumExtraChildren udNumExtraChildrenFunc; // Determines if CreateChildren should consider any additional nodes
 	CvAGetExtraChild udGetExtraChildFunc;	    // Get the extra children nodes
 #ifdef AUI_ASTAR_USE_DELEGATES
@@ -561,7 +626,7 @@ protected:
 };
 
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 inline int CvAStar::xRange(int iX) const
 #else
 inline int CvAStar::xRange(int iX)
@@ -589,7 +654,7 @@ inline int CvAStar::xRange(int iX)
 }
 
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 inline int CvAStar::yRange(int iY) const
 #else
 inline int CvAStar::yRange(int iY)
@@ -616,7 +681,7 @@ inline int CvAStar::yRange(int iY)
 	}
 }
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 inline bool CvAStar::isValid(int iX, int iY) const
 #else
 inline bool CvAStar::isValid(int iX, int iY)
@@ -733,7 +798,7 @@ public:
 	CvTwoLayerPathFinder();
 	~CvTwoLayerPathFinder();
 #ifdef AUI_ASTAR_USE_DELEGATES
-	void Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvABeginOrEnd InitializeFunc, CvABeginOrEnd UninitializeFunc);
+	void Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarCostFunc CostFunc, CvAStarFunc ValidFunc, CvAStarAddFunc NotifyChildFunc, CvAStarAddFunc NotifyListFunc, CvABeginOrEnd InitializeFunc, CvABeginOrEnd UninitializeFunc);
 #else
 	void Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvABegin InitializeFunc, CvAEnd UninitializeFunc, const void* pData);
 #endif
@@ -746,7 +811,7 @@ public:
 	CvPlot* GetPathEndTurnPlot() const;
 
 #ifdef AUI_ASTAR_USE_DELEGATES
-	int PathNodeAdd(CvAStarNode* parent, CvAStarNode* node, int data);
+	int PathNodeAdd(const CvAStarNode* parent, CvAStarNode* node, int data);
 #endif
 
 #ifdef AUI_ASTAR_TURN_LIMITER
@@ -785,7 +850,7 @@ public:
 #endif
 #endif
 	CvPlot* GetLastOwnedPlot(CvPlot* pStartPlot, CvPlot* pEndPlot, PlayerTypes iOwner) const;
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 	int GetPathLength() const;
 #else
 	int GetPathLength();

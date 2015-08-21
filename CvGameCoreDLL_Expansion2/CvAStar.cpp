@@ -147,7 +147,7 @@ void CvAStar::DeInit()
 //	--------------------------------------------------------------------------------
 /// Initializes the AStar algorithm
 #ifdef AUI_ASTAR_USE_DELEGATES
-void CvAStar::Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvANumExtraChildren NumExtraChildrenFunc, CvAGetExtraChild GetExtraChildFunc, CvABeginOrEnd InitializeFunc, CvABeginOrEnd UninitializeFunc)
+void CvAStar::Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarCostFunc CostFunc, CvAStarFunc ValidFunc, CvAStarAddFunc NotifyChildFunc, CvAStarAddFunc NotifyListFunc, CvANumExtraChildren NumExtraChildrenFunc, CvAGetExtraChild GetExtraChildFunc, CvABeginOrEnd InitializeFunc, CvABeginOrEnd UninitializeFunc)
 #else
 void CvAStar::Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvANumExtraChildren NumExtraChildrenFunc, CvAGetExtraChild GetExtraChildFunc, CvABegin InitializeFunc, CvAEnd UninitializeFunc, const void* pData)
 #endif
@@ -1236,7 +1236,7 @@ int PathDest(int iToX, int iToY, const void* pointer, CvAStar* finder)
 //	--------------------------------------------------------------------------------
 /// Standard path finder - is this end point for the path valid?
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::PathDestValid(int iToX, int iToY)
+int CvAStar::PathDestValid(int iToX, int iToY) const
 #else
 int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 #endif
@@ -1403,7 +1403,7 @@ int PathHeuristic(int iFromX, int iFromY, int iToX, int iToY)
 //	--------------------------------------------------------------------------------
 /// Standard path finder - compute cost of a path
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::PathCost(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::PathCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const
 #else
 int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -1809,7 +1809,7 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 //	---------------------------------------------------------------------------
 /// Standard path finder - check validity of a coordinate
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::PathValid(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::PathValid(CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -2365,7 +2365,7 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 //	--------------------------------------------------------------------------------
 /// Standard path finder - add a new path
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::PathAdd(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::PathAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -2451,7 +2451,7 @@ int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 //	--------------------------------------------------------------------------------
 /// Two layer path finder - if add a new open node with movement left, add a second one assuming stop for turn here
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvTwoLayerPathFinder::PathNodeAdd(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvTwoLayerPathFinder::PathNodeAdd(const CvAStarNode* parent, CvAStarNode* node, int data)
 #else
 int PathNodeAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -2517,7 +2517,7 @@ int PathNodeAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* po
 //	--------------------------------------------------------------------------------
 /// Ignore units path finder - is this end point for the path valid?
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::IgnoreUnitsDestValid(int iToX, int iToY)
+int CvAStar::IgnoreUnitsDestValid(int iToX, int iToY) const
 #else
 int IgnoreUnitsDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 #endif
@@ -2629,7 +2629,7 @@ int IgnoreUnitsDestValid(int iToX, int iToY, const void* pointer, CvAStar* finde
 //	--------------------------------------------------------------------------------
 /// Ignore units path finder - compute cost of a path
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::IgnoreUnitsCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const
 #else
 int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -2968,7 +2968,7 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 //	--------------------------------------------------------------------------------
 /// Ignore units path finder - check validity of a coordinate
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -3188,7 +3188,7 @@ int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data, const voi
 //	--------------------------------------------------------------------------------
 /// Ignore units path finder - add a new path
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::IgnoreUnitsPathAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -3318,7 +3318,7 @@ int StepHeuristic(int iFromX, int iFromY, int iToX, int iToY)
 //	--------------------------------------------------------------------------------
 /// Step path finder - compute cost of a path
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::StepCost(CvAStarNode* parent, CvAStarNode* node, int data) const
+int CvAStar::StepCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const
 #else
 int StepCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -3330,7 +3330,7 @@ int StepCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 //	--------------------------------------------------------------------------------
 /// Step path finder - check validity of a coordinate
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::StepValid(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::StepValid(CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int StepValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -3411,7 +3411,7 @@ int StepValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 //	--------------------------------------------------------------------------------
 /// Step path finder - check validity of a coordinate (special case that allows any area)
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::StepValidAnyArea(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::StepValidAnyArea(CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int StepValidAnyArea(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -3487,7 +3487,7 @@ int StepValidAnyArea(CvAStarNode* parent, CvAStarNode* node, int data, const voi
 //	--------------------------------------------------------------------------------
 /// Step path finder - add a new path
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::StepAdd(CvAStarNode* parent, CvAStarNode* node, int data) const
+int CvAStar::StepAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int StepAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -3566,7 +3566,7 @@ int InfluenceHeuristic(int iFromX, int iFromY, int iToX, int iToY)
 //	--------------------------------------------------------------------------------
 /// Influence path finder - compute cost of a path
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::InfluenceCost(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::InfluenceCost(const CvAStarNode* parent, const CvAStarNode* node, int data)
 #else
 int InfluenceCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -3576,12 +3576,12 @@ int InfluenceCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* 
 	if(parent->m_pParent || GC.getUSE_FIRST_RING_INFLUENCE_TERRAIN_COST())
 	{
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-		CvPlot* pFromPlot = parent->m_pPlot;
-		CvPlot* pToPlot = node->m_pPlot;
+		const CvPlot* pFromPlot = parent->m_pPlot;
+		const CvPlot* pToPlot = node->m_pPlot;
 #ifdef AUI_ASTAR_USE_DELEGATES
-		CvPlot* pSourcePlot = GC.getMap().plotUnchecked(GetStartX(), GetStartY());
+		const CvPlot* pSourcePlot = GC.getMap().plotUnchecked(GetStartX(), GetStartY());
 #else
-		CvPlot* pSourcePlot = GC.getMap().plotUnchecked(finder->GetStartX(), finder->GetStartY());
+		const CvPlot* pSourcePlot = GC.getMap().plotUnchecked(finder->GetStartX(), finder->GetStartY());
 #endif
 #else
 		CvMap& kMap = GC.getMap();
@@ -3693,7 +3693,7 @@ int InfluenceValid(CvAStarNode* parent, CvAStarNode* node, int data, const void*
 //	--------------------------------------------------------------------------------
 /// Influence path finder - add a new path
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::InfluenceAdd(CvAStarNode* parent, CvAStarNode* node, int data) const
+int CvAStar::InfluenceAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int InfluenceAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -3716,7 +3716,7 @@ int InfluenceAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* p
 //	--------------------------------------------------------------------------------
 // Route - Return the x, y plot of the node that we want to access
 #ifdef AUI_ASTAR_USE_DELEGATES
-CvAStarNode* CvAStar::RouteGetExtraChild(CvAStarNode* node, int iIndex) const
+CvAStarNode* CvAStar::RouteGetExtraChild(const CvAStarNode* node, int iIndex) const
 {
 	int iX = -1;
 	int iY = -1;
@@ -3733,7 +3733,7 @@ int RouteGetExtraChild(CvAStarNode* node, int iIndex, int& iX, int& iY, CvAStar*
 	CvPlayerAI& kPlayer = GET_PLAYER(ePlayer);
 	TeamTypes eTeam = kPlayer.getTeam();
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-	CvPlot* pPlot = node->m_pPlot;
+	const CvPlot* pPlot = node->m_pPlot;
 #else
 	CvPlot* pPlot = GC.getMap().plotCheckInvalid(node->m_iX, node->m_iY);
 #endif
@@ -3829,7 +3829,7 @@ int RouteValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poi
 #endif
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-	CvPlot* pNewPlot = node->m_pPlot;
+	const CvPlot* pNewPlot = node->m_pPlot;
 #else
 	pNewPlot = node->m_pPlot;
 #endif
@@ -3946,7 +3946,7 @@ int RouteValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poi
 // Route - find the number of additional children. In this case, the node is at a city, push all other cities that the city has a water connection to
 // This function does not require the global Tactical Analysis Map.
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::RouteGetNumExtraChildren(CvAStarNode* node) const
+int CvAStar::RouteGetNumExtraChildren(const CvAStarNode* node) const
 {
 	PlayerTypes ePlayer = ((PlayerTypes)(GetInfo() & 0xFF));
 #else
@@ -3957,7 +3957,7 @@ int RouteGetNumExtraChildren(CvAStarNode* node,  CvAStar* finder)
 	CvPlayerAI& kPlayer = GET_PLAYER(ePlayer);
 	TeamTypes eTeam = kPlayer.getTeam();
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-	CvPlot* pPlot = node->m_pPlot;
+	const CvPlot* pPlot = node->m_pPlot;
 #else
 	CvPlot* pPlot = GC.getMap().plotCheckInvalid(node->m_iX, node->m_iY);
 #endif
@@ -4053,7 +4053,7 @@ int WaterRouteValid(CvAStarNode* parent, CvAStarNode* node, int data, const void
 
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-	CvPlot* pNewPlot = node->m_pPlot;
+	const CvPlot* pNewPlot = node->m_pPlot;
 #else
 	pNewPlot = node->m_pPlot;
 #endif
@@ -4089,13 +4089,13 @@ int WaterRouteValid(CvAStarNode* parent, CvAStarNode* node, int data, const void
 //	--------------------------------------------------------------------------------
 /// Build route cost
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::BuildRouteCost(CvAStarNode* parent, CvAStarNode* node, int data) const
+int CvAStar::BuildRouteCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const
 #else
 int BuildRouteCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
 {
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-	CvPlot* pPlot = node->m_pPlot;
+	const CvPlot* pPlot = node->m_pPlot;
 #else
 	CvPlot* pPlot = GC.getMap().plotUnchecked(node->m_iX, node->m_iY);
 #endif
@@ -4190,7 +4190,7 @@ int BuildRouteValid(CvAStarNode* parent, CvAStarNode* node, int data, const void
 
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-	CvPlot* pNewPlot = node->m_pPlot;
+	const CvPlot* pNewPlot = node->m_pPlot;
 #else
 	pNewPlot = node->m_pPlot;
 #endif
@@ -4267,8 +4267,8 @@ int AreaValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 	}
 
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-	CvPlot* pOldPlot = parent->m_pPlot;
-	CvPlot* pNewPlot = node->m_pPlot;
+	const CvPlot* pOldPlot = parent->m_pPlot;
+	const CvPlot* pNewPlot = node->m_pPlot;
 	if (!pOldPlot || !pNewPlot)
 	{
 		return FALSE;
@@ -4294,7 +4294,7 @@ int AreaValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 //	--------------------------------------------------------------------------------
 /// Area path finder - callback routine when node added to open/closed list
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::JoinArea(CvAStarNode* parent, CvAStarNode* node, int data) const
+int CvAStar::JoinArea(const CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int JoinArea(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -4345,7 +4345,7 @@ int LandmassValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* 
 //	--------------------------------------------------------------------------------
 /// Area path finder - callback routine when node added to open/closed list
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::JoinLandmass(CvAStarNode* parent, CvAStarNode* node, int data) const
+int CvAStar::JoinLandmass(const CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int JoinLandmass(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -4393,7 +4393,7 @@ CvTwoLayerPathFinder::~CvTwoLayerPathFinder()
 //	--------------------------------------------------------------------------------
 /// Allocate memory, zero variables
 #ifdef AUI_ASTAR_USE_DELEGATES
-void CvTwoLayerPathFinder::Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvABeginOrEnd InitializeFunc, CvABeginOrEnd UninitializeFunc)
+void CvTwoLayerPathFinder::Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarCostFunc CostFunc, CvAStarFunc ValidFunc, CvAStarAddFunc NotifyChildFunc, CvAStarAddFunc NotifyListFunc, CvABeginOrEnd InitializeFunc, CvABeginOrEnd UninitializeFunc)
 #else
 void CvTwoLayerPathFinder::Initialize(int iColumns, int iRows, bool bWrapX, bool bWrapY, CvAPointFunc IsPathDestFunc, CvAPointFunc DestValidFunc, CvAHeuristic HeuristicFunc, CvAStarFunc CostFunc, CvAStarFunc ValidFunc, CvAStarFunc NotifyChildFunc, CvAStarFunc NotifyListFunc, CvABegin InitializeFunc, CvAEnd UninitializeFunc, const void* pData)
 #endif
@@ -5044,7 +5044,7 @@ CvPlot* CvIgnoreUnitsPathFinder::GetPreviousPlot()
 //	--------------------------------------------------------------------------------
 /// UI path finder - check validity of a coordinate
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::UIPathValid(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::UIPathValid(CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int UIPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -5060,7 +5060,7 @@ int UIPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* po
 	}
 
 #ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-	CvPlot* pToPlot = node->m_pPlot;
+	const CvPlot* pToPlot = node->m_pPlot;
 #else
 	CvPlot* pToPlot = GC.getMap().plotUnchecked(node->m_iX, node->m_iY);
 #endif
@@ -5132,7 +5132,7 @@ int UIPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* po
 //	--------------------------------------------------------------------------------
 /// UI path finder - add a new path and send out a message
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::UIPathAdd(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::UIPathAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const
 {
 	PathAdd(parent, node, data);
 #else
@@ -5164,7 +5164,7 @@ int UIPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::AttackPathAdd(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::AttackPathAdd(const CvAStarNode* parent, CvAStarNode* node, int data) const
 {
 	PathAdd(parent, node, data);
 #else
@@ -5203,9 +5203,9 @@ int AttackPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* 
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::AttackPathDestEval(int iToX, int iToY, bool bOnlyFortified, bool bOnlyCity)
+int CvAStar::AttackPathDestEval(int iToX, int iToY, bool bOnlyFortified, bool bOnlyCity) const
 {
-	CvUnit* pUnit = ((CvUnit*)m_pData);
+	const CvUnit* pUnit = ((CvUnit*)m_pData);
 #else
 int AttackPathDestEval(int iToX, int iToY, const void* pointer, CvAStar* finder, bool bOnlyFortified, bool bOnlyCity)
 {
@@ -5214,7 +5214,7 @@ int AttackPathDestEval(int iToX, int iToY, const void* pointer, CvAStar* finder,
 	CvAssertMsg(pUnit, "pUnit should be a value");
 	CvPlot* pPlot = GC.getMap().plot(iToX, iToY);
 #ifdef AUI_ASTAR_USE_DELEGATES
-	CvAStarNode* pNode = GetLastNode();
+	const CvAStarNode* pNode = GetLastNode();
 #else
 	CvAStarNode* pNode = finder->GetLastNode();
 #endif
@@ -5251,7 +5251,7 @@ int AttackPathDestEval(int iToX, int iToY, const void* pointer, CvAStar* finder,
 //	--------------------------------------------------------------------------------
 /// Destination is valid if there is an enemy unit there
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::AttackPathDest(int iToX, int iToY)
+int CvAStar::AttackPathDest(int iToX, int iToY) const
 {
 	return AttackPathDestEval(iToX, iToY, false, false);
 #else
@@ -5264,7 +5264,7 @@ int AttackPathDest(int iToX, int iToY, const void* pointer, CvAStar* finder)
 //	--------------------------------------------------------------------------------
 /// Destination is valid if there is a fortified unit there
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::AttackFortifiedPathDest(int iToX, int iToY)
+int CvAStar::AttackFortifiedPathDest(int iToX, int iToY) const
 {
 	return AttackPathDestEval(iToX, iToY, true, false);
 #else
@@ -5277,7 +5277,7 @@ int AttackFortifiedPathDest(int iToX, int iToY, const void* pointer, CvAStar* fi
 //	--------------------------------------------------------------------------------
 /// Destination is valid if there is a city there
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::AttackCityPathDest(int iToX, int iToY)
+int CvAStar::AttackCityPathDest(int iToX, int iToY) const
 {
 	return AttackPathDestEval(iToX, iToY, false, true);
 #else
@@ -5289,7 +5289,7 @@ int AttackCityPathDest(int iToX, int iToY, const void* pointer, CvAStar* finder)
 
 //	---------------------------------------------------------------------------
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int data) const
 #else
 int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif
@@ -5833,7 +5833,7 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 
 //	---------------------------------------------------------------------------
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::FindValidDestinationDest(int iToX, int iToY)
+int CvAStar::FindValidDestinationDest(int iToX, int iToY) const
 {
 	CvUnit* pUnit = ((CvUnit*)m_pData);
 #else
@@ -5864,7 +5864,7 @@ int FindValidDestinationDest(int iToX, int iToY, const void* pointer, CvAStar* f
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int data)
+int CvAStar::FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int data) const
 {
 	CvUnit* pUnit = ((CvUnit*)m_pData);
 #else
@@ -6357,7 +6357,7 @@ int TradeRouteHeuristic(int iFromX, int iFromY, int iToX, int iToY)
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::TradeRouteLandPathCost(CvAStarNode* parent, CvAStarNode* node, int data) const
+int CvAStar::TradeRouteLandPathCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const
 {
 	PlayerTypes ePlayer = (PlayerTypes)GetInfo();
 #else
@@ -6491,7 +6491,7 @@ int TradeRouteLandValid(CvAStarNode* parent, CvAStarNode* node, int data, const 
 //	--------------------------------------------------------------------------------
 /// slewis's fault
 #ifdef AUI_ASTAR_USE_DELEGATES
-int CvAStar::TradeRouteWaterPathCost(CvAStarNode* parent, CvAStarNode* node, int data) const
+int CvAStar::TradeRouteWaterPathCost(const CvAStarNode* parent, const CvAStarNode* node, int data) const
 #else
 int TradeRouteWaterPathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder)
 #endif

@@ -425,9 +425,9 @@ void CvCityCitizens::DoTurn()
 
 /// What is the overall value of the current Plot?
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
-int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, double* adBonusYields, double* adBonusYieldModifiers, int iExtraHappiness, int iExtraGrowthMod, bool bAfterGrowth) const
+int CvCityCitizens::GetPlotValue(const CvPlot* pPlot, bool bUseAllowGrowthFlag, double* adBonusYields, double* adBonusYieldModifiers, int iExtraHappiness, int iExtraGrowthMod, bool bAfterGrowth) const
 #elif defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW)
-int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth) const
+int CvCityCitizens::GetPlotValue(const CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth) const
 #else
 int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag)
 #endif

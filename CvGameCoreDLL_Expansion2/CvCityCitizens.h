@@ -47,9 +47,9 @@ public:
 #endif
 
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
-	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, double* adBonusYields = NULL, double* adBonusYieldModifiers = NULL, int iExtraHappiness = 0, int iExtraGrowthMod = 0, bool bAfterGrowth = false) const;
+	int GetPlotValue(const CvPlot* pPlot, bool bUseAllowGrowthFlag, double* adBonusYields = NULL, double* adBonusYieldModifiers = NULL, int iExtraHappiness = 0, int iExtraGrowthMod = 0, bool bAfterGrowth = false) const;
 #elif defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW)
-	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth = false) const;
+	int GetPlotValue(const CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth = false) const;
 #else
 	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag);
 #endif
