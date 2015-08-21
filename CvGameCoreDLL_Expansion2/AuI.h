@@ -1294,8 +1294,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// If a tile is unowned and not an ocean tile, extra danger is added to the trade route (bit of a cheat with unrevealed tiles to count them, too, but it's negligible)
 #define AUI_TRADE_SCORE_TRADE_ROUTE_UNOWNED_TILE_EXTRA_DANGER (1)
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
-/// Uses the centralized yield evaluation from CityCitizens for scoring yields
-#define AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+/// Uses the centralized yield evaluation from CityCitizens for scoring yields of the three trade route types
+#define AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_INTERNATIONAL_TR
+#define AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_FOOD_TR
+#define AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_PRODUCTION_TR
 #endif
 
 // Trait Classes Stuff

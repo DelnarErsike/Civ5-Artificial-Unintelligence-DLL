@@ -4419,7 +4419,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 		return 0;
 	}
 
-#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_INTERNATIONAL_TR
 	CvCity* pToCity = CvGameTrade::GetDestCity(kTradeConnection);
 	CvCity* pFromCity = CvGameTrade::GetOriginCity(kTradeConnection);
 	if (pToCity == NULL || pFromCity == NULL)
@@ -4428,9 +4428,9 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	const CvPlayer& kOtherPlayer = GET_PLAYER(kTradeConnection.m_eDestOwner);
 #endif
 
-#if defined(AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS) || defined(AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME) || defined(AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING)
+#if defined(AUI_TRADE_SCORE_INTERNATIONAL_MAX_DELTA_WITH_MINORS) || defined(AUI_TRADE_SCORE_INTERNATIONAL_TAPER_DELTA_WITH_FRIENDLY_AND_INCOME) || defined(AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_INTERNATIONAL_TR)
 	bool bIsToMinor = false;
-#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_INTERNATIONAL_TR
 	if (kOtherPlayer.isMinorCiv())
 #else
 	if (GET_PLAYER(kTradeConnection.m_eDestOwner).isMinorCiv())
@@ -4449,7 +4449,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	}
 #endif
 
-#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_INTERNATIONAL_TR
 	const CvPlayerTrade* pPlayerTrade = m_pPlayer->GetTrade();
 	const CvPlayerTrade* pOtherPlayerTrade = kOtherPlayer.GetTrade();
 #else
@@ -4495,7 +4495,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 		iDangerSum += iDangerValue;
 	}
 
-#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_INTERNATIONAL_TR
 	double dOurScore = 0;
 	double dOurYields[NUM_YIELD_TYPES] = {};
 	dOurYields[YIELD_GOLD] = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_GOLD, true) / 100.0;
@@ -4633,7 +4633,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 #endif
 	if (eOwnerFoundedReligion != NO_RELIGION)
 	{
-#ifndef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+#ifndef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_INTERNATIONAL_TR
 		CvCity* pToCity = CvGameTrade::GetDestCity(kTradeConnection);
 		CvCity* pFromCity = CvGameTrade::GetOriginCity(kTradeConnection);
 		CvAssert(pToCity != NULL && pFromCity != NULL);
@@ -4687,7 +4687,7 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 		}
 	}
 
-#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_INTERNATIONAL_TR
 	double dScore = dOurScore - dDiplomacyTaper * dTheirScore;
 	dScore += dReligionDelta;
 #else
@@ -4846,7 +4846,7 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 	}
 
 	// food
-#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_FOOD_TR
 	double dYields[NUM_YIELD_TYPES] = {};
 	dYields[YIELD_FOOD] = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_FOOD, true) / 100.0;
 	double dScore = pCity->GetCityCitizens()->GetTotalValue(dYields);
@@ -4894,7 +4894,7 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 		}
 	}
 
-#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_FOOD_TR
 	dScore += dReligionDelta;
 #else
 	double dScore = 0;
@@ -5026,7 +5026,7 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 }
 
 	// production
-#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_PRODUCTION_TR
 	double dYields[NUM_YIELD_TYPES] = {};
 	dYields[YIELD_PRODUCTION] = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_PRODUCTION, true) / 100.0;
 	double dScore = pCity->GetCityCitizens()->GetTotalValue(dYields);
@@ -5074,7 +5074,7 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 		}
 	}
 
-#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING
+#ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_PRODUCTION_TR
 	dScore += dReligionDelta;
 #else
 	double dScore = 0;
