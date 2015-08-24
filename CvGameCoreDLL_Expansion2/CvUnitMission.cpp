@@ -117,15 +117,13 @@ void CvUnitMission::PushMission(UnitHandle hUnit, MissionTypes eMission, int iDa
 			if(pkBuildInfo)
 			{
 #ifdef AUI_DANGER_PLOTS_REMADE
-				UnitHandle hBestDefender = hUnit->plot()->getBestDefender(hUnit->getOwner());
-				if ((!hUnit->IsCombatUnit() && !hBestDefender && GET_PLAYER(hUnit->getOwner()).IsPlotUnderImmediateThreat(*(hUnit->plot()), hUnit.pointer())) ||
-					(hBestDefender && GET_PLAYER(hUnit->getOwner()).GetPlotDanger(*(hUnit->plot()), hBestDefender.pointer()) >= hBestDefender->GetCurrHitPoints()))
+				if (GET_PLAYER(hUnit->getOwner()).GetPlotDanger(*(hUnit->plot()), hUnit.pointer()) >= hUnit->GetCurrHitPoints())
 				{
 #else
 				if (GET_PLAYER(hUnit->getOwner()).IsPlotUnderImmediateThreat(*(hUnit->plot())))
 				{
 					if(hUnit->plot()->getNumDefenders(hUnit->getOwner()) <= 0)
-#endif AUI_DANGER_PLOTS_REMADE
+#endif
 					{
 						hUnit->SetIgnoreDangerWakeup(true);
 					}

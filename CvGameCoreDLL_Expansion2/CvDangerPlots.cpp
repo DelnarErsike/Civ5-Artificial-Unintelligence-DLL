@@ -1489,7 +1489,6 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 			{
 				if (GetDanger(pFriendlyCity) + pFriendlyCity->getDamage() < pFriendlyCity->GetMaxHitPoints())
 				{
-					// Trivial amount to indicate that the plot can still be attacked
 					bWillBeCapped = false;
 				}
 			}
@@ -1609,32 +1608,6 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 			// Damage from improvements
 			iPlotDamage += GetCitadelDamage(pUnit);
 			return iPlotDamage;
-		}
-	}
-
-	// Garrisoning in a city will have the city's health stats replace the unit's health stats (capturing a city with a garrisoned unit destroys the garrisoned unit)
-	if (pFriendlyCity)
-	{
-		// If the city survives all possible attacks this turn, so will the unit
-		if (GetDanger(pFriendlyCity, 0, NO_PLAYER, (pUnit->getDomainType() == DOMAIN_LAND ? pUnit : NULL)) + pFriendlyCity->getDamage() < pFriendlyCity->GetMaxHitPoints())
-		{
-			// If a unit always heals and will survive, add healrate
-			if ((pUnit->isAlwaysHeal() || iAction & ACTION_HEAL) && !pUnit->isBarbarian() && iPlotDamage < pUnit->GetCurrHitPoints() &&
-				(!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit)))
-			{
-				iPlotDamage -= pUnit->healRate(m_pPlot);
-				// Overheals are ignored
-				if (pUnit->GetCurrHitPoints() > pUnit->GetMaxHitPoints() + iPlotDamage)
-					iPlotDamage = pUnit->GetCurrHitPoints() - pUnit->GetMaxHitPoints();
-			}
-			// Damage from improvements
-			iPlotDamage += GetCitadelDamage(pUnit);
-
-			return iPlotDamage;
-		}
-		else
-		{
-			return MAX_INT;
 		}
 	}
 
@@ -1768,6 +1741,32 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 		}
 
 		iPlotDamage += iDamageReceivedFromAttack;
+	}
+
+	// Garrisoning in a city will have the city's health stats replace the unit's health stats (capturing a city with a garrisoned unit destroys the garrisoned unit)
+	if (pFriendlyCity)
+	{
+		// If the city survives all possible attacks this turn, so will the unit
+		if (GetDanger(pFriendlyCity, 0, NO_PLAYER, (pUnit->getDomainType() == DOMAIN_LAND ? pUnit : NULL)) + pFriendlyCity->getDamage() < pFriendlyCity->GetMaxHitPoints())
+		{
+			// If a unit always heals and will survive, add healrate
+			if ((pUnit->isAlwaysHeal() || iAction & ACTION_HEAL) && !pUnit->isBarbarian() && iPlotDamage < pUnit->GetCurrHitPoints() &&
+				(!m_pPlot->isWater() || pUnit->getDomainType() != DOMAIN_LAND || m_pPlot->isValidDomainForAction(*pUnit)))
+			{
+				iPlotDamage -= pUnit->healRate(m_pPlot);
+				// Overheals are ignored
+				if (pUnit->GetCurrHitPoints() > pUnit->GetMaxHitPoints() + iPlotDamage)
+					iPlotDamage = pUnit->GetCurrHitPoints() - pUnit->GetMaxHitPoints();
+			}
+			// Damage from improvements
+			iPlotDamage += GetCitadelDamage(pUnit);
+
+			return iPlotDamage;
+		}
+		else
+		{
+			return MAX_INT;
+		}
 	}
 
 	FFastVector<const CvPlot*, true, c_eCiv5GameplayDLL> vpPossibleAttackPlots;
