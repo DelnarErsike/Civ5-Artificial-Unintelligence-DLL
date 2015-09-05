@@ -32,17 +32,29 @@ public:
 	void Read(FDataStream& kStream);
 	void Write(FDataStream& kStream);
 
+#ifdef AUI_CONSTIFY
+	CvPlayer* GetPlayer() const;
+	CvAIGrandStrategyXMLEntries* GetAIGrandStrategies() const;
+#else
 	CvPlayer* GetPlayer();
 	CvAIGrandStrategyXMLEntries* GetAIGrandStrategies();
+#endif
 
 	void DoTurn();
 #ifdef AUI_PUBLIC_HAS_MET_MAJOR
-	bool HasMetMajor();
+	bool HasMetMajor() const;
 #endif
+#ifdef AUI_CONSTIFY
+	int GetConquestPriority() const;
+	int GetCulturePriority() const;
+	int GetUnitedNationsPriority() const;
+	int GetSpaceshipPriority() const;
+#else
 	int GetConquestPriority();
 	int GetCulturePriority();
 	int GetUnitedNationsPriority();
 	int GetSpaceshipPriority();
+#endif
 
 #ifdef AUI_GS_PRIORITY_OVERHAUL
 	double GetFlavorCurve(AIGrandStrategyTypes eGrandStrategy);
@@ -52,6 +64,8 @@ public:
 	double GetCultureETAPriority();
 	double GetUnitedNationsETAPriority();
 	double GetSpaceshipETAPriority();
+#elif defined(AUI_CONSTIFY)
+	int GetBaseGrandStrategyPriority(AIGrandStrategyTypes eGrandStrategy) const;
 #else
 	int GetBaseGrandStrategyPriority(AIGrandStrategyTypes eGrandStrategy);
 #endif
@@ -76,9 +90,13 @@ public:
 
 #ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
 	int ScienceFlavorBoost() const;
-#endif \\ AUI_GS_SCIENCE_FLAVOR_BOOST
+#endif
 
+#ifdef AUI_CONSTIFY
+	int GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType) const;
+#else
 	int GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType);
+#endif
 
 	// **********
 	// Stuff relating to guessing what other Players are up to
@@ -138,8 +156,13 @@ public:
 	virtual bool CacheResults(Database::Results& kResults, CvDatabaseUtility& kUtility);
 
 	// Accessor Functions
+#ifdef AUI_WARNING_FIXES
+	int GetFlavorValue(uint i) const;
+	int GetFlavorModValue(uint i) const;
+#else
 	int GetFlavorValue(int i) const;
 	int GetFlavorModValue(int i) const;
+#endif
 	int GetSpecializationBoost(YieldTypes eYield) const;
 
 private:
@@ -167,8 +190,13 @@ public:
 
 	// Accessor functions
 	std::vector<CvAIGrandStrategyXMLEntry*>& GetAIGrandStrategyEntries();
+#ifdef AUI_WARNING_FIXES
+	uint GetNumAIGrandStrategies() const;
+	CvAIGrandStrategyXMLEntry* GetEntry(uint index) const;
+#else
 	int GetNumAIGrandStrategies();
 	CvAIGrandStrategyXMLEntry* GetEntry(int index);
+#endif
 
 	void DeleteArray();
 
