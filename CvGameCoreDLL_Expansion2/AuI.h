@@ -1299,6 +1299,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_FOOD_TR
 #define AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_PRODUCTION_TR
 #endif
+/// If a trade route crosses through territory that is not owned by one of the participants of the trade route or their allies, it is assumed that the territory could be warlike
+#define AUI_TRADE_SCORE_TRADE_ROUTE_CONSIDER_NONALLIED_NONPARTICIPANT
 
 // Trait Classes Stuff
 /// Scales the threshold wonder competitiveness for choosing an engineer with game turn instead of having it be two binary checks

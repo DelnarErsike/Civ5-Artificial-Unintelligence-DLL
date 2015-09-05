@@ -4487,22 +4487,50 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 				iDangerValue += 1;
 			}
 
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_CONSIDER_NONALLIED_NONPARTICIPANT
+			TeamTypes ePlotTeam = pPlot->getTeam();
+			if (ePlotTeam != NO_TEAM)
+			{
+				if (GET_TEAM(m_pPlayer->getTeam()).isAtWar(ePlotTeam) || GET_TEAM(GET_PLAYER(kTradeConnection.m_eDestOwner).getTeam()).isAtWar(ePlotTeam))
+				{
+					iDangerValue += 1000;
+				}
+				else if (m_pPlayer->getTeam() != ePlotTeam && GET_PLAYER(kTradeConnection.m_eDestOwner).getTeam() != ePlotTeam)
+				{
+					if (GET_TEAM(ePlotTeam).isMinorCiv())
+					{
+						PlayerTypes eMinorCivAlly = GET_PLAYER(pPlot->getOwner()).GetMinorCivAI()->GetAlly();
+						if (eMinorCivAlly == NO_PLAYER)
+						{
+							iDangerValue += 125;
+						}
+						else if (GET_PLAYER(eMinorCivAlly).getTeam() != m_pPlayer->getTeam() && GET_PLAYER(eMinorCivAlly).getTeam() != GET_PLAYER(kTradeConnection.m_eDestOwner).getTeam())
+						{
+							iDangerValue += 250;
+						}
+					}
+					else
+					{
+						iDangerValue += 500;
+					}
+				}
+#else
 			if (pPlot->getTeam() != NO_TEAM && GET_TEAM(m_pPlayer->getTeam()).isAtWar(pPlot->getTeam()))
 			{
 				iDangerValue += 1000;
+#endif
 			}
 		}
 		iDangerSum += iDangerValue;
 	}
 
 #ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_INTERNATIONAL_TR
-	double dOurScore = 0;
+	double dScore = 0;
 	double dOurYields[NUM_YIELD_TYPES] = {};
 	dOurYields[YIELD_GOLD] = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_GOLD, true) / 100.0;
 	dOurYields[YIELD_SCIENCE] = pPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_SCIENCE, true) / 100.0;
 	double dOurTourismGain = 0;
 
-	double dTheirScore = 0;
 	double dTheirYields[NUM_YIELD_TYPES] = {};
 	double dTheirTourismGain = 0;
 
@@ -4539,24 +4567,24 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 		int iLoop = 0;
 		double dExtraYields[NUM_YIELD_TYPES] = {};
 		int iCSTradeRouteProductionModifier = 0;
-		for (const CvCity* pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; m_pPlayer->nextCity(&iLoop))
+		for (const CvCity* pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 		{
 			iCSTradeRouteProductionModifier = pLoopCity->GetCityBuildings()->GetProductionModifierPerCityStateTradeRoute();
 			if (iCSTradeRouteProductionModifier != 0)
 			{
 				dExtraYields[YIELD_PRODUCTION] = pLoopCity->getRawProductionDifferenceTimes100(true, false, iCSTradeRouteProductionModifier) -
 					pLoopCity->getRawProductionDifferenceTimes100(true, false);
-				dOurScore += pLoopCity->GetCityCitizens()->GetTotalValue(dExtraYields);
+				dScore += pLoopCity->GetCityCitizens()->GetTotalValue(dExtraYields);
 			}
 		}	
 	}
 
-	dOurScore += pFromCity->GetCityCitizens()->GetTotalValue(dOurYields, NO_UNITCLASS, 0.0, 0, dOurTourismGain);
+	dScore += pFromCity->GetCityCitizens()->GetTotalValue(dOurYields, NO_UNITCLASS, 0.0, 0, dOurTourismGain);
 	if (dDiplomacyTaper != 0)
 	{
 		dTheirYields[YIELD_GOLD] += pOtherPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_GOLD, false) / 100.0;
 		dTheirYields[YIELD_SCIENCE] += pOtherPlayerTrade->GetTradeConnectionValueTimes100(kTradeConnection, YIELD_SCIENCE, true) / 100.0;
-		dTheirScore += pToCity->GetCityCitizens()->GetTotalValue(dTheirYields, NO_UNITCLASS, 0.0, 0, dTheirTourismGain);
+		dScore -= dDiplomacyTaper * pToCity->GetCityCitizens()->GetTotalValue(dTheirYields, NO_UNITCLASS, 0.0, 0, dTheirTourismGain);
 	}
 #else
 	// gold
@@ -4688,7 +4716,6 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 	}
 
 #ifdef AUI_TRADE_USE_CITIZENS_VALUE_FOR_SCORING_INTERNATIONAL_TR
-	double dScore = dOurScore - dDiplomacyTaper * dTheirScore;
 	dScore += dReligionDelta;
 #else
 #ifdef AUI_TRADE_SCORE_INTERNATIONAL_FLAVORED_DELTAS
@@ -4837,9 +4864,38 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 				iDangerValue += 1;
 			}
 
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_CONSIDER_NONALLIED_NONPARTICIPANT
+			TeamTypes ePlotTeam = pPlot->getTeam();
+			if (ePlotTeam != NO_TEAM)
+			{
+				if (GET_TEAM(m_pPlayer->getTeam()).isAtWar(ePlotTeam))
+				{
+					iDangerValue += 1000;
+				}
+				else if (m_pPlayer->getTeam() != ePlotTeam)
+				{
+					if (GET_TEAM(ePlotTeam).isMinorCiv())
+					{
+						PlayerTypes eMinorCivAlly = GET_PLAYER(pPlot->getOwner()).GetMinorCivAI()->GetAlly();
+						if (eMinorCivAlly == NO_PLAYER)
+						{
+							iDangerValue += 125;
+						}
+						else if (GET_PLAYER(eMinorCivAlly).getTeam() != m_pPlayer->getTeam())
+						{
+							iDangerValue += 250;
+						}
+					}
+					else
+					{
+						iDangerValue += 500;
+					}
+				}
+#else
 			if (pPlot->getTeam() != NO_TEAM && GET_TEAM(m_pPlayer->getTeam()).isAtWar(pPlot->getTeam()))
 			{
 				iDangerValue += 1000;
+#endif
 			}
 		}
 		iDangerSum += iDangerValue;
@@ -5017,9 +5073,38 @@ int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::
 				iDangerValue += 1;
 			}
 
+#ifdef AUI_TRADE_SCORE_TRADE_ROUTE_CONSIDER_NONALLIED_NONPARTICIPANT
+			TeamTypes ePlotTeam = pPlot->getTeam();
+			if (ePlotTeam != NO_TEAM)
+			{
+				if (GET_TEAM(m_pPlayer->getTeam()).isAtWar(ePlotTeam))
+				{
+					iDangerValue += 1000;
+				}
+				else if (m_pPlayer->getTeam() != ePlotTeam)
+				{
+					if (GET_TEAM(ePlotTeam).isMinorCiv())
+					{
+						PlayerTypes eMinorCivAlly = GET_PLAYER(pPlot->getOwner()).GetMinorCivAI()->GetAlly();
+						if (eMinorCivAlly == NO_PLAYER)
+						{
+							iDangerValue += 125;
+						}
+						else if (GET_PLAYER(eMinorCivAlly).getTeam() != m_pPlayer->getTeam())
+						{
+							iDangerValue += 250;
+						}
+					}
+					else
+					{
+						iDangerValue += 500;
+					}
+				}
+#else
 			if (pPlot->getTeam() != NO_TEAM && GET_TEAM(m_pPlayer->getTeam()).isAtWar(pPlot->getTeam()))
 			{
 				iDangerValue += 1000;
+#endif
 			}
 		}
 		iDangerSum += iDangerValue;
