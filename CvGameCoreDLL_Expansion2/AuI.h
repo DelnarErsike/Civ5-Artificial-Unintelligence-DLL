@@ -944,6 +944,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_RELIGION_CHOOSE_PROPHET_CONVERSION_CITY_TWEAKED
 
 // Site Evaluation Stuff
+#ifdef AUI_FACTORIAL
+/// The fertility multiplier based on city distance is now a continuous beta function
+#define AUI_SITE_EVALUATION_BETA_DISTRIBUTION_FOR_DISTANCE_MULTIPLIER
+#endif
 /// Removes pointless loops from the PlotFoundValue() function (loops that wouldn't actually alter any values)
 #define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_LOOP_OPTIMIZED
 /// Tweaks the multiplier given to the happiness score luxury resources that the player does not have (multiplier is applied once for importing, twice and times 2 for don't have at all)
@@ -960,10 +964,12 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_CONSIDER_CULTURE
 /// Changes the amount the plot value is divided by if we already own the tile (from 4)
 #define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_ALREADY_OWNED_DIVIDER (2)
+#ifndef AUI_SITE_EVALUATION_BETA_DISTRIBUTION_FOR_DISTANCE_MULTIPLIER
 /// The minimum "sweet spot" distance from another allied city is now this value (from 4); remember, the actual intercity distance will be this value minus one
 #define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT (5)
 /// The value of a plot is now multiplied by this value if it is closer than the sweet spot (from 1/2)
 #define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_CLOSER_THAN_SWEET_SPOT_MULTIPLIER 2 / 3
+#endif
 /// Resets the faith value of a tile back to 0 (like for all other yields) at the start of each loop
 #define AUI_SITE_EVALUATION_FIX_PLOT_FOUND_VALUE_RESET_FAITH_VALUE_EACH_LOOP
 #ifndef AUI_PLOT_CALCULATE_STRATEGIC_VALUE
@@ -998,10 +1004,6 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_IGNORE_WATER_RESOURCES_IF_NO_COASTAL
 /// Tiles with 0 or less fertility have their negative score scaled as if it were actually negative food yield
 #define AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_FLAVOR_SCALED_NEGATIVE_SCORE_FOR_EMPTY_PLOT
-#ifdef AUI_FACTORIAL
-/// The fertility multiplier based on city distance is now a continuous beta function
-#define AUI_SITE_EVALUATION_BETA_DISTRIBUTION_FOR_DISTANCE_MULTIPLIER
-#endif
 /// Offshore cities are not pulled closer together on purpose
 #define AUI_SITE_EVALUATION_NO_PULL_TOGETHER_ON_OFFSHORE
 /// Extra flavor from settling coastal is now logistic and doesn't overcommit naval civs
