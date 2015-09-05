@@ -1324,8 +1324,8 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		if (iMyClosestReinforce < MAX_INT)
 		{
 			if (iMySecondClosestReinforce == MAX_INT)
-				iMySecondClosestReinforce = 0;
-			double dDefenseFavor = (pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)m_iDefenseIndex)) / 1.0;
+				iMySecondClosestReinforce = iMyClosestReinforce;
+			double dDefenseFavor = 2.0 * pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)m_iDefenseIndex) / double(GC.getPERSONALITY_FLAVOR_MAX_VALUE());
 			if (dDefenseFavor > 2.0)
 				dDefenseFavor = 2.0;
 			dReinforceMultiplier = 4.5 * exp(-pow(sqrt(pow((double)iMyClosestReinforce, 2.0) + pow((double)iMySecondClosestReinforce, 2.0)) / (3.0 - dDefenseFavor), 2.0)) + 0.5;
