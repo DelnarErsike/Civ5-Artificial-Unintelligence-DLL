@@ -805,7 +805,7 @@ int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonC
 	double dHappinessValue = 4.0 * GC.getAI_CITIZEN_VALUE_FOOD() / (1.0 + exp(dExcessHappiness / 4.0 * (1.0 + exp(-dExcessHappiness / 10.0))));
 
 	// Extra multiplier (or divider) based on food needed to grow
-	dExcessFoodYieldValue *= 1.0 + 6.0 / (1.0 + exp(double(m_pCity->GetPlayer()->getGrowthThreshold(m_pCity->getPopulation())) / double(m_pCity->GetPlayer()->getGrowthThreshold(1)) - 1));
+	dExcessFoodYieldValue *= 1.0 + 6.0 / (1.0 + exp(double(GetPlayer()->getGrowthThreshold(m_pCity->getPopulation())) / double(GetPlayer()->getGrowthThreshold(1)) - 1.0));
 	if (bAfterGrowth)
 		dFoodYieldValue = 0.0;
 	int iUnhappinessOnGrowth = 0;
@@ -828,7 +828,7 @@ int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonC
 	}
 #endif
 
-	CvGrandStrategyAI* pGrandStrategyAI = GetPlayer()->GetGrandStrategyAI();
+	const CvGrandStrategyAI* pGrandStrategyAI = GetPlayer()->GetGrandStrategyAI();
 #ifdef AUI_GS_PRIORITY_RATIO
 	dTourismYieldValue *= pGrandStrategyAI->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"));
 #else
@@ -841,12 +841,8 @@ int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonC
 	if (eGreatPersonClass != NO_UNITCLASS)
 	{
 		SpecialistTypes eSpecialist = NO_SPECIALIST;
-		CvSpecialistInfo* pkSpecialistInfo;
-#ifdef AUI_WARNING_FIXES
+		const CvSpecialistInfo* pkSpecialistInfo;
 		for (uint iSpecialistLoop = 0; iSpecialistLoop < GC.getNumSpecialistInfos(); iSpecialistLoop++)
-#else
-		for (int iSpecialistLoop = 0; iSpecialistLoop < GC.getNumSpecialistInfos(); iSpecialistLoop++)
-#endif
 		{
 			const SpecialistTypes eLoopSpecialist = static_cast<SpecialistTypes>(iSpecialistLoop);
 			pkSpecialistInfo = GC.getSpecialistInfo(eSpecialist);
@@ -884,7 +880,7 @@ int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonC
 			}
 		}
 		UnitTypes eGPUnitType = (UnitTypes)GetPlayer()->getCivilizationInfo().getCivilizationUnits(eGreatPersonClass);
-		CvUnitEntry *pkGPEntry = GC.GetGameUnits()->GetEntry(eGPUnitType);
+		const CvUnitEntry *pkGPEntry = GC.GetGameUnits()->GetEntry(eGPUnitType);
 		if (pkGPEntry)
 		{
 			int iBestFlavor = 0;
@@ -1196,12 +1192,10 @@ void CvCityCitizens::SetNoAutoAssignSpecialists(bool bValue)
 /// Is this City avoiding growth?
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
 bool CvCityCitizens::IsAvoidGrowth(int iExtraHappiness) const
-#else
-#ifdef AUI_CONSTIFY
+#elif defined(AUI_CONSTIFY)
 bool CvCityCitizens::IsAvoidGrowth() const
 #else
 bool CvCityCitizens::IsAvoidGrowth()
-#endif
 #endif
 {
 #ifdef AUI_CITIZENS_FIX_AVOID_GROWTH_FLAG_NOT_IGNORED_IF_NO_HAPPINESS
@@ -1615,7 +1609,9 @@ BuildingTypes CvCityCitizens::GetAIBestSpecialistBuilding(int& iSpecialistValue)
 {
 	BuildingTypes eBestBuilding = NO_BUILDING;
 	int iBestSpecialistValue = -1;
+#ifndef AUI_PRUNING
 	int iBestUnmodifiedSpecialistValue = -1;
+#endif
 
 	SpecialistTypes eSpecialist;
 	int iValue;
@@ -1645,24 +1641,31 @@ BuildingTypes CvCityCitizens::GetAIBestSpecialistBuilding(int& iSpecialistValue)
 #else
 					iValue = GetSpecialistValue(eSpecialist);
 #endif
-
+#ifndef AUI_PRUNING
 					// Add a bit more weight to a Building if it has more slots (10% per).  This will bias the AI to fill a single building over spreading Specialists out
 					int iTemp = ((GetNumSpecialistsAllowedByBuilding(*pkBuildingInfo) - 1) * iValue * 10);
 					iTemp /= 100;
 					iValue += iTemp;
+#endif
 
 					if(iValue > iBestSpecialistValue)
 					{
 						eBestBuilding = eBuilding;
 						iBestSpecialistValue = iValue;
+#ifndef AUI_PRUNING
 						iBestUnmodifiedSpecialistValue = iValue - iTemp;
+#endif
 					}
 				}
 			}
 		}
 	}
 
+#ifdef AUI_PRUNING
+	iSpecialistValue = iBestSpecialistValue;
+#else
 	iSpecialistValue = iBestUnmodifiedSpecialistValue;
+#endif
 	return eBestBuilding;
 }
 
@@ -1724,18 +1727,25 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 
 	if (GetTotalSpecialistCount() > 0)
 	{
-		const CvReligion* pReligion = GC.getGame().GetGameReligions()->GetReligion(m_pCity->GetCityReligions()->GetReligiousMajority(), pPlayer->GetID());
-		dYieldArray[YIELD_FOOD] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_FOOD);
-		dYieldArray[YIELD_PRODUCTION] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_PRODUCTION);
-		dYieldArray[YIELD_GOLD] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_GOLD);
-		dYieldArray[YIELD_SCIENCE] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_SCIENCE);
-		dYieldArray[YIELD_CULTURE] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_CULTURE);
-		dYieldArray[YIELD_FAITH] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_FAITH);
+		ReligionTypes eCityReligion = m_pCity->GetCityReligions()->GetReligiousMajority();
+		if (eCityReligion != NO_RELIGION)
+		{
+			const CvReligion* pReligion = GC.getGame().GetGameReligions()->GetReligion(eCityReligion, pPlayer->GetID());
+			if (pReligion)
+			{
+				dYieldArray[YIELD_FOOD] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_FOOD);
+				dYieldArray[YIELD_PRODUCTION] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_PRODUCTION);
+				dYieldArray[YIELD_GOLD] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_GOLD);
+				dYieldArray[YIELD_SCIENCE] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_SCIENCE);
+				dYieldArray[YIELD_CULTURE] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_CULTURE);
+				dYieldArray[YIELD_FAITH] += pReligion->m_Beliefs.GetYieldChangeAnySpecialist(YIELD_FAITH);
+			}
+		}
 
 		BeliefTypes eSecondaryPantheon = m_pCity->GetCityReligions()->GetSecondaryReligionPantheonBelief();
 		if (eSecondaryPantheon != NO_BELIEF)
 		{
-			CvBeliefEntry* pBeliefEntry = GC.GetGameBeliefs()->GetEntry(eSecondaryPantheon);
+			const CvBeliefEntry* pBeliefEntry = GC.GetGameBeliefs()->GetEntry(eSecondaryPantheon);
 			if (pBeliefEntry)
 			{
 				dYieldArray[YIELD_FOOD] += pBeliefEntry->GetYieldChangeAnySpecialist(YIELD_FOOD);
