@@ -3692,7 +3692,11 @@ bool CvCity::isProductionProcess() const
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+bool CvCity::canContinueProduction(OrderData order) const
+#else
 bool CvCity::canContinueProduction(OrderData order)
+#endif
 {
 	VALIDATE_OBJECT
 	switch(order.eOrderType)
@@ -3727,7 +3731,11 @@ bool CvCity::canContinueProduction(OrderData order)
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+int CvCity::getProductionExperience(UnitTypes eUnit) const
+#else
 int CvCity::getProductionExperience(UnitTypes eUnit)
+#endif
 {
 	VALIDATE_OBJECT
 	int iExperience;
@@ -4680,7 +4688,11 @@ int CvCity::getProductionTurnsLeft(int iProductionNeeded, int iProduction, int i
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+int CvCity::GetPurchaseCost(UnitTypes eUnit) const
+#else
 int CvCity::GetPurchaseCost(UnitTypes eUnit)
+#endif
 {
 	VALIDATE_OBJECT
 
@@ -4717,7 +4729,11 @@ int CvCity::GetPurchaseCost(UnitTypes eUnit)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+int CvCity::GetFaithPurchaseCost(UnitTypes eUnit, bool bIncludeBeliefDiscounts) const
+#else
 int CvCity::GetFaithPurchaseCost(UnitTypes eUnit, bool bIncludeBeliefDiscounts)
+#endif
 {
 	VALIDATE_OBJECT
 
@@ -4880,7 +4896,11 @@ int CvCity::GetFaithPurchaseCost(UnitTypes eUnit, bool bIncludeBeliefDiscounts)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+int CvCity::GetPurchaseCost(BuildingTypes eBuilding) const
+#else
 int CvCity::GetPurchaseCost(BuildingTypes eBuilding)
+#endif
 {
 	VALIDATE_OBJECT
 
@@ -4910,7 +4930,11 @@ int CvCity::GetPurchaseCost(BuildingTypes eBuilding)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+int CvCity::GetFaithPurchaseCost(BuildingTypes eBuilding) const
+#else
 int CvCity::GetFaithPurchaseCost(BuildingTypes eBuilding)
+#endif
 {
 	int iCost;
 
@@ -4949,7 +4973,11 @@ int CvCity::GetFaithPurchaseCost(BuildingTypes eBuilding)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+int CvCity::GetPurchaseCost(ProjectTypes eProject) const
+#else
 int CvCity::GetPurchaseCost(ProjectTypes eProject)
+#endif
 {
 	VALIDATE_OBJECT
 
@@ -4965,7 +4993,11 @@ int CvCity::GetPurchaseCost(ProjectTypes eProject)
 
 //	--------------------------------------------------------------------------------
 /// Cost of Purchasing something based on the amount of Production it requires to construct
+#ifdef AUI_CONSTIFY
+int CvCity::GetPurchaseCostFromProduction(int iProduction) const
+#else
 int CvCity::GetPurchaseCostFromProduction(int iProduction)
+#endif
 {
 	VALIDATE_OBJECT
 	int iPurchaseCost;
@@ -10457,7 +10489,11 @@ void CvCity::doFoundMessage()
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+bool CvCity::IsExtraLuxuryResources() const
+#else
 bool CvCity::IsExtraLuxuryResources()
+#endif
 {
 	return (m_iCountExtraLuxuries > 0);
 }
@@ -11097,7 +11133,11 @@ void CvCity::changeDamage(int iChange)
 
 //	--------------------------------------------------------------------------------
 /// Can a specific plot be bought for the city
+#ifdef AUI_CONSTIFY
+bool CvCity::CanBuyPlot(int iPlotX, int iPlotY, bool bIgnoreCost) const
+#else
 bool CvCity::CanBuyPlot(int iPlotX, int iPlotY, bool bIgnoreCost)
+#endif
 {
 	VALIDATE_OBJECT
 	CvPlot* pTargetPlot = NULL;
@@ -11186,7 +11226,11 @@ bool CvCity::CanBuyPlot(int iPlotX, int iPlotY, bool bIgnoreCost)
 
 //	--------------------------------------------------------------------------------
 /// Can this city buy a plot, any plot?
+#ifdef AUI_CONSTIFY
+bool CvCity::CanBuyAnyPlot() const
+#else
 bool CvCity::CanBuyAnyPlot(void)
+#endif
 {
 	VALIDATE_OBJECT
 	CvPlot* pLoopPlot = NULL;
@@ -11914,7 +11958,11 @@ void CvCity::DoAcquirePlot(int iPlotX, int iPlotY)
 
 //	--------------------------------------------------------------------------------
 /// Compute how valuable buying a plot is to this city
+#ifdef AUI_CONSTIFY
+int CvCity::GetBuyPlotScore(int& iBestX, int& iBestY) const
+#else
 int CvCity::GetBuyPlotScore(int& iBestX, int& iBestY)
+#endif
 {
 	VALIDATE_OBJECT
 	CvPlot* pLoopPlot = NULL;
@@ -12727,7 +12775,11 @@ void CvCity::popOrder(int iNum, bool bFinish, bool bChoose)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+void CvCity::swapOrder(uint iNum)
+#else
 void CvCity::swapOrder(int iNum)
+#endif
 {
 	// okay, this only swaps the order with the next one up in the queue
 	VALIDATE_OBJECT
@@ -12791,7 +12843,11 @@ void CvCity::stopHeadOrder()
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_WARNING_FIXES
+uint CvCity::getOrderQueueLength()
+#else
 int CvCity::getOrderQueueLength()
+#endif
 {
 	VALIDATE_OBJECT
 	return m_orderQueue.getLength();
@@ -12799,9 +12855,16 @@ int CvCity::getOrderQueueLength()
 
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_FIX_FFASTVECTOR_USE_UNSIGNED
+OrderData* CvCity::getOrderFromQueue(uint iIndex)
+#else
 OrderData* CvCity::getOrderFromQueue(int iIndex)
+#endif
 {
 	VALIDATE_OBJECT
+#ifdef AUI_WARNING_FIXES
+	return m_orderQueue.nodeNum(iIndex);
+#else
 	OrderData* pOrderNode;
 
 	pOrderNode = m_orderQueue.nodeNum(iIndex);
@@ -12814,8 +12877,16 @@ OrderData* CvCity::getOrderFromQueue(int iIndex)
 	{
 		return NULL;
 	}
+#endif
 }
 
+#ifdef AUI_CONSTIFY
+const OrderData* CvCity::getOrderFromQueue(uint iIndex) const
+{
+	VALIDATE_OBJECT
+	return m_orderQueue.nodeNum(iIndex);
+}
+#endif
 
 //	--------------------------------------------------------------------------------
 OrderData* CvCity::nextOrderQueueNode(OrderData* pNode)
@@ -13124,7 +13195,11 @@ bool CvCity::CreateProject(ProjectTypes eProjectType)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+bool CvCity::CanPlaceUnitHere(UnitTypes eUnitType) const
+#else
 bool CvCity::CanPlaceUnitHere(UnitTypes eUnitType)
+#endif
 {
 	VALIDATE_OBJECT
 	bool bCombat = false;
@@ -13176,7 +13251,7 @@ bool CvCity::CanPlaceUnitHere(UnitTypes eUnitType)
 
 #if defined(AUI_CITY_FIX_BUILDING_PURCHASES_WITH_GOLD) || defined(AUI_RELIGION_FIX_DO_FAITH_PURCHASES_DO_HURRY_WITH_FAITH)
 /// Can we purchase this production order with (currency)?
-bool CvCity::IsCanPurchase(OrderData* pOrder, YieldTypes eCurrency)
+bool CvCity::IsCanPurchase(OrderData* pOrder, YieldTypes eCurrency) const
 {
 	UnitTypes eUnitType = NO_UNIT;
 	BuildingTypes eBuildingType = NO_BUILDING;
@@ -13204,7 +13279,7 @@ bool CvCity::IsCanPurchase(OrderData* pOrder, YieldTypes eCurrency)
 }
 
 /// What is the (currency) cost of this order?
-int CvCity::GetPurchaseCost(OrderData* pOrder, YieldTypes eCurrency)
+int CvCity::GetPurchaseCost(OrderData* pOrder, YieldTypes eCurrency) const
 {
 	if (eCurrency == YIELD_GOLD)
 	{
@@ -13242,7 +13317,11 @@ int CvCity::GetPurchaseCost(OrderData* pOrder, YieldTypes eCurrency)
 
 //	--------------------------------------------------------------------------------
 // Is this city allowed to purchase something right now?
+#ifdef AUI_CONSTIFY
+bool CvCity::IsCanPurchase(bool bTestPurchaseCost, bool bTestTrainable, UnitTypes eUnitType, BuildingTypes eBuildingType, ProjectTypes eProjectType, YieldTypes ePurchaseYield) const
+#else
 bool CvCity::IsCanPurchase(bool bTestPurchaseCost, bool bTestTrainable, UnitTypes eUnitType, BuildingTypes eBuildingType, ProjectTypes eProjectType, YieldTypes ePurchaseYield)
+#endif
 {
 	CvAssertMsg(eUnitType >= 0 || eBuildingType >= 0 || eProjectType >= 0, "No valid passed in");
 	CvAssertMsg(!(eUnitType >= 0 && eBuildingType >= 0) && !(eUnitType >= 0 && eProjectType >= 0) && !(eBuildingType >= 0 && eProjectType >= 0), "Only one being passed");
@@ -16237,7 +16316,11 @@ void CvCity::IncrementUnitStatCount(CvUnit* pUnit)
 
 //	--------------------------------------------------------------------------------
 // Check to see if all the units have been built
+#ifdef AUI_CONSTIFY
+bool CvCity::AreAllUnitsBuilt() const
+#else
 bool CvCity::AreAllUnitsBuilt()
+#endif
 {
 	int iI;
 	int iUnitStatStart = 1;   //As they're defined on the backend
