@@ -750,7 +750,7 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 	// check for no brainer bail-outs
 	// if the builder is already building something
 #ifdef AUI_WORKER_EVALUATE_WORKER_RETREAT_AND_BUILD
-	if (pUnit->getBuildType() != NO_BUILD && m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit) < pUnit->GetCurrHitPoints())
+	if (pUnit->getBuildType() != NO_BUILD && pUnit->GetCurrHitPoints() > m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit))
 #else
 	if(pUnit->getBuildType() != NO_BUILD)
 #endif
@@ -1021,8 +1021,13 @@ void CvBuilderTaskingAI::AddImprovingResourcesDirectives(CvUnit* pUnit, CvPlot* 
 	if (pUnit->GetMissionAIPlot() != pPlot)
 	{
 		int iLoop;
-		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
 		{
+			if (pUnit == pLoopUnit)
+			{
+				continue;
+			}
+
 			CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
 			if (!pMissionPlot)
 			{
@@ -1391,8 +1396,13 @@ void CvBuilderTaskingAI::AddImprovingPlotsDirectives(CvUnit* pUnit, CvPlot* pPlo
 	if(pUnit->GetMissionAIPlot() != pPlot)
 	{
 		int iLoop;
-		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
 		{
+			if (pUnit == pLoopUnit)
+			{
+				continue;
+			}
+
 			CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
 			if (!pMissionPlot)
 			{
@@ -1765,8 +1775,13 @@ void CvBuilderTaskingAI::AddImprovingMinorPlotsDirectives(CvUnit* pUnit, CvPlot*
 	if (pUnit->GetMissionAIPlot() != pPlot)
 	{
 		int iLoop;
-		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
 		{
+			if (pUnit == pLoopUnit)
+			{
+				continue;
+			}
+
 			CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
 			if (!pMissionPlot)
 			{
@@ -1993,8 +2008,13 @@ void CvBuilderTaskingAI::AddRouteDirectives(CvUnit* pUnit, CvPlot* pPlot, int iM
 	if (pUnit->GetMissionAIPlot() != pPlot)
 	{
 		int iLoop;
-		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
 		{
+			if (pUnit == pLoopUnit)
+			{
+				continue;
+			}
+
 			CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
 			if (!pMissionPlot)
 			{
@@ -2194,8 +2214,13 @@ void CvBuilderTaskingAI::AddChopDirectives(CvUnit* pUnit, CvPlot* pPlot, int iMo
 	if (pUnit->GetMissionAIPlot() != pPlot)
 	{
 		int iLoop;
-		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
+		for (CvUnit* pLoopUnit = m_pPlayer->firstUnit(&iLoop); pLoopUnit != NULL; pLoopUnit = m_pPlayer->nextUnit(&iLoop))
 		{
+			if (pUnit == pLoopUnit)
+			{
+				continue;
+			}
+
 			CvPlot* pMissionPlot = pLoopUnit->GetMissionAIPlot();
 			if (!pMissionPlot)
 			{
@@ -2674,13 +2699,11 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 #ifdef AUI_DANGER_PLOTS_REMADE
 	int iDanger = m_pPlayer->GetPlotDanger(*pPlot, pUnit);
 	if (iDanger >= pUnit->GetCurrHitPoints())
-#else
-#ifdef AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH
+#elif defined(AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH)
 	if ((!pUnit->IsCombatUnit() && m_pPlayer->GetPlotDanger(*pPlot) > 0) || 
 		m_pPlayer->GetPlotDanger(*pPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH)
 #else
 	if(m_pPlayer->GetPlotDanger(*pPlot) > 0)
-#endif
 #endif
 	{
 		if(m_bLogging)
@@ -3022,12 +3045,17 @@ bool CvBuilderTaskingAI::IsImprovementBeneficial(CvPlot* pPlot, const CvBuildInf
 /// Get this city that can interact with this plot
 CvCity* CvBuilderTaskingAI::GetWorkingCity(CvPlot* pPlot)
 {
+#ifdef AUI_WARNING_FIXES
+	CvCity* pCity = pPlot->getWorkingCity();
+	if (!pCity)
+#else
 	CvCity* pCity = NULL;
 	if(pPlot->getWorkingCity())
 	{
 		pCity = pPlot->getWorkingCity();
 	}
 	else
+#endif
 	{
 		CvCity* pLoopCity;
 		int iLoop;
@@ -3035,8 +3063,12 @@ CvCity* CvBuilderTaskingAI::GetWorkingCity(CvPlot* pPlot)
 		{
 			if(pLoopCity->GetCityCitizens()->IsCanWork(pPlot))
 			{
+#ifdef AUI_WARNING_FIXES
+				return pLoopCity;
+#else
 				pCity = pLoopCity;
 				break;
+#endif
 			}
 		}
 	}
@@ -3077,6 +3109,8 @@ bool CvBuilderTaskingAI::DoesBuildHelpRush(CvUnit* pUnit, CvPlot* pPlot, BuildTy
 
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
 int CvBuilderTaskingAI::ScorePlot(BuildTypes eBuild) const
+#elif defined(AUI_CONSTIFY)
+int CvBuilderTaskingAI::ScorePlot() const
 #else
 int CvBuilderTaskingAI::ScorePlot()
 #endif
@@ -3111,6 +3145,9 @@ int CvBuilderTaskingAI::ScorePlot()
 	FeatureTypes ePlotFeature = m_pTargetPlot->getFeatureType();
 #endif
 
+#ifdef AUI_WORKER_SCORE_PLOT_MULTIPLY_SCORE_IF_WOULD_WORK
+	bool bWouldBeWorked = m_pTargetPlot->isBeingWorked();
+#endif
 #ifdef AUI_WORKER_SCORE_PLOT_USE_CITIZENS_YIELD_VALUE
 	double adProjectedYields[NUM_YIELD_TYPES] = {};
 	adProjectedYields[YIELD_FOOD] = m_aiProjectedPlotYields[YIELD_FOOD];
@@ -3147,6 +3184,15 @@ int CvBuilderTaskingAI::ScorePlot()
 #endif
 
 	int iScore = pCity->GetCityCitizens()->GetTotalValue(adProjectedYields, NO_UNITCLASS, 0, 0, dProjectedPlotTourism);
+#ifdef AUI_WORKER_SCORE_PLOT_MULTIPLY_SCORE_IF_WOULD_WORK
+	if (!bWouldBeWorked)
+	{
+		int iBestCurrentWorkedPlotScore = 0;
+		CvPlot* pLoopPlot = pCity->GetCityCitizens()->GetBestCityPlotWithValue(iBestCurrentWorkedPlotScore, false, true);
+		if (pLoopPlot && iScore >= iBestCurrentWorkedPlotScore)
+			bWouldBeWorked = true;
+	}
+#endif
 	iScore -= pCity->GetCityCitizens()->GetTotalValue(adCurrentPlotYields, NO_UNITCLASS, 0, 0, dCurrentPlotTourism);
 #else
 	int iScore = 0;
@@ -3423,6 +3469,7 @@ int CvBuilderTaskingAI::ScorePlot()
 	}
 #endif
 
+#ifndef AUI_WORKER_SCORE_PLOT_NO_CAPITOL_FAVORING
 	if (pCity->isCapital()) // this is our capital and needs emphasis
 	{
 		iScore *= 8;
@@ -3431,6 +3478,13 @@ int CvBuilderTaskingAI::ScorePlot()
 	{
 		iScore *= 2;
 	}
+#endif
+#ifdef AUI_WORKER_SCORE_PLOT_MULTIPLY_SCORE_IF_WOULD_WORK
+	if (bWouldBeWorked)
+	{
+		iScore *= AUI_WORKER_SCORE_PLOT_MULTIPLY_SCORE_IF_WOULD_WORK;
+	}
+#endif
 #ifdef AUI_WORKER_SCORE_PLOT_REDUCED_PUPPET_SCORE
 	if (pCity->IsPuppet())
 	{
@@ -3441,7 +3495,11 @@ int CvBuilderTaskingAI::ScorePlot()
 	return iScore;
 }
 
+#ifdef AUI_CONSTIFY
+BuildTypes CvBuilderTaskingAI::GetBuildTypeFromImprovement(ImprovementTypes eImprovement) const
+#else
 BuildTypes CvBuilderTaskingAI::GetBuildTypeFromImprovement(ImprovementTypes eImprovement)
+#endif
 {
 #ifdef AUI_WARNING_FIXES
 	for (uint iBuildIndex = 0; iBuildIndex < GC.getNumBuildInfos(); iBuildIndex++)
@@ -3461,7 +3519,11 @@ BuildTypes CvBuilderTaskingAI::GetBuildTypeFromImprovement(ImprovementTypes eImp
 	return NO_BUILD;
 }
 
+#ifdef AUI_CONSTIFY
+BuildTypes CvBuilderTaskingAI::GetRepairBuild() const
+#else
 BuildTypes CvBuilderTaskingAI::GetRepairBuild(void)
+#endif
 {
 #ifdef AUI_WARNING_FIXES
 	for (uint i = 0; i < GC.getNumBuildInfos(); i++)
@@ -3481,12 +3543,20 @@ BuildTypes CvBuilderTaskingAI::GetRepairBuild(void)
 	return NO_BUILD;
 }
 
+#ifdef AUI_CONSTIFY
+FeatureTypes CvBuilderTaskingAI::GetFalloutFeature() const
+#else
 FeatureTypes CvBuilderTaskingAI::GetFalloutFeature(void)
+#endif
 {
 	return static_cast<FeatureTypes>(GC.getNUKE_FEATURE());
 }
 
+#ifdef AUI_CONSTIFY
+BuildTypes CvBuilderTaskingAI::GetFalloutRemove() const
+#else
 BuildTypes CvBuilderTaskingAI::GetFalloutRemove(void)
+#endif
 {
 	FeatureTypes eFalloutFeature = m_eFalloutFeature;
 	if(eFalloutFeature == NO_FEATURE)

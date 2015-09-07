@@ -115,15 +115,24 @@ public:
 
 #ifdef AUI_WORKER_SCORE_PLOT_CHOP
 	int ScorePlot(BuildTypes eBuild) const;
+#elif defined(AUI_CONSTIFY)
+	int ScorePlot() const;
 #else
 	int ScorePlot();
 #endif
 
+#ifdef AUI_CONSTIFY
+	BuildTypes GetBuildTypeFromImprovement(ImprovementTypes eImprovement) const;
+	BuildTypes GetRepairBuild() const;
+	FeatureTypes GetFalloutFeature() const;
+	BuildTypes GetFalloutRemove() const;
+#else
 	BuildTypes GetBuildTypeFromImprovement(ImprovementTypes eImprovement);
 	//static YieldTypes GetDeficientYield (CvCity* pCity, bool bIgnoreHappiness = false); // this is different from the CityStrategy one because it checks unhappiness before declaring a food emergency
 	BuildTypes GetRepairBuild(void);
 	FeatureTypes GetFalloutFeature(void);
 	BuildTypes GetFalloutRemove(void);
+#endif
 
 	static void LogInfo(CvString str, CvPlayer* pPlayer, bool bWriteToOutput = false);
 	static void LogYieldInfo(CvString strNewLogStr, CvPlayer* pPlayer); //Log yield related info to BuilderTaskingYieldLog.csv.

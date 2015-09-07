@@ -351,6 +351,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 /// Divides score for improvement if built for a puppeted city
 #define AUI_WORKER_SCORE_PLOT_REDUCED_PUPPET_SCORE (2)
+/// No longer artificially increases the score for plots owned by the player's capitol or an original capitol city
+#define AUI_WORKER_SCORE_PLOT_NO_CAPITOL_FAVORING
+/// Multiplies score for improvement if built on a plot that is either already worked or would be worked by the owning city
+#define AUI_WORKER_SCORE_PLOT_MULTIPLY_SCORE_IF_WOULD_WORK (2)
 /// Returns score of 0 for improvement if built for a city being razed
 #define AUI_WORKER_SCORE_PLOT_NO_SCORE_FROM_RAZE
 /// If building an improvement also generates flat hammers, consider the effect as flat +parameter hammer yield
