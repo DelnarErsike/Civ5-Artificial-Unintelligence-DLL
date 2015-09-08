@@ -134,7 +134,11 @@ void CvDiplomacyRequests::Update(void)
 	if (m_ePlayer == NO_PLAYER || m_aRequests.size() <= 0)
 		return;
 	CvPlayer& kToPlayer = GET_PLAYER(m_ePlayer);
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	if (GC.getGame().isNetworkMultiPlayer() && !(GC.getMULTIPLAYER_AI_DIPLOMACY_NOTIFICATIONS_ONLY_SIMULTANEOUS() > 0 && GC.getGame().isAnySimultaneousTurns()))
+#else
 	if (GC.getGame().isNetworkMultiPlayer() && !(GC.getMULTIPLAYER_AI_DIPLOMACY_NOTIFICATIONS_ONLY_SIMULTANEOUS() > 0 && kToPlayer.isSimultaneousTurns()))
+#endif
 	{
 		CvNotifications* pNotifications = kToPlayer.GetNotifications();
 		if (pNotifications)

@@ -1272,7 +1272,11 @@ void CvUnitMission::StartMission(UnitHandle hUnit)
 	CvPlayerAI& kUnitOwner = GET_PLAYER(hUnit->getOwner());
 
 
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	if (!GC.getGame().isAnySimultaneousTurns())
+#else
 	if(!kUnitOwner.isSimultaneousTurns())
+#endif
 	{
 		if(!kUnitOwner.isTurnActive())
 		{

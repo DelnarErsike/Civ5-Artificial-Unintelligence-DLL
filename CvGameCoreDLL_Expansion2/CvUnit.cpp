@@ -18627,7 +18627,11 @@ void CvUnit::setCombatUnit(CvUnit* pCombatUnit, bool bAttacking)
 	if(pCombatUnit != NULL)
 	{
 		CvAssertMsg(getCombatUnit() == NULL && getCombatCity() == NULL, "Combat Unit or City is not expected to be assigned");
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+		m_bCombatFocus = bAttacking && !(DLLUI->isFocusedWidget()) && ((getOwner() == GC.getGame().getActivePlayer()) || ((pCombatUnit->getOwner() == GC.getGame().getActivePlayer()) && !GC.getGame().isAnySimultaneousTurns()));
+#else
 		m_bCombatFocus = (bAttacking && !(DLLUI->isFocusedWidget()) && ((getOwner() == GC.getGame().getActivePlayer()) || ((pCombatUnit->getOwner() == GC.getGame().getActivePlayer()) && !(GET_PLAYER(GC.getGame().getActivePlayer()).isSimultaneousTurns()))));
+#endif
 		m_combatUnit = pCombatUnit->GetIDInfo();
 	}
 	else
@@ -18670,7 +18674,11 @@ void CvUnit::setCombatCity(CvCity* pCombatCity)
 	if(pCombatCity != NULL)
 	{
 		CvAssertMsg(getCombatUnit() == NULL && getCombatCity() == NULL, "Combat Unit or City is not expected to be assigned");
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+		m_bCombatFocus = !(DLLUI->isFocusedWidget()) && ((getOwner() == GC.getGame().getActivePlayer()) || ((pCombatCity->getOwner() == GC.getGame().getActivePlayer()) && !GC.getGame().isAnySimultaneousTurns()));
+#else
 		m_bCombatFocus = (!(DLLUI->isFocusedWidget()) && ((getOwner() == GC.getGame().getActivePlayer()) || ((pCombatCity->getOwner() == GC.getGame().getActivePlayer()) && !(GET_PLAYER(GC.getGame().getActivePlayer()).isSimultaneousTurns()))));
+#endif
 		m_combatCity = pCombatCity->GetIDInfo();
 	}
 	else

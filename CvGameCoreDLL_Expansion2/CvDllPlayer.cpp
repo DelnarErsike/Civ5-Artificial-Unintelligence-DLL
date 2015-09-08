@@ -211,7 +211,11 @@ void CvDllPlayer::SetTurnActive(bool bNewValue, bool bDoTurn)
 //------------------------------------------------------------------------------
 bool CvDllPlayer::IsSimultaneousTurns() const
 {
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	return GC.getGame().isAnySimultaneousTurns();
+#else
 	return m_pPlayer->isSimultaneousTurns();
+#endif
 }
 //------------------------------------------------------------------------------
 PlayerTypes CvDllPlayer::GetID() const

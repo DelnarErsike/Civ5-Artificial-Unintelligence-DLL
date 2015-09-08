@@ -194,6 +194,8 @@
 #define AUI_GAME_SET_PAUSED_TURN_TIMERS_PAUSE_ON_RECONNECT
 /// If the player receives a yield from a goody hut, floating text appears above the plot indicating the number and type of yields received
 #define AUI_PLAYER_RECEIVE_GOODY_PLOT_MESSAGE_FOR_YIELD
+/// When in hybrid mode, players who are not at war with each other have their turns happen simultaneously, thus speeding games up significantly
+#define AUI_GAME_BETTER_HYBRID_MODE
 
 // Observer mode fixes
 /// Observers will see all resources

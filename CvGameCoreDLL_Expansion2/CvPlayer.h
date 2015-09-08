@@ -978,7 +978,12 @@ public:
 	bool isTurnActive() const;
 	void setTurnActive(bool bNewValue, bool bDoTurn = true);
 	bool isSimultaneousTurns() const;
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	int getTurnOrder() const;
+	void setTurnOrder(int iTurnOrder);
+#else
 	void setDynamicTurnsSimultMode(bool simultaneousTurns);
+#endif
 
 	bool isAutoMoves() const;
 	void setAutoMoves(bool bNewValue);
@@ -1866,7 +1871,11 @@ protected:
 	FAutoVariable<bool, CvPlayer> m_bAutoMoves;					// Signal that we can process the auto moves when ready.
 	bool						  m_bProcessedAutoMoves;		// Signal that we have processed the auto moves
 	FAutoVariable<bool, CvPlayer> m_bEndTurn;					// Signal that the player has completed their turn.  The turn will still be active until the auto-moves have been processed.
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	int							  m_iTurnOrder;
+#else
 	bool						  m_bDynamicTurnsSimultMode;
+#endif
 	FAutoVariable<bool, CvPlayer> m_bPbemNewTurn;
 	FAutoVariable<bool, CvPlayer> m_bExtendedGame;
 	FAutoVariable<bool, CvPlayer> m_bFoundedFirstCity;

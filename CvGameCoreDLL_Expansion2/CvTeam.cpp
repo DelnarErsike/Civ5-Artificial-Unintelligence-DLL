@@ -6585,6 +6585,7 @@ bool CvTeam::isFriendlyTerritory(TeamTypes eTeam) const
 	return false;
 }
 
+#ifndef AUI_GAME_BETTER_HYBRID_MODE
 //	--------------------------------------------------------------------------------
 bool CvTeam::isAtWarWithHumans() const
 {//are we currently fighting a war with a human controlled civ?
@@ -6614,6 +6615,7 @@ bool CvTeam::isSimultaneousTurns() const
 
 	return false;
 }
+#endif
 
 //	--------------------------------------------------------------------------------
 void CvTeam::setForceRevealedResource(ResourceTypes eResource, bool bRevealed)
@@ -7082,6 +7084,35 @@ int CvTeam::GetIgnoreWarningCount (TeamTypes eTeam)
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+int CvTeam::getTurnOrder() const
+{
+	for (int iPlayer = 0; iPlayer < MAX_PLAYERS; ++iPlayer)
+	{
+		CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iPlayer);
+		if (kPlayer.isAlive() && kPlayer.getTeam() == GetID())
+		{
+			return kPlayer.getTurnOrder();
+		}
+	}
+
+	return MAX_TEAMS;
+}
+
+
+//	----------------------------------------------------------------------------
+void CvTeam::setTurnOrder(int iTurnOrder)
+{
+	for(int iPlayer = 0; iPlayer < MAX_PLAYERS; ++iPlayer)
+	{
+		CvPlayer& kPlayer = GET_PLAYER((PlayerTypes)iPlayer);
+		if (kPlayer.isAlive() && kPlayer.getTeam() == GetID())
+		{
+			kPlayer.setTurnOrder(iTurnOrder);
+		}
+	}
+}
+#else
 void CvTeam::setDynamicTurnsSimultMode(bool simultaneousTurns)
 {//set DynamicTurnsSimultMode for every player on this team.
 	for(int iPlayer = 0; iPlayer < MAX_PLAYERS; ++iPlayer)
@@ -7093,6 +7124,7 @@ void CvTeam::setDynamicTurnsSimultMode(bool simultaneousTurns)
 		}
 	}
 }
+#endif
 
 
 //	--------------------------------------------------------------------------------

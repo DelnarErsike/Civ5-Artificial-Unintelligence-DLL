@@ -353,8 +353,10 @@ public:
 	void changeImprovementFreshWaterYieldChange(ImprovementTypes eIndex1, YieldTypes eIndex2, int iChange);
 
 	bool isFriendlyTerritory(TeamTypes eTeam) const;
+#ifndef AUI_GAME_BETTER_HYBRID_MODE
 	bool isAtWarWithHumans() const;
 	bool isSimultaneousTurns() const;
+#endif
 
 	// DEPRECATED
 	bool IsHomeOfUnitedNations() const;
@@ -402,7 +404,12 @@ public:
 	void PopIgnoreWarning (TeamTypes eTeam);
 	int GetIgnoreWarningCount (TeamTypes eTeam);
 
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	int getTurnOrder() const;
+	void setTurnOrder(int iTurnOrder);
+#else
 	void setDynamicTurnsSimultMode(bool simultaneousTurns);
+#endif
 
 	// Wrapper for giving Players on this Team a notification message
 	void AddNotification(NotificationTypes eNotificationType, const char* strMessage, const char* strSummary, int iX = -1, int iY = -1, int iGameDataIndex = -1, int iExtraGameData = -1);

@@ -323,7 +323,11 @@ CvPlayer::CvPlayer() :
 	, m_bTurnActive("CvPlayer::m_bTurnActive", m_syncArchive, false, true)
 	, m_bAutoMoves("CvPlayer::m_bAutoMoves", m_syncArchive, false, true)
 	, m_bEndTurn("CvPlayer::m_bEndTurn", m_syncArchive, false, true)
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	, m_iTurnOrder(0)
+#else
 	, m_bDynamicTurnsSimultMode(true)
+#endif
 	, m_bPbemNewTurn("CvPlayer::m_bPbemNewTurn", m_syncArchive)
 	, m_bExtendedGame("CvPlayer::m_bExtendedGame", m_syncArchive)
 	, m_bFoundedFirstCity("CvPlayer::m_bFoundedFirstCity", m_syncArchive)
@@ -988,7 +992,11 @@ void CvPlayer::uninit()
 	m_bAutoMoves = false;
 	m_bProcessedAutoMoves = false;
 	m_bEndTurn = false;
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	m_iTurnOrder = 0;
+#else
 	m_bDynamicTurnsSimultMode = true;
+#endif
 	m_bPbemNewTurn = false;
 	m_bExtendedGame = false;
 	m_bFoundedFirstCity = false;
@@ -16315,7 +16323,12 @@ void CvPlayer::setAlive(bool bNewValue, bool bNotify)
 
 			GET_TEAM(getTeam()).SetKilledByTeam(NO_TEAM);
 
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+			CvGame& kCurGame = GC.getGame();
+			if (kCurGame.getCurrentTurnOrderActive() == getTurnOrder() || (kCurGame.getNumGameTurnActive() == 0) || (kCurGame.isAnySimultaneousTurns() && GET_TEAM(getTeam()).isTurnActive()))
+#else
 			if(isSimultaneousTurns() || (GC.getGame().getNumGameTurnActive() == 0) || (GC.getGame().isSimultaneousTeamTurns() && GET_TEAM(getTeam()).isTurnActive()))
+#endif
 			{
 				setTurnActive(true);
 			}
@@ -16659,6 +16672,9 @@ void CvPlayer::setTurnActive(bool bNewValue, bool bDoTurn)
 //	----------------------------------------------------------------------------
 bool CvPlayer::isSimultaneousTurns() const
 {
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	return GC.getGame().isAnySimultaneousTurns();
+#else
 	if(GC.getGame().isOption(GAMEOPTION_DYNAMIC_TURNS))
 	{//in dynamic turns mode, our turn mode varies
 		return m_bDynamicTurnsSimultMode;
@@ -16669,10 +16685,24 @@ bool CvPlayer::isSimultaneousTurns() const
 	}
 
 	return false;
+#endif
 }
 
 
 //	----------------------------------------------------------------------------
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+int CvPlayer::getTurnOrder() const
+{
+	return m_iTurnOrder;
+}
+
+
+//	----------------------------------------------------------------------------
+void CvPlayer::setTurnOrder(int iTurnOrder)
+{
+	m_iTurnOrder = iTurnOrder;
+}
+#else
 void CvPlayer::setDynamicTurnsSimultMode(bool simultaneousTurns)
 {
 	if(simultaneousTurns != m_bDynamicTurnsSimultMode)
@@ -16697,6 +16727,7 @@ void CvPlayer::setDynamicTurnsSimultMode(bool simultaneousTurns)
 	}
 	
 }
+#endif
 
 //	----------------------------------------------------------------------------
 bool CvPlayer::isAutoMoves() const
@@ -16740,10 +16771,14 @@ void CvPlayer::setEndTurn(bool bNewValue)
 {
 	CvGame& game = GC.getGame();
 
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	if (bNewValue && game.isAnySimultaneousTurns() && !game.isAllActivePlayersTurnAllComplete())
+#else
 	if(isSimultaneousTurns()
 		&& bNewValue 
 		&& game.isNetworkMultiPlayer() 
 		&& !gDLL->HasReceivedTurnAllCompleteFromAllPlayers())
+#endif
 	{//When doing simultaneous turns in multiplayer, we don't want anyone to end their turn until everyone has signalled TurnAllComplete.
 		// No setting end turn to true until all the players have sent the TurnComplete network message
 		return;
@@ -16789,7 +16824,11 @@ void CvPlayer::setEndTurn(bool bNewValue)
 
 		if(isEndTurn())
 		{
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+			if (game.isAnySimultaneousTurns())
+#else
 			if(!GC.getGame().isOption(GAMEOPTION_DYNAMIC_TURNS) && GC.getGame().isOption(GAMEOPTION_SIMULTANEOUS_TURNS))
+#endif
 			{//fully simultaneous turns only run automoves after every human has moved.
 				checkRunAutoMovesForEveryone();
 			}
@@ -16826,7 +16865,11 @@ void CvPlayer::checkRunAutoMovesForEveryone()
 			// To handle that case, we assume that human players who are not endturn and turn inactive after TurnAllComplete
 			// are ready for the human automoves phase.
 			&& (!p.isEndTurn()
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+			&& (!GC.getGame().isAllActivePlayersTurnAllComplete() || p.isTurnActive())))
+#else
 			&& (!gDLL->HasReceivedTurnAllCompleteFromAllPlayers() || p.isTurnActive()))) 
+#endif
 		{
 			runAutoMovesForEveryone = false;
 			break;
@@ -16838,7 +16881,11 @@ void CvPlayer::checkRunAutoMovesForEveryone()
 		for(i = 0; i < MAX_PLAYERS; ++i)
 		{
 			CvPlayer& p = CvPlayerAI::getPlayer((PlayerTypes)i);
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+			if (p.isHuman() && p.getTurnOrder() == GC.getGame().getCurrentTurnOrderActive())
+#else
 			if(p.isHuman())
+#endif
 			{
 				p.setAutoMoves(true);
 			}
@@ -23168,7 +23215,11 @@ void CvPlayer::Read(FDataStream& kStream)
 	kStream >> m_bTurnActive;
 	kStream >> m_bAutoMoves;
 	kStream >> m_bEndTurn;
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	kStream >> m_iTurnOrder;
+#else
 	kStream >> m_bDynamicTurnsSimultMode;
+#endif
 	kStream >> m_bPbemNewTurn;
 	kStream >> m_bExtendedGame;
 	kStream >> m_bFoundedFirstCity;
@@ -23669,7 +23720,11 @@ void CvPlayer::Write(FDataStream& kStream) const
 	kStream << m_bTurnActive;
 	kStream << m_bAutoMoves;
 	kStream << m_bEndTurn;
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	kStream << m_iTurnOrder;
+#else
 	kStream << m_bDynamicTurnsSimultMode;
+#endif
 	kStream << static_cast<bool>(m_bPbemNewTurn && GC.getGame().isPbem());
 	kStream << m_bExtendedGame;
 	kStream << m_bFoundedFirstCity;

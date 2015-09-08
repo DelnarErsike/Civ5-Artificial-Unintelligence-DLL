@@ -1158,7 +1158,11 @@ int CvLuaGame::lIsPitboss(lua_State* L)
 //bool isSimultaneousTeamTurns();
 int CvLuaGame::lIsSimultaneousTeamTurns(lua_State* L)
 {
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+	return BasicLuaMethod(L, &CvGame::isAnySimultaneousTurns);
+#else
 	return BasicLuaMethod(L, &CvGame::isSimultaneousTeamTurns);
+#endif
 }
 //------------------------------------------------------------------------------
 //bool isFinalInitialized();
