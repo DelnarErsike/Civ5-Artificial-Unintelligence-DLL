@@ -2008,9 +2008,8 @@ bool CvGame::hasTurnTimerExpired(PlayerTypes playerID)
 #ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
 				FFastVector<int, true, c_eCiv5GameplayDLL>::const_iterator piCurMaxTurnLength = m_aiMaxTurnLengths.begin();
 				piCurMaxTurnLength += curPlayer.getTurnOrder();
-				int iGameTurnEnd = *piCurMaxTurnLength;
 
-				float fGameTurnEnd = static_cast<float>(iGameTurnEnd);
+				float fGameTurnEnd = static_cast<float>(*piCurMaxTurnLength);
 #else
 				float gameTurnEnd = static_cast<float>(getMaxTurnLen());
 #endif
@@ -2049,7 +2048,7 @@ bool CvGame::hasTurnTimerExpired(PlayerTypes playerID)
 					}
 				}
 
-#ifndef AUI_GAME_PLAYER_BASED_TURN_LENGTH // This section's updates are only relevant for the local player, so they've been moved down into the local player conditional
+#ifndef AUI_GAME_PLAYER_BASED_TURN_LENGTH // This section is superfluous, so it was cut
 				if((!curPlayer.isTurnActive() || gDLL->HasReceivedTurnComplete(playerID)) //Active player has finished their turn.
 					&& getNumSequentialHumans() > 1)	//or sequential turn mode
 				{//It's not our turn and there are sequential turn human players in the game.
@@ -2087,27 +2086,6 @@ bool CvGame::hasTurnTimerExpired(PlayerTypes playerID)
 				if(isLocalPlayer)
 				{//update the local end turn timer.
 #ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
-					if (!curPlayer.isTurnActive() || gDLL->HasReceivedTurnComplete(playerID)) // Active player has finished their turn.
-					{
-						//In this case, the turn timer shows progress in terms of the max possible time until our next turn.
-						//As such, timeElapsed has to be adjusted to be a value in terms of the max possible time.
-						for (int iI = m_iCurrentTurnOrderActive; iI != curPlayer.getTurnOrder(); ++iI)
-						{
-							if (iI > m_iLastTurnOrderID)
-								iI = 0;
-							for (int iJ = 0; iJ < MAX_PLAYERS; ++iJ)
-							{
-								const CvPlayer& kLoopPlayer = GET_PLAYER((PlayerTypes)iJ);
-								if (kLoopPlayer.isHuman() && kLoopPlayer.isAlive() && kLoopPlayer.getTurnOrder() == iI)
-								{
-									iGameTurnEnd += m_aiMaxTurnLengths.at(iI);
-									break; // Go to next turn order once we've added in the time for this turn order
-								}
-							}
-						}
-						fGameTurnEnd = static_cast<float>(iGameTurnEnd);
-					}
-
 					CvPreGame::setEndTurnTimerLength(fGameTurnEnd);
 					iface->updateEndTurnTimer(fTimeElapsed / fGameTurnEnd);
 #else
