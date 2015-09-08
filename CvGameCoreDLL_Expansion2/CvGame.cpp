@@ -399,6 +399,10 @@ void CvGame::init(HandicapTypes eHandicap)
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
 	m_iCurrentTurnOrderActive = 0;
 	m_iLastTurnOrderID = 0;
+#ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
+	m_aiMaxTurnLengths.clear();
+	m_aiMaxTurnLengths.reserve(MAX_TEAMS);
+#endif
 #endif
 
 	doUpdateCacheOnTurn();
@@ -1129,6 +1133,10 @@ void CvGame::uninit()
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
 	m_iCurrentTurnOrderActive = 0;
 	m_iLastTurnOrderID = 0;
+#ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
+	m_aiMaxTurnLengths.clear();
+	m_aiMaxTurnLengths.reserve(MAX_TEAMS);
+#endif
 #endif
 
 	CvCityManager::Shutdown();
@@ -1553,7 +1561,7 @@ void CvGame::update()
 			}
 
 			// If there are no active players, move on to the AI
-			if(getNumGameTurnActive() == 0)
+			if (getNumGameTurnActive() == 0)
 			{
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
 				bool bDoAI = true;
@@ -1575,8 +1583,14 @@ void CvGame::update()
 						}
 					}
 				}
-				if (bDoAI && gDLL->CanAdvanceTurn())
-					doTurn();
+				
+				if (bDoAI)
+				{
+					if (gDLL->CanAdvanceTurn())
+						doTurn();
+				}
+				else
+					resetTurnTimer(false);
 #else
 				if(gDLL->CanAdvanceTurn())
 					doTurn();
@@ -1991,22 +2005,38 @@ bool CvGame::hasTurnTimerExpired(PlayerTypes playerID)
 				CvPlayer& curPlayer = GET_PLAYER(playerID);
 
 				// Has the turn expired?
-				float gameTurnEnd = static_cast<float>(getMaxTurnLen());
+#ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
+				FFastVector<int, true, c_eCiv5GameplayDLL>::const_iterator piCurMaxTurnLength = m_aiMaxTurnLengths.begin();
+				piCurMaxTurnLength += curPlayer.getTurnOrder();
+				int iGameTurnEnd = *piCurMaxTurnLength;
 
+				float fGameTurnEnd = static_cast<float>(iGameTurnEnd);
+#else
+				float gameTurnEnd = static_cast<float>(getMaxTurnLen());
+#endif
+
+#ifndef AUI_GAME_PLAYER_BASED_TURN_LENGTH
 				//NOTE:  These times exclude the time used for AI processing.
 				//Time since the current player's turn started.  Used for measuring time for players in sequential turn mode.
 				float timeSinceCurrentTurnStart = m_curTurnTimer.Peek() + m_fCurrentTurnTimerPauseDelta; 
 				//Time since the game (year) turn started.  Used for measuring time for players in simultaneous turn mode.
 				float timeSinceGameTurnStart = m_timeSinceGameTurnStart.Peek() + m_fCurrentTurnTimerPauseDelta; 
-				
-#ifdef AUI_GAME_BETTER_HYBRID_MODE
+#endif
+		
+#ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
+				float fTimeElapsed = m_curTurnTimer.Peek() + m_fCurrentTurnTimerPauseDelta;
+#elif defined(AUI_GAME_BETTER_HYBRID_MODE)
 				float timeElapsed = timeSinceCurrentTurnStart;
 #else
 				float timeElapsed = (curPlayer.isSimultaneousTurns() ? timeSinceGameTurnStart : timeSinceCurrentTurnStart);
 #endif
 				if(curPlayer.isTurnActive())
 				{//The timer is ticking for our turn
+#ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
+					if (fTimeElapsed > fGameTurnEnd)
+#else
 					if(timeElapsed > gameTurnEnd)
+#endif
 					{
 						if(s_unitMoveTurnSlice == 0)
 						{
@@ -2019,6 +2049,7 @@ bool CvGame::hasTurnTimerExpired(PlayerTypes playerID)
 					}
 				}
 
+#ifndef AUI_GAME_PLAYER_BASED_TURN_LENGTH // This section's updates are only relevant for the local player, so they've been moved down into the local player conditional
 				if((!curPlayer.isTurnActive() || gDLL->HasReceivedTurnComplete(playerID)) //Active player has finished their turn.
 					&& getNumSequentialHumans() > 1)	//or sequential turn mode
 				{//It's not our turn and there are sequential turn human players in the game.
@@ -2051,11 +2082,38 @@ bool CvGame::hasTurnTimerExpired(PlayerTypes playerID)
 						timeElapsed = timeSinceGameTurnStart + (humanTurnsCompleted-1)*timePerPlayer;
 					}
 				}
+#endif
 
 				if(isLocalPlayer)
 				{//update the local end turn timer.
+#ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
+					if (!curPlayer.isTurnActive() || gDLL->HasReceivedTurnComplete(playerID)) // Active player has finished their turn.
+					{
+						//In this case, the turn timer shows progress in terms of the max possible time until our next turn.
+						//As such, timeElapsed has to be adjusted to be a value in terms of the max possible time.
+						for (int iI = m_iCurrentTurnOrderActive; iI != curPlayer.getTurnOrder(); ++iI)
+						{
+							if (iI > m_iLastTurnOrderID)
+								iI = 0;
+							for (int iJ = 0; iJ < MAX_PLAYERS; ++iJ)
+							{
+								const CvPlayer& kLoopPlayer = GET_PLAYER((PlayerTypes)iJ);
+								if (kLoopPlayer.isHuman() && kLoopPlayer.isAlive() && kLoopPlayer.getTurnOrder() == iI)
+								{
+									iGameTurnEnd += m_aiMaxTurnLengths.at(iI);
+									break; // Go to next turn order once we've added in the time for this turn order
+								}
+							}
+						}
+						fGameTurnEnd = static_cast<float>(iGameTurnEnd);
+					}
+
+					CvPreGame::setEndTurnTimerLength(fGameTurnEnd);
+					iface->updateEndTurnTimer(fTimeElapsed / fGameTurnEnd);
+#else
 					CvPreGame::setEndTurnTimerLength(gameTurnEnd);
 					iface->updateEndTurnTimer(timeElapsed / gameTurnEnd);
+#endif
 				}
 			}
 		}
@@ -3983,6 +4041,7 @@ int CvGame::countHumanPlayersEverAlive() const
 	return iCount;
 }
 
+#ifndef AUI_GAME_PLAYER_BASED_TURN_LENGTH
 //	--------------------------------------------------------------------------------
 int CvGame::countSeqHumanTurnsUntilPlayerTurn( PlayerTypes playerID ) const
 {//This function counts the number of sequential human player turns that remain before this player's turn.
@@ -4059,6 +4118,7 @@ int CvGame::countSeqHumanTurnsUntilPlayerTurn( PlayerTypes playerID ) const
 
 	return humanTurnsUntilMe;
 }
+#endif
 
 //	--------------------------------------------------------------------------------
 int CvGame::countMajorCivsAlive() const
@@ -4793,6 +4853,7 @@ void CvGame::resetTurnTimer(bool resetGameTurnStart)
 	}
 }
 
+#ifndef AUI_GAME_PLAYER_BASED_TURN_LENGTH
 //	--------------------------------------------------------------------------------
 int CvGame::getMaxTurnLen()
 {//returns the amount of time players are being given for this turn.
@@ -4838,6 +4899,7 @@ int CvGame::getMaxTurnLen()
 		return baseTurnTime;
 	}
 }
+#endif
 
 //	--------------------------------------------------------------------------------
 bool CvGame::IsStaticTutorialActive() const
@@ -8039,7 +8101,65 @@ void CvGame::constructTurnOrders()
 			kCurTeam.setTurnOrder(iTeamIdx);
 		}
 	}
+	calculateMaxTurnLengths();
 }
+
+#ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
+void CvGame::calculateMaxTurnLengths()
+{
+	m_aiMaxTurnLengths.clear();
+	
+	if (getPitbossTurnTime() != 0)
+	{//manually set turn time.
+		if (isPitboss())
+		{// Turn time is in hours
+			for (int iI = 0; iI <= m_iLastTurnOrderID; ++iI)
+			{
+				m_aiMaxTurnLengths.push_back(getPitbossTurnTime() * 3600);
+			}
+		}
+		else
+		{
+			for (int iI = 0; iI <= m_iLastTurnOrderID; ++iI)
+			{
+				m_aiMaxTurnLengths.push_back(getPitbossTurnTime());
+			}
+		}
+	}
+	else
+	{
+		const CvTurnTimerInfo& kTurnTimer = CvPreGame::turnTimerInfo();
+		for (int iTurnOrder = 0; iTurnOrder <= m_iLastTurnOrderID; ++iTurnOrder)
+		{
+			int iMaxUnits = 0;
+			int iMaxCities = 0;
+
+			// Find out who has the most units and who has the most cities
+			// Calculate the max turn time based on the max number of units and cities
+			for (int iI = 0; iI < MAX_CIV_PLAYERS; ++iI)
+			{
+				const CvPlayer& kCurPlayer = GET_PLAYER((PlayerTypes)iI);
+				if (kCurPlayer.isAlive() && kCurPlayer.isHuman() && kCurPlayer.getTurnOrder() == iTurnOrder)
+				{
+					if (kCurPlayer.getNumUnits() > iMaxUnits)
+					{
+						iMaxUnits = kCurPlayer.getNumUnits();
+					}
+					if (kCurPlayer.getNumCities() > iMaxCities)
+					{
+						iMaxCities = kCurPlayer.getNumCities();
+					}
+				}
+			}
+
+			// Now set turn length based on base length and unit and city resources
+			int iBaseTurnTime = kTurnTimer.getBaseTime() + (kTurnTimer.getCityResource() * iMaxCities) + (kTurnTimer.getUnitResource() * iMaxUnits);
+
+			m_aiMaxTurnLengths.push_back(iBaseTurnTime);
+		}
+	}
+}
+#endif
 #endif
 
 //	--------------------------------------------------------------------------------
@@ -10003,6 +10123,9 @@ void CvGame::Read(FDataStream& kStream)
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
 	kStream >> m_iCurrentTurnOrderActive;
 	kStream >> m_iLastTurnOrderID;
+#ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
+	kStream >> m_aiMaxTurnLengths;
+#endif
 #endif
 
 	//when loading from file, we need to reset m_lastTurnAICivsProcessed 
@@ -10202,6 +10325,9 @@ void CvGame::Write(FDataStream& kStream) const
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
 	kStream << m_iCurrentTurnOrderActive;
 	kStream << m_iLastTurnOrderID;
+#ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
+	kStream << m_aiMaxTurnLengths;
+#endif
 #endif
 }
 

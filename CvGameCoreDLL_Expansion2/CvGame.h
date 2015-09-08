@@ -111,7 +111,9 @@ public:
 	int countCivTeamsEverAlive() const;
 	int countHumanPlayersAlive() const;
 	int countHumanPlayersEverAlive() const;
+#ifndef AUI_GAME_PLAYER_BASED_TURN_LENGTH
 	int countSeqHumanTurnsUntilPlayerTurn(PlayerTypes playerID) const;
+#endif
 
 	int countMajorCivsAlive() const;
 	int countMajorCivsEverAlive() const;
@@ -192,7 +194,9 @@ public:
 	void changeTurnSlice(int iChange);
 
 	void resetTurnTimer(bool resetGameTurnStart = true);
+#ifndef AUI_GAME_PLAYER_BASED_TURN_LENGTH
 	int getMaxTurnLen();
+#endif
 
 	bool IsStaticTutorialActive() const;
 	void SetStaticTutorialActive(bool bStaticTutorialActive);
@@ -773,6 +777,10 @@ protected:
 	void constructTurnOrders();
 	int m_iCurrentTurnOrderActive;
 	int m_iLastTurnOrderID;
+#ifdef AUI_GAME_PLAYER_BASED_TURN_LENGTH
+	void calculateMaxTurnLengths();
+	FFastVector<int, true, c_eCiv5GameplayDLL> m_aiMaxTurnLengths;
+#endif
 #endif
 
 	void updateWar();
