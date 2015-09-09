@@ -1889,6 +1889,7 @@ CvGlobals::~CvGlobals()
 {
 }
 
+#ifdef AUI_MINIDUMPS
 /************************************************************************************************/
 /* MINIDUMP_MOD                           04/10/11                                terkhen       */
 /*                                                                                              */
@@ -1949,6 +1950,7 @@ LONG WINAPI CustomFilter(EXCEPTION_POINTERS *ExceptionInfo)
 	CreateMiniDump(ExceptionInfo);
 	return EXCEPTION_EXECUTE_HANDLER;
 }
+#endif
 
 /************************************************************************************************/
 /* MINIDUMP_MOD                                END                                              */

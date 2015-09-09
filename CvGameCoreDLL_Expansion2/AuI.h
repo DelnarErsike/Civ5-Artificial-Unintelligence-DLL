@@ -28,6 +28,8 @@
 // Non-AI stuff (still used by AI routines, but could be used elsewhere as well)
 /// AUI's new GUID
 #define AUI_GUID
+/// Enables Minidump generation (originally for Civ4 by terkhen, ported to Civ5 by ls612)
+#define AUI_MINIDUMPS
 /// OpenMP is used to help with multithreading loops (note: can cause crashes if low on memory, could actually result in slower performance, may not actually be worth it)
 #define AUI_USE_OPENMP
 /// Enables const for functions, variables, and parameters that both allow it and are intended to be const
