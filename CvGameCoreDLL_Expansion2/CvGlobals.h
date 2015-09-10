@@ -9715,6 +9715,11 @@ extern CvGlobals gGlobals;
 #define DLLUI (GC.GetEngineUserInterface())
 #define DLLUIClass CvDLLInterfaceIFaceBase
 
+#ifdef AUI_MINIDUMPS
+void CreateMiniDump(EXCEPTION_POINTERS *pep = NULL);
+LONG WINAPI CustomFilter(EXCEPTION_POINTERS *ExceptionInfo = NULL);
+#endif
+
 inline Database::Connection* CvGlobals::GetGameDatabase()
 {
 	return m_pGameDatabase;
