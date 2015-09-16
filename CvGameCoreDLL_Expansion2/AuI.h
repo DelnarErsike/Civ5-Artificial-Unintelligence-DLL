@@ -174,8 +174,6 @@
 #define AUI_PLOT_VISIBILITY_OPTIMIZATIONS
 /// Power calculations for units are more representative of how useful the unit is
 #define AUI_UNIT_ENTRY_MORE_ACCURATE_POWER
-/// Plot yields are updated every turn for all players
-#define AUI_PLOT_UPDATE_YIELD_EVERY_TURN
 /// Disables the check for whether a unit is currently embarked for triggering Denmark's UA, so the pathfinder can use it properly
 #define AUI_UNIT_MOVEMENT_FIX_BAD_VIKING_DISEMBARK_PREVIEW
 /// The allows water walk check is fixed to no longer trigger if water walk improvements are not built adjacent to each other

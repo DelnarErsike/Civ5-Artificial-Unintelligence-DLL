@@ -19416,7 +19416,7 @@ bool CvUnit::isPromotionValid(PromotionTypes ePromotion) const
 	if(promotionInfo->GetInterceptionCombatModifier() != 0)
 	{
 #ifdef AUI_UNIT_FIX_ALLOW_COMBO_AIR_COMBAT_PROMOTIONS
-		if (!canAirDefend() && promotionInfo->GetInterceptChanceChange() == 0)
+		if (maxInterceptionProbability() + promotionInfo->GetInterceptChanceChange() <= 0)
 #else
 		if(!canAirDefend())
 #endif

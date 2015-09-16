@@ -233,16 +233,10 @@ public:
 		{
 			iNumChoices++;
 		}
-#endif // AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_TIE
+#endif
 
 		WeightedElement elem;
 		unsigned int i;
-		int iChoice;
-		int iTotalTopChoicesWeight = 0;
-
-		// Get the total weight
-		for (i = 0; i < iNumChoices; i++)
-		{
 #else
 	T ChooseFromTopChoices(int iNumChoices, RandomNumberDelegate *rndFcn, const char *szRollName)
 	{
@@ -260,17 +254,17 @@ public:
 				iNumChoices++;
 			}
 		}
-#endif // AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_TIE
+#endif
 
 		WeightedElement elem;
 		int i;
+#endif
 		int iChoice;
 		int iTotalTopChoicesWeight = 0;
 
 		// Get the total weight
 		for (i = 0; i < iNumChoices; i++)
 		{
-#endif // AUI_WEIGHTED_VECTOR_FIX_TOP_CHOICES_USE_UNSIGNED
 			elem = m_pItems[i];
 			iTotalTopChoicesWeight += elem.m_iWeight;
 		}
