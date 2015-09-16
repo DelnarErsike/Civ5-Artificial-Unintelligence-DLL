@@ -564,9 +564,7 @@ int CvFlavorManager::GetAdjustedValue(int iOriginalValue, int iPlusMinus, int iM
 		iRtnValue = iMax;
 #ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 	}
-#endif
 
-#ifdef AUI_FLAVOR_MANAGER_GET_ADJUSTED_VALUE_USE_REROLLS
 	if (iReroll != 0)
 	{
 		iRtnValue = GetAdjustedValue(iRtnValue, iReroll, iMin, iMax);

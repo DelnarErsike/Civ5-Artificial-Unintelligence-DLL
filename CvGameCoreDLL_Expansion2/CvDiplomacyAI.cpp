@@ -2389,7 +2389,11 @@ int CvDiplomacyAI::GetRandomPersonalityWeight(int iOriginalValue) const
 
 	while (iRerolls != 0)
 	{
+#ifdef AUI_DIPLOMACY_GET_RANDOM_PERSONALITY_WEIGHT_USES_BINOM_RNG
 		iAdjust = GC.getGame().getJonRandNumBinom(2 * iRerolls + 1, "Adjusting Personality Flavor") - iRerolls;
+#else
+		iAdjust = GC.getGame().getJonRandNum(2 * iRerolls + 1, "Adjusting Personality Flavor") - iRerolls;
+#endif
 		iRtnValue += iAdjust;
 
 		iRerolls = 0;
