@@ -23071,7 +23071,11 @@ CvUnit* CvUnit::airStrikeTarget(CvPlot& targetPlot, bool bNoncombatAllowed) cons
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CONSTIFY
+bool CvUnit::CanWithdrawFromMelee(const CvUnit& attacker) const
+#else
 bool CvUnit::CanWithdrawFromMelee(CvUnit& attacker)
+#endif
 {
 	VALIDATE_OBJECT
 	int iWithdrawChance = getExtraWithdrawal();

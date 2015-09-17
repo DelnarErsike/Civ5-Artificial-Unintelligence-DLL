@@ -842,12 +842,12 @@ bool CvDangerPlots::ShouldIgnorePlayer(PlayerTypes ePlayer)
 
 /// Should this unit be ignored when creating the danger plots?
 #ifdef AUI_DANGER_PLOTS_REMADE
-bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit) const
+bool CvDangerPlots::ShouldIgnoreUnit(const CvUnit* pUnit) const
 {
 	return !pUnit->IsCanAttack();
 #else
 #ifdef AUI_CONSTIFY
-bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility) const
+bool CvDangerPlots::ShouldIgnoreUnit(const CvUnit* pUnit, bool bIgnoreVisibility) const
 #else
 bool CvDangerPlots::ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility)
 #endif

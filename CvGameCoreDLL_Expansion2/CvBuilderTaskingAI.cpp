@@ -3452,18 +3452,14 @@ int CvBuilderTaskingAI::ScorePlot()
 		int iYieldDelta = m_aiProjectedPlotYields[eFocusYield] - m_aiCurrentPlotYields[eFocusYield];
 		if(iYieldDelta > 0)
 		{
-#ifdef AUI_WORKER_SCORE_PLOT_FLAVORS
-#ifdef AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS
+#if defined(AUI_WORKER_SCORE_PLOT_FLAVORS) && defined(AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS)
 			iScore += int(m_aiProjectedPlotYields[eFocusYield] * AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS * dYieldValue + 0.5);
-#else
+#elif defined(AUI_WORKER_SCORE_PLOT_FLAVORS)
 			iScore += int(m_aiProjectedPlotYields[eFocusYield] * 100 * dYieldValue + 0.5);
-#endif
-#else
-#ifdef AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS
+#elif defined(AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS)
 			iScore += m_aiProjectedPlotYields[eFocusYield] * AUI_WORKER_SCORE_PLOT_EFFECT_FROM_CITY_FOCUS;
 #else
 			iScore += m_aiProjectedPlotYields[eFocusYield] * 100;
-#endif
 #endif
 		}
 	}

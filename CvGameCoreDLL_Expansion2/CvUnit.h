@@ -1371,7 +1371,11 @@ public:
 	std::string stackTraceRemark(const FAutoVariableBase&) const;
 
 #ifdef AUI_SCOPE_FIXES
+#ifdef AUI_CONSTIFY
+	bool CanWithdrawFromMelee(const CvUnit& pAttacker) const;
+#else
 	bool CanWithdrawFromMelee(CvUnit& pAttacker);
+#endif
 	bool DoWithdrawFromMelee(CvUnit& pAttacker);
 
 	// these are do to a unit using Heavy Charge against you
@@ -1640,7 +1644,11 @@ protected:
 	CvUnit* airStrikeTarget(CvPlot& pPlot, bool bNoncombatAllowed) const;
 
 #ifndef AUI_SCOPE_FIXES
+#ifdef AUI_CONSTIFY
+	bool CanWithdrawFromMelee(const CvUnit& pAttacker) const;
+#else
 	bool CanWithdrawFromMelee(CvUnit& pAttacker);
+#endif
 	bool DoWithdrawFromMelee(CvUnit& pAttacker);
 
 	// these are do to a unit using Heavy Charge against you

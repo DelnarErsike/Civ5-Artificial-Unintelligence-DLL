@@ -204,7 +204,11 @@ public:
 	{
 		if (udIsPathDest && udIsPathDest(iX, iY))
 #else
+#ifdef AUI_CONSTIFY
+	inline bool IsPathDest(int iX, int iY) const
+#else
 	inline bool IsPathDest(int iX, int iY)
+#endif
 	{
 		if(udIsPathDest && udIsPathDest(iX, iY, m_pData, this))
 #endif
@@ -836,18 +840,14 @@ public:
 class CvIgnoreUnitsPathFinder: public CvAStar
 {
 public:
-#ifdef AUI_ASTAR_TURN_LIMITER
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#if defined(AUI_ASTAR_TURN_LIMITER) && defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 	bool DoesPathExist(const CvUnit* pUnit, const CvPlot* pStartPlot, const CvPlot* pEndPlot, const int iMaxTurns = MAX_INT);
-#else
+#elif defined(AUI_ASTAR_TURN_LIMITER)
 	bool DoesPathExist(CvUnit& unit, CvPlot* pStartPlot, CvPlot* pEndPlot, const int iMaxTurns = MAX_INT);
-#endif
-#else
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 	bool DoesPathExist(const CvUnit* pUnit, const CvPlot* pStartPlot, const CvPlot* pEndPlot);
 #else
 	bool DoesPathExist(CvUnit& unit, CvPlot* pStartPlot, CvPlot* pEndPlot);
-#endif
 #endif
 	CvPlot* GetLastOwnedPlot(CvPlot* pStartPlot, CvPlot* pEndPlot, PlayerTypes iOwner) const;
 #ifdef AUI_CONSTIFY

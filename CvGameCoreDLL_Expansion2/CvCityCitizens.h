@@ -69,14 +69,12 @@ public:
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
 	bool IsAvoidGrowth(int iExtraHappiness = 0) const;
 	bool IsForcedAvoidGrowth() const;
-#else
-#ifdef AUI_CONSTIFY
+#elif defined(AUI_CONSTIFY)
 	bool IsAvoidGrowth() const;
 	bool IsForcedAvoidGrowth() const;
 #else
 	bool IsAvoidGrowth();
 	bool IsForcedAvoidGrowth();
-#endif
 #endif
 	void SetForcedAvoidGrowth(bool bAvoidGrowth);
 	CityAIFocusTypes GetFocusType() const;

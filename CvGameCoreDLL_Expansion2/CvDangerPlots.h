@@ -141,9 +141,9 @@ public:
 #ifdef AUI_CONSTIFY
 	bool ShouldIgnorePlayer(PlayerTypes ePlayer) const;
 #ifdef AUI_DANGER_PLOTS_REMADE
-	bool ShouldIgnoreUnit(CvUnit* pUnit) const;
+	bool ShouldIgnoreUnit(const CvUnit* pUnit) const;
 #else
-	bool ShouldIgnoreUnit(CvUnit* pUnit, bool bIgnoreVisibility = false) const;
+	bool ShouldIgnoreUnit(const CvUnit* pUnit, bool bIgnoreVisibility = false) const;
 #endif
 	bool ShouldIgnoreCity(const CvCity* pCity, bool bIgnoreVisibility = false) const;
 	bool ShouldIgnoreCitadel(const CvPlot* pCitadelPlot, bool bIgnoreVisibility = false) const;
