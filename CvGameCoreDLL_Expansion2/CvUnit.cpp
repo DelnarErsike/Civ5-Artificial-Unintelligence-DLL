@@ -11765,9 +11765,13 @@ int CvUnit::GetBaseRangedCombatStrength() const
 //	--------------------------------------------------------------------------------
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack, const CvPlot* pTargetPlot, const CvPlot* pFromPlot, const int iDefenderExtraFortifyTurns, PlayerTypes eAssumeCityOwner) const
+#else
+int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack) const
+#endif
 {
 	VALIDATE_OBJECT
 
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 	if (pFromPlot == NULL)
 	{
 		pFromPlot = plot();
@@ -11800,10 +11804,8 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 			}
 		}
 	}
-#else
-int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* pCity, bool bAttacking, bool bForRangedAttack) const
-{
-	VALIDATE_OBJECT
+#elif defined(AUI_UNIT_FIX_BAD_BONUS_STACKS)
+	const CvPlot* pMyPlot = plot();
 #endif
 	int iModifier;
 	int iCombat;
@@ -12083,6 +12085,10 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 				iModifier += 25;
 			}
 		}
+
+#if defined(AUI_UNIT_FIX_BAD_BONUS_STACKS) && !defined(AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS)
+		const CvPlot* pTargetPlot = pMyPlot;
+#endif
 		// ATTACKING
 		if (bForRangedAttack)
 		{
@@ -12094,7 +12100,11 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 			// KNOWN BATTLE PLOT
 			////////////////////////
 
+#ifdef AUI_UNIT_FIX_BAD_BONUS_STACKS
+			pTargetPlot = pOtherUnit->plot();
+#else
 			CvPlot* pTargetPlot = pOtherUnit->plot();
+#endif
 
 			// Open Ground
 			if(pTargetPlot->isOpenGround())
@@ -12105,6 +12115,12 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 				iModifier += roughRangedAttackModifier();
 
 #ifdef AUI_UNIT_FIX_BAD_BONUS_STACKS
+		}
+		// Ranged DEFENSE
+		else
+		{
+			// Unit Class Defense Mod
+			iModifier += unitClassDefenseModifier(pOtherUnit->getUnitClassType());
 		}
 
 		// Bonus for fighting in one's lands
@@ -12207,8 +12223,11 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 		}
 #endif
 #endif
+#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
 		}
+#endif
 
+#if defined(AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS) || !defined(AUI_UNIT_FIX_BAD_BONUS_STACKS)
 		// Ranged DEFENSE
 		else
 		{
@@ -12220,6 +12239,7 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 			// Unit Class Defense Mod
 			iModifier += unitClassDefenseModifier(pOtherUnit->getUnitClassType());
 		}
+#endif
 	}
 
 	////////////////////////
@@ -12289,7 +12309,7 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 			iModifier += hillsDefenseModifier();
 #endif
 		// No TERRAIN bonuses for this Unit?
-#ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
+#if defined(AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS)  || defined(AUI_UNIT_FIX_BAD_BONUS_STACKS)
 		iTempModifier = pMyPlot->defenseModifier(getTeam(), false);
 #else
 		iTempModifier = plot()->defenseModifier(getTeam(), false);
