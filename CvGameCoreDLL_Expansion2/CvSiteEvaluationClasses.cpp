@@ -529,8 +529,7 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		iMaxDX = (NUM_CITY_RINGS + NUM_CITY_RINGS + 1) - MAX(0, iDY);
 		for (iDX = -(NUM_CITY_RINGS + NUM_CITY_RINGS + 1) - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #endif
-#else
-#ifdef AUI_HEXSPACE_DX_LOOPS
+#elif defined(AUI_HEXSPACE_DX_LOOPS)
 	int iDX, iMaxDX;
 	for (int iDY = -7; iDY <= 7; iDY++)
 	{
@@ -545,7 +544,6 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 	for (int iDX = -7; iDX <= 7; iDX++)
 	{
 		for (int iDY = -7; iDY <= 7; iDY++)
-#endif
 #endif
 		{
 			CvPlot* pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);

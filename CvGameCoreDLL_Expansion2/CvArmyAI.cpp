@@ -301,11 +301,7 @@ CvPlot* CvArmyAI::GetCenterOfMass(DomainTypes eDomainRequired)
 					pLoopPlot = plotXY(pRtnValue->getX(), pRtnValue->getY(), iDX, iDY);
 					if (pLoopPlot)
 					{
-#ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 						if (hexDistance(iDX, iDY) == 2)
-#else
-						if (plotDistance(pRtnValue->getX(), pRtnValue->getY(), pLoopPlot->getX(), pLoopPlot->getY()) == 2)
-#endif
 #else
 			for (int iDX = -2; iDX <= 2; iDX++)
 			{

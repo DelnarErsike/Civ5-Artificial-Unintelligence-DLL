@@ -127,8 +127,7 @@ void CvUnitMovement::GetCostsForMove(const CvUnit* pUnit, const CvPlot* pFromPlo
 #endif
 	}
 #ifdef AUI_UNIT_MOVEMENT_IROQUOIS_ROAD_TRANSITION_FIX
-	else if(pTraits->IsMoveFriendlyWoodsAsRoad() && pUnit->getOwner() == pToPlot->getOwner() && (eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE) && 
-		!pFromPlot->isRiverCrossing(directionXY(pFromPlot, pToPlot)))
+	else if(pTraits->IsMoveFriendlyWoodsAsRoad() && pUnit->getOwner() == pToPlot->getOwner() && (eFeature == FEATURE_FOREST || eFeature == FEATURE_JUNGLE))
 	{
 		CvRouteInfo* pRoadInfo = GC.getRouteInfo(ROUTE_ROAD);
 		iRouteCost = pRoadInfo->getMovementCost() + kUnitTeam.getRouteChange(ROUTE_ROAD);

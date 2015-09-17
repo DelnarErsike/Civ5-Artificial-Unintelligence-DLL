@@ -6085,7 +6085,7 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 			CvCity* pLoopCity;
 #ifdef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
 			iCityLoop = 0;
-#endif // #ifdef AUI_OPERATION_TWEAKED_FIND_BEST_TARGET_NUKE
+#endif
 			for(pLoopCity = enemyPlayer.firstCity(&iCityLoop); pLoopCity != NULL; pLoopCity = enemyPlayer.nextCity(&iCityLoop))
 			{
 				if(pLoopCity)

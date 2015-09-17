@@ -5862,21 +5862,22 @@ bool CvPlayer::canReceiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit) 
 		{
 			iMaxDX = iBarbCampDistance - MAX(0, iDY);
 			for (iDX = -iBarbCampDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-			{
 #else
 		for(iDX = -(iBarbCampDistance); iDX <= iBarbCampDistance; iDX++)
 		{
 			for(iDY = -(iBarbCampDistance); iDY <= iBarbCampDistance; iDY++)
-			{
 #endif
+			{
 				pNearbyPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 
 				if(pNearbyPlot != NULL)
 				{
+#ifndef AUI_HEXSPACE_DX_LOOPS
 #ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 					if (hexDistance(iDX, iDY) <= iBarbCampDistance)
 #else
 					if(plotDistance(pNearbyPlot->getX(), pNearbyPlot->getY(), pPlot->getX(), pPlot->getY()) <= iBarbCampDistance)
+#endif
 #endif
 					{
 						if(pNearbyPlot->getImprovementType() == barbCampType)
@@ -6298,20 +6299,21 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 			iMaxDX = iBarbCampDistance - MAX(0, iDY);
 			for (iDX = -iBarbCampDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #endif
-			{
 #else
 		for(iDX = -(iBarbCampDistance); iDX <= iBarbCampDistance; iDX++)
 		{
 			for(iDY = -(iBarbCampDistance); iDY <= iBarbCampDistance; iDY++)
-			{
 #endif
+			{
 				CvPlot* pNearbyBarbarianPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 				if(pNearbyBarbarianPlot != NULL)
 				{
+#ifndef AUI_HEXSPACE_DX_LOOPS
 #ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 					if (hexDistance(iDX, iDY) <= iBarbCampDistance)
 #else
 					if(plotDistance(pNearbyBarbarianPlot->getX(), pNearbyBarbarianPlot->getY(), pPlot->getX(), pPlot->getY()) <= iBarbCampDistance)
+#endif
 #endif
 					{
 						if(pNearbyBarbarianPlot->getImprovementType() == GC.getBARBARIAN_CAMP_IMPROVEMENT())
@@ -6415,10 +6417,12 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 
 				if(pLoopPlot != NULL)
 				{
+#ifndef AUI_HEXSPACE_DX_LOOPS
 #ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 					if (hexDistance(iDX, iDY) <= iRange)
 #else
 					if(plotDistance(pBestPlot->getX(), pBestPlot->getY(), pLoopPlot->getX(), pLoopPlot->getY()) <= iRange)
+#endif
 #endif
 					{
 						if(GC.getGame().getJonRandNum(100, "Goody Map") < kGoodyInfo.getMapProb())

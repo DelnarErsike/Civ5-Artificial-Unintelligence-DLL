@@ -10301,6 +10301,10 @@ bool CvTacticalAI::ExecuteSafeBombards(CvTacticalTarget& kTarget)
 			for(iDY = -(iRange); iDY <= iRange; iDY++)
 #endif
 			{
+#ifdef AUI_HEXSPACE_DX_LOOPS
+				if (iDX == 0 && iDY == 0)
+					continue;
+#endif
 				pLoopPlot = plotXY(kTarget.GetTargetX(), kTarget.GetTargetY(), iDX, iDY);
 				if(pLoopPlot != NULL)
 				{
@@ -10309,9 +10313,7 @@ bool CvTacticalAI::ExecuteSafeBombards(CvTacticalTarget& kTarget)
 #else
 					int iDistance = plotDistance(pLoopPlot->getX(), pLoopPlot->getY(), kTarget.GetTargetX(), kTarget.GetTargetY());
 #endif
-#ifdef AUI_HEXSPACE_DX_LOOPS
-					if (iDistance > 0)
-#else
+#ifndef AUI_HEXSPACE_DX_LOOPS
 					if(iDistance > 0 && iDistance <= iRange)
 #endif
 					{
@@ -10486,6 +10488,10 @@ bool CvTacticalAI::ExecuteOneProtectedBombard(CvTacticalTarget& kTarget)
 		for(iDY = -(iRange); iDY <= iRange; iDY++)
 #endif
 		{
+#ifdef AUI_HEXSPACE_DX_LOOPS
+			if (iDY == 0 && iDX == 0)
+				continue;
+#endif
 			pAttackPlot = plotXY(kTarget.GetTargetX(), kTarget.GetTargetY(), iDX, iDY);
 			if(pAttackPlot != NULL)
 			{
@@ -10494,9 +10500,7 @@ bool CvTacticalAI::ExecuteOneProtectedBombard(CvTacticalTarget& kTarget)
 #else
 				int iPlotDistance = plotDistance(pAttackPlot->getX(), pAttackPlot->getY(), kTarget.GetTargetX(), kTarget.GetTargetY());
 #endif
-#ifdef AUI_HEXSPACE_DX_LOOPS
-				if (iPlotDistance > 0)
-#else
+#ifndef AUI_HEXSPACE_DX_LOOPS
 				if(iPlotDistance > 0 && iPlotDistance <= iRange)
 #endif
 				{

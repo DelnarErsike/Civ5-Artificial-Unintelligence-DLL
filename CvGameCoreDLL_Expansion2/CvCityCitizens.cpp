@@ -3083,13 +3083,12 @@ bool CvCityCitizens::IsPlotBlockaded(CvPlot* pPlot) const
 	{
 		iMaxDX = iBlockadeDistance - MAX(0, iDY);
 		for (iDX = -iBlockadeDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-		{
 #else
 	for(iDX = -(iBlockadeDistance); iDX <= iBlockadeDistance; iDX++)
 	{
 		for(iDY = -(iBlockadeDistance); iDY <= iBlockadeDistance; iDY++)
-		{
 #endif
+		{
 			pNearbyPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 
 			if(pNearbyPlot != NULL)
@@ -3097,10 +3096,12 @@ bool CvCityCitizens::IsPlotBlockaded(CvPlot* pPlot) const
 				// Must be water in the same Area
 				if(pNearbyPlot->isWater() && pNearbyPlot->getArea() == pPlot->getArea())
 				{
+#ifndef AUI_HEXSPACE_DX_LOOPS
 #ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 					if(hexDistance(iDX, iDY) <= iBlockadeDistance)
 #else
 					if(plotDistance(pNearbyPlot->getX(), pNearbyPlot->getY(), pPlot->getX(), pPlot->getY()) <= iBlockadeDistance)
+#endif
 #endif
 					{
 						// Enemy boat within range to blockade our plot?

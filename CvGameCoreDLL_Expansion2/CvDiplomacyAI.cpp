@@ -19636,21 +19636,22 @@ void CvDiplomacyAI::SetPlayerNoSettleRequestAccepted(PlayerTypes ePlayer, bool b
 				{
 					iMaxDX = iRange - MAX(0, iLoopY);
 					for (iLoopX = -iRange - MIN(0, iLoopY); iLoopX <= iMaxDX; iLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-					{
 #else
 				for(iLoopX = -(iRange); iLoopX <= iRange; iLoopX++)
 				{
 					for(iLoopY = -(iRange); iLoopY <= iRange; iLoopY++)
-					{
 #endif
+					{
 						pNearbyPlot = plotXY(pLoopCity->getX(), pLoopCity->getY(), iLoopX, iLoopY);
 
 						if(pNearbyPlot != NULL)
 						{
+#ifndef AUI_HEXSPACE_DX_LOOPS
 #ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 							if (hexDistance(iLoopX, iLoopY) <= iRange)
 #else
 							if(plotDistance(pNearbyPlot->getX(), pNearbyPlot->getY(), pLoopCity->getX(), pLoopCity->getY()) <= iRange)
+#endif
 #endif
 							{
 								pNearbyPlot->SetNoSettling(eID, true);

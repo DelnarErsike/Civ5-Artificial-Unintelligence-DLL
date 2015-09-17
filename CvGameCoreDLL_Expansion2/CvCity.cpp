@@ -11371,7 +11371,9 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 	int iPLOT_INFLUENCE_NW_COST =				/*-105*/ GC.getPLOT_INFLUENCE_NW_COST();
 	int iPLOT_INFLUENCE_YIELD_POINT_COST =		/*-1*/	GC.getPLOT_INFLUENCE_YIELD_POINT_COST();
 
+#ifndef AUI_CITY_GET_BUYABLE_PLOT_LIST_ACTUALLY_IMPOSSIBLE_IF_NOT_ADJACENT_OWNED
 	int iPLOT_INFLUENCE_NO_ADJACENT_OWNED_COST = /*1000*/ GC.getPLOT_INFLUENCE_NO_ADJACENT_OWNED_COST();
+#endif
 
 	int iYieldLoop;
 
@@ -11416,6 +11418,29 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 				{
 					continue;
 				}
+
+#ifdef AUI_CITY_GET_BUYABLE_PLOT_LIST_ACTUALLY_IMPOSSIBLE_IF_NOT_ADJACENT_OWNED
+				// Plots not adjacent to another Plot acquired by this City are pretty much impossible to get
+				bFoundAdjacentOwnedByCity = false;
+				for (iDirectionLoop = 0; iDirectionLoop < NUM_DIRECTION_TYPES; iDirectionLoop++)
+				{
+					CvPlot* pAdjacentPlot = plotDirection(pLoopPlot->getX(), pLoopPlot->getY(), (DirectionTypes)iDirectionLoop);
+
+					if (pAdjacentPlot != NULL)
+					{
+						// Have to check plot ownership first because the City IDs match between different players!!!
+						if (pAdjacentPlot->getOwner() == getOwner() && pAdjacentPlot->GetCityPurchaseID() == GetID())
+						{
+							bFoundAdjacentOwnedByCity = true;
+							break;
+						}
+					}
+				}
+				if (!bFoundAdjacentOwnedByCity)
+				{
+					continue;
+				}
+#endif
 
 				ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
 				if (pkScriptSystem) 
@@ -11747,6 +11772,7 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 					iInfluenceCost += bUnownedNaturalWonderAdjacentCount ? -1 : 0;
 #endif
 
+#ifndef AUI_CITY_GET_BUYABLE_PLOT_LIST_ACTUALLY_IMPOSSIBLE_IF_NOT_ADJACENT_OWNED
 					// Plots not adjacent to another Plot acquired by this City are pretty much impossible to get
 					bFoundAdjacentOwnedByCity = false;
 					for (iDirectionLoop = 0; iDirectionLoop < NUM_DIRECTION_TYPES; iDirectionLoop++)
@@ -11767,6 +11793,7 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 					{
 						iInfluenceCost += iPLOT_INFLUENCE_NO_ADJACENT_OWNED_COST;
 					}
+#endif
 
 					// Are we cheap enough to get picked next?
 					if (iInfluenceCost < iLowestCost)
@@ -15375,13 +15402,12 @@ bool CvCity::CanRangeStrikeNow() const
 	{
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-		{
 #else
 	for(int iDX = -iRange; iDX <= iRange; iDX++)
 	{
 		for(int iDY = -iRange; iDY <= iRange; iDY++)
-		{
 #endif
+		{
 			CvPlot* pTargetPlot = plotXY(iX, iY, iDX, iDY);
 			bool bCanRangeStrike = true;
 

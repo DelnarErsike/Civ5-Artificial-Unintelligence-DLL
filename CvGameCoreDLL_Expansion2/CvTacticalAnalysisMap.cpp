@@ -506,12 +506,14 @@ void CvTacticalAnalysisMap::SetTargetBombardCells(CvPlot* pTarget, int iRange, b
 		for(iDY = -(iRange); iDY <= iRange; iDY++)
 #endif
 		{
+#ifdef AUI_HEXSPACE_DX_LOOPS
+			if (iDX == 0 && iDY == 0)
+				continue;
+#endif
 			pLoopPlot = plotXY(pTarget->getX(), pTarget->getY(), iDX, iDY);
 			if(pLoopPlot != NULL)
 			{
-#ifdef AUI_HEXSPACE_DX_LOOPS
-				if (pLoopPlot->getX() != pTarget->getX() || pLoopPlot->getY() != pTarget->getY())
-#else
+#ifndef AUI_HEXSPACE_DX_LOOPS
 #ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
 				iPlotDistance = hexDistance(iDX, iDY);
 #else

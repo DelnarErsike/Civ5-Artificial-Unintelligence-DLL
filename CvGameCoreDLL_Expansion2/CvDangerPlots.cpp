@@ -175,8 +175,8 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 				int iMaxDX = iRange - FASTMAX(0, iDY);
 				for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #else
-				iMaxDX = iRange - MAX(0, iDY);
-				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+				int iMaxDX = iRange - MAX(0, iDY);
+				for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #endif
 				{
 					// No need for range check because loops are set up properly

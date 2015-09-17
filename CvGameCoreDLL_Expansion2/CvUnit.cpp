@@ -6073,7 +6073,7 @@ bool CvUnit::isNukeVictim(const CvPlot* pPlot, TeamTypes eTeam) const
 		for (iDX = -iBlastRadius - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #else
 		iMaxDX = iBlastRadius - MAX(0, iDY);
-		for (iDX = -iBlastRadius - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+		for (iDX = -iBlastRadius - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #endif
 		{
 			// No need for range check because loops are set up properly
@@ -9053,7 +9053,7 @@ void CvUnit::PerformCultureBomb(int iRadius)
 		for (iDX = -iBombRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #else
 		iMaxDX = iBombRange - MAX(0, iDY);
-		for (iDX = -iBombRange - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+		for (iDX = -iBombRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #endif
 		{
 			// No need for range check because loops are set up properly
@@ -15378,7 +15378,7 @@ void CvUnit::setXY(int iX, int iY, bool bGroup, bool bUpdate, bool bShow, bool b
 		for (iDX = -iAttackRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #else
 		iMaxDX = iAttackRange - MAX(0, iDY);
-		for (iDX = -iAttackRange - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+		for (iDX = -iAttackRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #endif
 		{
 			// No need for range check because loops are set up properly
@@ -17359,7 +17359,7 @@ bool CvUnit::IsNearEnemyCitadel(int& iCitadelDamage)
 		for (int iDX = -iCitadelRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #else
 		int iMaxDX = iCitadelRange - MAX(0, iDY);
-		for (int iDX = -iCitadelRange - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+		for (int iDX = -iCitadelRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #endif
 		{
 			// No need for range check because loops are set up properly
@@ -17445,7 +17445,7 @@ bool CvUnit::IsNearGreatGeneral() const
 		for (iDX = -iGreatGeneralRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #else
 		iMaxDX = iGreatGeneralRange - MAX(0, iDY);
-		for (iDX = -iGreatGeneralRange - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+		for (iDX = -iGreatGeneralRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #endif
 		{
 			// No need for range check because loops are set up properly

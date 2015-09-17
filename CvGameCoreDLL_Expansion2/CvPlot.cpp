@@ -1282,10 +1282,10 @@ CvPlot* CvPlot::getNearestLandPlotInternal(int iDistance) const
 	{
 #ifdef AUI_FAST_COMP
 		iMaxDX = iDistance - FASTMAX(0, iDY);
-		for (iDX = -iDistance - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+		for (iDX = -iDistance - FASTMIN(0, iDY); iDX <= iMaxDX; ((iDY == abs(iDistance) || iDX == iMaxDX) ? iDX++ : iDX = iMaxDX)) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #else
 		iMaxDX = iDistance - MAX(0, iDY);
-		for (iDX = -iDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+		for (iDX = -iDistance - MIN(0, iDY); iDX <= iMaxDX; ((iDY == abs(iDistance) || iDX == iMaxDX) ? iDX++ : iDX = iMaxDX)) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 #endif
 #else
 	for(int iDX = -iDistance; iDX <= iDistance; iDX++)
@@ -1296,7 +1296,7 @@ CvPlot* CvPlot::getNearestLandPlotInternal(int iDistance) const
 			// bkw - revisit this, it works but is inefficient
 			CvPlot* pPlot = plotXY(getX(), getY(), iDX, iDY);
 #ifdef AUI_FIX_HEX_DISTANCE_INSTEAD_OF_PLOT_DISTANCE
-			if (pPlot != NULL && !pPlot->isWater() && hexDistance(iDX, iDY) == iDistance)
+			if (pPlot != NULL && !pPlot->isWater())
 #else
 			if(pPlot != NULL && !pPlot->isWater() && plotDistance(getX(), getY(), pPlot->getX(), pPlot->getY()) == iDistance)
 #endif
