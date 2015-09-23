@@ -304,9 +304,7 @@ bool CvAStar::GeneratePath(int iXstart, int iYstart, int iXdest, int iYdest, int
 				m_pClosed = temp;
 			}
 		}
-#endif
 
-#ifndef AUI_ASTAR_MINOR_OPTIMIZATION
 		PREFETCH_FASTAR_NODE(&(m_ppaaNodes[iXstart][iYstart]));
 #endif
 
@@ -564,7 +562,6 @@ void CvAStar::CreateChildren(CvAStarNode* node)
 			if (UDFUNC(udValid, node, check, 0))
 			{
 				LinkChild(node, check);
-			}
 #else
 		int x, y;
 		int iExtraChildren = udNumExtraChildrenFunc(node, this);
@@ -581,8 +578,8 @@ void CvAStar::CreateChildren(CvAStarNode* node)
 				{
 					LinkChild(node, check);
 				}
-			}
 #endif
+			}
 		}
 	}
 }
@@ -612,7 +609,11 @@ void CvAStar::CreateChildren(CvAStarNode* node)
 		{
 			check = &(m_ppaaNodes[x][y]);
 
+#ifdef AUI_ASTAR_USE_DELEGATES
+			if (check && UDFUNC(udValid, node, check, 0))
+#else
 			if(udFunc(udValid, node, check, 0, m_pData))
+#endif
 			{
 				LinkChild(node, check);
 			}
@@ -621,6 +622,15 @@ void CvAStar::CreateChildren(CvAStarNode* node)
 
 	if(udNumExtraChildrenFunc && udGetExtraChildFunc)
 	{
+#ifdef AUI_ASTAR_USE_DELEGATES
+		const uint uiNumExtraChildren = udNumExtraChildrenFunc(node);
+		for (uint uiI = 0; uiI < uiNumExtraChildren; uiI++)
+		{
+			check = udGetExtraChildFunc(node, uiI);
+			if (UDFUNC(udValid, node, check, 0))
+			{
+				LinkChild(node, check);
+#else
 		int iExtraChildren = udNumExtraChildrenFunc(node, this);
 		for(int i = 0; i < iExtraChildren; i++)
 		{
@@ -635,6 +645,7 @@ void CvAStar::CreateChildren(CvAStarNode* node)
 				{
 					LinkChild(node, check);
 				}
+#endif
 			}
 		}
 	}
@@ -645,12 +656,10 @@ void CvAStar::CreateChildren(CvAStarNode* node)
 /// Link in a child
 void CvAStar::LinkChild(CvAStarNode* node, CvAStarNode* check)
 {
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-#ifdef AUI_ASTAR_USE_DELEGATES
+#if defined(AUI_ASTAR_MINOR_OPTIMIZATION) && defined(AUI_ASTAR_USE_DELEGATES)
 	int iKnownCost = node->m_iKnownCost + UDFUNC(udCost, node, check, 0);
-#else
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 	int iKnownCost = node->m_iKnownCost + udFunc(udCost, node, check, 0, m_pData);
-#endif
 #else
 	int iKnownCost;
 
@@ -1237,6 +1246,8 @@ int PathDest(int iToX, int iToY, const void* pointer, CvAStar* finder)
 /// Standard path finder - is this end point for the path valid?
 #ifdef AUI_ASTAR_USE_DELEGATES
 int CvAStar::PathDestValid(int iToX, int iToY) const
+#elif defined(AUI_CONSTIFY)
+int PathDestValid(int iToX, int iToY, const void* pointer, const CvAStar* finder)
 #else
 int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 #endif
@@ -1670,12 +1681,10 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 					iDefenseBonus = 200;
 			}
 			iCost += PATH_DEFENSE_WEIGHT * (200 - iDefenseBonus);
-#else
-#ifdef AUI_FAST_COMP
+#elif defined(AUI_FAST_COMP)
 			iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
 #else
 			iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
-#endif
 #endif
 		}
 
@@ -1755,8 +1764,7 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 						if (iDealtDamage > GC.getMAX_HIT_POINTS())
 							iDealtDamage = GC.getMAX_HIT_POINTS();
 						iCost += iSelfDamage * PATH_DAMAGE_WEIGHT * pUnit->GetMaxHitPoints() / 100 + (GC.getMAX_HIT_POINTS() - iDealtDamage) * PATH_DAMAGE_WEIGHT / 10;
-#else
-#ifdef AUI_ASTAR_FIX_DEFENSE_PENALTIES_CONSIDERED_FOR_UNITS_WITHOUT_DEFENSE_BONUS
+#elif defined(AUI_ASTAR_FIX_DEFENSE_PENALTIES_CONSIDERED_FOR_UNITS_WITHOUT_DEFENSE_BONUS)
 						int iDefenseBonus = pFromPlot->defenseModifier(eUnitTeam, false);
 						if (iDefenseBonus > 0)
 						{
@@ -1767,11 +1775,10 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 						}
 						iCost += PATH_DEFENSE_WEIGHT * (200 - iDefenseBonus);
 #else
-#ifdef AUI_FAST_COMP
+#if defined(AUI_FAST_COMP)
 						iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
 #else
 						iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
-#endif
 #endif
 
 						// I guess we may as well be the garrison
@@ -2002,11 +2009,9 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 			kToNodeCacheData.bCanEnterTerrain = true;
 		kToNodeCacheData.bIsCalculated = true;
 	}
-#else
-#ifdef AUI_DANGER_PLOTS_REMADE
+#elif defined(AUI_DANGER_PLOTS_REMADE)
 	if (bAIControl || !bIsHuman)
 		kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
-#endif
 #endif
 
 	// We have determined that this node is not the origin above (parent == NULL)
@@ -2047,7 +2052,7 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 
 	iOldNumTurns = -1;
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifndef AUI_ASTAR_MINOR_OPTIMIZATION
 	CvPlot* pPlot = NULL;
 #endif
 
@@ -2299,19 +2304,15 @@ int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 #else
 					if (GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
 #endif
-#else
-#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+#elif defined(AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA)
 					if (GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pToPlot) > 0 && GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pFromPlot) <= 0)
 #else
-					if(GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > 0)
+					if (GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > 0)
 #endif
-#endif
-#else
-#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+#elif defined(AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
 					if (GET_PLAYER(unit_owner).GetPlotDanger(*pFromPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
 #else
 					if(GET_PLAYER(unit_owner).GetPlotDanger(*pFromPlot) > 0)
-#endif
 #endif
 #endif
 					{
@@ -2463,35 +2464,27 @@ int PathNodeAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* po
 	if(data == ASNL_ADDOPEN || data == ASNL_STARTOPEN)
 	{
 		// Are there movement points left and we're worried about stacking or mountains?
-#ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-#ifdef AUI_ASTAR_USE_DELEGATES
+#if defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES) && defined(AUI_ASTAR_USE_DELEGATES)
 		if (node->m_iData1 > 0 && !IsPathDest(node->m_iX, node->m_iY) && (!(GetInfo() & MOVE_IGNORE_STACKING) || node->m_pPlot->isMountain()))
-#else
+#elif defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES)
 		if (node->m_iData1 > 0 && !finder->IsPathDest(node->m_iX, node->m_iY) && (!(finder->GetInfo() & MOVE_IGNORE_STACKING) || node->m_pPlot->isMountain()))
-#endif
-#else
-#ifdef AUI_ASTAR_USE_DELEGATES
+#elif defined(AUI_ASTAR_USE_DELEGATES)
 		if(node->m_iData1 > 0 && !IsPathDest(node->m_iX, node->m_iY) && (!(GetInfo() & MOVE_IGNORE_STACKING) || GC.getMap().plotUnchecked(node->m_iX, node->m_iY)->isMountain()))
 #else
 		if(node->m_iData1 > 0 && !finder->IsPathDest(node->m_iX, node->m_iY) && (!(finder->GetInfo() & MOVE_IGNORE_STACKING) || GC.getMap().plotUnchecked(node->m_iX, node->m_iY)->isMountain()))
 #endif
-#endif
 		{
 			// Retrieve another node
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-#ifdef AUI_ASTAR_USE_DELEGATES
+#if defined(AUI_ASTAR_MINOR_OPTIMIZATION) && defined(AUI_ASTAR_USE_DELEGATES)
 			CvAStarNode* pNode = GetPartialMoveNode(node->m_iX, node->m_iY);
-#else
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 			CvTwoLayerPathFinder* twoLayerFinder = static_cast<CvTwoLayerPathFinder*>(finder);
 			CvAStarNode* pNode = twoLayerFinder->GetPartialMoveNode(node->m_iX, node->m_iY);
-#endif
-#else
-#ifdef AUI_ASTAR_USE_DELEGATES
+#elif defined(AUI_ASTAR_USE_DELEGATES)
 			pNode = GetPartialMoveNode(node->m_iX, node->m_iY);
 #else
 			CvTwoLayerPathFinder* twoLayerFinder = static_cast<CvTwoLayerPathFinder*>(finder);
 			pNode = twoLayerFinder->GetPartialMoveNode(node->m_iX, node->m_iY);
-#endif
 #endif
 			pNode->m_iData1 = 0;   // Zero out movement
 			pNode->m_iData2 = node->m_iData2;
@@ -2518,6 +2511,8 @@ int PathNodeAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* po
 /// Ignore units path finder - is this end point for the path valid?
 #ifdef AUI_ASTAR_USE_DELEGATES
 int CvAStar::IgnoreUnitsDestValid(int iToX, int iToY) const
+#elif defined(AUI_CONSTIFY)
+int IgnoreUnitsDestValid(int iToX, int iToY, const void* pointer, const CvAStar* finder)
 #else
 int IgnoreUnitsDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 #endif
@@ -2613,8 +2608,10 @@ int IgnoreUnitsDestValid(int iToX, int iToY, const void* pointer, CvAStar* finde
 
 	if(bAIControl || pToPlot->isRevealed(eUnitTeam))
 	{
-#ifdef AUI_ASTAR_FIX_IGNORE_UNITS_PATHFINDER_TERRITORY_CHECK
+#if defined(AUI_ASTAR_FIX_IGNORE_UNITS_PATHFINDER_TERRITORY_CHECK) && defined(AUI_ASTAR_USE_DELEGATES)
 		if (!pUnit->canEnterTerrain(*pToPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE) || !pUnit->canEnterTerritory(pToPlot->getTeam(), false, false, pUnit->IsDeclareWar() || (GetInfo() & MOVE_DECLARE_WAR)))
+#elif defined(AUI_ASTAR_FIX_IGNORE_UNITS_PATHFINDER_TERRITORY_CHECK)
+		if (!pUnit->canEnterTerrain(*pToPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE) || !pUnit->canEnterTerritory(pToPlot->getTeam(), false, false, pUnit->IsDeclareWar() || (finder->GetInfo() & MOVE_DECLARE_WAR)))
 #else
 		if(!pUnit->canEnterTerrain(*pToPlot, CvUnit::MOVEFLAG_PRETEND_CORRECT_EMBARK_STATE) || !pUnit->canEnterTerritory(eUnitTeam))
 #endif
@@ -2828,12 +2825,10 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 					iDefenseBonus = 200;
 			}
 			iCost += PATH_DEFENSE_WEIGHT * (200 - iDefenseBonus);
-#else
-#ifdef AUI_FAST_COMP
+#elif defined(AUI_FAST_COMP)
 			iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
 #else
 			iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
-#endif
 #endif
 		}
 
@@ -2924,12 +2919,10 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 								iDefenseBonus = 200;
 						}
 						iCost += PATH_DEFENSE_WEIGHT * (200 - iDefenseBonus);
-#else
-#ifdef AUI_FAST_COMP
+#elif defined(AUI_FAST_COMP)
 						iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
 #else
 						iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
-#endif
 #endif
 
 						// I guess we may as well be the garrison
@@ -3047,7 +3040,7 @@ int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data, const voi
 
 #endif
 
-#ifndef AUI_ASTAR_CACHE_PLOTS_AT_NODES
+#ifndef AUI_ASTAR_MINOR_OPTIMIZATION
 	CvMap& theMap = GC.getMap();
 #endif
 
@@ -3268,6 +3261,8 @@ int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const v
 /// Step path finder - is this end point for the path valid?
 #ifdef AUI_ASTAR_USE_DELEGATES
 int CvAStar::StepDestValid(int iToX, int iToY) const
+#elif defined(AUI_CONSTIFY)
+int StepDestValid(int iToX, int iToY, const void* pointer, const CvAStar* finder)
 #else
 int StepDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 #endif
@@ -3511,6 +3506,8 @@ int StepAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 /// Influence path finder - is this end point for the path valid?
 #ifdef AUI_ASTAR_USE_DELEGATES
 int CvAStar::InfluenceDestValid(int iToX, int iToY)
+#elif defined(AUI_CONSTIFY)
+int InfluenceDestValid(int iToX, int iToY, const void* pointer, const CvAStar* finder)
 #else
 int InfluenceDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 #endif
@@ -3668,8 +3665,7 @@ int InfluenceValid(CvAStarNode* parent, CvAStarNode* node, int data, const void*
 	{
 		return FALSE;
 	}
-#else
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 	if (!GC.getMap().isPlot(node->m_iX, node->m_iY))
 	{
 		return FALSE;
@@ -3681,7 +3677,6 @@ int InfluenceValid(CvAStarNode* parent, CvAStarNode* node, int data, const void*
 	{
 		return FALSE;
 	}
-#endif
 #endif
 
 	// todo: a check to see if we are within the theoretical influence range would be great
@@ -3835,12 +3830,10 @@ int RouteValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poi
 #endif
 	if (!pNewPlot)
 		return FALSE;
-#else
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 	CvPlot* pNewPlot = GC.getMap().plotUnchecked(node->m_iX, node->m_iY);
 #else
 	pNewPlot = GC.getMap().plotUnchecked(node->m_iX, node->m_iY);
-#endif
 #endif
 
 
@@ -4059,12 +4052,10 @@ int WaterRouteValid(CvAStarNode* parent, CvAStarNode* node, int data, const void
 #endif
 	if (!pNewPlot)
 		return FALSE;
-#else
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 	CvPlot* pNewPlot = GC.getMap().plotUnchecked(node->m_iX, node->m_iY);
 #else
 	pNewPlot = GC.getMap().plotUnchecked(node->m_iX, node->m_iY);
-#endif
 #endif
 
 	if(!(pNewPlot->isRevealed(eTeam)))
@@ -4196,12 +4187,10 @@ int BuildRouteValid(CvAStarNode* parent, CvAStarNode* node, int data, const void
 #endif
 	if (!pNewPlot)
 		return FALSE;
-#else
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 	CvPlot* pNewPlot = GC.getMap().plotUnchecked(node->m_iX, node->m_iY);
 #else
 	pNewPlot = GC.getMap().plotUnchecked(node->m_iX, node->m_iY);
-#endif
 #endif
 	if(!bThisPlayerIsMinor && !(pNewPlot->isRevealed(thisPlayer.getTeam())))
 	{
@@ -4301,18 +4290,14 @@ int JoinArea(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 {
 	if(data == ASNL_ADDCLOSED)
 	{
-#ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-#ifdef AUI_ASTAR_USE_DELEGATES
+#if defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES) && defined(AUI_ASTAR_USE_DELEGATES)
 		node->m_pPlot->setArea(GetInfo());
-#else
+#elif defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES)
 		node->m_pPlot->setArea(finder->GetInfo());
-#endif
-#else
-#ifdef AUI_ASTAR_USE_DELEGATES
+#elif defined(AUI_ASTAR_USE_DELEGATES)
 		GC.getMap().plotUnchecked(node->m_iX, node->m_iY)->setArea(GetInfo());
 #else
 		GC.getMap().plotUnchecked(node->m_iX, node->m_iY)->setArea(finder->GetInfo());
-#endif
 #endif
 	}
 
@@ -4352,18 +4337,14 @@ int JoinLandmass(CvAStarNode* parent, CvAStarNode* node, int data, const void* p
 {
 	if(data == ASNL_ADDCLOSED)
 	{
-#ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-#ifdef AUI_ASTAR_USE_DELEGATES
+#if defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES) && defined(AUI_ASTAR_USE_DELEGATES)
 		node->m_pPlot->setLandmass(GetInfo());
-#else
+#elif defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES)
 		node->m_pPlot->setLandmass(finder->GetInfo());
-#endif
-#else
-#ifdef AUI_ASTAR_USE_DELEGATES
+#elif defined(AUI_ASTAR_USE_DELEGATES)
 		GC.getMap().plotUnchecked(node->m_iX, node->m_iY)->setLandmass(GetInfo());
 #else
 		GC.getMap().plotUnchecked(node->m_iX, node->m_iY)->setLandmass(finder->GetInfo());
-#endif
 #endif
 	}
 
@@ -4442,7 +4423,7 @@ void CvTwoLayerPathFinder::DeInit()
 
 //	--------------------------------------------------------------------------------
 /// Return a node from the second layer of A-star nodes (for the partial moves)
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#if defined(AUI_ASTAR_MINOR_OPTIMIZATION) || defined(AUI_CONSTIFY)
 CvAStarNode* CvTwoLayerPathFinder::GetPartialMoveNode(int iCol, int iRow) const
 #else
 CvAStarNode* CvTwoLayerPathFinder::GetPartialMoveNode(int iCol, int iRow)
@@ -4642,20 +4623,16 @@ CvPlot* CvStepPathFinder::GetLastOwnedPlot(PlayerTypes ePlayer, PlayerTypes eEne
 #endif
 		while(pNode != NULL)
 		{
-#ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#if defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES) && defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 			CvPlot* currentPlot = pNode->m_pPlot;
-#else
+#elif defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES)
 			CvPlot* currentPlot;
 			currentPlot = pNode->m_pPlot;
-#endif
-#else
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 			CvPlot* currentPlot = kMap.plotUnchecked(pNode->m_iX, pNode->m_iY);
 #else
 			CvPlot* currentPlot;
 			currentPlot = kMap.plotUnchecked(pNode->m_iX, pNode->m_iY);
-#endif
 #endif
 
 			// Check and see if this plot has the right owner
@@ -4758,18 +4735,14 @@ CvPlot* CvStepPathFinder::GetXPlotsFromEnd(PlayerTypes ePlayer, PlayerTypes eEne
 
 //	--------------------------------------------------------------------------------
 /// Check for existence of step path between two points
-#ifdef AUI_ASTAR_TURN_LIMITER
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#if defined(AUI_ASTAR_TURN_LIMITER) && defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 bool CvIgnoreUnitsPathFinder::DoesPathExist(const CvUnit* pUnit, const CvPlot* pStartPlot, const CvPlot* pEndPlot, const int iMaxTurns)
-#else
+#elif defined(AUI_ASTAR_TURN_LIMITER)
 bool CvIgnoreUnitsPathFinder::DoesPathExist(CvUnit& unit, CvPlot* pStartPlot, CvPlot* pEndPlot, const int iMaxTurns)
-#endif
-#else
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 bool CvIgnoreUnitsPathFinder::DoesPathExist(const CvUnit* pUnit, const CvPlot* pStartPlot, const CvPlot* pEndPlot)
 #else
 bool CvIgnoreUnitsPathFinder::DoesPathExist(CvUnit& unit, CvPlot* pStartPlot, CvPlot* pEndPlot)
-#endif
 #endif
 {
 	m_pCurNode = NULL;
@@ -4779,27 +4752,27 @@ bool CvIgnoreUnitsPathFinder::DoesPathExist(CvUnit& unit, CvPlot* pStartPlot, Cv
 		return false;
 	}
 
-#ifdef AUI_ASTAR_TURN_LIMITER
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#if defined(AUI_ASTAR_TURN_LIMITER) && defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 	SetData(pUnit, iMaxTurns);
-#else
+#elif defined(AUI_ASTAR_TURN_LIMITER)
 	SetData(&unit, iMaxTurns);
-#endif
-#else
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 	SetData(pUnit);
 #else
 	SetData(&unit);
-#endif
 #endif
 	return GeneratePath(pStartPlot->getX(), pStartPlot->getY(), pEndPlot->getX(), pEndPlot->getY(), 0, true /*bReuse*/);
 }
 
 //	--------------------------------------------------------------------------------
 /// Get length of last path computed by path finder in turns [should be used after a call to DoesPathExist()]
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_CONSTIFY
 int CvIgnoreUnitsPathFinder::GetPathLength() const
+#else
+int CvIgnoreUnitsPathFinder::GetPathLength()
+#endif
 {
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
 	CvAStarNode* pNode = GetLastNode();
 	if (pNode != NULL)
 	{
@@ -4808,8 +4781,6 @@ int CvIgnoreUnitsPathFinder::GetPathLength() const
 
 	return MAX_INT;
 #else
-int CvIgnoreUnitsPathFinder::GetPathLength()
-{
 	int iPathDistance = MAX_INT;
 
 	CvAStarNode* pNode = GetLastNode();
@@ -4846,20 +4817,16 @@ CvPlot* CvIgnoreUnitsPathFinder::GetLastOwnedPlot(CvPlot* pStartPlot, CvPlot* pE
 #endif
 		while(pNode != NULL)
 		{
-#ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#if defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES) && defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 			CvPlot* currentPlot = pNode->m_pPlot;
-#else
+#elif defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES)
 			CvPlot* currentPlot;
 			currentPlot = pNode->m_pPlot;
-#endif
-#else
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 			CvPlot* currentPlot = kMap.plotUnchecked(pNode->m_iX, pNode->m_iY);
 #else
 			CvPlot* currentPlot;
 			currentPlot = kMap.plotUnchecked(pNode->m_iX, pNode->m_iY);
-#endif
 #endif
 
 			// Check and see if this plot has the right owner
@@ -5018,18 +4985,14 @@ CvPlot* CvIgnoreUnitsPathFinder::GetPreviousPlot()
 
 		if(m_pCurNode != NULL)
 		{
-#ifdef AUI_ASTAR_CACHE_PLOTS_AT_NODES
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#if defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES) && defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 			return m_pCurNode->m_pPlot;
-#else
+#elif defined(AUI_ASTAR_CACHE_PLOTS_AT_NODES)
 			pPlot = m_pCurNode->m_pPlot;
-#endif
-#else
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
 			return GC.getMap().plot(m_pCurNode->m_iX, m_pCurNode->m_iY);
 #else
 			pPlot = GC.getMap().plot(m_pCurNode->m_iX, m_pCurNode->m_iY);
-#endif
 #endif
 		}
 	}
@@ -5480,11 +5443,9 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 #endif
 		kToNodeCacheData.bIsCalculated = true;
 	}
-#else
-#ifdef AUI_DANGER_PLOTS_REMADE
+#elif defined(AUI_DANGER_PLOTS_REMADE)
 	if (bAIControl || !bIsHuman)
 		kToNodeCacheData.iPlotDanger = GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot, pUnit);
-#endif
 #endif
 
 	// We have determined that this node is not the origin above (parent == NULL)
@@ -5770,19 +5731,15 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 #else
 					if (GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
 #endif
-#else
-#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA
+#elif defined(AUI_ASTAR_FIX_CONSIDER_DANGER_ONLY_POSITIVE_DANGER_DELTA)
 					if (GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > 0 && GET_PLAYER(pUnit->getOwner()).GetPlotDanger(*pFromPlot) <= 0)
 #else
 					if(GET_PLAYER(unit_owner).GetPlotDanger(*pToPlot) > 0)
 #endif
-#endif
-#else
-#ifdef AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH
+#elif defined(AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
 					if (GET_PLAYER(unit_owner).GetPlotDanger(*pFromPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_ASTAR_FIX_CONSIDER_DANGER_USES_COMBAT_STRENGTH)
 #else
 					if(GET_PLAYER(unit_owner).GetPlotDanger(*pFromPlot) > 0)
-#endif
 #endif
 #endif
 					{
@@ -6096,42 +6053,34 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 	}
 }
 
-#ifdef AUI_DANGER_PLOTS_REMADE
-#ifdef AUI_ASTAR_TURN_LIMITER
+#if defined(AUI_DANGER_PLOTS_REMADE) && defined(AUI_ASTAR_TURN_LIMITER)
 // Delnar: if you're checking if a unit can reach a tile within X turns, set the iTargetTurns parameter to X to speed up the pathfinder
 int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns, bool bForDanger)
 {
 	return TurnsToReachTargetFromPlot(pUnit, pTarget, NULL, bReusePaths, bIgnoreUnits, bIgnoreStacking, iTargetTurns, bForDanger);
 }
-#endif
-#else
-#ifdef AUI_ASTAR_TURN_LIMITER
+#elif defined(AUI_ASTAR_TURN_LIMITER)
 // Delnar: if you're checking if a unit can reach a tile within X turns, set the iTargetTurns parameter to X to speed up the pathfinder
 int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns)
 {
 	return TurnsToReachTargetFromPlot(pUnit, pTarget, NULL, bReusePaths, bIgnoreUnits, bIgnoreStacking, iTargetTurns);
 }
 #endif
-#endif
 
 //	--------------------------------------------------------------------------------
 /// How many turns will it take a unit to get to a target plot (returns MAX_INT if can't reach at all; returns 0 if makes it in 1 turn and has movement left)
 // Should call it with bIgnoreStacking true if want foolproof way to see if can make it in 0 turns (since that way doesn't open
 // open the 2nd layer of the pathfinder)
-#ifdef AUI_DANGER_PLOTS_REMADE
-#ifdef AUI_ASTAR_TURN_LIMITER
+#if defined(AUI_DANGER_PLOTS_REMADE) && defined(AUI_ASTAR_TURN_LIMITER)
 // Delnar: if you're checking if a unit can reach a tile within X turns, set the iTargetTurns parameter to X to speed up the pathfinder
 int TurnsToReachTargetFromPlot(UnitHandle pUnit, const CvPlot* pTarget, const CvPlot* pFromPlot, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns, bool bForDanger)
-#else
+#elif defined(AUI_DANGER_PLOTS_REMADE)
 int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, bool bForDanger)
-#endif
-#else
-#ifdef AUI_ASTAR_TURN_LIMITER
+#elif defined(AUI_ASTAR_TURN_LIMITER)
 // Delnar: if you're checking if a unit can reach a tile within X turns, set the iTargetTurns parameter to X to speed up the pathfinder
 int TurnsToReachTargetFromPlot(UnitHandle pUnit, const CvPlot* pTarget, const CvPlot* pFromPlot, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking, int iTargetTurns)
 #else
 int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool bIgnoreUnits, bool bIgnoreStacking)
-#endif
 #endif
 {
 	int rtnValue = MAX_INT;
@@ -6144,11 +6093,10 @@ int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths, bool
 
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
 	if (pUnit && pTarget)
-	{
 #else
 	if(pUnit)
-	{
 #endif
+	{
 #ifdef PATH_FINDER_LOGGING
 		CvString strBaseString;
 		cvStopWatch kTimer(strBaseString, "Pathfinder.csv");

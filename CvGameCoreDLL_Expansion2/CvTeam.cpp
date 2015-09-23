@@ -170,6 +170,11 @@ void CvTeam::uninit()
 	m_iNumNaturalWondersDiscovered = 0;
 	m_iBestPossibleRoute = NO_ROUTE;
 	m_iNumMinorCivsAttacked = 0;
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	m_iBestRouteFlatCostMultiplier = 0;
+	m_iBestRouteNormalCostMultiplier = 1;
+	m_iUseFlatCostIfBelowThis = -1;
+#endif
 
 	m_bMapCentering = false;
 	m_bHasBrokenPeaceTreaty = false;
@@ -7166,6 +7171,11 @@ void CvTeam::Read(FDataStream& kStream)
 	kStream >> m_iNumNaturalWondersDiscovered;
 	kStream >> m_iBestPossibleRoute;
 	kStream >> m_iNumMinorCivsAttacked;
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	kStream >> m_iBestRouteFlatCostMultiplier;
+	kStream >> m_iBestRouteNormalCostMultiplier;
+	kStream >> m_iUseFlatCostIfBelowThis;
+#endif
 
 	kStream >> m_bMapCentering;
 	kStream >> m_bHasBrokenPeaceTreaty;
@@ -7341,6 +7351,11 @@ void CvTeam::Write(FDataStream& kStream) const
 	kStream << m_iNumNaturalWondersDiscovered;
 	kStream << m_iBestPossibleRoute;
 	kStream << m_iNumMinorCivsAttacked;
+#ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
+	kStream << m_iBestRouteFlatCostMultiplier;
+	kStream << m_iBestRouteNormalCostMultiplier;
+	kStream << m_iUseFlatCostIfBelowThis;
+#endif
 
 	kStream << m_bMapCentering;
 	kStream << m_bHasBrokenPeaceTreaty;

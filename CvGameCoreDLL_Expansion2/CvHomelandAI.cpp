@@ -6406,7 +6406,7 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 
 #ifdef AUI_DANGER_PLOTS_REMADE
 	int iMyDanger = m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit);
-#else
+#elif defined(AUI_HOMELAND_TWEAKED_FIND_PATROL_TARGET_CIVILIAN_NO_DANGER)
 	int iMyDanger = m_pPlayer->GetPlotDanger(*(pUnit->plot()));
 #endif
 
@@ -6472,8 +6472,7 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 								iValue = -1;
 							}
 						}
-#else
-#ifdef AUI_HOMELAND_TWEAKED_FIND_PATROL_TARGET_CIVILIAN_NO_DANGER
+#elif defined(AUI_HOMELAND_TWEAKED_FIND_PATROL_TARGET_CIVILIAN_NO_DANGER)
 						if (!pUnit->IsCombatUnit())
 						{
 							int iDanger = m_pPlayer->GetPlotDanger(*pAdjacentPlot);
@@ -6498,7 +6497,6 @@ CvPlot* CvHomelandAI::FindPatrolTarget(CvUnit* pUnit)
 								}
 							}
 						}
-#endif
 #endif
 #ifdef AUI_HOMELAND_FIND_PATROL_TARGET_DESIRES_BORDER_AND_ROUTE
 						iValue += iValueBonus;

@@ -77,7 +77,7 @@ public:
 
 #ifdef AUI_CONSTIFY
 	bool IsValidTradeRoutePath(const CvCity* pOriginCity, const CvCity* pDestCity, DomainTypes eDomain) const;
-	CvPlot* GetPlotAdjacentToWater(CvPlot* pTarget, CvPlot* pOrigin) const;
+	CvPlot* GetPlotAdjacentToWater(const CvPlot* pTarget, const CvPlot* pOrigin) const;
 
 	bool IsDestinationExclusive(const TradeConnection& kTradeConnection) const;
 	bool IsConnectionInternational(const TradeConnection& kTradeConnection) const;
@@ -92,7 +92,7 @@ public:
 	int GetNumTimesOriginCity(const CvCity* pCity, bool bOnlyInternational) const;
 	int GetNumTimesDestinationCity(const CvCity* pCity, bool bOnlyInternational) const;
 
-	void CopyPathIntoTradeConnection(CvAStarNode* pNode, TradeConnection* pTradeConnection) const;
+	void CopyPathIntoTradeConnection(const CvAStarNode* pNode, TradeConnection* pTradeConnection) const;
 
 	int GetDomainModifierTimes100(DomainTypes eDomain) const;
 
@@ -132,7 +132,7 @@ public:
 	void DoAutoWarPlundering(TeamTypes eTeam1, TeamTypes eTeam2); // when war is declared, both sides plunder each others trade routes for cash!
 
 #ifdef AUI_CONSTIFY
-	int GetNumTradeRoutesInPlot(CvPlot* pPlot) const;
+	int GetNumTradeRoutesInPlot(const CvPlot* pPlot) const;
 
 	int GetIndexFromID(int iID) const;
 	PlayerTypes GetOwnerFromID(int iID) const;
@@ -370,6 +370,9 @@ public:
 #ifdef AUI_TRADE_UNBIASED_PRIORITIZE
 	int ScoreFoodTR (const TradeConnection& kTradeConnection) const;
 	int ScoreProductionTR (const TradeConnection& kTradeConnection) const;
+#elif defined(AUI_CONSTIFY)
+	int ScoreFoodTR(const TradeConnection& kTradeConnection, const CvCity* pSmallestCity) const;
+	int ScoreProductionTR(const TradeConnection& kTradeConnection, std::vector<const CvCity*>& aTargetCityList) const;
 #else
 	int ScoreFoodTR(const TradeConnection& kTradeConnection, CvCity* pSmallestCity);
 	int ScoreProductionTR (const TradeConnection& kTradeConnection, std::vector<CvCity*> aTargetCityList);

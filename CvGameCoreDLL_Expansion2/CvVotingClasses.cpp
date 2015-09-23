@@ -9756,7 +9756,6 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		CvAssertMsg(eTargetReligion != NO_RELIGION, "Evaluating World Religion for NO_RELIGION. Please send Anton your save file and version.");
 		bool bFoundedReligion = GetPlayer()->GetReligions()->GetReligionCreatedByPlayer() == eTargetReligion;
 		bool bMajorityReligion = GetPlayer()->GetReligions()->HasReligionInMostCities(eTargetReligion);
-
 #ifndef AUI_VOTING_TWEAKED_WORLD_RELIGION	
 		if (bMajorityReligion)
 		{
@@ -10356,7 +10355,11 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 			}
 		}
 #ifdef AUI_VOTING_TWEAKED_PROPOSAL_SCORING
-		dScore += MAX(MIN(dScore + dProposerBoost, 20.0), -20.0);
+		if (dScore + dProposerBoost > 20.0)
+			dProposerBoost = 20.0 - dScore;
+		else if (dScore + dProposerBoost < -20)
+			dProposerBoost = -20.0 - dScore;
+		dScore += dProposerBoost;
 #endif
 	}
 
@@ -11131,8 +11134,8 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 		if (eAlignment == ALIGNMENT_LIBERATOR)
 		{
 			iScore += 200;
-			iScore += -iScoreForWinner;
 #ifdef AUI_VOTING_SCORE_VOTING_CHOICE_PLAYER_ADJUST_FOR_FPTP
+			iScore += -iScoreForWinner;
 			if (GetPlayer()->GetGrandStrategyAI()->GetGuessOtherPlayerActiveGrandStrategy(eChoicePlayer) == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"))
 			{
 				iScore += 100 * (1 + GetPlayer()->GetGrandStrategyAI()->GetGuessOtherPlayerActiveGrandStrategyConfidence(eChoicePlayer)) / (1 + GUESS_CONFIDENCE_POSITIVE);
@@ -11142,8 +11145,8 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 		else if (eAlignment == ALIGNMENT_LEADER)
 		{
 			iScore += 150;
-			iScore += -iScoreForWinner;
 #ifdef AUI_VOTING_SCORE_VOTING_CHOICE_PLAYER_ADJUST_FOR_FPTP
+			iScore += -iScoreForWinner;
 #ifdef AUI_GS_PRIORITY_RATIO
 			iScore += int(100 * GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) + 0.5);
 #else
@@ -11157,8 +11160,8 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 		else if (eAlignment == ALIGNMENT_SELF)
 		{
 			iScore += 100;
-			iScore += -iScoreForWinner;
 #ifdef AUI_VOTING_SCORE_VOTING_CHOICE_PLAYER_ADJUST_FOR_FPTP
+			iScore += -iScoreForWinner;
 #ifdef AUI_GS_PRIORITY_RATIO
 			iScore += int(100 * GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) + 0.5);
 #else
@@ -11258,8 +11261,8 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 		if (eAlignment == ALIGNMENT_LIBERATOR)
 		{
 			iScore += 200;
-			iScore += -iScoreForWinner;
 #ifdef AUI_VOTING_SCORE_VOTING_CHOICE_PLAYER_ADJUST_FOR_FPTP
+			iScore += -iScoreForWinner;
 			if (GetPlayer()->GetGrandStrategyAI()->GetGuessOtherPlayerActiveGrandStrategy(eChoicePlayer) == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS"))
 			{
 				iScore += 100 * (1 + GetPlayer()->GetGrandStrategyAI()->GetGuessOtherPlayerActiveGrandStrategyConfidence(eChoicePlayer)) / (1 + GUESS_CONFIDENCE_POSITIVE);
@@ -11269,8 +11272,8 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 		else if (eAlignment == ALIGNMENT_SELF)
 		{
 			iScore += 100;
-			iScore += -iScoreForWinner;
 #ifdef AUI_VOTING_SCORE_VOTING_CHOICE_PLAYER_ADJUST_FOR_FPTP
+			iScore += -iScoreForWinner;
 			if (pLeague->IsUnitedNations())
 			{
 #ifdef AUI_GS_PRIORITY_RATIO
@@ -11288,8 +11291,8 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 		else if (eAlignment == ALIGNMENT_LEADER)
 		{
 			iScore += 50;
-			iScore += -iScoreForWinner;
 #ifdef AUI_VOTING_SCORE_VOTING_CHOICE_PLAYER_ADJUST_FOR_FPTP
+			iScore += -iScoreForWinner;
 #ifdef AUI_GS_PRIORITY_RATIO
 			iScore += int(100 * GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) + 0.5);
 #else
@@ -11308,15 +11311,13 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 		{
 #ifdef AUI_VOTING_SCORE_VOTING_CHOICE_PLAYER_ADJUST_FOR_FPTP
 			iScore += -iScoreForWinner;
-#else
-#ifdef AUI_GS_PRIORITY_RATIO
+#elif defined(AUI_GS_PRIORITY_RATIO)
 			iScore += -int(150 * GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")) + 0.5);
 #else
 			if (bSeekingDiploVictory)
 			{
 				iScore += -150;
 			}
-#endif
 #endif
 
 			switch (eAlignment)

@@ -498,7 +498,7 @@ bool CvGameTrade::IsValidTradeRoutePath (CvCity* pOriginCity, CvCity* pDestCity,
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-CvPlot* CvGameTrade::GetPlotAdjacentToWater(CvPlot* pTargetLandPlot, CvPlot* pFromLandPlot) const
+CvPlot* CvGameTrade::GetPlotAdjacentToWater(const CvPlot* pTargetLandPlot, const CvPlot* pFromLandPlot) const
 #else
 CvPlot* CvGameTrade::GetPlotAdjacentToWater (CvPlot* pTargetLandPlot, CvPlot* pFromLandPlot)
 #endif
@@ -622,14 +622,18 @@ bool CvGameTrade::IsCityConnectedToPlayer (CvCity* pCity, PlayerTypes eOtherPlay
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-void CvGameTrade::CopyPathIntoTradeConnection (CvAStarNode* pNode, TradeConnection* pTradeConnection) const
+void CvGameTrade::CopyPathIntoTradeConnection(const CvAStarNode* pNode, TradeConnection* pTradeConnection) const
 #else
 void CvGameTrade::CopyPathIntoTradeConnection (CvAStarNode* pNode, TradeConnection* pTradeConnection)
 #endif
 {
 	// beyond the origin player's trade range
 	int iPathSteps = 0;
+#ifdef AUI_CONSTIFY
+	const CvAStarNode* pWalkingPath = pNode;
+#else
 	CvAStarNode* pWalkingPath = pNode;
+#endif
 	while (pWalkingPath)
 	{
 		iPathSteps++;
@@ -1206,7 +1210,7 @@ void CvGameTrade::DoAutoWarPlundering(TeamTypes eTeam1, TeamTypes eTeam2)
 
 //	--------------------------------------------------------------------------------
 #ifdef AUI_CONSTIFY
-int CvGameTrade::GetNumTradeRoutesInPlot(CvPlot* pPlot) const
+int CvGameTrade::GetNumTradeRoutesInPlot(const CvPlot* pPlot) const
 #else
 int CvGameTrade::GetNumTradeRoutesInPlot (CvPlot* pPlot)
 #endif
@@ -4807,6 +4811,8 @@ int CvTradeAI::ScoreInternationalTR (const TradeConnection& kTradeConnection)
 /// Score Food TR
 #ifdef AUI_TRADE_UNBIASED_PRIORITIZE
 int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection) const
+#elif defined(AUI_CONSTIFY)
+int CvTradeAI::ScoreFoodTR(const TradeConnection& kTradeConnection, const CvCity* pSmallestCity) const
 #else
 int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSmallestCity)
 #endif
@@ -5015,6 +5021,8 @@ int CvTradeAI::ScoreFoodTR (const TradeConnection& kTradeConnection, CvCity* pSm
 /// Score Production TR
 #ifdef AUI_TRADE_UNBIASED_PRIORITIZE
 int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection) const
+#elif defined(AUI_CONSTIFY)
+int CvTradeAI::ScoreProductionTR(const TradeConnection& kTradeConnection, std::vector<const CvCity*>& aTargetCityList) const
 #else
 int CvTradeAI::ScoreProductionTR (const TradeConnection& kTradeConnection, std::vector<CvCity*> aTargetCityList)
 #endif
@@ -5328,7 +5336,11 @@ void CvTradeAI::PrioritizeTradeRoutes(TradeConnectionList& aTradeConnectionList)
 	// PRODUCTION PRODUCTION PRODUCTION PRODUCTION
 	// - Search for wonder city
 	// - Search for spaceship city
+#ifdef AUI_CONSTIFY
+	std::vector<const CvCity*> apProductionTargetCities;
+#else
 	std::vector<CvCity*> apProductionTargetCities;
+#endif
 	CvCity* pWonderCity = m_pPlayer->GetCitySpecializationAI()->GetWonderBuildCity();
 	if (pWonderCity)
 	{

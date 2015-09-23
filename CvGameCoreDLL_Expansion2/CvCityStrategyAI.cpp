@@ -430,11 +430,16 @@ void CvCityStrategyAI::FlavorUpdate()
 		}
 #endif
 
+#ifdef AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF
+		m_pUnitProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
+#endif
 		m_pBuildingProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
 #ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
 		m_pWonderProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
 #endif
+#ifndef AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF
 		m_pUnitProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
+#endif
 		m_pProjectProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
 #ifndef AUI_GS_SCIENCE_FLAVOR_BOOST
 		m_pProcessProductionAI->AddFlavorWeights((FlavorTypes)iFlavor, iFlavorValue);
@@ -2640,7 +2645,12 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_NeedTileImprovers(AICityStrategyT
 {
 	CvPlayer& kPlayer = GET_PLAYER(pCity->getOwner());
 	int iCurrentNumCities = kPlayer.getNumCities();
-
+#ifdef AUI_CITYSTRATEGY_DONT_EMPHASIZE_WORKERS_IF_NO_MILITARY
+	if (kPlayer.getNumMilitaryUnits() - kPlayer.GetNumUnitsWithUnitAI(UNITAI_EXPLORE) <= 0)
+	{
+		return false;
+	}
+#endif
 	int iLastTurnWorkerDisbanded = kPlayer.GetEconomicAI()->GetLastTurnWorkerDisbanded();
 #ifdef AUI_CITYSTRATEGY_FIX_TILE_IMPROVERS_LAST_DISBAND_WORKER_TURN_SCALE
 	if (iLastTurnWorkerDisbanded >= 0 && GC.getGame().getGameTurn() - iLastTurnWorkerDisbanded <= 25 * GC.getGame().getEstimateEndTurn() / 500)
@@ -2707,6 +2717,12 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_NeedTileImprovers(AICityStrategyT
 bool CityStrategyAIHelpers::IsTestCityStrategy_WantTileImprovers(AICityStrategyTypes eStrategy, CvCity* pCity)
 {
 	CvPlayer& kPlayer = GET_PLAYER(pCity->getOwner());
+#ifdef AUI_CITYSTRATEGY_DONT_EMPHASIZE_WORKERS_IF_NO_MILITARY
+	if (kPlayer.getNumMilitaryUnits() - kPlayer.GetNumUnitsWithUnitAI(UNITAI_EXPLORE) <= 0)
+	{
+		return false;
+	}
+#endif
 	int iLastTurnWorkerDisbanded = kPlayer.GetEconomicAI()->GetLastTurnWorkerDisbanded();
 #ifdef AUI_CITYSTRATEGY_FIX_TILE_IMPROVERS_LAST_DISBAND_WORKER_TURN_SCALE
 	if (iLastTurnWorkerDisbanded >= 0 && GC.getGame().getGameTurn() - iLastTurnWorkerDisbanded <= 10 * GC.getGame().getEstimateEndTurn() / 500)
@@ -2884,6 +2900,12 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_WantTileImprovers(AICityStrategyT
 bool CityStrategyAIHelpers::IsTestCityStrategy_EnoughTileImprovers(AICityStrategyTypes eStrategy, CvCity* pCity)
 {
 	CvPlayer& kPlayer = GET_PLAYER(pCity->getOwner());
+#ifdef AUI_CITYSTRATEGY_DONT_EMPHASIZE_WORKERS_IF_NO_MILITARY
+	if (kPlayer.getNumMilitaryUnits() - kPlayer.GetNumUnitsWithUnitAI(UNITAI_EXPLORE) <= 0)
+	{
+		return true;
+	}
+#endif
 	int iLastTurnWorkerDisbanded = kPlayer.GetEconomicAI()->GetLastTurnWorkerDisbanded();
 #ifdef AUI_CITYSTRATEGY_FIX_TILE_IMPROVERS_LAST_DISBAND_WORKER_TURN_SCALE
 	if (iLastTurnWorkerDisbanded >= 0 && GC.getGame().getGameTurn() - iLastTurnWorkerDisbanded <= 10 * GC.getGame().getEstimateEndTurn() / 500)

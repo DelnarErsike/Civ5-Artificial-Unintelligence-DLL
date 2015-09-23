@@ -178,7 +178,7 @@
 #define AUI_UNIT_MOVEMENT_FIX_BAD_VIKING_DISEMBARK_PREVIEW
 /// The allows water walk check is fixed to no longer trigger if water walk improvements are not built adjacent to each other
 #define AUI_UNIT_MOVEMENT_FIX_BAD_ALLOWS_WATER_WALK_CHECK
-/// Fixes the exploit where order-specific hammer bonuses would go into overflow 
+/// Fixes the bug where order-specific hammer bonuses would go into overflow for an order that may not be eligible for those bonuses
 #define AUI_CITY_FIX_DO_PRODUCTION_NO_OVERFLOW_EXPLOIT
 
 // Multiplayer-specific fixes/changes
@@ -255,7 +255,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_PER_CITY_WONDER_PRODUCTION_AI
 /// Beliefs can now alter the flavors of certain buildingclasses
 #define AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS
-/// Policies can now alter the flavors of certain buildingclasses
+/// Policies can now alter the flavors of certain buildingclasses (disabled for now because it crashes at initialization)
 //#define AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
 /// Adds a new Lua event for adding onto a flavor for a building or a wonder
 #define AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
@@ -387,7 +387,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #endif
 /// Shifts the check for whether there already is someone building something on the plot to the necessary AddDirectives() functions (so collaborative building is possible)
 #define AUI_WORKER_FIX_SHOULD_BUILDER_CONSIDER_PLOT_EXISTING_BUILD_MISSIONS_SHIFT
-/// New function that is called to construct non-road improvements in a minor's territory (eg. for Portugal)
+/// New function that is called by AI/Automated workers to construct non-road improvements in a minor's territory (eg. for Portugal)
 #define AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
 /// Multiplies the weight of unowned luxury resources for plot directives depending on the empire's happiness (value is the multiplier at 0 happiness)
 #define AUI_WORKER_GET_RESOURCE_WEIGHT_INCREASE_UNOWNED_LUXURY_WEIGHT (2.0)
@@ -399,14 +399,16 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_WORKER_FIX_SHOULD_CONSIDER_PLOT_FLYING_WORKER_DISREGARDS_PEAKS
 /// Added some extra checks for Celts so that 1) they will improve forests when there would still be enough unimproved ones remaining to give the same faith bonnus and 2) they will not improve luxury resources on forests if they do not get any use out of them and would lower faith
 #define AUI_WORKER_FIX_CELTIC_IMPROVE_UNIMPROVED_FORESTS
-/// AI/Automated workers will no longer automatically continue building the improvement they are currently building if the tile they are on is in danger
+/// AI/Automated workers will no longer automatically continue building the improvement they are currently building if the tile they are on is in danger (instead of having this behavior trigger in CvHomelandAI)
 #define AUI_WORKER_EVALUATE_WORKER_RETREAT_AND_BUILD
 /// AI/Automated workers will now consider any modifiers the player has to road maintenance when calculating how much profit the road earns
 #define AUI_WORKER_FIX_CONNECT_CITIES_TO_CAPITOL_CONSIDER_MAINTENANCE_MODIFIERS
 /// No longer requires that an improvement enable use of a bonus resource, since the projected plot yields will be higher from unlocking the resource anyway
 #define AUI_WORKER_FIX_IMPROVING_PLOTS_DIRECTIVE_DONT_REQUIRE_BONUS_RESOURCE_UNLOCKER
+#ifdef AUI_PLAYER_CACHE_UNIQUE_IMPROVEMENTS
 /// Unhardcodes the fact that the AI will not remove features that are needed to construct a civ's unique improvement
 #define AUI_WORKER_UNHARDCODE_NO_REMOVE_FEATURE_THAT_IS_REQUIRED_FOR_UNIQUE_IMPROVEMENT
+#endif
 
 // City Stuff
 /// Shifts the scout assignment code to EconomicAI
@@ -477,6 +479,8 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 //#define AUI_CITYSTRATEGY_CHOOSE_PRODUCTION_NORMALIZE_LIST
 /// If the player has yet to unlock an ideology, multiply the base weight of buildings that can unlock ideologies by this value
 #define AUI_CITYSTRATEGY_EMPHASIZE_FACTORIES_IF_NO_IDEOLOGY (8)
+/// If a player does not have any non-scouting military units, the "enough workers" city strategy is triggered and the "want workers" and "need workers" city strategies always return false
+#define AUI_CITYSTRATEGY_DONT_EMPHASIZE_WORKERS_IF_NO_MILITARY
 
 // Culture Classes Stuff
 /// AI only wants propaganda diplomats with players of different ideologies (since that's the only time they get the tourism bonus)
@@ -504,6 +508,10 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_DANGER_PLOTS_ADD_DANGER_CONSIDER_TERRAIN_STRENGTH_MODIFICATION
 /// Minors will assume tresspassing units are there for war
 #define AUI_DANGER_PLOTS_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_DO_NOT_IGNORE_TRESSPASSERS
+#ifndef AUI_DANGER_PLOTS_REMADE
+/// Plots that are under immediate threat by an even number of units will properly return that the plot is under immediate threat
+#define AUI_DANGER_PLOTS_FIX_ADD_DANGER_WITHIN_ONE_MOVE
+#endif
 
 // Deals Stuff
 /// Tweaked various ways that certain resources are valued when making deals
@@ -694,7 +702,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 #define AUI_HOMELAND_PLOT_WORKER_SEA_MOVES_DISBAND_WORK_BOATS_WITHOUT_TARGET
 /// If the AI wants to use a unit for a Great Work, check if the unit can create one right there and then (performance improvement)
 #define AUI_HOMELAND_EXECUTE_GP_MOVE_INSTANT_GREAT_WORK_CHECK
-/// If an AI or automated worker can still move after it has reached its target, allow it to queue up a build order
+/// If an AI/automated worker can still move after it has reached its target, allow it to queue up a build order
 #define AUI_HOMELAND_FIX_EXECUTE_WORKER_MOVE_MOVE_AND_BUILD
 /// AI explorers can now scout and sell goods in the same turn
 #define AUI_HOMELAND_EXECUTE_EXPLORER_MOVES_EXPLORE_AND_SELL_IN_SAME_TURN
@@ -1359,7 +1367,7 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 // Voting/League Stuff
 /// VITAL FOR MOST FUNCTIONS! Use double instead of int for certain variables (to retain information during division)
 #define AUI_VOTING_USE_DOUBLES
-/// When voting for a player, the AI will now adjust for the fact that the voting system is First-Past-The-Post (so it will try to vote against player as well)
+/// When voting for a player, the AI will now adjust for the fact that the voting system is First-Past-The-Post (so it will try to vote against players as well)
 #define AUI_VOTING_SCORE_VOTING_CHOICE_PLAYER_ADJUST_FOR_FPTP
 /// Uses slightly modified algorithm for determining Diplomat Usefulness levels
 #define AUI_VOTING_TWEAKED_DIPLOMAT_USEFULNESS

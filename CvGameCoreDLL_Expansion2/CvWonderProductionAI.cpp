@@ -204,6 +204,7 @@ void CvWonderProductionAI::FlavorUpdate()
 /// Establish weights for one flavor; can be called multiple times to layer strategies
 void CvWonderProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 {
+#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
 #ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
 	CvPlayer* pPlayer = m_pCity->GetPlayer();
 	CvPlayerPolicies* pPlayerPolicies = NULL;
@@ -212,6 +213,20 @@ void CvWonderProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 #endif
 #ifdef AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS
 	const CvReligion* pReligion = GC.getGame().GetGameReligions()->GetReligion(m_pCity->GetCityReligions()->GetReligiousMajority(), m_pCity->getOwner());
+#endif
+#else
+#ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
+	CvPlayer* pPlayer = m_pPlayer;
+	CvPlayerPolicies* pPlayerPolicies = NULL;
+	if (pPlayer)
+		pPlayerPolicies = pPlayer->GetPlayerPolicies();
+#endif
+#ifdef AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS
+	CvCity* pCapitol = m_pPlayer->getCapitalCity();
+	const CvReligion* pReligion = NULL;
+	if (pCapitol)
+		pReligion = GC.getGame().GetGameReligions()->GetReligion(pCapitol->GetCityReligions()->GetReligiousMajority(), m_pPlayer->GetID());
+#endif
 #endif
 #ifdef AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS
 	ICvEngineScriptSystem1* pkScriptSystem = gDLL->GetScriptSystem();
@@ -229,7 +244,8 @@ void CvWonderProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 			CvBuildingEntry& kBuilding = *entry;
 			if(IsWonder(kBuilding))
 			{
-#if defined(AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS)
+				// Set its weight by looking at wonder's weight for this flavor and using iWeight multiplier passed in
+#if defined(AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS) || (defined(AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF) && defined(AUI_PER_CITY_WONDER_PRODUCTION_AI))
 				int iFlavorValue = entry->GetFlavorValue(eFlavor);
 #endif
 #ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
@@ -266,8 +282,21 @@ void CvWonderProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 						iFlavorValue += iResult;
 				}
 #endif
-				// Set its weight by looking at wonder's weight for this flavor and using iWeight multiplier passed in
-#if defined(AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS)
+#if defined(AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF) && defined(AUI_PER_CITY_WONDER_PRODUCTION_AI)
+#ifdef AUI_WARNING_FIXES
+				for (uint iI = 0; iI < GC.getNumUnitInfos(); iI++)
+#else
+				for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
+#endif
+				{
+					int iNumFreeUnits = entry->GetNumFreeUnits(iI);
+					if (iNumFreeUnits > 0)
+					{
+						iWeight += iNumFreeUnits * m_pCity->GetCityStrategyAI()->GetUnitProductionAI()->GetWeight((UnitTypes)iI);
+					}
+				}
+#endif
+#if defined(AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS) || (defined(AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF) && defined(AUI_PER_CITY_WONDER_PRODUCTION_AI))
 				m_WonderAIWeights.IncreaseWeight(iBldg, iFlavorValue * iWeight);
 #else
 				m_WonderAIWeights.IncreaseWeight(iBldg, kBuilding.GetFlavorValue(eFlavor) * iWeight);
@@ -280,7 +309,7 @@ void CvWonderProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 /// Retrieve sum of weights on one item
 int CvWonderProductionAI::GetWeight(BuildingTypes eBldg)
 {
-#ifdef AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF
+#if defined(AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF) && defined(AUI_PER_CITY_WONDER_PRODUCTION_AI)
 	int iWeight = m_WonderAIWeights.GetWeight(eBldg);
 	CvBuildingEntry* entry = m_pBuildings->GetEntry(eBldg);
 	if (entry)
@@ -303,19 +332,6 @@ int CvWonderProductionAI::GetWeight(BuildingTypes eBldg)
 			{
 				if (pLoopCity->GetCityBuildings()->GetNumBuilding(eFreeBuilding) == 0)
 					iWeight += pLoopCity->GetCityStrategyAI()->GetBuildingProductionAI()->GetWeight(eFreeBuilding);
-			}
-		}
-
-#ifdef AUI_WARNING_FIXES
-		for (uint iI = 0; iI < GC.getNumUnitInfos(); iI++)
-#else
-		for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
-#endif
-		{
-			int iNumFreeUnits = entry->GetNumFreeUnits(iI);
-			if (iNumFreeUnits > 0)
-			{
-				iWeight += iNumFreeUnits * m_pCity->GetCityStrategyAI()->GetUnitProductionAI()->GetWeight((UnitTypes)iI);
 			}
 		}
 

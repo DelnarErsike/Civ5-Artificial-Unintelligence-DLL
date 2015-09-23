@@ -5479,7 +5479,11 @@ int CvCity::getProductionModifier(ProcessTypes eProcess, CvString* toolTipSink) 
 }
 
 //	--------------------------------------------------------------------------------
+#ifdef AUI_CITY_FIX_DO_PRODUCTION_NO_OVERFLOW_EXPLOIT
+int CvCity::getProductionDifference(int iProductionNeeded, int iProductionT100, int iProductionModifier, bool bFoodProduction, bool bOverflow) const
+#else
 int CvCity::getProductionDifference(int /*iProductionNeeded*/, int /*iProduction*/, int iProductionModifier, bool bFoodProduction, bool bOverflow) const
+#endif
 {
 	VALIDATE_OBJECT
 	// If we're in anarchy, then no Production is done!
@@ -5501,7 +5505,17 @@ int CvCity::getProductionDifference(int /*iProductionNeeded*/, int /*iProduction
 	int iBaseProduction = getBaseYieldRate(YIELD_PRODUCTION) * 100;
 	iBaseProduction += (GetYieldPerPopTimes100(YIELD_PRODUCTION) * getPopulation());
 
+#ifdef AUI_CITY_FIX_DO_PRODUCTION_NO_OVERFLOW_EXPLOIT
+	const int iProductionNeededT100 = iProductionNeeded * 100;
+	const int iGenericModifier = getGeneralProductionModifiers();
+	int iModifiedProduction = iBaseProduction * getBaseYieldRateModifier(YIELD_PRODUCTION, iGenericModifier);
+	int iExtraProductionT100 = iBaseProduction * getBaseYieldRateModifier(YIELD_PRODUCTION, iProductionModifier) - iModifiedProduction;
+	if (iProductionT100 + iExtraProductionT100 > iProductionNeededT100)
+		iExtraProductionT100 = iProductionNeededT100 - iProductionT100;
+	iModifiedProduction += iExtraProductionT100;
+#else
 	int iModifiedProduction = iBaseProduction * getBaseYieldRateModifier(YIELD_PRODUCTION, iProductionModifier);
+#endif
 	iModifiedProduction /= 10000;
 
 	iModifiedProduction += iOverflow;

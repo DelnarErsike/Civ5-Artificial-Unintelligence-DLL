@@ -7443,25 +7443,19 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 #else
 		int iBuildingCount = (FaithBuildingAvailable(m_pPlayer->GetReligions()->GetReligionCreatedByPlayer()) != NO_BUILDINGCLASS ? 1 : 0) * m_pPlayer->getNumCities();
 #endif
-#ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY
-#ifdef AUI_GS_PRIORITY_RATIO
+#if defined(AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY) && defined(AUI_GS_PRIORITY_RATIO)
 		dRtnValue += (pEntry->GetFaithBuildingTourism() * iBuildingCount * iFlavorCulture * (0.5 + 2 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))));
-#else
+#elif defined(AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY)
 		dRtnValue += (pEntry->GetFaithBuildingTourism() * iBuildingCount * iFlavorCulture * (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE") ? 2.5 : 0.5));
-#endif
 #else
 		dRtnValue += (pEntry->GetFaithBuildingTourism() * iBuildingCount * 1.5 * iFlavorCulture);
 #endif
-#else
-#ifdef AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY
-#ifdef AUI_GS_PRIORITY_RATIO
+#elif defined(AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY) && defined(AUI_GS_PRIORITY_RATIO)
 		dRtnValue += (pEntry->GetFaithBuildingTourism() * 2 * iFlavorCulture * (0.5 + 2 * m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE"))));
-#else
+#elif defined(AUI_RELIGION_SCORE_BELIEF_FOR_PLAYER_CONSIDER_GRAND_STRATEGY)
 		dRtnValue += (pEntry->GetFaithBuildingTourism() * 2 * iFlavorCulture * (m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE") ? 2.5 : 0.5));
-#endif
 #else
 		dRtnValue += (pEntry->GetFaithBuildingTourism() * 3.0 * iFlavorCulture);
-#endif
 #endif
 	}
 #else

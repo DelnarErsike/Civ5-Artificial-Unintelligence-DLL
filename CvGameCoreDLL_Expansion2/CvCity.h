@@ -227,7 +227,9 @@ public:
 	int getProductionModifier(SpecialistTypes eSpecialist, _In_opt_ CvString* toolTipSink = NULL) const;
 	int getProductionModifier(ProcessTypes eProcess, _In_opt_ CvString* toolTipSink = NULL) const;
 
+#ifndef AUI_PRUNING
 	int getOverflowProductionDifference(int iProductionNeeded, int iProduction, int iProductionModifier, int iDiff, int iModifiedProduction) const;
+#endif
 	int getProductionDifference(int iProductionNeeded, int iProduction, int iProductionModifier, bool bFoodProduction, bool bOverflow) const;
 	int getCurrentProductionDifference(bool bIgnoreFood, bool bOverflow) const;
 	int getRawProductionDifference(bool bIgnoreFood, bool bOverflow) const;

@@ -447,6 +447,9 @@ int CvDangerPlots::GetDanger(const CvPlot& pPlot, const CvUnit* pUnit, const CvP
 void CvDangerPlots::AddDanger(int iPlotX, int iPlotY, int iValue, bool bWithinOneMove)
 {
 	const int idx = iPlotX + iPlotY * GC.getMap().getGridWidth();
+#ifdef AUI_DANGER_PLOTS_FIX_ADD_DANGER_WITHIN_ONE_MOVE
+	iValue &= ~0x1;
+#else
 	if (iValue > 0)
 	{
 		if (bWithinOneMove)
@@ -458,8 +461,15 @@ void CvDangerPlots::AddDanger(int iPlotX, int iPlotY, int iValue, bool bWithinOn
 			iValue &= ~0x1;
 		}
 	}
+#endif
 
 	m_DangerPlots[idx] += iValue;
+#ifdef AUI_DANGER_PLOTS_FIX_ADD_DANGER_WITHIN_ONE_MOVE
+	if (bWithinOneMove)
+	{
+		m_DangerPlots[idx] |= 0x1;
+	}
+#endif
 }
 
 /// Return the danger value of a given plot
@@ -712,12 +722,10 @@ bool CvDangerPlots::IsDangerByRelationshipZero(PlayerTypes ePlayer, CvPlot* pPlo
 #ifndef AUI_DANGER_PLOTS_FIX_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_IGNORE_ALL_NONWARRED
 			bIgnoreInFriendlyTerritory = true; // ignore friendly territory
 #endif
-#else
-#ifdef AUI_DANGER_PLOTS_FIX_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_IGNORE_ALL_NONWARRED
+#elif defined(AUI_DANGER_PLOTS_FIX_IS_DANGER_BY_RELATIONSHIP_ZERO_MINORS_IGNORE_ALL_NONWARRED)
 			return true;
 #else
 			bIgnoreInFriendlyTerritory = true; // ignore friendly territory
-#endif
 #endif
 		}
 	}

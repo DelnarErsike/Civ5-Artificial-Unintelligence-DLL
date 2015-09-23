@@ -340,11 +340,9 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 	int iRoadLength = 0;
 	int iPlotsNeeded = 0;
 	CvAStarNode* pNode = GC.GetBuildRouteFinder().GetLastNode();
-
 #ifdef AUI_WORKER_INCA_HILLS
 	bool bIncaBonusActive = (m_pPlayer->GetPlayerTraits()->IsNoHillsImprovementMaintenance() && !m_pPlayer->isHuman());
 #endif
-
 	while(pNode)
 	{
 		pPlot = GC.getMap().plotCheckInvalid(pNode->m_iX, pNode->m_iY);
@@ -428,12 +426,10 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 #else
 	int iProfit = iGoldForRoute - iTotalMaintenance;
 #endif
-#else
-#ifdef AUI_WORKER_INCA_HILLS
+#elif defined(AUI_WORKER_INCA_HILLS)
 	int iProfit = iGoldForRoute - ((iRoadLength - iFreeIncaRoadLength) * iMaintenancePerTile);
 #else
 	int iProfit = iGoldForRoute - (iRoadLength * iMaintenancePerTile);
-#endif
 #endif
 	if(bIndustrialRoute)
 	{
@@ -457,7 +453,7 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 	else if(bMajorMinorConnection)
 	{
 #ifdef AUI_WARNING_FIXES
-		sValue = FASTMIN(GC.getMINOR_CIV_ROUTE_QUEST_WEIGHT() / iPlotsNeeded, MAX_INT);
+		sValue = MIN(GC.getMINOR_CIV_ROUTE_QUEST_WEIGHT() / iPlotsNeeded, MAX_INT);
 #else
 		sValue = min(GC.getMINOR_CIV_ROUTE_QUEST_WEIGHT() / iPlotsNeeded, MAX_SHORT);
 #endif
@@ -484,7 +480,7 @@ void CvBuilderTaskingAI::ConnectCitiesToCapital(CvCity* pPlayerCapital, CvCity* 
 #endif
 #endif
 #ifdef AUI_WARNING_FIXES
-		sValue = FASTMIN(iValue, MAX_INT);
+		sValue = MIN(iValue, MAX_INT);
 #else
 		sValue = min(iValue, MAX_SHORT);
 #endif
@@ -750,7 +746,15 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 	// check for no brainer bail-outs
 	// if the builder is already building something
 #ifdef AUI_WORKER_EVALUATE_WORKER_RETREAT_AND_BUILD
+#ifdef AUI_DANGER_PLOTS_REMADE
 	if (pUnit->getBuildType() != NO_BUILD && pUnit->GetCurrHitPoints() > m_pPlayer->GetPlotDanger(*pUnit->plot(), pUnit))
+#elif defined(AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH)
+	if (pUnit->getBuildType() != NO_BUILD &&
+		((pUnit->IsCombatUnit() && pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH > m_pPlayer->GetPlotDanger(*pUnit->plot())) ||
+			(!pUnit->IsCombatUnit() && !m_pPlayer->IsPlotUnderImmediateThreat(*pUnit->plot()))))
+#else
+	if (pUnit->getBuildType() != NO_BUILD && !m_pPlayer->IsPlotUnderImmediateThreat(*pUnit->plot())))
+#endif
 #else
 	if(pUnit->getBuildType() != NO_BUILD)
 #endif
@@ -844,10 +848,7 @@ bool CvBuilderTaskingAI::EvaluateBuilder(CvUnit* pUnit, BuilderDirective* paDire
 
 #ifdef AUI_WORKER_ADD_IMPROVING_MINOR_PLOTS_DIRECTIVES
 		if (pPlot->getOwner() != m_pPlayer->GetID())
-#ifdef AUI_FIX_FFASTVECTOR_CONFLATE
-			if (pPlot->isRevealed(m_pPlayer->getTeam()))
-#endif
-				AddImprovingMinorPlotsDirectives(pUnit, pPlot, iMoveTurnsAway);
+			AddImprovingMinorPlotsDirectives(pUnit, pPlot, iMoveTurnsAway);
 		else
 		{
 #endif
@@ -1911,10 +1912,12 @@ void CvBuilderTaskingAI::AddImprovingMinorPlotsDirectives(CvUnit* pUnit, CvPlot*
 						}
 					}
 				}
+#ifdef AUI_WORKER_ADD_IMPROVING_PLOTS_DIRECTIVE_DEFENSIVES
 				int iBaseDefenseBonus = (pPlot->isHills() || pPlot->isMountain() ? GC.getHILLS_EXTRA_DEFENSE() :
 					(eFeature != NO_FEATURE && !pkBuild->isFeatureRemove(eFeature) ? GC.getFeatureInfo(eFeature)->getDefenseModifier() :
 					GC.getTerrainInfo(pPlot->getTerrainType())->getDefenseModifier() + GC.getFLAT_LAND_EXTRA_DEFENSE()));
 				iScore += (pImprovement->GetDefenseModifier() + iBaseDefenseBonus) * pPlot->getStrategicValue() / (100 * GC.getCHOKEPOINT_STRATEGIC_VALUE());
+#endif
 			}
 		}
 
@@ -2545,9 +2548,8 @@ void CvBuilderTaskingAI::AddScrubFalloutDirectives(CvUnit* pUnit, CvPlot* pPlot,
 		int iWeight = GC.getBUILDER_TASKING_BASELINE_SCRUB_FALLOUT();
 		//int iTurnsAway = FindTurnsAway(pUnit, pPlot);
 		iWeight = iWeight / (iMoveTurnsAway/*iTurnsAway*/ + 1);
-
-		// For scrubbing fallout, build times and build costs should be ignored because... well, it's fallout
 #ifdef AUI_WORKER_FIX_FALLOUT
+		// For scrubbing fallout, build times and build costs should be ignored because... well, it's fallout
 		// Max values returned from BuildCostWeight and BuildTimeWeight
 		iWeight *= 100;
 		iWeight += 10000 / (iMoveTurnsAway/*iTurnsAway*/ + 1);
@@ -2700,7 +2702,7 @@ bool CvBuilderTaskingAI::ShouldBuilderConsiderPlot(CvUnit* pUnit, CvPlot* pPlot)
 	int iDanger = m_pPlayer->GetPlotDanger(*pPlot, pUnit);
 	if (iDanger >= pUnit->GetCurrHitPoints())
 #elif defined(AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH)
-	if ((!pUnit->IsCombatUnit() && m_pPlayer->GetPlotDanger(*pPlot) > 0) || 
+	if ((!pUnit->IsCombatUnit() && IsPlotUnderImmediateThreat(*pUnit->plot())) ||
 		m_pPlayer->GetPlotDanger(*pPlot) > pUnit->GetBaseCombatStrengthConsideringDamage() * AUI_WORKER_SHOULD_BUILDER_CONSIDER_PLOT_MAXIMUM_DANGER_BASED_ON_UNIT_STRENGTH)
 #else
 	if(m_pPlayer->GetPlotDanger(*pPlot) > 0)

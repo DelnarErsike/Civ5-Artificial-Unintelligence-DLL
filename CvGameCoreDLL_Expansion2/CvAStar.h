@@ -25,7 +25,11 @@ using namespace fastdelegate;
 class CvAStar;
 
 #ifndef AUI_ASTAR_USE_DELEGATES
+#ifdef AUI_CONSTIFY
+typedef int(*CvAPointFunc)(int, int, const void*, const CvAStar*);
+#else
 typedef int(*CvAPointFunc)(int, int, const void*, CvAStar*);
+#endif
 typedef int(*CvAHeuristic)(int, int, int, int);
 typedef int(*CvAStarFunc)(CvAStarNode*, CvAStarNode*, int, const void*, CvAStar*);
 typedef int(*CvANumExtraChildren)(CvAStarNode*, CvAStar*);
@@ -713,17 +717,31 @@ inline int CvAStar::udFunc(CvAStarFunc func, CvAStarNode* param1, CvAStarNode* p
 // C-style non-member functions (used by path finder)
 int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int PathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
+#ifdef AUI_CONSTIFY
+int PathDestValid(int iToX, int iToY, const void* pointer, const CvAStar* finder);
+
+int PathDest(int iToX, int iToyY, const void* pointer, const CvAStar* finder);
+#else
 int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder);
 
 int PathDest(int iToX, int iToyY, const void* pointer, CvAStar* finder);
+#endif
 int PathHeuristic(int iFromX, int iFromY, int iToX, int iToY);
 int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int PathNodeAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
+#ifdef AUI_CONSTIFY
+int IgnoreUnitsDestValid(int iToX, int iToY, const void* pointer, const CvAStar* finder);
+#else
 int IgnoreUnitsDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder);
+#endif
 int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
+#ifdef AUI_CONSTIFY
+int StepDestValid(int iToX, int iToY, const void* pointer, const CvAStar* finder);
+#else
 int StepDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder);
+#endif
 int StepHeuristic(int iFromX, int iFromY, int iToX, int iToY);
 int StepValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int StepValidAnyArea(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
@@ -737,7 +755,11 @@ int AreaValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* poin
 int JoinArea(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int LandmassValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int JoinLandmass(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
+#ifdef AUI_CONSTIFY
+int InfluenceDestValid(int iToX, int iToY, const void* pointer, const CvAStar* finder);
+#else
 int InfluenceDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder);
+#endif
 int InfluenceHeuristic(int iFromX, int iFromY, int iToX, int iToY);
 int InfluenceValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int InfluenceCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
@@ -754,20 +776,16 @@ int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int dat
 int FindValidDestinationDest(int iToX, int iToY, const void* pointer, CvAStar* finder);
 int FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 #endif
-#ifdef AUI_DANGER_PLOTS_REMADE
-#ifdef AUI_ASTAR_TURN_LIMITER
+#if defined(AUI_DANGER_PLOTS_REMADE) && defined(AUI_ASTAR_TURN_LIMITER)
 int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, int iTargetTurns = MAX_INT, bool bForDanger = false);
 int TurnsToReachTargetFromPlot(UnitHandle pUnit, const CvPlot* pTarget, const CvPlot* pFromPlot, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, int iTargetTurns = MAX_INT, bool bForDanger = false);
-#else
+#elif defined(AUI_DANGER_PLOTS_REMADE)
 int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, bool bForDanger = false);
-#endif
-#else
-#ifdef AUI_ASTAR_TURN_LIMITER
+#elif defined(AUI_ASTAR_TURN_LIMITER)
 int TurnsToReachTarget(UnitHandle pUnit, const CvPlot* pTarget, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, int iTargetTurns = MAX_INT);
 int TurnsToReachTargetFromPlot(UnitHandle pUnit, const CvPlot* pTarget, const CvPlot* pFromPlot, bool bReusePaths = false, bool bIgnoreUnits = false, bool bIgnoreStacking = false, int iTargetTurns = MAX_INT);
 #else
 int TurnsToReachTarget(UnitHandle pUnit, CvPlot* pTarget, bool bReusePaths=false, bool bIgnoreUnits=false, bool bIgnoreStacking=false);
-#endif
 #endif
 #ifdef AUI_ASTAR_PARADROP
 bool CanReachInXTurns(UnitHandle pUnit, const CvPlot* pTarget, int iTurns, bool bIgnoreUnits = false, bool bIgnoreParadrop = false, int* piTurns = NULL);
@@ -809,6 +827,8 @@ public:
 	void DeInit();
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
 	inline CvAStarNode* GetPartialMoveNode(int iCol, int iRow) const;
+#elif defined(AUI_CONSTIFY)
+	CvAStarNode* GetPartialMoveNode(int iCol, int iRow) const;
 #else
 	CvAStarNode* GetPartialMoveNode(int iCol, int iRow);
 #endif

@@ -471,7 +471,7 @@ bool CvPolicyEntry::CacheResults(Database::Results& kResults, CvDatabaseUtility&
 	}
 
 #ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
-	//BuildingFlavorChanges
+	//BuildingClassFlavorChanges
 	{
 		kUtility.Initialize2DArray(m_ppiBuildingClassFlavorChanges, "BuildingClasses", "Flavors");
 

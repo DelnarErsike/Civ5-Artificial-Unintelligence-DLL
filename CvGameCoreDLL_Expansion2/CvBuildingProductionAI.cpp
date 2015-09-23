@@ -162,7 +162,7 @@ void CvBuildingProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 		if(entry)
 		{
 			// Set its weight by looking at building's weight for this flavor and using iWeight multiplier passed in
-#if defined(AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS)
+#if defined(AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS) || defined(AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF)
 			int iFlavorValue = entry->GetFlavorValue(eFlavor);
 #endif
 #ifdef AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS
@@ -199,7 +199,21 @@ void CvBuildingProductionAI::AddFlavorWeights(FlavorTypes eFlavor, int iWeight)
 					iFlavorValue += iResult;
 			}
 #endif
-#if defined(AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS)
+#ifdef AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF
+#ifdef AUI_WARNING_FIXES
+			for (uint iI = 0; iI < GC.getNumUnitInfos(); iI++)
+#else
+			for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
+#endif
+			{
+				int iNumFreeUnits = entry->GetNumFreeUnits(iI);
+				if (iNumFreeUnits > 0)
+				{
+					iFlavorValue += iNumFreeUnits * m_pCity->GetCityStrategyAI()->GetUnitProductionAI()->GetWeight((UnitTypes)iI);
+				}
+			}
+#endif
+#if defined(AUI_POLICY_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BELIEF_BUILDING_CLASS_FLAVOR_MODIFIERS) || defined(AUI_BUILDING_PRODUCTION_AI_LUA_FLAVOR_WEIGHTS) || defined(AUI_BUILDING_PRODUCTION_AI_CONSIDER_FREE_STUFF)
 			m_BuildingAIWeights.IncreaseWeight(iBuilding, iFlavorValue * iWeight);
 #else
 			m_BuildingAIWeights.IncreaseWeight(iBuilding, entry->GetFlavorValue(eFlavor) * iWeight);
@@ -237,19 +251,6 @@ int CvBuildingProductionAI::GetWeight(BuildingTypes eBuilding)
 			{
 				if (pLoopCity->GetCityBuildings()->GetNumBuilding(eFreeBuilding) == 0)
 					iWeight += pLoopCity->GetCityStrategyAI()->GetBuildingProductionAI()->GetWeight(eFreeBuilding);
-			}
-		}
-
-#ifdef AUI_WARNING_FIXES
-		for (uint iI = 0; iI < GC.getNumUnitInfos(); iI++)
-#else
-		for (int iI = 0; iI < GC.getNumUnitInfos(); iI++)
-#endif
-		{
-			int iNumFreeUnits = entry->GetNumFreeUnits(iI);
-			if (iNumFreeUnits > 0)
-			{
-				iWeight += iNumFreeUnits * m_pCity->GetCityStrategyAI()->GetUnitProductionAI()->GetWeight((UnitTypes)iI);
 			}
 		}
 
