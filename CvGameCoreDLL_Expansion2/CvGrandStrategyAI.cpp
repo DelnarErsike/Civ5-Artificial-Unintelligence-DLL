@@ -2162,11 +2162,7 @@ int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
 	double dLowestRatio = 1.0;
 	for (uint iI = 0; iI < GC.getNumAIGrandStrategyInfos(); iI++)
 	{
-#ifdef AUI_FAST_COMP
-		dLowestRatio = FASTMIN(dLowestRatio, GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iI));
-#else
 		dLowestRatio = MIN(dLowestRatio, GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iI));
-#endif
 	}
 	if (dLowestRatio == 1.0)
 		dLowestRatio = 0.0;

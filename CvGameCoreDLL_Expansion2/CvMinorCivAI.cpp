@@ -8030,13 +8030,8 @@ int CvMinorCivAI::CalculateBullyMetric(PlayerTypes eBullyPlayer, bool bForUnit, 
 	int iMaxDX, iDX;
 	for (int iDY = -iComparisonRadius; iDY <= iComparisonRadius; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iComparisonRadius - FASTMAX(0, iDY);
-		for (iDX = -iComparisonRadius - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iComparisonRadius - MAX(0, iDY);
 		for (iDX = -iComparisonRadius - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(iMinorCapitalX, iMinorCapitalY, iDX, iDY);

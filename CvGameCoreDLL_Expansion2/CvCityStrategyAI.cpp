@@ -2185,11 +2185,7 @@ void CvCityStrategyAI::NormalizeList()
 	if (m_Buildables.size() > 0)
 	{
 		m_Buildables.SortItems();
-#ifdef AUI_FAST_COMP
-		int iToDecrease = -FASTMAX(m_Buildables.GetWeight(m_Buildables.size() - 1) - 1, 0);
-#else
 		int iToDecrease = -MAX(m_Buildables.GetWeight(m_Buildables.size() - 1) - 1, 0);
-#endif
 		for (int iI = 0; iI < m_Buildables.size(); iI++)
 		{
 			m_Buildables.IncreaseWeight(iI, iToDecrease);
@@ -3309,13 +3305,8 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_HillCity(CvCity* pCity)
 	CvPlot* pLoopPlot;
 	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iDY);
-		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -3377,13 +3368,8 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_ForestCity(CvCity* pCity)
 	CvPlot* pLoopPlot;
 	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iDY);
-		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -3425,13 +3411,8 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_JungleCity(CvCity* pCity)
 	CvPlot* pLoopPlot;
 	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iDY);
-		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);

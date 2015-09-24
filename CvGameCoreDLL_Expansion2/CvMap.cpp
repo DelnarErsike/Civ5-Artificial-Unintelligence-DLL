@@ -471,10 +471,8 @@ void CvMap::reset(CvMapInitData* pInitInfo)
 	}
 
 #ifdef AUI_FAST_COMP
-	m_iTopLatitude = FASTMIN(m_iTopLatitude, 90);
-	m_iTopLatitude = FASTMAX(m_iTopLatitude, -90);
-	m_iBottomLatitude = FASTMIN(m_iBottomLatitude, 90);
-	m_iBottomLatitude = FASTMAX(m_iBottomLatitude, -90);
+	m_iTopLatitude = MAX(MIN(m_iTopLatitude, 90), -90);
+	m_iBottomLatitude = MAX(MIN(m_iBottomLatitude, 90), -90);
 #else
 	m_iTopLatitude = std::min(m_iTopLatitude, 90);
 	m_iTopLatitude = std::max(m_iTopLatitude, -90);
@@ -958,13 +956,8 @@ void CvMap::updateWorkingCity(CvPlot* pPlot, int iRange)
 		CvPlot* pLoopPlot;
 		for (int iDY = -iRange; iDY <= iRange; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iRange - FASTMAX(0, iDY);
-			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iRange - MAX(0, iDY);
 			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				// No need for range check because loops are set up properly
 				pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -1089,13 +1082,8 @@ CvPlot* CvMap::syncRandPlot(int iFlags, int iArea, int iMinUnitDistance, int iTi
 #ifdef AUI_HEXSPACE_DX_LOOPS
 					for (iDY = -iMinUnitDistance; iDY <= iMinUnitDistance; iDY++)
 					{
-#ifdef AUI_FAST_COMP
-						iMaxDX = iMinUnitDistance - FASTMAX(0, iDY);
-						for (iDX = -iMinUnitDistance - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 						iMaxDX = iMinUnitDistance - MAX(0, iDY);
 						for (iDX = -iMinUnitDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 						{
 							// No need for range check because loops are set up properly
 							pLoopPlot = plotXY(pTestPlot->getX(), pTestPlot->getY(), iDX, iDY);
@@ -1409,13 +1397,8 @@ bool CvMap::findWater(CvPlot* pPlot, int iRange, bool bFreshWater)
 	int iMaxDX;
 	for (iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iDY);
-		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(iPlotX, iPlotY, iDX, iDY);
@@ -1468,7 +1451,7 @@ int CvMap::plotY(int iIndex) const
 int CvMap::maxPlotDistance()
 {
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, plotDistance(0, 0, ((isWrapX()) ? (getGridWidth() / 2) : (getGridWidth() - 1)), ((isWrapY()) ? (getGridHeight() / 2) : (getGridHeight() - 1))));
+	return MAX(1, plotDistance(0, 0, ((isWrapX()) ? (getGridWidth() / 2) : (getGridWidth() - 1)), ((isWrapY()) ? (getGridHeight() / 2) : (getGridHeight() - 1))));
 #else
 	return std::max(1, plotDistance(0, 0, ((isWrapX()) ? (getGridWidth() / 2) : (getGridWidth() - 1)), ((isWrapY()) ? (getGridHeight() / 2) : (getGridHeight() - 1))));
 #endif
@@ -2188,13 +2171,8 @@ void CvMap::DoPlaceNaturalWonders()
 #ifdef AUI_HEXSPACE_DX_LOOPS
 			for (iPlotLoopY = -iCoastDistance; iPlotLoopY <= iCoastDistance; iPlotLoopY++)
 			{
-#ifdef AUI_FAST_COMP
-				iMaxDX = iCoastDistance - FASTMAX(0, iPlotLoopY);
-				for (iPlotLoopX = -iCoastDistance - FASTMIN(0, iPlotLoopY); iPlotLoopX <= iMaxDX; iPlotLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 				iMaxDX = iCoastDistance - MAX(0, iPlotLoopY);
 				for (iPlotLoopX = -iCoastDistance - MIN(0, iPlotLoopY); iPlotLoopX <= iMaxDX; iPlotLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(pRandPlot->getX(), pRandPlot->getY(), iPlotLoopX, iPlotLoopY);
@@ -2239,13 +2217,8 @@ void CvMap::DoPlaceNaturalWonders()
 #ifdef AUI_HEXSPACE_DX_LOOPS
 		for (iPlotLoopY = -iAnotherNWDistance; iPlotLoopY <= iAnotherNWDistance; iPlotLoopY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iAnotherNWDistance - FASTMAX(0, iPlotLoopY);
-			for (iPlotLoopX = -iAnotherNWDistance - FASTMIN(0, iPlotLoopY); iPlotLoopX <= iMaxDX; iPlotLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iAnotherNWDistance - MAX(0, iPlotLoopY);
 			for (iPlotLoopX = -iAnotherNWDistance - MIN(0, iPlotLoopY); iPlotLoopX <= iMaxDX; iPlotLoopX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				// No need for range check because loops are set up properly
 				pLoopPlot = plotXY(pRandPlot->getX(), pRandPlot->getY(), iPlotLoopX, iPlotLoopY);

@@ -217,15 +217,6 @@
 /// All cities are set to be revealed to observers
 #define AUI_CITY_OBSERVER_REVEALS_ALL_CITIES
 
-#ifdef AUI_FAST_COMP
-// Avoids Visual Studio's compiler from generating inefficient code
-// FastMax() and FastMin() taken from https://randomascii.wordpress.com/2013/11/24/stdmin-causing-three-times-slowdown-on-vc/
-template<class T> inline T FastMax(const T& _Left, const T& _Right) { return (_DEBUG_LT(_Left, _Right) ? _Right : _Left); }
-template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_DEBUG_LT(_Right, _Left) ? _Right : _Left); }
-#define FASTMAX(a, b) FastMax(a, b)
-#define FASTMIN(a, b) FastMin(a, b)
-#endif
-
 #ifdef AUI_USE_OPENMP
 // OpenMP for multithreading loops
 #include <omp.h>

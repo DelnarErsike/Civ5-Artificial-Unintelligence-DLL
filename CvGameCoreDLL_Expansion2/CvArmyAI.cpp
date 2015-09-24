@@ -289,13 +289,8 @@ CvPlot* CvArmyAI::GetCenterOfMass(DomainTypes eDomainRequired)
 			CvPlot* pLoopPlot;
 			for (int iDY = -2; iDY <= 2; iDY++)
 			{
-#ifdef AUI_FAST_COMP
-				iMaxDX = 2 - FASTMAX(0, iDY);
-				for (iDX = -2 - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 				iMaxDX = 2 - MAX(0, iDY);
 				for (iDX = -2 - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(pRtnValue->getX(), pRtnValue->getY(), iDX, iDY);

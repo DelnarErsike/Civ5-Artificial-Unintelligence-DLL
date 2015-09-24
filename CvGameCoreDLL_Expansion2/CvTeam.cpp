@@ -3931,13 +3931,8 @@ void CvTeam::SetHasEmbassyAtTeam(TeamTypes eIndex, bool bNewValue)
 						CvPlot* pLoopPlot;
 						for (int iDY = -iPopRange; iDY <= iPopRange; iDY++)
 						{
-#ifdef AUI_FAST_COMP
-							iMaxDX = iPopRange - FASTMAX(0, iDY);
-							for (iDX = -iPopRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 							iMaxDX = iPopRange - MAX(0, iDY);
 							for (iDX = -iPopRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 							{
 								// No need for range check because loops are set up properly
 								pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);

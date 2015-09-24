@@ -656,13 +656,8 @@ int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag)
 				}
 #endif
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
-#ifdef AUI_FAST_COMP
-				iExtraFoodValueT100 += (m_pCity->foodDifferenceTimes100(true, NULL, true, FASTMIN(iExcessFoodWithPlotTimes100, 100 * GC.getFOOD_CONSUMPTION_PER_POPULATION())) -
-					FASTMIN(iExcessFoodWithPlotTimes100, 100 * GC.getFOOD_CONSUMPTION_PER_POPULATION())) * 8 * /*12*/ GC.getAI_CITIZEN_VALUE_FOOD();
-#else
 				iExtraFoodValueT100 += (m_pCity->foodDifferenceTimes100(true, NULL, true, MIN(iExcessFoodWithPlotTimes100, 100 * GC.getFOOD_CONSUMPTION_PER_POPULATION())) -
 					MIN(iExcessFoodWithPlotTimes100, 100 * GC.getFOOD_CONSUMPTION_PER_POPULATION())) * 8 * /*12*/ GC.getAI_CITIZEN_VALUE_FOOD();
-#endif
 				if (eFocus == CITY_AI_FOCUS_TYPE_FOOD)
 					iExtraFoodValueT100 *= 3;
 				else if (eFocus == CITY_AI_FOCUS_TYPE_GOLD_GROWTH || eFocus == CITY_AI_FOCUS_TYPE_PROD_GROWTH)
@@ -1034,7 +1029,7 @@ int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonC
 
 		double dProductionFlavor = (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_PRODUCTION"));
 		dProductionFlavor += (double)pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_WONDER"));
-		dProductionFlavor += (double)FASTMAX(pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE")), 
+		dProductionFlavor += (double)MAX(pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_OFFENSE")), 
 										 pGrandStrategyAI->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_DEFENSE")));
 		dProductionFlavor /= 3.0;
 		dProductionYieldValue *= pow(1.02, dProductionFlavor - GC.getDEFAULT_FLAVOR_VALUE());
@@ -2212,13 +2207,8 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 				}
 #endif
 #ifdef AUI_CITIZENS_GET_VALUE_CONSIDER_GROWTH_MODIFIERS
-#ifdef AUI_FAST_COMP
-				iExtraFoodValueT100 += (m_pCity->foodDifferenceTimes100(true, NULL, true, FASTMIN(iExcessFoodWithPlotTimes100, 100 * GC.getFOOD_CONSUMPTION_PER_POPULATION())) -
-					FASTMIN(iExcessFoodWithPlotTimes100, 100 * GC.getFOOD_CONSUMPTION_PER_POPULATION())) * 8 * /*12*/ GC.getAI_CITIZEN_VALUE_FOOD();
-#else
 				iExtraFoodValueT100 += (m_pCity->foodDifferenceTimes100(true, NULL, true, MIN(iExcessFoodWithPlotTimes100, 100 * GC.getFOOD_CONSUMPTION_PER_POPULATION())) -
 					MIN(iExcessFoodWithPlotTimes100, 100 * GC.getFOOD_CONSUMPTION_PER_POPULATION())) * 8 * /*12*/ GC.getAI_CITIZEN_VALUE_FOOD();
-#endif
 				if (eFocus == CITY_AI_FOCUS_TYPE_FOOD)
 					iExtraFoodValueT100 *= 3;
 				else if (eFocus == CITY_AI_FOCUS_TYPE_GOLD_GROWTH || eFocus == CITY_AI_FOCUS_TYPE_PROD_GROWTH)

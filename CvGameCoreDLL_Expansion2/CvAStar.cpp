@@ -1530,8 +1530,8 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 		{
 			if(pToPlot->getFeatureType() != NO_FEATURE)
 			{
-#ifdef AUI_FAST_COMP
-				iCost += (GC.getPATH_DAMAGE_WEIGHT() * FASTMAX(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+				iCost += (GC.getPATH_DAMAGE_WEIGHT() * MAX(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
 #else
 				iCost += (GC.getPATH_DAMAGE_WEIGHT() * std::max(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
 #endif
@@ -1681,8 +1681,8 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 					iDefenseBonus = 200;
 			}
 			iCost += PATH_DEFENSE_WEIGHT * (200 - iDefenseBonus);
-#elif defined(AUI_FAST_COMP)
-			iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
+			iCost += (PATH_DEFENSE_WEIGHT * MAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
 #else
 			iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
 #endif
@@ -1775,8 +1775,8 @@ int PathCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* point
 						}
 						iCost += PATH_DEFENSE_WEIGHT * (200 - iDefenseBonus);
 #else
-#if defined(AUI_FAST_COMP)
-						iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
+#if defined(AUI_ASTAR_MINOR_OPTIMIZATION)
+						iCost += (PATH_DEFENSE_WEIGHT * MAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
 #else
 						iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
 #endif
@@ -2432,8 +2432,8 @@ int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 		}
 		else
 		{
-#ifdef AUI_FAST_COMP
-			iMoves = FASTMIN(iMoves, FASTMAX(0, iStartMoves - CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType()), pCacheData->maxMoves(), iStartMoves)));
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+			iMoves = FASTMIN(iMoves, MAX(0, iStartMoves - CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType()), pCacheData->maxMoves(), iStartMoves)));
 #else
 			iMoves = std::min(iMoves, std::max(0, iStartMoves - CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves(), iStartMoves)));
 #endif
@@ -2743,8 +2743,8 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 		{
 			if(pToPlot->getFeatureType() != NO_FEATURE)
 			{
-#ifdef AUI_FAST_COMP
-				iCost += (GC.getPATH_DAMAGE_WEIGHT() * FASTMAX(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+				iCost += (GC.getPATH_DAMAGE_WEIGHT() * MAX(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
 #else
 				iCost += (GC.getPATH_DAMAGE_WEIGHT() * std::max(0, GC.getFeatureInfo(pToPlot->getFeatureType())->getTurnDamage())) / GC.getMAX_HIT_POINTS();
 #endif
@@ -2825,8 +2825,8 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 					iDefenseBonus = 200;
 			}
 			iCost += PATH_DEFENSE_WEIGHT * (200 - iDefenseBonus);
-#elif defined(AUI_FAST_COMP)
-			iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
+			iCost += (PATH_DEFENSE_WEIGHT * MAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
 #else
 			iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pToPlot->defenseModifier(eUnitTeam, false)))));
 #endif
@@ -2919,8 +2919,8 @@ int IgnoreUnitsCost(CvAStarNode* parent, CvAStarNode* node, int data, const void
 								iDefenseBonus = 200;
 						}
 						iCost += PATH_DEFENSE_WEIGHT * (200 - iDefenseBonus);
-#elif defined(AUI_FAST_COMP)
-						iCost += (PATH_DEFENSE_WEIGHT * FASTMAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
+#elif defined(AUI_ASTAR_MINOR_OPTIMIZATION)
+						iCost += (PATH_DEFENSE_WEIGHT * MAX(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
 #else
 						iCost += (PATH_DEFENSE_WEIGHT * std::max(0, (200 - ((pUnit->noDefensiveBonus()) ? 0 : pFromPlot->defenseModifier(eUnitTeam, false)))));
 #endif
@@ -3240,8 +3240,8 @@ int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const v
 #else
 		// We can't use maxMoves, because that checks where the unit is currently, and we're plotting a path so we have to see
 		// what the max moves would be like if the unit was already at the desired location.
-#ifdef AUI_FAST_COMP
-		iMoves = FASTMIN(iMoves, FASTMAX(0, iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves())));
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+		iMoves = FASTMIN(iMoves, MAX(0, iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves())));
 #else
 		iMoves = std::min(iMoves, std::max(0, iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves())));
 #endif
@@ -3628,9 +3628,9 @@ int InfluenceCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* 
 	{
 		iCost = 1;
 	}
-#ifdef AUI_FAST_COMP
-	iCost = FASTMAX(1,iCost);
-	iCost = FASTMIN(3,iCost);
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	iCost = MAX(1,iCost);
+	iCost = MIN(3,iCost);
 #else
 	iCost = std::max(1,iCost);
 	iCost = std::min(3,iCost);
@@ -4660,8 +4660,8 @@ CvPlot* CvStepPathFinder::GetXPlotsFromEnd(PlayerTypes ePlayer, PlayerTypes eEne
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
 	// Generate step path
 	int iPathLen = GC.getStepFinder().GetStepDistanceBetweenPoints(ePlayer, eEnemy, pStartPlot, pEndPlot);
-#ifdef AUI_FAST_COMP
-	int iNumSteps = FASTMIN(iPlotsFromEnd, iPathLen);
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	int iNumSteps = MIN(iPlotsFromEnd, iPathLen);
 #else
 	int iNumSteps = ::min(iPlotsFromEnd, iPathLen);
 #endif
@@ -4671,8 +4671,8 @@ CvPlot* CvStepPathFinder::GetXPlotsFromEnd(PlayerTypes ePlayer, PlayerTypes eEne
 
 	// Generate step path
 	iPathLen = GC.getStepFinder().GetStepDistanceBetweenPoints(ePlayer, eEnemy, pStartPlot, pEndPlot);
-#ifdef AUI_FAST_COMP
-	iNumSteps = FASTMIN(iPlotsFromEnd, iPathLen);
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	iNumSteps = MIN(iPlotsFromEnd, iPathLen);
 #else
 	iNumSteps = ::min(iPlotsFromEnd, iPathLen);
 #endif
@@ -5889,13 +5889,8 @@ void IncreaseMoveRangeForRoads(const CvUnit* pUnit, int& iRange)
 	FeatureTypes eFeature;
 	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		int iMaxDX = iRange - FASTMAX(0, iDY);
-		for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		int iMaxDX = iRange - MAX(0, iDY);
 		for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			pLoopPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
 			if (pLoopPlot)
@@ -5974,13 +5969,8 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 #endif
 			for (int iDY = -iRange; iDY <= iRange; iDY++)
 			{
-#ifdef AUI_FAST_COMP
-				int iMaxDX = iRange - FASTMAX(0, iDY);
-				for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 				iMaxDX = iRange - MAX(0, iDY);
 				for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 				{
 
 					pLoopPlot = plotXY(pTarget->getX(), pTarget->getY(), iDX, iDY);

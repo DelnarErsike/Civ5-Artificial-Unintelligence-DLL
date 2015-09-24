@@ -1399,7 +1399,7 @@ void loadFromIni(FIGameIniParser& iniParser)
 	{
 		StringToBools(szHolder, &iNumBools, &pbBools);
 #ifdef AUI_FAST_COMP
-		iNumBools = FASTMIN(iNumBools, (int)GC.getNumVictoryInfos());
+		iNumBools = MIN(iNumBools, (int)GC.getNumVictoryInfos());
 #else
 		iNumBools = std::min(iNumBools, GC.getNumVictoryInfos());
 #endif
@@ -1421,7 +1421,7 @@ void loadFromIni(FIGameIniParser& iniParser)
 		{
 			StringToBools(szHolder, &iNumBools, &pbBools);
 #ifdef AUI_FAST_COMP
-			iNumBools = FASTMIN(iNumBools, static_cast<int>(NUM_GAMEOPTION_TYPES));
+			iNumBools = MIN(iNumBools, static_cast<int>(NUM_GAMEOPTION_TYPES));
 #else
 			iNumBools = std::min(iNumBools, static_cast<int>(NUM_GAMEOPTION_TYPES));
 #endif

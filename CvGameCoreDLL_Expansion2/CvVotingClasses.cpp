@@ -872,11 +872,7 @@ CvString CvVoterDecision::GetVotesAsText(CvLeague* pLeague)
 	}
 
 	std::stable_sort(vVoteText.begin(), vVoteText.end(), LeagueHelpers::VoteTextSorter());
-#ifdef AUI_FAST_COMP
-	int iNumToShow = FASTMIN(16, (int)vVoteText.size());
-#else
 	int iNumToShow = MIN(16, (int)vVoteText.size());
-#endif
 	for (int i = 0; i < iNumToShow; i++)
 	{
 		s += vVoteText[i].sText;
@@ -3048,11 +3044,7 @@ int CvLeague::GetNumResolutionsEverEnacted() const
 
 int CvLeague::GetNumProposersPerSession() const
 {
-#ifdef AUI_FAST_COMP
-	int iProposers = FASTMIN(LeagueHelpers::PROPOSERS_PER_SESSION, GetNumMembers());
-#else
 	int iProposers = MIN(LeagueHelpers::PROPOSERS_PER_SESSION, GetNumMembers());
-#endif
 	return iProposers;
 }
 
@@ -3834,11 +3826,7 @@ float CvLeague::GetContributionTierThreshold(ContributionTier eTier, LeagueProje
 					iBestContribution = iContribution;
 				}
 			}
-#ifdef AUI_FAST_COMP
-			fThreshold = FASTMAX((float)iBestContribution, GC.getLEAGUE_PROJECT_REWARD_TIER_2_THRESHOLD() * GetProjectCostPerPlayer(eLeagueProject));
-#else
 			fThreshold = MAX((float)iBestContribution, GC.getLEAGUE_PROJECT_REWARD_TIER_2_THRESHOLD() * GetProjectCostPerPlayer(eLeagueProject));
-#endif
 			break;
 		}
 	default:
@@ -4661,11 +4649,7 @@ CvString CvLeague::GetProjectProgressDetails(LeagueProjectTypes eProject, Player
 	if (eObserver != NO_PLAYER && IsProjectActive(eProject))
 	{
 		int iPercentCompleted = (int) (((float)GetProjectProgress(eProject) / (float)GetProjectCost(eProject)) * 100);
-#ifdef AUI_FAST_COMP
-		iPercentCompleted = FASTMIN(100, iPercentCompleted);
-#else
 		iPercentCompleted = MIN(100, iPercentCompleted);
-#endif
 		Localization::String sTemp = Localization::Lookup("TXT_KEY_LEAGUE_PROJECT_POPUP_PROGRESS_COST");
 		sTemp << iPercentCompleted;
 		sTemp << GetMemberContribution(eObserver, eProject) / 100;
@@ -6041,11 +6025,7 @@ void CvLeague::NotifyProjectProgress(LeagueProjectTypes eProject)
 					if (pNotifications)
 					{
 						int iPercentCompleted = (int) (((float)GetProjectProgress(eProject) / (float)GetProjectCost(eProject)) * 100);
-#ifdef AUI_FAST_COMP
-						iPercentCompleted = FASTMIN(100, iPercentCompleted);
-#else
 						iPercentCompleted = MIN(100, iPercentCompleted);
-#endif
 
 						Localization::String sSummary = Localization::Lookup("TXT_KEY_NOTIFICATION_LEAGUE_PROJECT_PROGRESS");
 						sSummary << pInfo->GetDescriptionKey();
@@ -6113,11 +6093,7 @@ void CvLeague::CheckProjectsProgress()
 				else
 				{
 					int iPercentCompleted = (int) (((float)iTotal / (float)iNeeded) * 100);
-#ifdef AUI_FAST_COMP
-					iPercentCompleted = FASTMIN(100, iPercentCompleted);
-#else
 					iPercentCompleted = MIN(100, iPercentCompleted);
-#endif
 
 					if (!it->bProgressWarningSent && iPercentCompleted >= LeagueHelpers::PROJECT_PROGRESS_PERCENT_WARNING)
 					{
@@ -6941,13 +6917,8 @@ void CvGameLeagues::FoundLeague(PlayerTypes eFounder)
 				}
 			}
 			// In case the game era is actually before or after the triggers in the database
-#ifdef AUI_FAST_COMP
-			EraTypes eGoverningEraTrigger = (EraTypes) FASTMAX((int)LeagueHelpers::GetGameEraForTrigger(), (int)eEarliestEraTrigger);
-			eGoverningEraTrigger = (EraTypes)FASTMIN((int)eGoverningEraTrigger, (int)eLatestEraTrigger);
-#else
 			EraTypes eGoverningEraTrigger = (EraTypes) MAX((int)LeagueHelpers::GetGameEraForTrigger(), (int)eEarliestEraTrigger);
 			eGoverningEraTrigger = (EraTypes) MIN((int)eGoverningEraTrigger, (int)eLatestEraTrigger);
-#endif
 
 			// Find which special session info this league begins at
 			LeagueSpecialSessionTypes eGoverningSpecialSession = NO_LEAGUE_SPECIAL_SESSION;
@@ -8754,11 +8725,7 @@ void CvLeagueAI::FindBestVoteChoices(CvEnactProposal* pProposal, VoteConsiderati
 	{
 		VoteConsideration consideration(/*bEnact*/ true, pProposal->GetID(), vChoices[i]);
 		int iScore = ScoreVoteChoice(pProposal, vChoices[i]);
-#ifdef AUI_FAST_COMP
-		iScore = FASTMAX(iScore, 0); // No negative weights
-#else
 		iScore = MAX(iScore, 0); // No negative weights
-#endif
 		vScoredChoices.push_back(consideration, iScore);
 	}
 
@@ -8804,11 +8771,7 @@ void CvLeagueAI::FindBestVoteChoices(CvRepealProposal* pProposal, VoteConsiderat
 	{
 		VoteConsideration consideration(/*bEnact*/ false, pProposal->GetID(), vChoices[i]);
 		int iScore = ScoreVoteChoice(pProposal, vChoices[i]);
-#ifdef AUI_FAST_COMP
-		iScore = FASTMAX(iScore, 0); // No negative weights
-#else
 		iScore = MAX(iScore, 0); // No negative weights
-#endif
 		vScoredChoices.push_back(consideration, iScore);
 	}
 
@@ -8983,17 +8946,10 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		// acts as a boolean
 		int iIsStrongProduction = 0;
 
-#ifdef AUI_FAST_COMP
-		double dProductionMightRatio = (double)iOurProductionMight / (double)FASTMAX(iHighestProductionMight, 1);
-		CvAssertMsg(0.0 <= dProductionMightRatio && dProductionMightRatio <= 1.0, "Error when evaluating delegates for an international project. Please send Anton your save file and version.");
-		dProductionMightRatio = FASTMAX(dProductionMightRatio, 0.0);
-		dProductionMightRatio = FASTMIN(dProductionMightRatio, 1.0);
-#else
 		double dProductionMightRatio = (double)iOurProductionMight / (double)MAX(iHighestProductionMight, 1);
 		CvAssertMsg(0.0 <= dProductionMightRatio && dProductionMightRatio <= 1.0, "Error when evaluating delegates for an international project. Please send Anton your save file and version.");
 		dProductionMightRatio = MAX(dProductionMightRatio, 0.0);
 		dProductionMightRatio = MIN(dProductionMightRatio, 1.0);
-#endif
 
 		if (dProductionMightRatio >= 0.50)
 		{
@@ -9213,11 +9169,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		// Would we lose active CS trade routes?
 		if (iCSPartners > 0)
 		{
-#ifdef AUI_FAST_COMP
-			dScore += FASTMAX(-50, iCSPartners * -15) * dCityStateCountModifier;
-#else
 			dScore += MAX(-50, iCSPartners * -15) * dCityStateCountModifier;
-#endif
 		}
 		else
 		{
@@ -9409,11 +9361,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 			if (GC.getGame().GetGameTrade()->IsPlayerConnectedToPlayer(GetPlayer()->GetID(), eTargetPlayer))
 			{
 				int iFactor = -10;
-#ifdef AUI_FAST_COMP
-				dScore += FASTMAX(-40, GC.getGame().GetGameTrade()->CountNumPlayerConnectionsToPlayer(GetPlayer()->GetID(), eTargetPlayer) * iFactor);
-#else
 				dScore += MAX(-40, GC.getGame().GetGameTrade()->CountNumPlayerConnectionsToPlayer(GetPlayer()->GetID(), eTargetPlayer) * iFactor);
-#endif
 			}
 
 			// Player Trait making routes to them valuable (Morocco)
@@ -9645,18 +9593,10 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 		// if congress is not the UN and we dislike the proposal, add in extra score based on AI's plan for diplomatic victory
 		if (!GC.getGame().GetGameLeagues()->GetActiveLeague()->IsUnitedNations() && dTechRatio < 0)
 		{
-#ifdef AUI_FAST_COMP
-#ifdef AUI_GS_PRIORITY_RATIO
-			dTechRatio = FASTMIN(dTechRatio + 0.5 / dOverallTechStatus * FASTMAX(0.0, dDiploVictoryRatio - sqrt(dConquestVictoryRatio * dScienceVictoryRatio)), 0.0);
-#else
-			dTechRatio = FASTMIN(dTechRatio + (bSeekingDiploVictory ? 0.5 : 0), 0.0);
-#endif
-#else
 #ifdef AUI_GS_PRIORITY_RATIO
 			dTechRatio = MIN(dTechRatio + 0.5 / dOverallTechStatus * MAX(0.0, dDiploVictoryRatio - sqrt(dConquestVictoryRatio * dScienceVictoryRatio)), 0.0);
 #else
 			dTechRatio = MIN(dTechRatio + (bSeekingDiploVictory ? 0.5 : 0), 0.0);
-#endif
 #endif
 		}
 
@@ -9706,11 +9646,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 #endif
 			dTempScore += iNumWonders * dFactor;
 		}
-#ifdef AUI_FAST_COMP
-		dScore += FASTMIN(70.0, dTempScore);
-#else
 		dScore += MIN(70.0, dTempScore);
-#endif
 	}
 	// Natural Heritage Sites
 	if (pProposal->GetEffects()->iCulturePerNaturalWonder != 0)
@@ -9726,11 +9662,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 #endif
 			dTempScore += iNumNaturalWonders * dFactor;
 		}
-#ifdef AUI_FAST_COMP
-		dScore += FASTMIN(70.0, dTempScore);
-#else
 		dScore += MIN(70.0, dTempScore);
-#endif
 	}
 	// Nuclear Non-Proliferation
 	if (pProposal->GetEffects()->bNoTrainingNuclearWeapons)
@@ -9913,11 +9845,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 					}
 				}
 			}
-#ifdef AUI_FAST_COMP
-			dScore += FASTMAX(-50.0, FASTMIN(50.0, 10.0 * iPressure * iWithoutIdeologyCount / (double)iCivCount));
-#else
 			dScore += MAX(-50.0, MIN(50.0, 10.0 * iPressure * iWithoutIdeologyCount / (double)iCivCount));
-#endif
 		}
 #else
 		bool bPublicOpinionUnhappiness = GetPlayer()->GetCulture()->GetPublicOpinionUnhappiness() > 0;
@@ -9968,11 +9896,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 
 #ifdef AUI_GS_PRIORITY_RATIO
 		// Ranges from -80 to 80 depending on ratios between grand strategies; Due to Great Merchant, Diplo ratio replaces SS ratio when it is twice as big as SS ratio
-#ifdef AUI_FAST_COMP
-		dScore += 80.0 * (dCultureVictoryRatio * dArtsyGreatPersonRateMod + FASTMAX(dScienceVictoryRatio, dDiploVictoryRatio / 2.0) * dScienceyGreatPersonRateMod);
-#else
 		dScore += 80.0 * (dCultureVictoryRatio * dArtsyGreatPersonRateMod + MAX(dScienceVictoryRatio, dDiploVictoryRatio / 2.0) * dScienceyGreatPersonRateMod);
-#endif
 #else
 		if (bSeekingCultureVictory)
 		{
@@ -10278,11 +10202,7 @@ int CvLeagueAI::ScoreVoteChoiceYesNo(CvProposal* pProposal, int iChoice, bool bE
 			fTempScore += iNumLandmarks * iLandmarkFactor;
 #endif
 		}
-#ifdef AUI_FAST_COMP
-		dScore += FASTMIN(70.0, dTempScore);
-#else
 		dScore += MIN(70.0, dTempScore);
-#endif
 	}
 
 	// == Diplomat knowledge, Vote Commitments we secured ==
@@ -11119,11 +11039,7 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 	int iScoreForWinner = 0;
 	if (vLeagueVoteCounts.GetElement(0) != eChoicePlayer)
 	{
-#ifdef AUI_FAST_COMP
-		iScoreForWinner = FASTMIN(0, ScoreVoteChoicePlayer(pProposal, vLeagueVoteCounts.GetElement(0), bEnact));
-#else
 		iScoreForWinner = MIN(0, ScoreVoteChoicePlayer(pProposal, vLeagueVoteCounts.GetElement(0), bEnact));
-#endif
 	}
 #endif
 
@@ -11236,19 +11152,11 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 #endif
 			}
 			if (pLeague->CalculateStartingVotesForMember(GetPlayer()->GetID()) >= vLeagueVoteCounts.GetWeight(0))
-#ifdef AUI_FAST_COMP
-				iScore = FASTMIN(0, iScore);
-#else
 				iScore = MIN(0, iScore);
-#endif
 			iScore = int(iScore * (vLeagueVoteCounts.GetWeight(1) + iVotesGainedOnFail) / double(pLeague->CalculateStartingVotesForMember(eChoicePlayer) + iVotesGainedOnFail) *
 				pow(3.0, 1.0 - double(pLeague->CalculateStartingVotesForMember(GetPlayer()->GetID()) + pLeague->CalculateStartingVotesForMember(GetPlayer()->GetID())) /
 				double(pLeague->CalculateStartingVotesForMember(eChoicePlayer) + pLeague->CalculateStartingVotesForMember(GetPlayer()->GetID()))) + 0.5);
-#ifdef AUI_FAST_COMP
-			iScore = FASTMIN(FASTMAX(iScore, -500), 300);
-#else
 			iScore = MIN(MAX(iScore, -500), 300);
-#endif
 #endif
 		}
 	}
@@ -11345,19 +11253,11 @@ int CvLeagueAI::ScoreVoteChoicePlayer(CvProposal* pProposal, int iChoice, bool b
 			}
 #ifdef AUI_VOTING_SCORE_VOTING_CHOICE_PLAYER_ADJUST_FOR_FPTP
 			if (pLeague->CalculateStartingVotesForMember(GetPlayer()->GetID()) >= vLeagueVoteCounts.GetWeight(0))
-#ifdef AUI_FAST_COMP
-				iScore = FASTMIN(0, iScore);
-#else
 				iScore = MIN(0, iScore);
-#endif
 			iScore = int(iScore * (vLeagueVoteCounts.GetWeight(0) + iVotesGainedOnFail) / double(pLeague->CalculateStartingVotesForMember(eChoicePlayer) + iVotesGainedOnFail) *
 				pow(3.0, 1.0 - double(pLeague->CalculateStartingVotesForMember(GetPlayer()->GetID()) + pLeague->CalculateStartingVotesForMember(GetPlayer()->GetID())) /
 				double(pLeague->CalculateStartingVotesForMember(eChoicePlayer) + pLeague->CalculateStartingVotesForMember(GetPlayer()->GetID()))) + 0.5);
-#ifdef AUI_FAST_COMP
-			iScore = FASTMIN(FASTMAX(iScore, -500), 300);
-#else
 			iScore = MIN(MAX(iScore, -500), 300);
-#endif
 #endif
 		}
 	}
@@ -11454,11 +11354,7 @@ void CvLeagueAI::AllocateProposals(CvLeague* pLeague)
 		}
 
 		RandomNumberDelegate fn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
-#ifdef AUI_FAST_COMP
-		ProposalConsideration proposal = vConsiderations.ChooseFromTopChoices(FASTMIN(vConsiderations.size(), LeagueHelpers::AI_CHOOSE_PROPOSAL_FROM_TOP), &fn, "Choosing proposal from top choices");
-#else
 		ProposalConsideration proposal = vConsiderations.ChooseFromTopChoices(MIN(vConsiderations.size(), LeagueHelpers::AI_CHOOSE_PROPOSAL_FROM_TOP), &fn, "Choosing proposal from top choices");
-#endif
 		if (proposal.bEnact)
 		{
 			ResolutionTypes eResolution = vInactive[proposal.iIndex];

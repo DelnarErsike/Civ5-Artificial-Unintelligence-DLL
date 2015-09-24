@@ -2620,13 +2620,8 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 		CvPlot* pLoopPlot;
 		for (int iDY = -iMaxRange; iDY <= iMaxRange; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iMaxRange - FASTMAX(0, iDY);
-			for (iDX = -iMaxRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iMaxRange - MAX(0, iDY);
 			for (iDX = -iMaxRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				// No need for range check because loops are set up properly
 				pLoopPlot = plotXY(iOldCityX, iOldCityY, iDX, iDY);
@@ -6281,13 +6276,8 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 #ifdef AUI_HEXSPACE_DX_LOOPS
 		for (iDY = -iBarbCampDistance; iDY <= iBarbCampDistance; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iBarbCampDistance - FASTMAX(0, iDY);
-			for (iDX = -iBarbCampDistance - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iBarbCampDistance - MAX(0, iDY);
 			for (iDX = -iBarbCampDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 #else
 		for(iDX = -(iBarbCampDistance); iDX <= iBarbCampDistance; iDX++)
 		{
@@ -6335,13 +6325,8 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 #ifdef AUI_HEXSPACE_DX_LOOPS
 			for (iDY = -iOffset; iDY <= iOffset; iDY++)
 			{
-#ifdef AUI_FAST_COMP
-				iMaxDX = iOffset - FASTMAX(0, iDY);
-				for (iDX = -iOffset - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 				iMaxDX = iOffset - MAX(0, iDY);
 				for (iDX = -iOffset - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 				{
 					pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 #else
@@ -6389,13 +6374,8 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 #ifdef AUI_HEXSPACE_DX_LOOPS
 		for (iDY = -iRange; iDY <= iRange; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iRange - FASTMAX(0, iDY);
-			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iRange - MAX(0, iDY);
 			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 #else
 		for(iDX = -(iRange); iDX <= iRange; iDX++)
 		{
@@ -6671,13 +6651,8 @@ void CvPlayer::receiveGoody(CvPlot* pPlot, GoodyTypes eGoody, CvUnit* pUnit)
 #ifdef AUI_HEXSPACE_DX_LOOPS
 				for (iDY = -iPopRange; iDY <= iPopRange; iDY++)
 				{
-#ifdef AUI_FAST_COMP
-					iMaxDX = iPopRange - FASTMAX(0, iDY);
-					for (iDX = -iPopRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 					iMaxDX = iPopRange - MAX(0, iDY);
 					for (iDX = -iPopRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 					{
 						pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 #else
@@ -7467,11 +7442,7 @@ bool CvPlayer::canConstruct(BuildingTypes eBuilding, bool bContinue, bool bTestV
 			CvTechEntry* pPrereqTech = GC.getTechInfo(ePrereqTech);
 			if (pPrereqTech)
 			{
-#ifdef AUI_FAST_COMP
-				*piWithinEras = FASTMAX(pPrereqTech->GetEra() - GetCurrentEra() + 1, *piWithinEras);
-#else
 				*piWithinEras = MAX(pPrereqTech->GetEra() - GetCurrentEra() + 1, *piWithinEras);
-#endif
 				if (!(currentTeam.GetTeamTechs()->HasTech(ePrereqTech)))
 				{
 					bHasTech = false;
@@ -7486,11 +7457,7 @@ bool CvPlayer::canConstruct(BuildingTypes eBuilding, bool bContinue, bool bTestV
 				CvTechEntry* pPrereqTech = GC.getTechInfo(ePrereqTech);
 				if (pPrereqTech)
 				{
-#ifdef AUI_FAST_COMP
-					*piWithinEras = FASTMAX(pPrereqTech->GetEra() - GetCurrentEra() + 1, *piWithinEras);
-#else
 					*piWithinEras = MAX(pPrereqTech->GetEra() - GetCurrentEra() + 1, *piWithinEras);
-#endif
 					if (!(currentTeam.GetTeamTechs()->HasTech(ePrereqTech)))
 					{
 						bHasTech = false;
@@ -17078,13 +17045,8 @@ void CvPlayer::DoUpdateCramped()
 #ifdef AUI_HEXSPACE_DX_LOOPS
 		for (int iDY = -iRange; iDY <= iRange; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			int iMaxDX = iRange - FASTMAX(0, iDY);
-			for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			int iMaxDX = iRange - MAX(0, iDY);
 			for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				pPlot = plotXY(pLoopCity->getX(), pLoopCity->getY(), iDX, iDY);
 #else

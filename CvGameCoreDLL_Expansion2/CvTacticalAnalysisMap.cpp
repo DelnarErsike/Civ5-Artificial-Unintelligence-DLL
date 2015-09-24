@@ -404,13 +404,8 @@ void CvTacticalAnalysisMap::MarkCellsNearEnemy()
 						int iMaxDX, iDX;
 						for (int iDY = -iCityRange; iDY <= iCityRange; iDY++)
 						{
-#ifdef AUI_FAST_COMP
-							iMaxDX = iCityRange - FASTMAX(0, iDY);
-							for (iDX = -iCityRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 							iMaxDX = iCityRange - MAX(0, iDY);
-							for (iDX = -iCityRange - MIN(0, iDY); iDX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
+							for (iDX = -iCityRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 							{
 								pAdjacentPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 								if (pAdjacentPlot != NULL && pAdjacentPlot->getOwner() != NO_PLAYER)
@@ -491,13 +486,8 @@ void CvTacticalAnalysisMap::SetTargetBombardCells(CvPlot* pTarget, int iRange, b
 	int iMaxDX;
 	for (iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iDY);
-		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 #else
 	int iPlotDistance;
 
@@ -943,11 +933,7 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 							if (iDistance <= m_iTacticalRange)
 							{
 #ifdef AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_DISTANCE_DROPOFF
-#ifdef AUI_FAST_COMP
-								iMultiplier = m_iTacticalRange + FASTMIN(4 - iDistance, 0);  // 4 because action may still be spread out over the zone
-#else
 								iMultiplier = m_iTacticalRange + MIN(4 - iDistance, 0);  // 4 because action may still be spread out over the zone
-#endif
 #else
 								iMultiplier = (m_iTacticalRange + 4 - iDistance);  // "4" so unit strength isn't totally dominated by proximity to city
 #endif
@@ -1031,11 +1017,7 @@ void CvTacticalAnalysisMap::CalculateMilitaryStrengths()
 										if (iDistance <= m_iTacticalRange)
 										{
 #ifdef AUI_TACTICAL_ANALYSIS_MAP_CALCULATE_MILITARY_STRENGTHS_LIMITED_DISTANCE_DROPOFF
-#ifdef AUI_FAST_COMP
-											iMultiplier = m_iTacticalRange + FASTMIN(4 - iDistance, 0);  // 4 because action may still be spread out over the zone
-#else
 											iMultiplier = m_iTacticalRange + MIN(4 - iDistance, 0);  // 4 because action may still be spread out over the zone
-#endif
 #else
 											iMultiplier = (m_iTacticalRange + 4 - iDistance);  // "4" so unit strength isn't totally dominated by proximity to city
 #endif

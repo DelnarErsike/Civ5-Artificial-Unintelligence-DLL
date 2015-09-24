@@ -40,7 +40,7 @@ void CvUnitMovement::GetCostsForMove(const CvUnit* pUnit, const CvPlot* pFromPlo
 		if(iRegularCost > 0)
 		{
 #ifdef AUI_FAST_COMP
-			iRegularCost = FASTMAX(1, (iRegularCost - pUnit->getExtraMoveDiscount()));
+			iRegularCost = MAX(1, (iRegularCost - pUnit->getExtraMoveDiscount()));
 #else
 			iRegularCost = std::max(1, (iRegularCost - pUnit->getExtraMoveDiscount()));
 #endif
@@ -74,7 +74,7 @@ void CvUnitMovement::GetCostsForMove(const CvUnit* pUnit, const CvPlot* pFromPlo
 	}
 
 #ifdef AUI_FAST_COMP
-	iRegularCost = FASTMIN(iRegularCost, (iBaseMoves * iMoveDenominator));
+	iRegularCost = MIN(iRegularCost, (iBaseMoves * iMoveDenominator));
 #else
 	iRegularCost = std::min(iRegularCost, (iBaseMoves * iMoveDenominator));
 #endif
@@ -112,11 +112,11 @@ void CvUnitMovement::GetCostsForMove(const CvUnit* pUnit, const CvPlot* pFromPlo
 
 #ifdef AUI_FAST_COMP
 #ifdef AUI_UNIT_MOVEMENT_IROQUOIS_ROAD_TRANSITION_FIX
-		iRouteCost = FASTMAX(iFromMovementCost + kUnitTeam.getRouteChange(eFromPlotRoute), iMovementCost + kUnitTeam.getRouteChange(eToPlotRoute));
+		iRouteCost = MAX(iFromMovementCost + kUnitTeam.getRouteChange(eFromPlotRoute), iMovementCost + kUnitTeam.getRouteChange(eToPlotRoute));
 #else
-		iRouteCost = FASTMAX(iFromMovementCost + kUnitTeam.getRouteChange(pFromPlot->getRouteType()), iMovementCost + kUnitTeam.getRouteChange(pToPlot->getRouteType()));
+		iRouteCost = MAX(iFromMovementCost + kUnitTeam.getRouteChange(pFromPlot->getRouteType()), iMovementCost + kUnitTeam.getRouteChange(pToPlot->getRouteType()));
 #endif
-		iRouteFlatCost = FASTMAX(iFromFlatMovementCost * iBaseMoves, iFlatMovementCost * iBaseMoves);
+		iRouteFlatCost = MAX(iFromFlatMovementCost * iBaseMoves, iFlatMovementCost * iBaseMoves);
 #else
 #ifdef AUI_UNIT_MOVEMENT_IROQUOIS_ROAD_TRANSITION_FIX
 		iRouteCost = std::max(iFromMovementCost + kUnitTeam.getRouteChange(eFromPlotRoute), iMovementCost + kUnitTeam.getRouteChange(eToPlotRoute));
@@ -197,7 +197,7 @@ int CvUnitMovement::MovementCost(const CvUnit* pUnit, const CvPlot* pFromPlot, c
 	GetCostsForMove(pUnit, pFromPlot, pToPlot, iBaseMoves, iRegularCost, iRouteCost, iRouteFlatCost);
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, FASTMIN(iRegularCost, FASTMIN(iRouteCost, iRouteFlatCost)));
+	return MAX(1, MIN(iRegularCost, MIN(iRouteCost, iRouteFlatCost)));
 #else
 	return std::max(1, std::min(iRegularCost, std::min(iRouteCost, iRouteFlatCost)));
 #endif
@@ -227,7 +227,7 @@ int CvUnitMovement::MovementCostNoZOC(const CvUnit* pUnit, const CvPlot* pFromPl
 	GetCostsForMove(pUnit, pFromPlot, pToPlot, iBaseMoves, iRegularCost, iRouteCost, iRouteFlatCost);
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, FASTMIN(iRegularCost, FASTMIN(iRouteCost, iRouteFlatCost)));
+	return MAX(1, MIN(iRegularCost, MIN(iRouteCost, iRouteFlatCost)));
 #else
 	return std::max(1, std::min(iRegularCost, std::min(iRouteCost, iRouteFlatCost)));
 #endif

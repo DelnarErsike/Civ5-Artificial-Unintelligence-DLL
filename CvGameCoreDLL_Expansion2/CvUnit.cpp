@@ -1342,9 +1342,9 @@ void CvUnit::convert(CvUnit* pUnit, bool bIsUpgrade)
 	setLevel(pUnit->getLevel());
 #endif
 #ifdef AUI_FAST_COMP
-	int iOldModifier = FASTMAX(1, 100 + GET_PLAYER(pUnit->getOwner()).getLevelExperienceModifier());
-	int iOurModifier = FASTMAX(1, 100 + GET_PLAYER(getOwner()).getLevelExperienceModifier());
-	setExperience(FASTMAX(0, (pUnit->getExperience() * iOurModifier) / iOldModifier));
+	int iOldModifier = MAX(1, 100 + GET_PLAYER(pUnit->getOwner()).getLevelExperienceModifier());
+	int iOurModifier = MAX(1, 100 + GET_PLAYER(getOwner()).getLevelExperienceModifier());
+	setExperience(MAX(0, (pUnit->getExperience() * iOurModifier) / iOldModifier));
 #else
 	int iOldModifier = std::max(1, 100 + GET_PLAYER(pUnit->getOwner()).getLevelExperienceModifier());
 	int iOurModifier = std::max(1, 100 + GET_PLAYER(getOwner()).getLevelExperienceModifier());
@@ -2707,13 +2707,8 @@ bool CvUnit::willRevealByMove(const CvPlot& plot) const
 	CvPlot* pLoopPlot;
 	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iDY);
-		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(plot.getX(), plot.getY(), iDX, iDY);
@@ -3737,13 +3732,8 @@ bool CvUnit::jumpToNearestValidPlotWithinRange(int iRange)
 	int iMaxDX, iDX;
 	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iDY);
-		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -4662,7 +4652,7 @@ int CvUnit::GetCaptureChance(CvUnit *pEnemy)
 				int iMyCombat = m_pUnitInfo->GetCombat();
 				int iComputedChance = GC.getCOMBAT_CAPTURE_MIN_CHANCE() + (int)(((float)iMyCombat / (float)iTheirCombat) * GC.getCOMBAT_CAPTURE_RATIO_MULTIPLIER());
 #ifdef AUI_FAST_COMP
-				iRtnValue = FASTMIN(GC.getCOMBAT_CAPTURE_MAX_CHANCE(), iComputedChance);
+				iRtnValue = MIN(GC.getCOMBAT_CAPTURE_MAX_CHANCE(), iComputedChance);
 #else
 				iRtnValue = min(GC.getCOMBAT_CAPTURE_MAX_CHANCE(), iComputedChance);
 #endif
@@ -4758,13 +4748,8 @@ bool CvUnit::canEmbark(const CvPlot* pPlot) const
 	CvPlot* pEvalPlot;
 	for (int iY = -iRange; iY <= iRange; iY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iY);
-		for (iX = -iRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iY);
 		for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pEvalPlot = plotXY(pPlot->getX(), pPlot->getY(), iX, iY);
@@ -4844,13 +4829,8 @@ bool CvUnit::canDisembark(const CvPlot* pPlot) const
 	CvPlot* pEvalPlot;
 	for (int iY = -iRange; iY <= iRange; iY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iY);
-		for (iX = -iRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iY);
 		for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pEvalPlot = plotXY(pPlot->getX(), pPlot->getY(), iX, iY);
@@ -6068,13 +6048,8 @@ bool CvUnit::isNukeVictim(const CvPlot* pPlot, TeamTypes eTeam) const
 	int iMaxDX;
 	for (iDY = -iBlastRadius; iDY <= iBlastRadius; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iBlastRadius - FASTMAX(0, iDY);
-		for (iDX = -iBlastRadius - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iBlastRadius - MAX(0, iDY);
 		for (iDX = -iBlastRadius - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -6934,11 +6909,7 @@ int CvUnit::getExoticGoodsGoldAmount()
 
 		int iExtraGold = GC.getEXOTIC_GOODS_GOLD_MAX() - GC.getEXOTIC_GOODS_GOLD_MIN();
 		iValue = GC.getEXOTIC_GOODS_GOLD_MIN() + (int)(iExtraGold * fDistanceFactor);
-#ifdef AUI_FAST_COMP
-		iValue = FASTMIN(iValue, GC.getEXOTIC_GOODS_GOLD_MAX());
-#else
 		iValue = MIN(iValue, GC.getEXOTIC_GOODS_GOLD_MAX());
-#endif
 	}
 	return iValue;
 }
@@ -6953,11 +6924,7 @@ int CvUnit::getExoticGoodsXPAmount()
 
 		int iExtraXP = GC.getEXOTIC_GOODS_XP_MAX() - GC.getEXOTIC_GOODS_XP_MIN();
 		iValue = GC.getEXOTIC_GOODS_XP_MIN() + (int)(iExtraXP * fDistanceFactor);
-#ifdef AUI_FAST_COMP
-		iValue = FASTMIN(iValue, GC.getEXOTIC_GOODS_XP_MAX());
-#else
 		iValue = MIN(iValue, GC.getEXOTIC_GOODS_XP_MAX());
-#endif
 	}
 	return iValue;
 }
@@ -7420,7 +7387,7 @@ bool CvUnit::pillage()
 		else
 		{
 #ifdef AUI_FAST_COMP
-			int iHealAmount = FASTMIN(getDamage(), GC.getPILLAGE_HEAL_AMOUNT());
+			int iHealAmount = MIN(getDamage(), GC.getPILLAGE_HEAL_AMOUNT());
 #else
 			int iHealAmount = min(getDamage(), GC.getPILLAGE_HEAL_AMOUNT());
 #endif
@@ -8239,11 +8206,7 @@ int CvUnit::getDiscoverAmount()
 			if (pPlayer->GetGreatScientistBeakerMod() != 0)
 			{
 				iValue += (iValue * pPlayer->GetGreatScientistBeakerMod()) / 100;
-#ifdef AUI_FAST_COMP
-				iValue = FASTMAX(iValue, 0); // Cannot be negative
-#else
 				iValue = MAX(iValue, 0); // Cannot be negative
-#endif
 			}
 
 			// Modify based on game speed
@@ -8394,7 +8357,7 @@ int CvUnit::getMaxHurryProduction(CvCity* pCity) const
 	iProduction /= 100;
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, iProduction);
+	return MAX(0, iProduction);
 #else
 	return std::max(0, iProduction);
 #endif
@@ -8417,9 +8380,9 @@ int CvUnit::getHurryProduction(const CvPlot* pPlot) const
 	iProduction = getMaxHurryProduction(pCity);
 
 #ifdef AUI_FAST_COMP
-	iProduction = FASTMIN(pCity->productionLeft(), iProduction);
+	iProduction = MIN(pCity->productionLeft(), iProduction);
 
-	return FASTMAX(0, iProduction);
+	return MAX(0, iProduction);
 #else
 	iProduction = std::min(pCity->productionLeft(), iProduction);
 
@@ -8560,7 +8523,7 @@ int CvUnit::getTradeGold(const CvPlot* /*pPlot*/) const
 	iGold /= 100;
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, iGold);
+	return MAX(0, iGold);
 #else
 	return std::max(0, iGold);
 #endif
@@ -9048,13 +9011,8 @@ void CvUnit::PerformCultureBomb(int iRadius)
 	int iMaxDX, iDX;
 	for (int iDY = -iBombRange; iDY <= iBombRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iBombRange - FASTMAX(0, iDY);
-		for (iDX = -iBombRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iBombRange - MAX(0, iDY);
 		for (iDX = -iBombRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -9999,7 +9957,7 @@ int CvUnit::getStackExperienceToGive(int iNumUnits) const
 {
 	VALIDATE_OBJECT
 #ifdef AUI_FAST_COMP
-	return (getUnitInfo().GetLeaderExperience() * (100 + FASTMIN(50, (iNumUnits - 1) * GC.getWARLORD_EXTRA_EXPERIENCE_PER_UNIT_PERCENT()))) / 100;
+	return (getUnitInfo().GetLeaderExperience() * (100 + MIN(50, (iNumUnits - 1) * GC.getWARLORD_EXTRA_EXPERIENCE_PER_UNIT_PERCENT()))) / 100;
 #else
 	return (getUnitInfo().GetLeaderExperience() * (100 + std::min(50, (iNumUnits - 1) * GC.getWARLORD_EXTRA_EXPERIENCE_PER_UNIT_PERCENT()))) / 100;
 #endif
@@ -10194,7 +10152,7 @@ int CvUnit::upgradePrice(UnitTypes eUnit) const
 	CvPlayerAI& kPlayer = GET_PLAYER(getOwner());
 
 #ifdef AUI_FAST_COMP
-	iPrice += (FASTMAX(0, (kPlayer.getProductionNeeded(eUnit) - kPlayer.getProductionNeeded(getUnitType()))) * /*2*/ GC.getUNIT_UPGRADE_COST_PER_PRODUCTION());
+	iPrice += (MAX(0, (kPlayer.getProductionNeeded(eUnit) - kPlayer.getProductionNeeded(getUnitType()))) * /*2*/ GC.getUNIT_UPGRADE_COST_PER_PRODUCTION());
 #else
 	iPrice += (std::max(0, (kPlayer.getProductionNeeded(eUnit) - kPlayer.getProductionNeeded(getUnitType()))) * /*2*/ GC.getUNIT_UPGRADE_COST_PER_PRODUCTION());
 #endif
@@ -10218,7 +10176,7 @@ int CvUnit::upgradePrice(UnitTypes eUnit) const
 		iPrice /= 100;
 
 #ifdef AUI_FAST_COMP
-		iPrice *= FASTMAX(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GET_TEAM(getTeam()).GetCurrentEra()) + 100));
+		iPrice *= MAX(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GET_TEAM(getTeam()).GetCurrentEra()) + 100));
 #else
 		iPrice *= std::max(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GET_TEAM(getTeam()).GetCurrentEra()) + 100));
 #endif
@@ -10580,7 +10538,7 @@ int CvUnit::movesLeft() const
 {
 	VALIDATE_OBJECT
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, getMoves());
+	return MAX(0, getMoves());
 #else
 	return std::max(0, getMoves());
 #endif
@@ -10621,11 +10579,7 @@ int CvUnit::GetRangePlusMoveToshot(bool bWithRoads) const
 		IncreaseMoveRangeForRoads(this, iMoveRange);
 	}
 #endif
-#ifdef AUI_FAST_COMP
-	return FASTMAX(GetRange(), 1) + FASTMAX(iMoveRange - 1 - getMustSetUpToRangedAttackCount(), 0);
-#else
 	return MAX(GetRange(), 1) + MAX(iMoveRange - 1 - getMustSetUpToRangedAttackCount(), 0);
-#endif
 }
 #endif
 
@@ -10735,7 +10689,7 @@ int CvUnit::workRate(bool bMax, BuildTypes /*eBuild*/) const
 	CvPlayerAI& kPlayer = GET_PLAYER(getOwner());
 
 #ifdef AUI_FAST_COMP
-	iRate *= FASTMAX(0, (kPlayer.getWorkerSpeedModifier() + kPlayer.GetPlayerTraits()->GetWorkerSpeedModifier() + 100));
+	iRate *= MAX(0, (kPlayer.getWorkerSpeedModifier() + kPlayer.GetPlayerTraits()->GetWorkerSpeedModifier() + 100));
 #else
 	iRate *= std::max(0, (kPlayer.getWorkerSpeedModifier() + kPlayer.GetPlayerTraits()->GetWorkerSpeedModifier() + 100));
 #endif
@@ -10744,7 +10698,7 @@ int CvUnit::workRate(bool bMax, BuildTypes /*eBuild*/) const
 	if(!kPlayer.isHuman() && !kPlayer.IsAITeammateOfHuman() && !kPlayer.isBarbarian())
 	{
 #ifdef AUI_FAST_COMP
-		iRate *= FASTMAX(0, (GC.getGame().getHandicapInfo().getAIWorkRateModifier() + 100));
+		iRate *= MAX(0, (GC.getGame().getHandicapInfo().getAIWorkRateModifier() + 100));
 #else
 		iRate *= std::max(0, (GC.getGame().getHandicapInfo().getAIWorkRateModifier() + 100));
 #endif
@@ -11014,7 +10968,7 @@ int CvUnit::GetStrategicResourceCombatPenalty() const
 	}
 
 #ifdef AUI_FAST_COMP
-	iPenalty = FASTMAX(iPenalty, GC.getSTRATEGIC_RESOURCE_EXHAUSTED_PENALTY());
+	iPenalty = MAX(iPenalty, GC.getSTRATEGIC_RESOURCE_EXHAUSTED_PENALTY());
 #else
 	iPenalty = max(iPenalty, GC.getSTRATEGIC_RESOURCE_EXHAUSTED_PENALTY());
 #endif
@@ -11032,7 +10986,7 @@ int CvUnit::GetUnhappinessCombatPenalty() const
 	{
 		iPenalty = (-1 * kPlayer.GetExcessHappiness()) * GC.getVERY_UNHAPPY_COMBAT_PENALTY_PER_UNHAPPY();
 #ifdef AUI_FAST_COMP
-		iPenalty = FASTMAX(iPenalty, GC.getVERY_UNHAPPY_MAX_COMBAT_PENALTY());
+		iPenalty = MAX(iPenalty, GC.getVERY_UNHAPPY_MAX_COMBAT_PENALTY());
 #else
 		iPenalty = max(iPenalty, GC.getVERY_UNHAPPY_MAX_COMBAT_PENALTY());
 #endif
@@ -11560,7 +11514,7 @@ int CvUnit::GetMaxAttackStrength(const CvPlot* pFromPlot, const CvPlot* pToPlot,
 	iCombat = GetBaseCombatStrength(bIsEmbarkedAttackingLand) * (iModifier + 100);
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, iCombat);
+	return MAX(1, iCombat);
 #else
 	return std::max(1, iCombat);
 #endif
@@ -11705,7 +11659,7 @@ int CvUnit::GetMaxDefenseStrength(const CvPlot* pInPlot, const CvUnit* pAttacker
 	}
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, iCombat);
+	return MAX(1, iCombat);
 #else
 	return std::max(1, iCombat);
 #endif
@@ -12329,7 +12283,7 @@ int CvUnit::GetMaxRangedCombatStrength(const CvUnit* pOtherUnit, const CvCity* p
 	iCombat = (iStr * (iModifier + 100));
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, iCombat);
+	return MAX(1, iCombat);
 #else
 	return std::max(1, iCombat);
 #endif
@@ -12498,7 +12452,7 @@ int CvUnit::GetAirCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bInc
 	iAttackerDamage /= 100;
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, iAttackerDamage);
+	return MAX(1, iAttackerDamage);
 #else
 	iAttackerDamage = max(1,iAttackerDamage);
 
@@ -12666,7 +12620,7 @@ int CvUnit::GetRangeCombatDamage(const CvUnit* pDefender, CvCity* pCity, bool bI
 	iAttackerDamage /= 100;
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, iAttackerDamage);
+	return MAX(1, iAttackerDamage);
 #else
 	iAttackerDamage = max(1,iAttackerDamage);
 
@@ -12751,7 +12705,7 @@ int CvUnit::GetAirStrikeDefenseDamage(const CvUnit* pAttacker, bool bIncludeRand
 	iDefenderDamage /= 100;
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, iDefenderDamage);
+	return MAX(1, iDefenderDamage);
 #else
 	iDefenderDamage = max(1,iDefenderDamage);
 
@@ -13074,7 +13028,7 @@ int CvUnit::GetInterceptionDamage(const CvUnit* pAttacker, bool bIncludeRand) co
 	iInterceptorDamage /= 100;
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, iInterceptorDamage);
+	return MAX(1, iInterceptorDamage);
 #else
 	iInterceptorDamage = max(1,iInterceptorDamage);
 
@@ -13250,7 +13204,7 @@ int CvUnit::maxXPValue() const
 	if(isBarbarian())
 	{
 #ifdef AUI_FAST_COMP
-		iMaxValue = FASTMIN(iMaxValue, GC.getBARBARIAN_MAX_XP_VALUE());
+		iMaxValue = MIN(iMaxValue, GC.getBARBARIAN_MAX_XP_VALUE());
 #else
 		iMaxValue = std::min(iMaxValue, GC.getBARBARIAN_MAX_XP_VALUE());
 #endif
@@ -13265,7 +13219,7 @@ int CvUnit::firstStrikes() const
 {
 	VALIDATE_OBJECT
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, getExtraFirstStrikes());
+	return MAX(0, getExtraFirstStrikes());
 #else
 	return std::max(0, getExtraFirstStrikes());
 #endif
@@ -13277,7 +13231,7 @@ int CvUnit::chanceFirstStrikes() const
 {
 	VALIDATE_OBJECT
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, getExtraChanceFirstStrikes());
+	return MAX(0, getExtraChanceFirstStrikes());
 #else
 	return std::max(0, getExtraChanceFirstStrikes());
 #endif
@@ -13788,7 +13742,7 @@ int CvUnit::maxInterceptionProbability() const
 {
 	VALIDATE_OBJECT
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, getExtraIntercept());
+	return MAX(0, getExtraIntercept());
 #else
 	return std::max(0, getExtraIntercept());
 #endif
@@ -13815,7 +13769,7 @@ int CvUnit::evasionProbability() const
 {
 	VALIDATE_OBJECT
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, getExtraEvasion());
+	return MAX(0, getExtraEvasion());
 #else
 	return std::max(0, getExtraEvasion());
 #endif
@@ -13827,7 +13781,7 @@ int CvUnit::withdrawalProbability() const
 {
 	VALIDATE_OBJECT
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, getExtraWithdrawal());
+	return MAX(0, getExtraWithdrawal());
 #else
 	return std::max(0, getExtraWithdrawal());
 #endif
@@ -14502,7 +14456,7 @@ int CvUnit::cargoSpaceAvailable(SpecialUnitTypes eSpecialCargo, DomainTypes eDom
 	}
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, (cargoSpace() - getCargo()));
+	return MAX(0, (cargoSpace() - getCargo()));
 #else
 	return std::max(0, (cargoSpace() - getCargo()));
 #endif
@@ -15393,13 +15347,8 @@ void CvUnit::setXY(int iX, int iY, bool bGroup, bool bUpdate, bool bShow, bool b
 	CvPlot* pTargetPlot;
 	for (int iDY = -iAttackRange; iDY <= iAttackRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iAttackRange - FASTMAX(0, iDY);
-		for (iDX = -iAttackRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iAttackRange - MAX(0, iDY);
 		for (iDX = -iAttackRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pTargetPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -16020,7 +15969,7 @@ void CvUnit::setExperience(int iNewValue, int iMax)
 		int iExperienceChange = iNewValue - getExperience();
 
 #ifdef AUI_FAST_COMP
-		m_iExperience = FASTMIN(((iMax == -1) ? INT_MAX : iMax), iNewValue);
+		m_iExperience = MIN(((iMax == -1) ? INT_MAX : iMax), iNewValue);
 #else
 		m_iExperience = std::min(((iMax == -1) ? INT_MAX : iMax), iNewValue);
 #endif
@@ -16157,7 +16106,7 @@ void CvUnit::changeExperience(int iChange, int iMax, bool bFromCombat, bool bInB
 			else
 			{
 #ifdef AUI_FAST_COMP
-				int iModdedChange = FASTMIN(iMax - m_iExperience, iChange);
+				int iModdedChange = MIN(iMax - m_iExperience, iChange);
 #else
 				int iModdedChange = min(iMax - m_iExperience, iChange);
 #endif
@@ -16178,7 +16127,7 @@ void CvUnit::changeExperience(int iChange, int iMax, bool bFromCombat, bool bInB
 		if(getExperiencePercent() != 0)
 		{
 #ifdef AUI_FAST_COMP
-			iUnitExperience *= FASTMAX(0, 100 + getExperiencePercent());
+			iUnitExperience *= MAX(0, 100 + getExperiencePercent());
 #else
 			iUnitExperience *= std::max(0, 100 + getExperiencePercent());
 #endif
@@ -17374,13 +17323,8 @@ bool CvUnit::IsNearEnemyCitadel(int& iCitadelDamage)
 #ifdef AUI_HEXSPACE_DX_LOOPS
 	for (int iDY = -iCitadelRange; iDY <= iCitadelRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		int iMaxDX = iCitadelRange - FASTMAX(0, iDY);
-		for (int iDX = -iCitadelRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		int iMaxDX = iCitadelRange - MAX(0, iDY);
 		for (int iDX = -iCitadelRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
@@ -17460,13 +17404,8 @@ bool CvUnit::IsNearGreatGeneral() const
 	int iMaxDX, iDX;
 	for (int iDY = -iGreatGeneralRange; iDY <= iGreatGeneralRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iGreatGeneralRange - FASTMAX(0, iDY);
-		for (iDX = -iGreatGeneralRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iGreatGeneralRange - MAX(0, iDY);
 		for (iDX = -iGreatGeneralRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
@@ -17668,13 +17607,8 @@ int CvUnit::GetReverseGreatGeneralModifier()const
 	int iMaxDX, iX;
 	for (int iY = -iGreatGeneralRange; iY <= iGreatGeneralRange; iY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iGreatGeneralRange - FASTMAX(0, iY);
-		for (iX = -iGreatGeneralRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iGreatGeneralRange - MAX(0, iY);
 		for (iX = -iGreatGeneralRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
@@ -17766,13 +17700,8 @@ int CvUnit::GetNearbyImprovementModifier()const
 #ifdef AUI_HEXSPACE_DX_LOOPS
 		for (int iY = -iImprovementRange; iY <= iImprovementRange; iY++)
 		{
-#ifdef AUI_FAST_COMP
-			int iMaxDX = iImprovementRange - FASTMAX(0, iY);
-			for (int iX = -iImprovementRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			int iMaxDX = iImprovementRange - MAX(0, iY);
 			for (int iX = -iImprovementRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				// No need for range check because loops are set up properly
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
@@ -17986,13 +17915,8 @@ bool CvUnit::IsNearSapper(const CvCity* pTargetCity) const
 	int iMaxDX, iX;
 	for (int iY = -iSapperRange; iY <= iSapperRange; iY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iSapperRange - FASTMAX(0, iY);
-		for (iX = -iSapperRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iSapperRange - MAX(0, iY);
 		for (iX = -iSapperRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 #ifdef AUI_UNIT_EXTRA_IN_OTHER_PLOT_HELPERS
@@ -19739,7 +19663,7 @@ int CvUnit::getSubUnitsAlive(int iDamage) const
 	else
 	{
 #ifdef AUI_FAST_COMP
-		return FASTMAX(1, (((getUnitInfo().GetGroupSize() * (GetMaxHitPoints() - iDamage)) + (GetMaxHitPoints() / ((getUnitInfo().GetGroupSize() * 2) + 1))) / GetMaxHitPoints()));
+		return MAX(1, (((getUnitInfo().GetGroupSize() * (GetMaxHitPoints() - iDamage)) + (GetMaxHitPoints() / ((getUnitInfo().GetGroupSize() * 2) + 1))) / GetMaxHitPoints()));
 #else
 		return std::max(1, (((getUnitInfo().GetGroupSize() * (GetMaxHitPoints() - iDamage)) + (GetMaxHitPoints() / ((getUnitInfo().GetGroupSize() * 2) + 1))) / GetMaxHitPoints()));
 #endif
@@ -20534,16 +20458,16 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, co
 		if (IsCanAttackRanged())
 		{
 			// iXVariance and iYVariance construct a diamond of plots to check
-			int iXVariance = FASTMAX(abs(iFromX - iToX) >> 1, baseMoves() - 1);
-			int iYVariance = FASTMAX(abs(iFromY - iToY) >> 1, baseMoves() - 1);
+			int iXVariance = MAX(abs(iFromX - iToX) >> 1, baseMoves() - 1);
+			int iYVariance = MAX(abs(iFromY - iToY) >> 1, baseMoves() - 1);
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
 			IncreaseMoveRangeForRoads(this, iXVariance);
 			IncreaseMoveRangeForRoads(this, iYVariance);
 #endif
-			int iXMin = FASTMIN(iFromX, iToX) - iYVariance;
-			iXMax = FASTMAX(iFromX, iToX) + iYVariance;
-			iYMin = FASTMIN(iFromY, iToY) - iXVariance;
-			iYMax = FASTMAX(iFromY, iToY) + iXVariance;
+			int iXMin = MIN(iFromX, iToX) - iYVariance;
+			iXMax = MAX(iFromX, iToX) + iYVariance;
+			iYMin = MIN(iFromY, iToY) - iXVariance;
+			iYMax = MAX(iFromY, iToY) + iXVariance;
 
 			if (!bExitOnFound)
 			{
@@ -20622,7 +20546,7 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, co
 						}
 						if (iMovementLeft > 0)
 						{
-							iMovementLeft += FASTMAX(GC.getMOVE_DENOMINATOR(), pTargetPlot->movementCost(this, pLoopPlot));
+							iMovementLeft += MAX(GC.getMOVE_DENOMINATOR(), pTargetPlot->movementCost(this, pLoopPlot));
 						}
 					}
 					// First pathfinder check is just to make sure we can attack, second one is the one whose node is stored
@@ -20644,20 +20568,11 @@ bool CvUnit::GetMovablePlotListOpt(BaseVector<const CvPlot*, true>& plotData, co
 	// Delnar: Try not to use anything with WithinTurns > 1, otherwise AI turns would take forever (it will work, but a lot of tiles will be filled)
 	else
 	{
-#ifdef AUI_FAST_COMP
-		int iRange = FASTMIN((getMoves() + GC.getMOVE_DENOMINATOR() - 1) / GC.getMOVE_DENOMINATOR(), baseMoves());
-#else
 		int iRange = MIN((getMoves() + GC.getMOVE_DENOMINATOR() - 1) / GC.getMOVE_DENOMINATOR(), baseMoves());
-#endif
 		for (iDY = -iRange; iDY <= iRange; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			int iMaxDX = iRange - FASTMAX(0, iDY);
-			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
-			iMaxDX = iRange - MAX(0, iDY);
+			int iMaxDX = iRange - MAX(0, iDY);
 			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				pLoopPlot = plotXY(iFromX, iFromY, iDX, iDY);
 				if (pLoopPlot && pLoopPlot != pTargetPlot)
@@ -21415,13 +21330,8 @@ bool CvUnit::SentryAlert() const
 		CvPlot* pPlot;
 		for (int iY = -iRange; iY <= iRange; iY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iRange - FASTMAX(0, iY);
-			for (iX = -iRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iRange - MAX(0, iY);
 			for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				// No need for range check because loops are set up properly
 				pPlot = plotXY(getX(), getY(), iX, iY);
@@ -23634,8 +23544,8 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	if (dTemp != 0)
 	{
 		dTemp += getAdjacentTileHeal();
-		int iBaseHeal = FASTMIN(GC.getENEMY_HEAL_RATE() + getExtraEnemyHeal() + pkPromotionInfo->GetEnemyHealChange(), 
-			FASTMIN(GC.getNEUTRAL_HEAL_RATE() + getExtraNeutralHeal() + pkPromotionInfo->GetNeutralHealChange(), 
+		int iBaseHeal = MIN(GC.getENEMY_HEAL_RATE() + getExtraEnemyHeal() + pkPromotionInfo->GetEnemyHealChange(), 
+			MIN(GC.getNEUTRAL_HEAL_RATE() + getExtraNeutralHeal() + pkPromotionInfo->GetNeutralHealChange(), 
 			GC.getFRIENDLY_HEAL_RATE() + getExtraFriendlyHeal() + pkPromotionInfo->GetFriendlyHealChange()));
 		dTemp *= 2 * dTemp / (dTemp + iBaseHeal);
 		if (!IsCombatUnit() || GC.getPLOT_UNIT_LIMIT() > 1)
@@ -23738,7 +23648,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 
 	if (pkPromotionInfo->IsHealOutsideFriendly() && getDomainType() == DOMAIN_SEA)
 	{
-		dValue += FASTMIN(GC.getENEMY_HEAL_RATE() + pkPromotionInfo->GetEnemyHealChange() + getExtraEnemyHeal(), GC.getNEUTRAL_HEAL_RATE() + pkPromotionInfo->GetNeutralHealChange() + getExtraNeutralHeal()) * 5 / 2 + iFlavorDefense * 2;
+		dValue += MIN(GC.getENEMY_HEAL_RATE() + pkPromotionInfo->GetEnemyHealChange() + getExtraEnemyHeal(), GC.getNEUTRAL_HEAL_RATE() + pkPromotionInfo->GetNeutralHealChange() + getExtraNeutralHeal()) * 5 / 2 + iFlavorDefense * 2;
 	}
 
 	dTemp = (double)pkPromotionInfo->GetMovesChange(); // Mobility
@@ -23758,7 +23668,7 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 		if (getDomainType() == DOMAIN_AIR)
 			dTemp = GC.getFRIENDLY_HEAL_RATE() * 0xfff;
 		else
-			dTemp = FASTMIN(GC.getENEMY_HEAL_RATE() + getExtraEnemyHeal(), FASTMIN(GC.getNEUTRAL_HEAL_RATE() + getExtraNeutralHeal(), GC.getFRIENDLY_HEAL_RATE() + getExtraFriendlyHeal()));
+			dTemp = MIN(GC.getENEMY_HEAL_RATE() + getExtraEnemyHeal(), MIN(GC.getNEUTRAL_HEAL_RATE() + getExtraNeutralHeal(), GC.getFRIENDLY_HEAL_RATE() + getExtraFriendlyHeal()));
 		if (IsCanAttackRanged())
 			dTemp *= 4;
 		if (isBlitz() || getNumAttacks() > 1 || canMoveAfterAttacking() || pkPromotionInfo->IsBlitz() || pkPromotionInfo->GetExtraAttacks() > 0 || pkPromotionInfo->IsCanMoveAfterAttacking())

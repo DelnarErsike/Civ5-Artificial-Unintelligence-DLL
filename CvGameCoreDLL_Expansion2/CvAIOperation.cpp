@@ -6103,13 +6103,8 @@ CvPlot* CvAIOperationNukeAttack::FindBestTarget()
 						CvPlot* pLoopPlot;
 						for (int iDY = -iBlastRadius; iDY <= iBlastRadius; iDY++)
 						{
-#ifdef AUI_FAST_COMP
-							iMaxDX = iBlastRadius - FASTMAX(0, iDY);
-							for (iDX = -iBlastRadius - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 							iMaxDX = iBlastRadius - MAX(0, iDY);
 							for (iDX = -iBlastRadius - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 							{
 								// No need for range check because loops are set up properly
 								pLoopPlot = plotXY(pCityPlot->getX(), pCityPlot->getY(), iDX, iDY);

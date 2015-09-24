@@ -221,13 +221,8 @@ bool CvCitySiteEvaluator::CanFound(CvPlot* pPlot, const CvPlayer* pPlayer, bool 
 		int iMaxDX;
 		for (iDY = -iRange; iDY <= iRange; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iRange - FASTMAX(0, iDY);
-			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iRange - MAX(0, iDY);
 			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
 #else
@@ -522,24 +517,14 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 	int iDX, iMaxDX;
 	for (int iDY = -(NUM_CITY_RINGS + NUM_CITY_RINGS + 1); iDY <= (NUM_CITY_RINGS + NUM_CITY_RINGS + 1); iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = (NUM_CITY_RINGS + NUM_CITY_RINGS + 1) - FASTMAX(0, iDY);
-		for (iDX = -(NUM_CITY_RINGS + NUM_CITY_RINGS + 1) - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = (NUM_CITY_RINGS + NUM_CITY_RINGS + 1) - MAX(0, iDY);
 		for (iDX = -(NUM_CITY_RINGS + NUM_CITY_RINGS + 1) - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 #elif defined(AUI_HEXSPACE_DX_LOOPS)
 	int iDX, iMaxDX;
 	for (int iDY = -7; iDY <= 7; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = 7 - FASTMAX(0, iDY);
-		for (iDX = -7 - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = 7 - MAX(0, iDY);
 		for (iDX = -7 - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 #else
 	for (int iDX = -7; iDX <= 7; iDX++)
 	{
@@ -1143,11 +1128,11 @@ int CvCitySiteEvaluator::PlotFoundValue(CvPlot* pPlot, CvPlayer* pPlayer, YieldT
 		iSweetSpot += (iExpansionFlavor < 4) ?  1 : 0;
 #ifdef AUI_FAST_COMP
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT
-		iSweetSpot = FASTMAX(AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT, iSweetSpot);
+		iSweetSpot = MAX(AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT, iSweetSpot);
 #else
-		iSweetSpot = FASTMAX(4,iSweetSpot);
+		iSweetSpot = MAX(4,iSweetSpot);
 #endif
-		iSweetSpot = FASTMIN(6,iSweetSpot);
+		iSweetSpot = MIN(6,iSweetSpot);
 #else
 #ifdef AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT
 		iSweetSpot = max(AUI_SITE_EVALUATION_PLOT_FOUND_VALUE_TWEAKED_MINIMUM_SWEET_SPOT, iSweetSpot);
@@ -1533,11 +1518,7 @@ int CvCitySiteEvaluator::ComputeFoodValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (pYieldInfo)
 		{
 			rtnValue += pYieldInfo->getCityChange();
-#ifdef AUI_FAST_COMP
-			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
-#else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif
 		}
 		if (pPlayer)
 		{
@@ -1750,11 +1731,7 @@ int CvCitySiteEvaluator::ComputeProductionValue(CvPlot* pPlot, CvPlayer* pPlayer
 		if (pYieldInfo)
 		{
 			rtnValue += pYieldInfo->getCityChange();
-#ifdef AUI_FAST_COMP
-			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
-#else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif
 		}
 		if (pPlayer)
 		{
@@ -1870,11 +1847,7 @@ int CvCitySiteEvaluator::ComputeGoldValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (pYieldInfo)
 		{
 			rtnValue += pYieldInfo->getCityChange();
-#ifdef AUI_FAST_COMP
-			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
-#else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif
 		}
 		if (pPlayer)
 		{
@@ -1993,11 +1966,7 @@ int CvCitySiteEvaluator::ComputeScienceValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (pYieldInfo)
 		{
 			rtnValue += pYieldInfo->getCityChange();
-#ifdef AUI_FAST_COMP
-			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
-#else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif
 		}
 		if (pPlayer)
 		{
@@ -2117,11 +2086,7 @@ int CvCitySiteEvaluator::ComputeCultureValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (pYieldInfo)
 		{
 			rtnValue += pYieldInfo->getCityChange();
-#ifdef AUI_FAST_COMP
-			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
-#else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif
 		}
 		if (pPlayer)
 		{
@@ -2248,11 +2213,7 @@ int CvCitySiteEvaluator::ComputeFaithValue(CvPlot* pPlot, CvPlayer* pPlayer)
 		if (pYieldInfo)
 		{
 			rtnValue += pYieldInfo->getCityChange();
-#ifdef AUI_FAST_COMP
-			rtnValue = FASTMAX(rtnValue, pYieldInfo->getMinCity());
-#else
 			rtnValue = MAX(rtnValue, pYieldInfo->getMinCity());
-#endif
 		}
 		if (pPlayer)
 		{

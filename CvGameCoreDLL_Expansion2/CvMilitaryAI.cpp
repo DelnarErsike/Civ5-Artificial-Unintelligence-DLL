@@ -4311,13 +4311,8 @@ void CvMilitaryAI::GetNumEnemyAirUnitsInRange(CvPlot* pCenterPlot, int iRange, i
 						CvPlot* pEvalPlot;
 						for (int iDY = -iRange; iDY <= iRange; iDY++)
 						{
-#ifdef AUI_FAST_COMP
-							int iMaxDX = iRange - FASTMAX(0, iDY);
-							for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 							int iMaxDX = iRange - MAX(0, iDY);
 							for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 							{
 								pEvalPlot = plotXY(pCenterPlot->getX(), pCenterPlot->getY(), iDX, iDY);
 								if (pEvalPlot && pEvalPlot != pCenterPlot)
@@ -4459,13 +4454,8 @@ CvPlot *CvMilitaryAI::GetBestAirSweepTarget(CvUnit* pFighter) const
 	int iPlotDanger = 0;
 	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		int iMaxDX = iRange - FASTMAX(0, iDY);
-		for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		int iMaxDX = iRange - MAX(0, iDY);
 		for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			pEvalPlot = plotXY(pFighter->getX(), pFighter->getY(), iDX, iDY);
 			if (pEvalPlot)
@@ -5448,11 +5438,7 @@ int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 	dMultiplier = 0.75 + ((double)pPlayer->GetMilitaryAI()->GetHighestThreat() / 4.0) + ((double)iFlavorNaval / 40.0);
 	dNumUnitsWanted = dNumUnitsWanted * dMultiplier * /*0.67*/ GC.getAI_STRATEGY_NAVAL_UNITS_PER_CITY();
 
-#ifdef AUI_FAST_COMP
-	dNumUnitsWanted = FASTMAX(1.0, dNumUnitsWanted);
-#else
 	dNumUnitsWanted = MAX(1.0, dNumUnitsWanted);
-#endif
 
 	EconomicAIStrategyTypes eStrategyNavalMap = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_NAVAL_MAP");
 	EconomicAIStrategyTypes eExpandOtherContinents = (EconomicAIStrategyTypes)GC.getInfoTypeForString("ECONOMICAISTRATEGY_EXPAND_TO_OTHER_CONTINENTS");
@@ -5472,17 +5458,9 @@ int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 	int iGT = GC.getGame().getGameTurn();
 #ifdef AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING
 	int iMaximumTurn = int(GC.getGame().getEstimateEndTurn() * AUI_MILITARY_FIX_COMPUTE_RECOMMENDED_NAVY_SIZE_GAME_TURN_SCALING + 0.5);
-#ifdef AUI_FAST_COMP
-	iGT = FASTMIN(iGT, iMaximumTurn);
-#else
 	iGT = MIN(iGT, iMaximumTurn);
-#endif
-#else
-#ifdef AUI_FAST_COMP
-	iGT = FASTMIN(iGT, 200);
 #else
 	iGT = MIN(iGT, 200);
-#endif
 #endif
 	AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
 	if (eConquestGrandStrategy != NO_AIGRANDSTRATEGY)

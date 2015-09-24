@@ -330,13 +330,8 @@ void CvCity::init(int iID, PlayerTypes eOwner, int iX, int iY, bool bBumpUnits, 
 	CvPlot* pLoopPlot;
 	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iDY);
-		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -2942,13 +2937,8 @@ void CvCity::DoUpdateFeatureSurrounded()
 	CvPlot* pLoopPlot;
 	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iDY);
-		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -9353,13 +9343,8 @@ bool CvCity::IsBlockaded() const
 	CvPlot* pLoopPlot;
 	for (int iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iDY);
-		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -11260,13 +11245,8 @@ bool CvCity::CanBuyAnyPlot(void)
 	int iMaxDX, iDX;
 	for (int iDY = -iMaxRange; iDY <= iMaxRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iMaxRange - FASTMAX(0, iDY);
-		for (iDX = -iMaxRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iMaxRange - MAX(0, iDY);
 		for (iDX = -iMaxRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -11393,13 +11373,8 @@ void CvCity::GetBuyablePlotList(std::vector<int>& aiPlotList)
 	int iMaxDX;
 	for (iDY = -iMaxRange; iDY <= iMaxRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iMaxRange - FASTMAX(0, iDY);
-		for (iDX = -iMaxRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iMaxRange - MAX(0, iDY);
 		for (iDX = -iMaxRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -12002,13 +11977,8 @@ int CvCity::GetBuyPlotScore(int& iBestX, int& iBestY)
 	int iMaxDX;
 	for (iDY = -iMaxRange; iDY <= iMaxRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iMaxRange - FASTMAX(0, iDY);
-		for (iDX = -iMaxRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iMaxRange - MAX(0, iDY);
 		for (iDX = -iMaxRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -12214,13 +12184,8 @@ void CvCity::DoUpdateCheapestPlotInfluence()
 	int iMaxDX;
 	for (iDY = -iMaxRange; iDY <= iMaxRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iMaxRange - FASTMAX(0, iDY);
-		for (iDX = -iMaxRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iMaxRange - MAX(0, iDY);
 		for (iDX = -iMaxRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -14005,7 +13970,7 @@ void CvCity::doGrowth()
 		else
 		{
 #ifdef AUI_FAST_COMP
-			changeFood(-FASTMAX(0, growthThreshold() - getFoodKept()));
+			changeFood(-MAX(0, growthThreshold() - getFoodKept()));
 #else
 			changeFood(-(std::max(0, (growthThreshold() - getFoodKept()))));
 #endif
@@ -15219,13 +15184,8 @@ bool CvCity::isValidBuildingLocation(BuildingTypes eBuilding) const
 		int iMaxDX, iDX;
 		for (int iDY = -iMountainRange; iDY <= iMountainRange; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iMountainRange - FASTMAX(0, iDY);
-			for (iDX = -iMountainRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iMountainRange - MAX(0, iDY);
 			for (iDX = -iMountainRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				// No need for range check because loops are set up properly
 				pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
@@ -15880,13 +15840,8 @@ void CvCity::DoNearbyEnemy()
 	CvPlot* pLoopPlot;
 	for (int iDY = -iSearchRange; iDY <= iSearchRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iSearchRange - FASTMAX(0, iDY);
-		for (iDX = -iSearchRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iSearchRange - MAX(0, iDY);
 		for (iDX = -iSearchRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);

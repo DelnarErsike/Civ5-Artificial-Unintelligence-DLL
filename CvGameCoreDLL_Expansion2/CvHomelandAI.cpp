@@ -1636,8 +1636,8 @@ void CvHomelandAI::PlotUpgradeMoves()
 		}
 
 #ifdef AUI_FAST_COMP
-		iFlavorMilitaryTraining = FASTMAX(1,iFlavorMilitaryTraining/3);
-		int iBonusUpgrades = FASTMAX(0,GC.getGame().getHandicapInfo().GetID() - 5); // more at the higher difficulties (the AI should have more money to spend)
+		iFlavorMilitaryTraining = MAX(1,iFlavorMilitaryTraining/3);
+		int iBonusUpgrades = MAX(0,GC.getGame().getHandicapInfo().GetID() - 5); // more at the higher difficulties (the AI should have more money to spend)
 #else
 		iFlavorMilitaryTraining = max(1,iFlavorMilitaryTraining/3);
 		int iBonusUpgrades = max(0,GC.getGame().getHandicapInfo().GetID() - 5); // more at the higher difficulties (the AI should have more money to spend)
@@ -2556,13 +2556,8 @@ void CvHomelandAI::ExecuteExplorerMoves()
 		CvPlot* pEvalPlot;
 		for (int iDY = -iMovementRange; iDY <= iMovementRange; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iMovementRange - FASTMAX(0, iDY);
-			for (iDX = -iMovementRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iMovementRange - MAX(0, iDY);
 			for (iDX = -iMovementRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				// No need for range check because loops are set up properly
 				pEvalPlot = plotXY(iUnitX, iUnitY, iDX, iDY);
@@ -3223,11 +3218,7 @@ void CvHomelandAI::ExecuteMovesToSafestPlot()
 			IncreaseMoveRangeForRoads(pUnit.pointer(), iRange);
 #endif
 #ifdef AUI_HOMELAND_PARATROOPERS_PARADROP
-#ifdef AUI_FAST_COMP
-			iRange = FASTMAX(iRange, pUnit->getDropRange());
-#else
 			iRange = MAX(iRange, pUnit->getDropRange());
-#endif
 #endif
 
 			// For each plot within movement range of the fleeing unit
@@ -3236,13 +3227,8 @@ void CvHomelandAI::ExecuteMovesToSafestPlot()
 			CvPlot* pPlot;
 			for (int iY = -iRange; iY <= iRange; iY++)
 			{
-#ifdef AUI_FAST_COMP
-				iMaxDX = iRange - FASTMAX(0, iY);
-				for (iX = -iRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 				iMaxDX = iRange - MAX(0, iY);
 				for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 				{
 					// No need for range check because loops are set up properly
 					pPlot = plotXY(pUnit->getX(), pUnit->getY(), iX, iY);
@@ -5324,13 +5310,8 @@ void CvHomelandAI::ExecuteAircraftInterceptions()
 				bool bCouldDieFromSweep = false;
 				for (int iDY = -iRange; iDY <= iRange; iDY++)
 				{
-#ifdef AUI_FAST_COMP
-					int iMaxDX = iRange - FASTMAX(0, iDY);
-					for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 					int iMaxDX = iRange - MAX(0, iDY);
 					for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 					{
 						pEvalPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
 						if (pEvalPlot && pEvalPlot != pUnitPlot)
@@ -5568,11 +5549,7 @@ void CvHomelandAI::ExecuteAircraftMoves()
 						}
 					}
 					iTempDanger /= NUM_DIRECTION_TYPES;
-#ifdef AUI_FAST_COMP
-					iPlotDanger = FASTMAX(iPlotDanger, iTempDanger);
-#else
 					iPlotDanger = MAX(iPlotDanger, iTempDanger);
-#endif
 				}
 			}
 			if (iPlotDanger > iMostDangerous)
@@ -5735,13 +5712,8 @@ bool CvHomelandAI::MoveCivilianToSafety(CvUnit* pUnit, bool bIgnoreUnits)
 	CvPlot* pLoopPlot;
 	for (int iDY = -iSearchRange; iDY <= iSearchRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iSearchRange - FASTMAX(0, iDY);
-		for (iDX = -iSearchRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iSearchRange - MAX(0, iDY);
 		for (iDX = -iSearchRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pLoopPlot = plotXY(pUnit->getX(), pUnit->getY(), iDX, iDY);
@@ -6110,11 +6082,7 @@ void CvHomelandAI::ExecuteArchaeologistMoves()
 				LogHomelandMessage(strLogString);
 			}
 		}
-#ifdef AUI_FAST_COMP
-		iSitesStillAvailable = FASTMAX(0, iSitesStillAvailable - 1);
-#else
 		iSitesStillAvailable = MAX(0, iSitesStillAvailable - 1);
-#endif
 #endif
 	}
 }

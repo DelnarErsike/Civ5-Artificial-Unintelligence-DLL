@@ -114,11 +114,7 @@ inline int hexDistance(int iDX, int iDY)
 	}
 	else
 	{
-#ifdef AUI_FAST_COMP
-		return FASTMAX(abs(iDX), abs(iDY));
-#else
 		return MAX(abs(iDX), abs(iDY));
-#endif
 	}
 #else
 	if((iDX >= 0) == (iDY >= 0))  // the signs match
@@ -180,7 +176,7 @@ inline int plotDistance(int iX1, int iY1, int iX2, int iY2)
 	else
 	{
 #ifdef AUI_FAST_COMP
-		return (FASTMAX(iDX, iDY));
+		return MAX(iDX, iDY);
 #else
 		return (std::max(iDX, iDY));
 #endif

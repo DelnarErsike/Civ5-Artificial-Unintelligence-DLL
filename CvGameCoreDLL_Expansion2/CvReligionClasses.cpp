@@ -4464,11 +4464,7 @@ BeliefTypes CvReligionAI::ChoosePantheonBelief()
 		beliefChoices.SortItems();
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // Throw out two-thirds of the choices -- this was way too loose as choices way down were being selected now only top 3
 #ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
-#ifdef AUI_FAST_COMP
-		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#endif
 		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
@@ -4525,11 +4521,7 @@ BeliefTypes CvReligionAI::ChooseFounderBelief()
 		beliefChoices.SortItems();
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // this was way too loose as choices way down were being selected now only top 3
 #ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
-#ifdef AUI_FAST_COMP
-		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#endif
 		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
@@ -4586,11 +4578,7 @@ BeliefTypes CvReligionAI::ChooseFollowerBelief()
 		beliefChoices.SortItems();
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // this was way too loose as choices way down were being selected now only top 3
 #ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
-#ifdef AUI_FAST_COMP
-		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#endif
 		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
@@ -4647,11 +4635,7 @@ BeliefTypes CvReligionAI::ChooseEnhancerBelief()
 		beliefChoices.SortItems();
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // this was way too loose as choices way down were being selected now only top 3
 #ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
-#ifdef AUI_FAST_COMP
-		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#endif
 		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
@@ -4711,11 +4695,7 @@ BeliefTypes CvReligionAI::ChooseBonusBelief(int iExcludeBelief1, int iExcludeBel
 		beliefChoices.SortItems();
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // this was way too loose as choices way down were being selected now only top 3
 #ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
-#ifdef AUI_FAST_COMP
-		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#endif
 		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
@@ -4772,11 +4752,7 @@ BeliefTypes CvReligionAI::ChooseReformationBelief()
 		beliefChoices.SortItems();
 		int iNumChoices = MIN(beliefChoices.size(), 3);   // this was way too loose as choices way down were being selected now only top 3
 #ifdef AUI_RELIGION_RELATIVE_BELIEF_SCORE
-#ifdef AUI_FAST_COMP
-		int iToDecrease = -FASTMAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#else
 		int iToDecrease = -MAX(beliefChoices.GetWeight(beliefChoices.size() - 1) - 1, 0);
-#endif
 		for (int iI = 0; iI < beliefChoices.size(); iI++)
 		{
 			beliefChoices.IncreaseWeight(iI, iToDecrease);
@@ -7639,13 +7615,8 @@ int CvReligionAI::ScoreCityForMissionary(CvCity* pCity, UnitHandle pUnit)
 	int iTempScore = 0;
 	for(int iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		int iMaxDX = iRange - FASTMAX(0, iDY);
-		for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		int iMaxDX = iRange - MAX(0, iDY);
 		for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			pLoopPlot = plotXY(pCity->getX(), pCity->getY(), iDX, iDY);
 			if (pLoopPlot)

@@ -982,13 +982,8 @@ int CvEconomicAI::ScoreExplorePlot(CvPlot* pPlot, TeamTypes eTeam, int iRange, D
 	int iMaxDX, iX;
 	for (int iY = -iRange; iY <= iRange; iY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iY);
-		for (iX = -iRange - FASTMIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iY);
 		for (iX = -iRange - MIN(0, iY); iX <= iMaxDX; iX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pEvalPlot = plotXY(iPlotX, iPlotY, iX, iY);
@@ -3590,13 +3585,8 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 							int iMaxDX, iDY, iDX;
 							for (iDY = -iRange; iDY <= iRange; iDY++)
 							{
-#ifdef AUI_FAST_COMP
-								iMaxDX = iRange - FASTMAX(0, iDY);
-								for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 								iMaxDX = iRange - MAX(0, iDY);
 								for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 								{
 									// No need for range check because loops are set up properly
 									pLoopPlot = plotXY(pLoopCity->getX(), pLoopCity->getY(), iDX, iDY);

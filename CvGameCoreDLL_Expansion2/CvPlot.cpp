@@ -1105,13 +1105,8 @@ bool CvPlot::isFreshWater() const
 	int iMaxDX;
 	for (iDY = -1; iDY <= 1; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = 1 - FASTMAX(0, iDY);
-		for (iDX = -1 - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = 1 - MAX(0, iDY);
 		for (iDX = -1 - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
 #else
@@ -1280,13 +1275,8 @@ CvPlot* CvPlot::getNearestLandPlotInternal(int iDistance) const
 	int iDX, iMaxDX;
 	for (int iDY = -iDistance; iDY <= iDistance; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iDistance - FASTMAX(0, iDY);
-		for (iDX = -iDistance - FASTMIN(0, iDY); iDX <= iMaxDX; ((iDY == abs(iDistance) || iDX == iMaxDX) ? iDX++ : iDX = iMaxDX)) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iDistance - MAX(0, iDY);
 		for (iDX = -iDistance - MIN(0, iDY); iDX <= iMaxDX; ((iDY == abs(iDistance) || iDX == iMaxDX) ? iDX++ : iDX = iMaxDX)) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 #else
 	for(int iDX = -iDistance; iDX <= iDistance; iDX++)
 	{
@@ -1902,9 +1892,9 @@ void CvPlot::updateSeeFromSight(bool bIncrement)
 	}
 
 #ifdef AUI_FAST_COMP
-	iRange = FASTMAX(GC.getRECON_VISIBILITY_RANGE() + 1, iRange);
+	iRange = MAX(GC.getRECON_VISIBILITY_RANGE() + 1, iRange);
 #ifndef AUI_PLOT_SEE_FROM_SIGHT_NO_MAXIMUM_SIGHT_RANGE
-	iRange = FASTMIN(8, iRange); // I don't care, I'm not looking more than 8 out, deal
+	iRange = MIN(8, iRange); // I don't care, I'm not looking more than 8 out, deal
 #endif
 #else
 	iRange = std::max(GC.getRECON_VISIBILITY_RANGE() + 1, iRange);
@@ -1917,13 +1907,8 @@ void CvPlot::updateSeeFromSight(bool bIncrement)
 	int iMaxDX;
 	for (iDY = -iRange; iDY <= iRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iRange - FASTMAX(0, iDY);
-		for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iRange - MAX(0, iDY);
 		for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			pLoopPlot = plotXY(getX(), getY(), iDX, iDY);
 #else
@@ -2557,7 +2542,7 @@ int CvPlot::getBuildTime(BuildTypes eBuild, PlayerTypes ePlayer) const
 	}
 
 #ifdef AUI_FAST_COMP
-	iTime *= FASTMAX(0, (GC.getTerrainInfo(getTerrainType())->getBuildModifier() + 100));
+	iTime *= MAX(0, (GC.getTerrainInfo(getTerrainType())->getBuildModifier() + 100));
 #else
 	iTime *= std::max(0, (GC.getTerrainInfo(getTerrainType())->getBuildModifier() + 100));
 #endif
@@ -2617,7 +2602,7 @@ int CvPlot::getBuildTurnsLeft(BuildTypes eBuild, PlayerTypes ePlayer, int iNowEx
 	iBuildLeft -= iNowBuildRate;
 
 #ifdef AUI_FAST_COMP
-	iBuildLeft = FASTMAX(0, iBuildLeft);
+	iBuildLeft = MAX(0, iBuildLeft);
 #else
 	iBuildLeft = std::max(0, iBuildLeft);
 #endif
@@ -2672,7 +2657,7 @@ int CvPlot::getBuildTurnsTotal(BuildTypes eBuild, PlayerTypes ePlayer) const
 	iBuildLeft = getBuildTime(eBuild, ePlayer);
 
 #ifdef AUI_FAST_COMP
-	iBuildLeft = FASTMAX(0, iBuildLeft);
+	iBuildLeft = MAX(0, iBuildLeft);
 #else
 	iBuildLeft = std::max(0, iBuildLeft);
 #endif
@@ -2682,7 +2667,7 @@ int CvPlot::getBuildTurnsTotal(BuildTypes eBuild, PlayerTypes ePlayer) const
 	iTurnsLeft--;
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, iTurnsLeft);
+	return MAX(1, iTurnsLeft);
 #else
 	return std::max(1, iTurnsLeft);
 #endif
@@ -2725,9 +2710,9 @@ int CvPlot::getFeatureProduction(BuildTypes eBuild, PlayerTypes ePlayer, CvCity*
 
 	// Distance mod
 #ifdef AUI_FAST_COMP
-	iProduction -= (FASTMAX(0, (plotDistance(getX(), getY(), (*ppCity)->getX(), (*ppCity)->getY()) - 2)) * 5);
+	iProduction -= (MAX(0, (plotDistance(getX(), getY(), (*ppCity)->getX(), (*ppCity)->getY()) - 2)) * 5);
 
-	iProduction *= FASTMAX(0, (GET_PLAYER((*ppCity)->getOwner()).getFeatureProductionModifier() + 100));
+	iProduction *= MAX(0, (GET_PLAYER((*ppCity)->getOwner()).getFeatureProductionModifier() + 100));
 #else
 	iProduction -= (std::max(0, (plotDistance(getX(), getY(), (*ppCity)->getX(), (*ppCity)->getY()) - 2)) * 5);
 
@@ -2745,7 +2730,7 @@ int CvPlot::getFeatureProduction(BuildTypes eBuild, PlayerTypes ePlayer, CvCity*
 	}
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, iProduction);
+	return MAX(0, iProduction);
 #else
 	return std::max(0, iProduction);
 #endif
@@ -4560,7 +4545,7 @@ int CvPlot::getUpgradeTimeLeft(ImprovementTypes eImprovement, PlayerTypes ePlaye
 	}
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(1, iTurnsLeft);
+	return MAX(1, iTurnsLeft);
 #else
 	return std::max(1, iTurnsLeft);
 #endif
@@ -7434,7 +7419,7 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 	}
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, iYield);
+	return MAX(0, iYield);
 #else
 	return std::max(0, iYield);
 #endif
@@ -7445,7 +7430,7 @@ int CvPlot::calculateNatureYield(YieldTypes eYield, TeamTypes eTeam, bool bIgnor
 int CvPlot::calculateBestNatureYield(YieldTypes eIndex, TeamTypes eTeam) const
 {
 #ifdef AUI_FAST_COMP
-	return FASTMAX(calculateNatureYield(eIndex, eTeam, false), calculateNatureYield(eIndex, eTeam, true));
+	return MAX(calculateNatureYield(eIndex, eTeam, false), calculateNatureYield(eIndex, eTeam, true));
 #else
 	return std::max(calculateNatureYield(eIndex, eTeam, false), calculateNatureYield(eIndex, eTeam, true));
 #endif
@@ -7558,7 +7543,7 @@ int CvPlot::calculateImprovementYieldChange(ImprovementTypes eImprovement, Yield
 		for(iI = 0; iI < GC.getNumRouteInfos(); ++iI)
 		{
 #ifdef AUI_FAST_COMP
-			iBestYield = FASTMAX(iBestYield, pImprovement->GetRouteYieldChanges(iI, eYield));
+			iBestYield = MAX(iBestYield, pImprovement->GetRouteYieldChanges(iI, eYield));
 #else
 			iBestYield = std::max(iBestYield, pImprovement->GetRouteYieldChanges(iI, eYield));
 #endif
@@ -7886,7 +7871,7 @@ int CvPlot::calculateYield(YieldTypes eYield, bool bDisplay)
 	if(bCity)
 	{
 #ifdef AUI_FAST_COMP
-		iYield = FASTMAX(iYield, kYield.getMinCity());
+		iYield = MAX(iYield, kYield.getMinCity());
 #else
 		iYield = std::max(iYield, kYield.getMinCity());
 #endif
@@ -7935,7 +7920,7 @@ int CvPlot::calculateYield(YieldTypes eYield, bool bDisplay)
 	}
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, iYield);
+	return MAX(0, iYield);
 #else
 	return std::max(0, iYield);
 #endif
@@ -10793,7 +10778,7 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 	if(bCity)
 	{
 #ifdef AUI_FAST_COMP
-		iYield = FASTMAX(iYield, kYield.getMinCity());
+		iYield = MAX(iYield, kYield.getMinCity());
 #else
 		iYield = std::max(iYield, kYield.getMinCity());
 #endif
@@ -10842,7 +10827,7 @@ int CvPlot::getYieldWithBuild(BuildTypes eBuild, YieldTypes eYield, bool bWithUp
 	}
 
 #ifdef AUI_FAST_COMP
-	return FASTMAX(0, iYield);
+	return MAX(0, iYield);
 #else
 	return std::max(0, iYield);
 #endif
@@ -11162,11 +11147,7 @@ void CvPlot::calculateStrategicValue(bool bForCity, bool bForInitialize, bool bD
 	}
 
 	// Straits are extremely strategic 
-#ifdef AUI_FAST_COMP
-	int iStraitCount = FASTMAX(aiLandAreas.size(), (uint)1) - 1 + NUM_DIRECTION_TYPES * (FASTMAX(aiWaterAreas.size(), (uint)1) - 1);
-#else
 	int iStraitCount = MAX(aiLandAreas.size(), (uint)1) - 1 + NUM_DIRECTION_TYPES * (MAX(aiWaterAreas.size(), (uint)1) - 1);
-#endif
 	iRtnValue += (iStraitCount) * GC.getCHOKEPOINT_STRATEGIC_VALUE();
 
 	// Everything afterwards has much smaller weight; scores of all adjacent tiles are averaged into one tile's worth of points
@@ -11539,13 +11520,8 @@ bool CvPlot::isValidBuildingLocation(BuildingTypes eBuilding, bool bNeedsAtLeast
 		int iMaxDX, iDX;
 		for (int iDY = -iMountainRange; iDY <= iMountainRange; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iMountainRange - FASTMAX(0, iDY);
-			for (iDX = -iMountainRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iMountainRange - MAX(0, iDY);
 			for (iDX = -iMountainRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				// No need for range check because loops are set up properly
 				pLoopPlot = plotXY(getX(), getY(), iDX, iDY);

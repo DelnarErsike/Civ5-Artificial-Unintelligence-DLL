@@ -11815,13 +11815,8 @@ int CalculateDigSiteWeight(int iIndex, FFastVector<CvArchaeologyData, true, c_eC
 			CvPlot* pLoopPlot;
 			for (int iDY = -iRange; iDY <= iRange; iDY++)
 			{
-#ifdef AUI_FAST_COMP
-				iMaxDX = iRange - FASTMAX(0, iDY);
-				for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 				iMaxDX = iRange - MAX(0, iDY);
 				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(iPlotX, iPlotY, iDX, iDY);
@@ -12263,13 +12258,8 @@ void CvGame::SpawnArchaeologySitesHistorically()
 		CvPlot* pLoopPlot;
 		for (int iDY = -iRange; iDY <= iRange; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iRange - FASTMAX(0, iDY);
-			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iRange - MAX(0, iDY);
 			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				// No need for range check because loops are set up properly
 				pLoopPlot = plotXY(iPlotX, iPlotY, iDX, iDY);

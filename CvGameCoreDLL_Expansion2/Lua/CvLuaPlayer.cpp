@@ -8583,13 +8583,8 @@ int CvLuaPlayer::lGetRecommendedFoundCityPlots(lua_State* L)
 	CvPlot* pPlot;
 	for (int iDY = -iEvalDistance; iDY <= iEvalDistance; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		iMaxDX = iEvalDistance - FASTMAX(0, iDY);
-		for (iDX = -iEvalDistance - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		iMaxDX = iEvalDistance - MAX(0, iDY);
 		for (iDX = -iEvalDistance - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pPlot = plotXY(iSettlerX, iSettlerY, iDX, iDY);

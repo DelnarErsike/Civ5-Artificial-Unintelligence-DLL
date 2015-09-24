@@ -171,13 +171,8 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 #ifdef AUI_HEXSPACE_DX_LOOPS
 			for (int iDY = -iRange; iDY <= iRange; iDY++)
 			{
-#ifdef AUI_FAST_COMP
-				int iMaxDX = iRange - FASTMAX(0, iDY);
-				for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 				int iMaxDX = iRange - MAX(0, iDY);
 				for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(pUnitPlot->getX(), pUnitPlot->getY(), iDX, iDY);
@@ -229,13 +224,8 @@ void CvDangerPlots::UpdateDanger(bool bPretendWarWithAllCivs, bool bIgnoreVisibi
 			int iMaxDX, iDX;
 			for (int iDY = -iRange; iDY <= iRange; iDY++)
 			{
-#ifdef AUI_FAST_COMP
-				iMaxDX = iRange - FASTMAX(0, iDY);
-				for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 				iMaxDX = iRange - MAX(0, iDY);
 				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(pCityPlot->getX(), pCityPlot->getY(), iDX, iDY);
@@ -350,13 +340,8 @@ void CvDangerPlots::UpdateDanger(CvPlot* pPlot, bool bPretendWarWithAllCivs, boo
 			CvPlot* pLoopPlot = NULL;
 			for (int iDY = -iRange; iDY <= iRange; iDY++)
 			{
-#ifdef AUI_FAST_COMP
-				int iMaxDX = iRange - FASTMAX(0, iDY);
-				for (int iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 				iMaxDX = iRange - MAX(0, iDY);
 				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -378,13 +363,8 @@ void CvDangerPlots::UpdateDanger(CvPlot* pPlot, bool bPretendWarWithAllCivs, boo
 		int iMaxDX, iDX;
 		for (int iDY = -iRange; iDY <= iRange; iDY++)
 		{
-#ifdef AUI_FAST_COMP
-			iMaxDX = iRange - FASTMAX(0, iDY);
-			for (iDX = -iRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 			iMaxDX = iRange - MAX(0, iDY);
 			for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 			{
 				// No need for range check because loops are set up properly
 				pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -560,13 +540,8 @@ int CvDangerPlots::GetCityDanger(CvCity* pCity)
 	CvPlot* pEvalPlot;
 	for (int iDY = -iEvalRange; iDY <= iEvalRange; iDY++)
 	{
-#ifdef AUI_FAST_COMP
-		int iMaxDX = iEvalRange - FASTMAX(0, iDY);
-		for (int iDX = -iEvalRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 		int iMaxDX = iEvalRange - MAX(0, iDY);
 		for (int iDX = -iEvalRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 		{
 			// No need for range check because loops are set up properly
 			pEvalPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -583,11 +558,7 @@ int CvDangerPlots::GetCityDanger(CvCity* pCity)
 			}
 
 #ifdef AUI_DANGER_PLOTS_REMADE
-#ifdef AUI_FAST_COMP
-			iDangerValue += (GetDanger(*pEvalPlot, pCity) / (FASTMAX(hexDistance(iDX, iDY) * NUM_DIRECTION_TYPES, 1)));
-#else
 			iDangerValue += (GetDanger(*pEvalPlot, pCity) / (MAX(hexDistance(iDX, iDY) * NUM_DIRECTION_TYPES, 1)));
-#endif
 #else
 			iDangerValue += GetDanger(*pEvalPlot);
 #endif
@@ -1174,11 +1145,7 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 				if (pUnit->GetRange() > 1)
 					iTurnsAway -= 1;
 				iTurnsAway += pUnit->getMustSetUpToRangedAttackCount();
-#ifdef AUI_FAST_COMP
-				iTurnsAway = FASTMAX(iTurnsAway, 1);
-#else
 				iTurnsAway = MAX(iTurnsAway, 1);
-#endif
 			}
 #else
 			// can the unit actually walk there
@@ -1190,7 +1157,7 @@ void CvDangerPlots::AssignUnitDangerValue(CvUnit* pUnit, CvPlot* pPlot)
 			CvAStarNode* pNode = kPathFinder.GetLastNode();
 			int iTurnsAway = pNode->m_iData2;
 #ifdef AUI_FAST_COMP
-			iTurnsAway = FASTMAX(iTurnsAway, 1);
+			iTurnsAway = MAX(iTurnsAway, 1);
 #else
 			iTurnsAway = max(iTurnsAway, 1);
 #endif
@@ -2239,13 +2206,8 @@ int CvDangerPlotContents::GetCitadelDamage(PlayerTypes ePlayer) const
 
 			for (int iDY = -iCitadelRange; iDY <= iCitadelRange; iDY++)
 			{
-#ifdef AUI_FAST_COMP
-				int iMaxDX = iCitadelRange - FASTMAX(0, iDY);
-				for (int iDX = -iCitadelRange - FASTMIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#else
 				iMaxDX = iCitadelRange - MAX(0, iDY);
 				for (iDX = -iCitadelRange - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
-#endif
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(m_pCitadel->getX(), m_pCitadel->getY(), iDX, iDY);
