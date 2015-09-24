@@ -425,9 +425,7 @@ void CvCityCitizens::DoTurn()
 
 /// What is the overall value of the current Plot?
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
-int CvCityCitizens::GetPlotValue(const CvPlot* pPlot, bool bUseAllowGrowthFlag, double* adBonusYields, double* adBonusYieldModifiers, int iExtraHappiness, int iExtraGrowthMod, bool bAfterGrowth) const
-#elif defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW)
-int CvCityCitizens::GetPlotValue(const CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth) const
+int CvCityCitizens::GetPlotValue(const CvPlot* pPlot, bool bUseAllowGrowthFlag, double* adBonusYields, double* adBonusYieldModifiers, int iExtraHappiness, int iExtraGrowthMod) const
 #else
 int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag)
 #endif
@@ -474,16 +472,12 @@ int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag)
 	double dTourismYield = dYieldArray[YIELD_CULTURE] * m_pCity->GetCityBuildings()->GetLandmarksTourismPercent() / 100.0;
 	dTourismYield = m_pCity->GetCityCulture()->GetBaseTourism(true, int(m_pCity->GetCityCulture()->GetBaseTourismBeforeModifiers() + dTourismYield)) - m_pCity->GetCityCulture()->GetBaseTourism();
 	
-	return GetTotalValue(dYieldArray, NO_UNITCLASS, 0.0, iExtraHappiness, dTourismYield, iExtraGrowthMod, bAfterGrowth, bUseAllowGrowthFlag);
+	return GetTotalValue(dYieldArray, NO_UNITCLASS, 0.0, iExtraHappiness, dTourismYield, iExtraGrowthMod, bUseAllowGrowthFlag);
 #else
 	int iValue = 0;
 
 	// Yield Values
 	int iFoodYieldValue = (/*12*/ GC.getAI_CITIZEN_VALUE_FOOD() * pPlot->getYield(YIELD_FOOD));
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
-	if (bAfterGrowth)
-		iFoodYieldValue = 0;
-#endif
 	int iProductionYieldValue = (/*8*/ GC.getAI_CITIZEN_VALUE_PRODUCTION() * pPlot->getYield(YIELD_PRODUCTION));
 	int iGoldYieldValue = (/*10*/ GC.getAI_CITIZEN_VALUE_GOLD() * pPlot->getYield(YIELD_GOLD));
 	int iScienceYieldValue = (/*6*/ GC.getAI_CITIZEN_VALUE_SCIENCE() * pPlot->getYield(YIELD_SCIENCE));
@@ -726,7 +720,7 @@ int CvCityCitizens::GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag)
 
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
 /// Get the total value of a set of yields, great person points, tourism, and happiness
-int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonClass, double dGPPYield, int iExtraHappiness, double dTourismYield, int iExtraGrowthMod, bool bAfterGrowth, bool bUseAvoidGrowth) const
+int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonClass, double dGPPYield, int iExtraHappiness, double dTourismYield, int iExtraGrowthMod, bool bUseAvoidGrowth) const
 {
 	double dValue = 0.0;
 
@@ -806,8 +800,6 @@ int CvCityCitizens::GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonC
 
 	// Extra multiplier (or divider) based on food needed to grow
 	dExcessFoodYieldValue *= 1.0 + 6.0 / (1.0 + exp(double(GetPlayer()->getGrowthThreshold(m_pCity->getPopulation())) / double(GetPlayer()->getGrowthThreshold(1)) - 1.0));
-	if (bAfterGrowth)
-		dFoodYieldValue = 0.0;
 	int iUnhappinessOnGrowth = 0;
 	if (!m_pCity->IsIgnoreCityForHappiness())
 	{
@@ -1601,8 +1593,8 @@ bool CvCityCitizens::IsAIWantSpecialistRightNow()
 #endif
 
 /// What is the Building Type the AI likes the Specialist of most right now?
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-BuildingTypes CvCityCitizens::GetAIBestSpecialistBuilding(int& iSpecialistValue, bool bAfterGrowth)
+#ifdef AUI_CONSTIFY
+BuildingTypes CvCityCitizens::GetAIBestSpecialistBuilding(int& iSpecialistValue) const
 #else
 BuildingTypes CvCityCitizens::GetAIBestSpecialistBuilding(int& iSpecialistValue)
 #endif
@@ -1636,11 +1628,7 @@ BuildingTypes CvCityCitizens::GetAIBestSpecialistBuilding(int& iSpecialistValue)
 				{
 					eSpecialist = (SpecialistTypes) pkBuildingInfo->GetSpecialistType();
 
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-					iValue = GetSpecialistValue(eSpecialist, bAfterGrowth);
-#else
 					iValue = GetSpecialistValue(eSpecialist);
-#endif
 #ifndef AUI_PRUNING
 					// Add a bit more weight to a Building if it has more slots (10% per).  This will bias the AI to fill a single building over spreading Specialists out
 					int iTemp = ((GetNumSpecialistsAllowedByBuilding(*pkBuildingInfo) - 1) * iValue * 10);
@@ -1670,8 +1658,8 @@ BuildingTypes CvCityCitizens::GetAIBestSpecialistBuilding(int& iSpecialistValue)
 }
 
 /// How valuable is eSpecialist?
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist, bool bAfterGrowth) const
+#ifdef AUI_CONSTIFY
+int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist) const
 #else
 int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 #endif
@@ -1827,7 +1815,7 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 		dGPPChange *= (100.0 + iMod) / 100.0;
 	}
 	
-	return GetTotalValue(dYieldArray, eGPUnitClass, dGPPChange, iHappiness, 0.0, 0, bAfterGrowth);
+	return GetTotalValue(dYieldArray, eGPUnitClass, dGPPChange, iHappiness, 0.0, 0);
 #else
 
 	// factor in the fact that specialists may need less food
@@ -1839,10 +1827,6 @@ int CvCityCitizens::GetSpecialistValue(SpecialistTypes eSpecialist)
 
 	// Yield Values
 	int iFoodYieldValue = (GC.getAI_CITIZEN_VALUE_FOOD() * (pPlayer->specialistYield(eSpecialist, YIELD_FOOD) + iFoodConsumptionBonus));
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
-	if (bAfterGrowth)
-		iFoodYieldValue = 0;
-#endif
 	int iProductionYieldValue = (GC.getAI_CITIZEN_VALUE_PRODUCTION() * pPlayer->specialistYield(eSpecialist, YIELD_PRODUCTION));
 	int iGoldYieldValue = (GC.getAI_CITIZEN_VALUE_GOLD() * pPlayer->specialistYield(eSpecialist, YIELD_GOLD));
 	int iScienceYieldValue = (GC.getAI_CITIZEN_VALUE_SCIENCE() * pPlayer->specialistYield(eSpecialist, YIELD_SCIENCE));
@@ -2388,11 +2372,7 @@ void CvCityCitizens::ChangeNumCitizensWorkingPlots(int iChange)
 }
 
 /// Pick the best Plot to work from one of our unassigned pool
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-bool CvCityCitizens::DoAddBestCitizenFromUnassigned(bool bAfterGrowth)
-#else
 bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
-#endif
 {
 	// We only assign the unassigned here, folks
 	if (GetNumUnassignedCitizens() == 0)
@@ -2405,11 +2385,7 @@ bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
 	BuildingTypes eBestSpecialistBuilding = NO_BUILDING;
 	if (!IsNoAutoAssignSpecialists())
 	{
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-		eBestSpecialistBuilding = GetAIBestSpecialistBuilding(iSpecialistValue, bAfterGrowth);
-#else
 		eBestSpecialistBuilding = GetAIBestSpecialistBuilding(iSpecialistValue);
-#endif
 	}
 
 	bool bBetterThanSlacker = false;
@@ -2428,11 +2404,7 @@ bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
 	}
 
 	int iBestPlotValue = 0;
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-	CvPlot* pBestPlot = GetBestCityPlotWithValue(iBestPlotValue, /*bBest*/ true, /*bWorked*/ false, bAfterGrowth);
-#else
 	CvPlot* pBestPlot = GetBestCityPlotWithValue(iBestPlotValue, /*bBest*/ true, /*bWorked*/ false);
-#endif
 
 	bool bSpecialistBetterThanPlot = (eBestSpecialistBuilding != NO_BUILDING && iSpecialistValue >= iBestPlotValue);
 
@@ -2444,11 +2416,7 @@ bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
 	}
 	// Found a Valid Plot to place a guy?
 #ifdef AUI_CITIZENS_IS_PLOT_BETTER_THAN_DEFAULT_SPECIALIST
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-	else if (pBestPlot != NULL && iBestPlotValue >= GetSpecialistValue((SpecialistTypes)GC.getDEFAULT_SPECIALIST(), bAfterGrowth))
-#else
 	else if (pBestPlot != NULL && iBestPlotValue >= GetSpecialistValue((SpecialistTypes)GC.getDEFAULT_SPECIALIST()))
-#endif
 #else
 	else if (!bSpecialistBetterThanPlot && pBestPlot != NULL)
 #endif
@@ -2468,11 +2436,7 @@ bool CvCityCitizens::DoAddBestCitizenFromUnassigned()
 		{
 			if (!GET_PLAYER(GetOwner()).isHuman() || !IsNoAutoAssignSpecialists())
 			{
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-				BuildingTypes eBestBuilding = GetAIBestSpecialistBuilding(iSpecialistValue, bAfterGrowth);
-#else
 				BuildingTypes eBestBuilding = GetAIBestSpecialistBuilding(iSpecialistValue);
-#endif
 				if(eBestBuilding != NO_BUILDING)
 				{
 					CvBuildingEntry* pkBuildingInfo = GC.getBuildingInfo(eBestBuilding);
@@ -2560,11 +2524,7 @@ bool CvCityCitizens::DoRemoveWorstCitizen(bool bRemoveForcedStatus, SpecialistTy
 }
 
 /// Find a Plot the City is either working or not, and the best/worst value for it - this function does "double duty" depending on what the user wants to find
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-CvPlot* CvCityCitizens::GetBestCityPlotWithValue(int& iValue, bool bWantBest, bool bWantWorked, bool bAfterGrowth)
-#else
 CvPlot* CvCityCitizens::GetBestCityPlotWithValue(int& iValue, bool bWantBest, bool bWantWorked)
-#endif
 {
 	bool bPlotForceWorked;
 
@@ -2593,9 +2553,7 @@ CvPlot* CvCityCitizens::GetBestCityPlotWithValue(int& iValue, bool bWantBest, bo
 						if(bWantWorked || IsCanWork(pLoopPlot))
 						{
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
-							iValue = GetPlotValue(pLoopPlot, bWantBest, NULL, NULL, 0, 0, bAfterGrowth);
-#elif defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW)
-							iValue = GetPlotValue(pLoopPlot, bWantBest, bAfterGrowth);
+							iValue = GetPlotValue(pLoopPlot, bWantBest, NULL, NULL, 0, 0);
 #else
 							iValue = GetPlotValue(pLoopPlot, bWantBest);
 #endif

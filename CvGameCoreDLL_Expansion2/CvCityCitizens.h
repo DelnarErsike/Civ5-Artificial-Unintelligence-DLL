@@ -47,15 +47,13 @@ public:
 #endif
 
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
-	int GetPlotValue(const CvPlot* pPlot, bool bUseAllowGrowthFlag, double* adBonusYields = NULL, double* adBonusYieldModifiers = NULL, int iExtraHappiness = 0, int iExtraGrowthMod = 0, bool bAfterGrowth = false) const;
-#elif defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW)
-	int GetPlotValue(const CvPlot* pPlot, bool bUseAllowGrowthFlag, bool bAfterGrowth = false) const;
+	int GetPlotValue(const CvPlot* pPlot, bool bUseAllowGrowthFlag, double* adBonusYields = NULL, double* adBonusYieldModifiers = NULL, int iExtraHappiness = 0, int iExtraGrowthMod = 0) const;
 #else
 	int GetPlotValue(CvPlot* pPlot, bool bUseAllowGrowthFlag);
 #endif
 
 #ifdef AUI_CITIZENS_GET_VALUE_FROM_STATS
-	int GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonClass = NO_UNITCLASS, double dGPPYield = 0.0, int iExtraHappiness = 0, double dTourismYield = 0.0, int iExtraGrowthMod = 0, bool bAfterGrowth = false, bool bUseAvoidGrowth = true) const;
+	int GetTotalValue(double* aiYields, UnitClassTypes eGreatPersonClass = NO_UNITCLASS, double dGPPYield = 0.0, int iExtraHappiness = 0, double dTourismYield = 0.0, int iExtraGrowthMod = 0, bool bUseAvoidGrowth = true) const;
 	int GetTurnsToGP(SpecialistTypes eSpecialist, double dExtraGPP = 0.0) const;
 #endif
 
@@ -84,16 +82,13 @@ public:
 #ifndef AUI_PRUNING
 	bool IsAIWantSpecialistRightNow();
 #endif
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-	BuildingTypes GetAIBestSpecialistBuilding(int& iSpecialistValue, bool bAfterGrowth = false);
-	int GetSpecialistValue(SpecialistTypes eSpecialist, bool bAfterGrowth = false) const;
+#ifdef AUI_CONSTIFY
+	BuildingTypes GetAIBestSpecialistBuilding(int& iSpecialistValue) const;
+	int GetSpecialistValue(SpecialistTypes eSpecialist) const;
+	bool IsBetterThanDefaultSpecialist(SpecialistTypes eSpecialist) const;
 #else
 	BuildingTypes GetAIBestSpecialistBuilding(int& iSpecialistValue);
 	int GetSpecialistValue(SpecialistTypes eSpecialist);
-#endif
-#ifdef AUI_CONSTIFY
-	bool IsBetterThanDefaultSpecialist(SpecialistTypes eSpecialist) const;
-#else
 	bool IsBetterThanDefaultSpecialist(SpecialistTypes eSpecialist);
 #endif
 
@@ -103,20 +98,12 @@ public:
 	int GetNumCitizensWorkingPlots() const;
 	void ChangeNumCitizensWorkingPlots(int iChange);
 
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-	bool DoAddBestCitizenFromUnassigned(bool bAfterGrowth = false);
-#else
 	bool DoAddBestCitizenFromUnassigned();
-#endif
 	bool DoRemoveWorstCitizen(bool bRemoveForcedStatus = false, SpecialistTypes eDontChangeSpecialist = NO_SPECIALIST, int iCurrentCityPopulation = -1);
 
 	void DoReallocateCitizens();
 
-#if defined(AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW) || defined(AUI_CITIZENS_GET_VALUE_FROM_STATS)
-	CvPlot* GetBestCityPlotWithValue(int& iValue, bool bWantBest, bool bWantWorked, bool bAfterGrowth = false);
-#else
 	CvPlot* GetBestCityPlotWithValue(int& iValue, bool bWantBest, bool bWantWorked);
-#endif
 
 	// Worked Plots
 	bool IsWorkingPlot(const CvPlot* pPlot) const;

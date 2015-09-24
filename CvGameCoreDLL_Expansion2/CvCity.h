@@ -351,13 +351,8 @@ public:
 	void setGameTurnLastExpanded(int iNewValue);
 
 	int getPopulation() const;
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
-	void setPopulation(int iNewValue, bool bReassignPop = true, bool bForGrowth = false);
-	void changePopulation(int iChange, bool bReassignPop = true, bool bForGrowth = false);
-#else
 	void setPopulation(int iNewValue, bool bReassignPop = true);
 	void changePopulation(int iChange, bool bReassignPop = true);
-#endif
 
 	long getRealPopulation() const;
 

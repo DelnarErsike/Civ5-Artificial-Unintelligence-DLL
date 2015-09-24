@@ -4496,17 +4496,6 @@ void CvPlayer::doTurnPostDiplomacy()
 
 	GatherPerTurnReplayStats(iGameTurn);
 
-#ifdef AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
-	if (getNumCities() > 0)
-	{
-		int iLoop = 0;
-		for (CvCity* pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
-		{
-			pLoopCity->GetCityCitizens()->DoReallocateCitizens();
-		}
-	}
-#endif
-
 	GC.GetEngineUserInterface()->setDirty(CityInfo_DIRTY_BIT, true);
 
 	AI_doTurnPost();

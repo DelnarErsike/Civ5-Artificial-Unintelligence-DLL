@@ -180,6 +180,8 @@
 #define AUI_UNIT_MOVEMENT_FIX_BAD_ALLOWS_WATER_WALK_CHECK
 /// Fixes the bug where order-specific hammer bonuses would go into overflow for an order that may not be eligible for those bonuses
 #define AUI_CITY_FIX_DO_PRODUCTION_NO_OVERFLOW_EXPLOIT
+/// If a city grows or starves a population, it will add any difference in food production after the change to its food supply. Among other things, this means a) the food yields earned by new citizens are evaluated just like all other yields, and b) the food consumption of the new citizen is taken into account on the turn the citizen is added
+#define AUI_CITY_FIX_DO_GROWTH_USE_FOOD_AFTER_POP_CHANGE
 
 // Multiplayer-specific fixes/changes
 /// First Contact notifications now happen properly in multiplayer
@@ -441,8 +443,6 @@ template<class T> inline T FastMin(const T& _Left, const T& _Right) { return (_D
 /// If the empire is unhappy, cities with full or partial food focus get their food focus removed
 #define AUI_CITIZENS_DO_TURN_NO_FOOD_FOCUS_IF_UNHAPPY
 #endif
-/// When assigning a new citizen after a city has grown, the value of food is set to 0 because food is calculated before citizen growth, all other yields are done after it
-#define AUI_CITIZENS_IGNORE_FOOD_FOR_CITIZEN_ASSIGN_AFTER_GROW
 /// If a tile would provide enough food to generate excess food, the excess amount has its value halved as if the city was already generating enough food
 #define AUI_CITIZENS_GET_VALUE_SPLIT_EXCESS_FOOD_MUTLIPLIER
 /// If a city is using excess food for production, change the value of food yields accordingly (eg. city cannot starve, food is not 1:1 with production)
