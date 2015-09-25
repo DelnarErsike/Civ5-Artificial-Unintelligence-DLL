@@ -1413,7 +1413,7 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 			}
 			else
 			{
-				iResourceQuantity = FASTMIN(FASTMAX((int)NUM_DIRECTION_TYPES, GetPlayer()->getNumCities()), iResourceQuantity);
+				iResourceQuantity = MIN(MAX((int)NUM_DIRECTION_TYPES, GetPlayer()->getNumCities()), iResourceQuantity);
 				int iResourcesUsedByBuildings = 0;
 				for (uint iBldgLoop = 0; iBldgLoop < GC.GetGameBuildings()->GetNumBuildings(); iBldgLoop++)
 				{
@@ -1789,8 +1789,8 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 #ifdef AUI_DEALAI_TWEAKED_CITY_VALUE
 		if (bFromMe)
 			goldPerPlot = pOtherPlayer->GetBuyPlotCost(); // use other player's thingy for this
-		int iNumTurns = FASTMIN(1, GC.getGame().getEstimateEndTurn() - GC.getGame().getGameTurn());
-		iNumTurns = FASTMAX(GC.getGame().getEstimateEndTurn() * 120 / 500, iNumTurns); // let's not go hog wild here
+		int iNumTurns = MIN(1, GC.getGame().getEstimateEndTurn() - GC.getGame().getGameTurn());
+		iNumTurns = MAX(GC.getGame().getEstimateEndTurn() * 120 / 500, iNumTurns); // let's not go hog wild here
 #endif
 
 		int iGoldValueOfPlots = 0;
@@ -2568,7 +2568,7 @@ int CvDealAI::GetResearchAgreementValue(bool bFromMe, PlayerTypes eOtherPlayer, 
 			}
 		}
 		int iGoldCost = GC.getGame().GetResearchAgreementCost(GetPlayer()->GetID(), eOtherPlayer);
-		int iBeakersBonus = FASTMIN(GetPlayer()->GetScienceTimes100(), kOtherPlayer.GetScienceTimes100()) * GC.getGame().GetDealDuration() / 100;
+		int iBeakersBonus = MIN(GetPlayer()->GetScienceTimes100(), kOtherPlayer.GetScienceTimes100()) * GC.getGame().GetDealDuration() / 100;
 		iBeakersBonus /= GC.getRESEARCH_AGREEMENT_BOOST_DIVISOR(); //one (third) of minimum contribution
 		int iMyBeakerGain = (iBeakersBonus * GetPlayer()->GetMedianTechPercentage()) / 100;
 		if (int(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain + 0.5) > iGoldCost * GetPlayer()->GetScienceTimes100())
@@ -2578,7 +2578,7 @@ int CvDealAI::GetResearchAgreementValue(bool bFromMe, PlayerTypes eOtherPlayer, 
 				1.0 + (double)GetPlayer()->GetGrandStrategyAI()->ScienceFlavorBoost() / AUI_GS_SCIENCE_FLAVOR_BOOST) + 0.5);
 #else
 #ifdef AUI_GS_PRIORITY_RATIO
-			iItemValue = int(iItemValue / pow(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain / FASTMAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1),
+			iItemValue = int(iItemValue / pow(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain / MAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1),
 				1.0 + (double)GetPlayer()->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"))) + 0.5);
 #else
 			if (GetPlayer()->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"))
@@ -2963,7 +2963,7 @@ int CvDealAI::GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, Team
 	// I declare war on 3rd player
 	if(bFromMe)
 	{
-		iItemValue = int(1000 * FASTMAX(pow(2.0, WAR_PROJECTION_UNKNOWN - eWarProjection), pow(10.0, WAR_PROJECTION_STALEMATE - eWarProjection)) + 0.5);
+		iItemValue = int(1000 * MAX(pow(2.0, WAR_PROJECTION_UNKNOWN - eWarProjection), pow(10.0, WAR_PROJECTION_STALEMATE - eWarProjection)) + 0.5);
 
 		// Minor
 		if (bMinor)
@@ -3004,7 +3004,7 @@ int CvDealAI::GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, Team
 				break;
 			}
 			// Modify for our feelings towards the player we're would go to war with
-			iItemValue = int(iItemValue * FASTMAX(pow(2.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_NEUTRAL), pow(10.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_FAVORABLE)) + 0.5);
+			iItemValue = int(iItemValue * MAX(pow(2.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_NEUTRAL), pow(10.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_FAVORABLE)) + 0.5);
 		}
 
 		// Approach is important (we prefer to be bribed by someone we want to be on friendly terms with)
@@ -3025,7 +3025,7 @@ int CvDealAI::GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, Team
 		}
 
 		// Modify for our feelings towards the asking player
-		iItemValue = int(iItemValue * FASTMAX(pow(2.0, MAJOR_CIV_OPINION_NEUTRAL - eOpinionTowardsAskingPlayer), pow(10.0, MAJOR_CIV_OPINION_COMPETITOR - eOpinionTowardsAskingPlayer)) + 0.5);
+		iItemValue = int(iItemValue * MAX(pow(2.0, MAJOR_CIV_OPINION_NEUTRAL - eOpinionTowardsAskingPlayer), pow(10.0, MAJOR_CIV_OPINION_COMPETITOR - eOpinionTowardsAskingPlayer)) + 0.5);
 	}
 	// They declare war on 3rd player
 	else
@@ -3070,11 +3070,11 @@ int CvDealAI::GetThirdPartyWarValue(bool bFromMe, PlayerTypes eOtherPlayer, Team
 				break;
 			}
 			// Modify for our feelings towards the player we're would go to war with
-			iItemValue = int(iItemValue * FASTMAX(pow(2.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_NEUTRAL), pow(10.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_FAVORABLE)) + 0.5);
+			iItemValue = int(iItemValue * MAX(pow(2.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_NEUTRAL), pow(10.0, pDiploAI->GetMajorCivOpinion(eWithPlayer) - MAJOR_CIV_OPINION_FAVORABLE)) + 0.5);
 		}
 
 		// If we dislike the person we are asking, we want them to lose, so the opinion multiplier is inverted if the war projection is lower than average (ie. instead of bad opinion increasing value, it decreases value)
-		iItemValue = int(iItemValue * pow(FASTMAX(pow(2.0, MAJOR_CIV_OPINION_NEUTRAL - eOpinionTowardsAskingPlayer),
+		iItemValue = int(iItemValue * pow(MAX(pow(2.0, MAJOR_CIV_OPINION_NEUTRAL - eOpinionTowardsAskingPlayer),
 			pow(10.0, MAJOR_CIV_OPINION_COMPETITOR - eOpinionTowardsAskingPlayer)), eWarProjection - (NUM_WAR_PROJECTION_TYPES - 1) / 2.0) + 0.5);
 	}
 	iItemValue += iCollateralWarValues;

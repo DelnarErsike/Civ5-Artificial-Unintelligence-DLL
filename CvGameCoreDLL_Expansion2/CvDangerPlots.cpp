@@ -340,8 +340,8 @@ void CvDangerPlots::UpdateDanger(CvPlot* pPlot, bool bPretendWarWithAllCivs, boo
 			CvPlot* pLoopPlot = NULL;
 			for (int iDY = -iRange; iDY <= iRange; iDY++)
 			{
-				iMaxDX = iRange - MAX(0, iDY);
-				for (iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+				int iMaxDX = iRange - MAX(0, iDY);
+				for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(pPlot->getX(), pPlot->getY(), iDX, iDY);
@@ -1701,7 +1701,7 @@ int CvDangerPlotContents::GetDanger(const CvUnit* pUnit, const CvPlot* pAttackTa
 		{
 			if (pUnit->getHPHealedIfDefeatEnemy() > 0 && (!pUnit->IsHealIfDefeatExcludeBarbarians() || !pAttackTargetUnit->isBarbarian()))
 			{
-				iDamageReceivedFromAttack -= FASTMIN(pUnit->getHPHealedIfDefeatEnemy(), pUnit->getDamage() + iDamageReceivedFromAttack);
+				iDamageReceivedFromAttack -= MIN(pUnit->getHPHealedIfDefeatEnemy(), pUnit->getDamage() + iDamageReceivedFromAttack);
 			}
 		}
 		if (!pUnit->IsCanAttackRanged() && !(pUnit->IsCaptureDefeatedEnemy() && pUnit->AreUnitsOfSameType(*pAttackTargetUnit)))
@@ -2206,8 +2206,8 @@ int CvDangerPlotContents::GetCitadelDamage(PlayerTypes ePlayer) const
 
 			for (int iDY = -iCitadelRange; iDY <= iCitadelRange; iDY++)
 			{
-				iMaxDX = iCitadelRange - MAX(0, iDY);
-				for (iDX = -iCitadelRange - MIN(0, iDY); iX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
+				int iMaxDX = iCitadelRange - MAX(0, iDY);
+				for (int iDX = -iCitadelRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 				{
 					// No need for range check because loops are set up properly
 					pLoopPlot = plotXY(m_pCitadel->getX(), m_pCitadel->getY(), iDX, iDY);
