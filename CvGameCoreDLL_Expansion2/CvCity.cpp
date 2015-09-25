@@ -14354,18 +14354,18 @@ void CvCity::doProduction(bool bAllowNoProduction)
 #ifdef AUI_CITY_FIX_DO_PRODUCTION_CONSIDER_FOOD_HAMMERS_FROM_NEW_BUILDING
 			bool bIsFoodProd = isFoodProduction();
 			int iOldFoodDiff = foodDifferenceTimes100();
-			int iOldProdDiff = getRawProductionDifferenceTimes100(true, false);
+			int iOldProdDiff = getRawProductionDifferenceTimes100(bIsFoodProd, false);
 #endif
 			popOrder(0, true, true);
 #ifdef AUI_CITY_FIX_DO_PRODUCTION_CONSIDER_FOOD_HAMMERS_FROM_NEW_BUILDING
-			if (!bIsFoodProd)
+			if (!bIsFoodProd && !isFoodProduction())
 			{
 				int iNewFood = foodDifferenceTimes100() - iOldFoodDiff;
 				changeFoodTimes100(iNewFood);
 				changeFoodKept(iNewFood / 100);
 			}
 
-			int iNewProd = getRawProductionDifferenceTimes100(true, false) - iOldProdDiff;
+			int iNewProd = getRawProductionDifferenceTimes100(bIsFoodProd, false) - iOldProdDiff;
 			changeProductionTimes100(iNewProd);
 #endif
 		}
