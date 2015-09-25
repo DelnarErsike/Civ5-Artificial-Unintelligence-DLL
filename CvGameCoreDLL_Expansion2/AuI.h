@@ -182,6 +182,8 @@
 #define AUI_CITY_FIX_DO_PRODUCTION_NO_OVERFLOW_EXPLOIT
 /// If a city grows or starves a population, it will add any difference in food production after the change to its food supply. Among other things, this means a) the food yields earned by new citizens are evaluated just like all other yields, and b) the food consumption of the new citizen is taken into account on the turn the citizen is added
 #define AUI_CITY_FIX_DO_GROWTH_USE_FOOD_AFTER_POP_CHANGE
+/// Food and production earned from a newly constructed building is added into the city's food and production pools, just like how new buildings add onto all other yields the turn they are constructed
+#define AUI_CITY_FIX_DO_PRODUCTION_CONSIDER_FOOD_HAMMERS_FROM_NEW_BUILDING
 
 // Multiplayer-specific fixes/changes
 /// First Contact notifications now happen properly in multiplayer
