@@ -2432,11 +2432,7 @@ int PathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointe
 		}
 		else
 		{
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-			iMoves = FASTMIN(iMoves, MAX(0, iStartMoves - CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked()) ? DOMAIN_SEA : pCacheData->getDomainType()), pCacheData->maxMoves(), iStartMoves)));
-#else
 			iMoves = std::min(iMoves, std::max(0, iStartMoves - CvUnitMovement::MovementCost(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves(), iStartMoves)));
-#endif
 		}
 #endif
 	}
@@ -3240,11 +3236,7 @@ int IgnoreUnitsPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const v
 #else
 		// We can't use maxMoves, because that checks where the unit is currently, and we're plotting a path so we have to see
 		// what the max moves would be like if the unit was already at the desired location.
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
-		iMoves = FASTMIN(iMoves, MAX(0, iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves())));
-#else
 		iMoves = std::min(iMoves, std::max(0, iStartMoves - CvUnitMovement::MovementCostNoZOC(pUnit, pFromPlot, pToPlot, pCacheData->baseMoves((pToPlot->isWater() || pCacheData->isEmbarked())?DOMAIN_SEA:pCacheData->getDomainType()), pCacheData->maxMoves())));
-#endif
 #endif
 	}
 
@@ -5170,7 +5162,11 @@ int CvAStar::AttackPathDestEval(int iToX, int iToY, bool bOnlyFortified, bool bO
 {
 	const CvUnit* pUnit = ((CvUnit*)m_pData);
 #else
+#ifdef AUI_CONSTIFY
+int AttackPathDestEval(int iToX, int iToY, const void* pointer, const CvAStar* finder, bool bOnlyFortified, bool bOnlyCity)
+#else
 int AttackPathDestEval(int iToX, int iToY, const void* pointer, CvAStar* finder, bool bOnlyFortified, bool bOnlyCity)
+#endif
 {
 	CvUnit* pUnit = ((CvUnit*)pointer);
 #endif
@@ -5218,7 +5214,11 @@ int CvAStar::AttackPathDest(int iToX, int iToY) const
 {
 	return AttackPathDestEval(iToX, iToY, false, false);
 #else
+#ifdef AUI_CONSTIFY
+int AttackPathDest(int iToX, int iToY, const void* pointer, const CvAStar* finder)
+#else
 int AttackPathDest(int iToX, int iToY, const void* pointer, CvAStar* finder)
+#endif
 {
 	return AttackPathDestEval(iToX, iToY, pointer, finder, false, false);
 #endif
@@ -5231,7 +5231,11 @@ int CvAStar::AttackFortifiedPathDest(int iToX, int iToY) const
 {
 	return AttackPathDestEval(iToX, iToY, true, false);
 #else
+#ifdef AUI_CONSTIFY
+int AttackFortifiedPathDest(int iToX, int iToY, const void* pointer, const CvAStar* finder)
+#else
 int AttackFortifiedPathDest(int iToX, int iToY, const void* pointer, CvAStar* finder)
+#endif
 {
 	return AttackPathDestEval(iToX, iToY, pointer, finder, true, false);
 #endif
@@ -5244,7 +5248,11 @@ int CvAStar::AttackCityPathDest(int iToX, int iToY) const
 {
 	return AttackPathDestEval(iToX, iToY, false, true);
 #else
+#ifdef AUI_CONSTIFY
+int AttackCityPathDest(int iToX, int iToY, const void* pointer, const CvAStar* finder)
+#else
 int AttackCityPathDest(int iToX, int iToY, const void* pointer, CvAStar* finder)
+#endif
 {
 	return AttackPathDestEval(iToX, iToY, pointer, finder, false, true);
 #endif
@@ -5794,7 +5802,11 @@ int CvAStar::FindValidDestinationDest(int iToX, int iToY) const
 {
 	CvUnit* pUnit = ((CvUnit*)m_pData);
 #else
+#ifdef AUI_CONSTIFY
+int FindValidDestinationDest(int iToX, int iToY, const void* pointer, const CvAStar* finder)
+#else
 int FindValidDestinationDest(int iToX, int iToY, const void* pointer, CvAStar* finder)
+#endif
 {
 	CvUnit* pUnit = ((CvUnit*)pointer);
 #endif
@@ -5961,7 +5973,7 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 		{
 			int iTempTurns = MAX_INT;
 			CvPlot* pLoopPlot;			
-			int iRange = FASTMIN((pUnit->getMoves() + GC.getMOVE_DENOMINATOR() - 1 - GC.getMOVE_DENOMINATOR() / 2) / GC.getMOVE_DENOMINATOR(), pUnit->baseMoves());
+			int iRange = MIN((pUnit->getMoves() + GC.getMOVE_DENOMINATOR() - 1 - GC.getMOVE_DENOMINATOR() / 2) / GC.getMOVE_DENOMINATOR(), pUnit->baseMoves());
 			if (iTurns > 1)
 				iRange += pUnit->baseMoves() * (iTurns - 1);
 #ifdef AUI_ASTAR_TWEAKED_OPTIMIZED_BUT_CAN_STILL_USE_ROADS
@@ -5969,7 +5981,7 @@ bool CanReachInXTurns(UnitHandle pUnit, CvPlot* pTarget, int iTurns, bool bIgnor
 #endif
 			for (int iDY = -iRange; iDY <= iRange; iDY++)
 			{
-				iMaxDX = iRange - MAX(0, iDY);
+				int iMaxDX = iRange - MAX(0, iDY);
 				for (int iDX = -iRange - MIN(0, iDY); iDX <= iMaxDX; iDX++) // MIN() and MAX() stuff is to reduce loops (hexspace!)
 				{
 

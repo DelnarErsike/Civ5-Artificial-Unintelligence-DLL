@@ -8005,7 +8005,7 @@ int CvMinorCivAI::CalculateBullyMetric(PlayerTypes eBullyPlayer, bool bForUnit, 
 	// +0 ~ +125
 	// **************************
 #ifdef AUI_WARNING_FIXES
-	int iComparisonRadius = FASTMAX(GC.getMap().getGridWidth() / 10, uint(5));
+	int iComparisonRadius = MAX(GC.getMap().getGridWidth() / 10, uint(5));
 #else
 	int iComparisonRadius = std::max(GC.getMap().getGridWidth() / 10, 5);
 #endif

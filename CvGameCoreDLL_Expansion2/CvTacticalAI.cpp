@@ -12924,11 +12924,7 @@ int CvTacticalAI::ComputeTotalExpectedDamage(CvTacticalTarget* pTarget, CvPlot* 
 #ifdef AUI_TACTICAL_FIX_COMPUTE_EXPECTED_DAMAGE_AIR_UNITS
 				if (pAttacker->getDomainType() == DOMAIN_AIR)
 				{
-#ifdef AUI_FAST_COMP
-					iExpectedDamage = FASTMIN(pAttacker->GetAirCombatDamage(NULL, /*pCity*/ pCity, false, 0), iMaxRangedCityDamage);
-#else
 					iExpectedDamage = MIN(pAttacker->GetAirCombatDamage(NULL, /*pCity*/ pCity, false, 0), iMaxRangedCityDamage);
-#endif
 					iExpectedSelfDamage = pCity->GetAirStrikeDefenseDamage(pAttacker.pointer(), false);
 				}
 				else
@@ -12940,11 +12936,7 @@ int CvTacticalAI::ComputeTotalExpectedDamage(CvTacticalTarget* pTarget, CvPlot* 
 #endif
 				{
 #ifdef AUI_TACTICAL_TWEAKED_CAPTURE_DAMAGE_CITY_MOVES
-#ifdef AUI_FAST_COMP
-					iExpectedDamage = FASTMIN(pAttacker->GetRangeCombatDamage(NULL, pCity, false), iMaxRangedCityDamage);
-#else
 					iExpectedDamage = MIN(pAttacker->GetRangeCombatDamage(NULL, pCity, false), iMaxRangedCityDamage);
-#endif
 #else
 					iExpectedDamage = pAttacker->GetRangeCombatDamage(NULL, pCity, false);
 #endif

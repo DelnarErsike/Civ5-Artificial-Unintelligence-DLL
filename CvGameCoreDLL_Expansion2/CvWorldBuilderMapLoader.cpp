@@ -308,7 +308,7 @@ void CvWorldBuilderMapLoader::SetupGameOptions()
 void CvWorldBuilderMapLoader::SetupPlayers()
 {
 #ifdef AUI_WARNING_FIXES
-	const byte uiPlayerCount = FASTMIN(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
+	const byte uiPlayerCount = MIN(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
 	for (byte i = 0; i < uiPlayerCount; ++i)
 #else
 	const uint uiPlayerCount = std::min(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
@@ -605,7 +605,7 @@ void SetTeamInitialItems(CvTeam& kGameplayTeam, const CvWorldBuilderMap::Team& k
 void CvWorldBuilderMapLoader::SetInitialItems(bool bFirstCall)
 {
 #ifdef AUI_WARNING_FIXES
-	const byte uiTeamCount = FASTMIN(sg_kSave.GetTeamCount(), (byte)MAX_TEAMS);
+	const byte uiTeamCount = MIN(sg_kSave.GetTeamCount(), (byte)MAX_TEAMS);
 	for (byte i = 0; i < uiTeamCount; ++i)
 #else
 	const uint uiTeamCount = std::min(sg_kSave.GetTeamCount(), (byte)MAX_TEAMS);
@@ -617,7 +617,7 @@ void CvWorldBuilderMapLoader::SetInitialItems(bool bFirstCall)
 	}
 
 #ifdef AUI_WARNING_FIXES
-	const byte uiPlayerCount = FASTMIN(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
+	const byte uiPlayerCount = MIN(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
 	for (byte i = 0; i < uiPlayerCount; ++i)
 #else
 	const uint uiPlayerCount = std::min(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
@@ -647,7 +647,7 @@ void CvWorldBuilderMapLoader::SetInitialItems(bool bFirstCall)
 	}
 
 #ifdef AUI_WARNING_FIXES
-	const byte uiCityStateCount = FASTMIN(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
+	const byte uiCityStateCount = MIN(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
 	for (byte i = 0; i < uiCityStateCount; ++i)
 #else
 	const uint uiCityStateCount = std::min(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
@@ -1051,7 +1051,7 @@ bool CvWorldBuilderMapLoader::InitMap()
 	OutputDebugStringA("Setting up players...\n");
 
 #ifdef AUI_WARNING_FIXES
-	const byte uiPlayerCount = FASTMIN(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
+	const byte uiPlayerCount = MIN(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
 	for (byte i = 0; i < uiPlayerCount; ++i)
 #else
 	const uint uiPlayerCount = std::min(sg_kSave.GetPlayerCount(), (byte)MAX_CIV_PLAYERS);
@@ -1071,7 +1071,7 @@ bool CvWorldBuilderMapLoader::InitMap()
 	}
 
 #ifdef AUI_WARNING_FIXES
-	const byte uiCityStateCount = FASTMIN(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
+	const byte uiCityStateCount = MIN(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
 	for (byte i = 0; i < uiCityStateCount; ++i)
 #else
 	const uint uiCityStateCount = std::min(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);

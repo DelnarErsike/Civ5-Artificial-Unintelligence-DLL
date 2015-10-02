@@ -3582,7 +3582,11 @@ _Ret_maybenull_ CvUnitClassInfo* CvGlobals::getUnitClassInfo(UnitClassTypes eUni
 	if (uiIndex < m_paUnitClassInfo.size())
 		return m_paUnitClassInfo[uiIndex];
 #else
+#ifdef AUI_CONSTIFY
+_Ret_maybenull_ CvUnitClassInfo* getUnitClassInfo(UnitClassTypes eUnitClassNum) const;
+#else
 CvUnitClassInfo* CvGlobals::getUnitClassInfo(UnitClassTypes eUnitClassNum)
+#endif
 {
 	CvAssert(eUnitClassNum > -1);
 	CvAssert(eUnitClassNum < GC.getNumUnitClassInfos());

@@ -1726,17 +1726,10 @@ bool CvPlayerAI::GreatMerchantWantsCash()
 				iFlavorGrowth = GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)iFlavorLoop);
 			}
 		}
-#ifdef AUI_FAST_COMP
-		iFlavorExpansion = FASTMAX(GC.getFLAVOR_MIN_VALUE(), iFlavorExpansion);
-		iFlavorGrowth = FASTMAX(GC.getFLAVOR_MIN_VALUE(), iFlavorGrowth);
-		// Extra cities from difficulty get applied as Expansion flavor
-		double dDifficulty = FASTMAX(0, GC.getGame().getHandicapInfo().GetID() - 3) + 2.0;
-#else
 		iFlavorExpansion = MAX(GC.getFLAVOR_MIN_VALUE(), iFlavorExpansion);
 		iFlavorGrowth = MAX(GC.getFLAVOR_MIN_VALUE(), iFlavorGrowth);
 		// Extra cities from difficulty get applied as Expansion flavor
 		double dDifficulty = MAX(0, GC.getGame().getHandicapInfo().GetID() - 3) + 2.0;
-#endif
 		dDifficulty /= 2.0;
 		// Base flavor scaling
 		dDesiredCities *= log(iFlavorExpansion * pow(dDifficulty, 2.0)) / log((double)MAX(iFlavorGrowth, 2));

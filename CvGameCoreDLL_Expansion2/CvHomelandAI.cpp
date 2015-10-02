@@ -1762,6 +1762,7 @@ void CvHomelandAI::PlotUpgradeMoves()
 						CvString strTemp = pUnit->getUnitInfo().GetDescription();
 #else
 						CvString strTemp;
+
 						strTemp = GC.getUnitInfo(pUnit->getUnitType())->GetDescription();
 #endif
 						strLogString.Format("Moving %s for upgrade at %s, GOLD: Available = %d, Needed = %d, Priority = %d, Dist = %d",
@@ -6567,7 +6568,7 @@ bool CvHomelandAI::GetClosestUnitByTurnsToTarget(CvHomelandAI::MoveUnitsArray &k
 			if (iDistance == MAX_INT)
 				continue;
 #ifdef AUI_ASTAR_TURN_LIMITER
-			int iMaxRange = FASTMIN(iDistance, FASTMIN(iMaxTurns, iMinTurns - 1));
+			int iMaxRange = MIN(iDistance, FASTMIN(iMaxTurns, iMinTurns - 1));
 			int iMoves = TurnsToReachTarget(pLoopUnit.pointer(), pTarget, false, false, false, iMaxRange);
 #else
 			int iMoves = TurnsToReachTarget(pLoopUnit.pointer(), pTarget);

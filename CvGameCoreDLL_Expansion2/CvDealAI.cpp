@@ -2574,7 +2574,7 @@ int CvDealAI::GetResearchAgreementValue(bool bFromMe, PlayerTypes eOtherPlayer, 
 		if (int(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain + 0.5) > iGoldCost * GetPlayer()->GetScienceTimes100())
 		{
 #ifdef AUI_GS_SCIENCE_FLAVOR_BOOST
-			iItemValue = int(iItemValue / pow(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain / FASTMAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1),
+			iItemValue = int(iItemValue / pow(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain / MAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1),
 				1.0 + (double)GetPlayer()->GetGrandStrategyAI()->ScienceFlavorBoost() / AUI_GS_SCIENCE_FLAVOR_BOOST) + 0.5);
 #else
 #ifdef AUI_GS_PRIORITY_RATIO
@@ -2583,10 +2583,10 @@ int CvDealAI::GetResearchAgreementValue(bool bFromMe, PlayerTypes eOtherPlayer, 
 #else
 			if (GetPlayer()->GetGrandStrategyAI()->GetActiveGrandStrategy() == (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP"))
 				iItemValue = int(iItemValue / pow(GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain 
-				/ FASTMAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1), 2.0) + 0.5);
+				/ MAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1), 2.0) + 0.5);
 			else
 				iItemValue = int(iItemValue / GetPlayer()->GetTreasury()->AverageIncome(GC.getGame().GetDealDuration()) * iMyBeakerGain / 
-				FASTMAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1) + 0.5);
+				MAX(iGoldCost * GetPlayer()->GetScienceTimes100(), 1) + 0.5);
 #endif
 #endif
 		}

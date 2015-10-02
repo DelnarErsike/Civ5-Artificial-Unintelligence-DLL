@@ -769,11 +769,21 @@ int BuildRouteValid(CvAStarNode* parent, CvAStarNode* node, int data, const void
 int UIPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int UIPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 int AttackPathAdd(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
+#ifdef AUI_CONSTIFY
+int AttackPathDest(int iToX, int iToY, const void* pointer, const CvAStar* finder);
+int AttackFortifiedPathDest(int iToX, int iToY, const void* pointer, const CvAStar* finder);
+int AttackCityPathDest(int iToX, int iToY, const void* pointer, const CvAStar* finder);
+#else
 int AttackPathDest(int iToX, int iToY, const void* pointer, CvAStar* finder);
 int AttackFortifiedPathDest(int iToX, int iToY, const void* pointer, CvAStar* finder);
 int AttackCityPathDest(int iToX, int iToY, const void* pointer, CvAStar* finder);
+#endif
 int TacticalAnalysisMapPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
+#ifdef AUI_CONSTIFY
+int FindValidDestinationDest(int iToX, int iToY, const void* pointer, const CvAStar* finder);
+#else
 int FindValidDestinationDest(int iToX, int iToY, const void* pointer, CvAStar* finder);
+#endif
 int FindValidDestinationPathValid(CvAStarNode* parent, CvAStarNode* node, int data, const void* pointer, CvAStar* finder);
 #endif
 #if defined(AUI_DANGER_PLOTS_REMADE) && defined(AUI_ASTAR_TURN_LIMITER)

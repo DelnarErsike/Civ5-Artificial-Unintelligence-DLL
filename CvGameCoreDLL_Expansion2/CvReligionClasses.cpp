@@ -6379,7 +6379,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 		// Production per follower
 		if (pEntry->GetMaxYieldModifierPerFollower(iI) > 0)
 		{
-			adExtraYieldMods[iI] += FASTMIN(pEntry->GetMaxYieldModifierPerFollower(iI), pCity->getPopulation());
+			adExtraYieldMods[iI] += MIN(pEntry->GetMaxYieldModifierPerFollower(iI), pCity->getPopulation());
 		}
 	}
 
@@ -6387,7 +6387,7 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 
 	dRtnValue = pCity->GetCityCitizens()->GetPlotValue(pCity->plot(), true, adExtraYields, adExtraYieldMods, iHappiness, pEntry->GetCityGrowthModifier()) - pCity->GetCityCitizens()->GetPlotValue(pCity->plot(), true);
 
-	int iMinPop = FASTMAX(pEntry->GetMinPopulation(), pEntry->GetMinFollowers());
+	int iMinPop = MAX(pEntry->GetMinPopulation(), pEntry->GetMinFollowers());
 	if (pCity->getPopulation() < iMinPop)
 	{
 		dRtnValue /= log(iMinPop - pCity->getPopulation() + M_E);
