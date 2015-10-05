@@ -1856,7 +1856,8 @@ bool CvUnit::getCaptureDefinition(CvUnitCaptureDefinition* pkCaptureDef, PlayerT
 								//player recaptured a friendly unit
 								strBuffer = GetLocalizedText("TXT_KEY_MISC_YOU_RECAPTURED_UNIT", pUnitInfo->GetTextKey());
 							}
-							else {
+							else
+							{
 								strBuffer = GetLocalizedText("TXT_KEY_MISC_YOU_CAPTURED_UNIT", pUnitInfo->GetTextKey());
 							}
 #else
