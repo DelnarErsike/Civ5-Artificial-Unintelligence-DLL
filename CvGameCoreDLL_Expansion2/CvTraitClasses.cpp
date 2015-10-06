@@ -2517,7 +2517,11 @@ int CvPlayerTraits::GetUnitBaktun(UnitTypes eUnit) const
 	std::vector<MayaBonusChoice>::const_iterator it;
 
 	// Loop through all units available to tactical AI this turn
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_aMayaBonusChoices.begin(); it != m_aMayaBonusChoices.end(); ++it)
+#else
 	for(it = m_aMayaBonusChoices.begin(); it != m_aMayaBonusChoices.end(); it++)
+#endif
 	{
 		if(it->m_eUnitType == eUnit)
 		{
@@ -3051,7 +3055,11 @@ void CvPlayerTraits::Write(FDataStream& kStream)
 
 	std::vector<MayaBonusChoice>::const_iterator it;
 	kStream << m_aMayaBonusChoices.size();
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_aMayaBonusChoices.begin(); it != m_aMayaBonusChoices.end(); ++it)
+#else
 	for(it = m_aMayaBonusChoices.begin(); it != m_aMayaBonusChoices.end(); it++)
+#endif
 	{
 		kStream << it->m_eUnitType;
 		kStream << it->m_iBaktunJustFinished;

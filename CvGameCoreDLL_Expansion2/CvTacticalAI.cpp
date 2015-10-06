@@ -900,7 +900,11 @@ int CvTacticalAI::PlotAlreadyTargeted(CvPlot* pPlot)
 	if(m_QueuedAttacks.size() > 0)
 	{
 		std::list<CvQueuedAttack>::iterator it;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+		for (it = m_QueuedAttacks.begin(); it != m_QueuedAttacks.end(); ++it)
+#else
 		for(it = m_QueuedAttacks.begin(); it != m_QueuedAttacks.end(); it++)
+#endif
 		{
 			if(it->GetTarget()->GetTargetX() == pPlot->getX() &&
 			        it->GetTarget()->GetTargetY() == pPlot->getY())
@@ -918,7 +922,11 @@ bool CvTacticalAI::IsInQueuedAttack(const CvUnit* pUnit)
 	if(m_QueuedAttacks.size() > 0)
 	{
 		std::list<CvQueuedAttack>::iterator it;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+		for (it = m_QueuedAttacks.begin(); it != m_QueuedAttacks.end(); ++it)
+#else
 		for(it = m_QueuedAttacks.begin(); it != m_QueuedAttacks.end(); it++)
+#endif
 		{
 			if(it->GetAttacker() == pUnit)
 			{
@@ -935,7 +943,11 @@ bool CvTacticalAI::IsCityInQueuedAttack(const CvCity* pAttackCity)
 	if(m_QueuedAttacks.size() > 0)
 	{
 		std::list<CvQueuedAttack>::iterator it;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+		for (it = m_QueuedAttacks.begin(); it != m_QueuedAttacks.end(); ++it)
+#else
 		for(it = m_QueuedAttacks.begin(); it != m_QueuedAttacks.end(); it++)
+#endif
 		{
 			if(it->IsCityAttack() && it->GetAttacker() == (void*)pAttackCity)
 			{
@@ -1025,7 +1037,11 @@ int CvTacticalAI::NearXQueuedAttacks(const CvPlot* pPlot, const int iRange)
 		CvUnit* pAttacker;
 #endif
 		std::list<CvQueuedAttack>::iterator it;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+		for (it = m_QueuedAttacks.begin(); it != m_QueuedAttacks.end(); ++it)
+#else
 		for(it = m_QueuedAttacks.begin(); it != m_QueuedAttacks.end(); it++)
+#endif
 		{
 #ifdef AUI_TACTICAL_FIX_NEAR_X_QUEUED_ATTACKS_USE_ATTACKERS
 			if (!it->IsCityAttack())
@@ -1921,7 +1937,11 @@ void CvTacticalAI::ProcessDominanceZones()
 		UpdatePostures();
 
 		// Proceed in priority order
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+		for (it = m_MovePriorityList.begin(); it != m_MovePriorityList.end(); ++it)
+#else
 		for(it = m_MovePriorityList.begin(); it != m_MovePriorityList.end(); it++)
+#endif
 		{
 			CvTacticalMove move = *it;
 
@@ -2245,7 +2265,11 @@ void CvTacticalAI::AssignBarbarianMoves()
 	FStaticVector<CvTacticalMove, 256, true, c_eCiv5GameplayDLL >::iterator it;
 
 	// Proceed in priority order
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_MovePriorityList.begin(); it != m_MovePriorityList.end(); ++it)
+#else
 	for(it = m_MovePriorityList.begin(); it != m_MovePriorityList.end(); it++)
+#endif
 	{
 		CvTacticalMove move = *it;
 
@@ -2747,7 +2771,11 @@ void CvTacticalAI::PlotMovesToSafety(bool bCombatUnits)
 	m_CurrentMoveUnits.clear();
 
 	// Loop through all recruited units
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		UnitHandle pUnit = m_pPlayer->getUnit(*it);
 		if(pUnit)
@@ -2883,7 +2911,11 @@ void CvTacticalAI::PlotRepositionMoves()
 	m_CurrentMoveUnits.clear();
 
 	// Loop through all recruited units
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		UnitHandle pUnit = m_pPlayer->getUnit(*it);
 		if(pUnit)
@@ -2920,7 +2952,11 @@ void CvTacticalAI::PlotBarbarianMove(bool bAggressive)
 		m_CurrentMoveUnits.clear();
 
 		// Loop through all recruited units
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+		for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 		for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 		{
 			UnitHandle pUnit = m_pPlayer->getUnit(*it);
 			if(pUnit)
@@ -2947,7 +2983,11 @@ void CvTacticalAI::PlotBarbarianCivilianEscortMove()
 	{
 		m_CurrentMoveUnits.clear();
 
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+		for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 		for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 		{
 			UnitHandle pUnit = m_pPlayer->getUnit(*it);
 
@@ -3449,7 +3489,11 @@ void CvTacticalAI::PlotHealMoves()
 	CvTacticalUnit unit;
 
 	// Loop through all recruited units
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		UnitHandle pUnit = m_pPlayer->getUnit(*it);
 		if(pUnit)
@@ -3683,7 +3727,11 @@ void CvTacticalAI::PlotAirInterceptMoves()
 #endif
 
 	// Loop through all recruited units
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		UnitHandle pUnit = m_pPlayer->getUnit(*it);
 		if(pUnit)
@@ -3794,7 +3842,11 @@ void CvTacticalAI::PlotAirSweepMoves()
 	CvTacticalDominanceZone *pZone;
 
 	// Loop through all recruited units
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		UnitHandle pUnit = m_pPlayer->getUnit(*it);
 #ifdef AUI_DANGER_PLOTS_REMADE
@@ -3949,7 +4001,11 @@ void CvTacticalAI::PlotDefensiveAirlifts()
 	if(pCity && pCity->getOwner() == m_pPlayer->GetID() && pZone->GetTerritoryType() == TACTICAL_TERRITORY_FRIENDLY && pCity->CanAirlift()&& pZone->GetEnemyUnitCount() > 0)
 	{
 		// Loop through all recruited units
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+		for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 		for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 		{
 			UnitHandle pUnit = m_pPlayer->getUnit(*it);
 			if(pUnit)
@@ -3983,7 +4039,11 @@ void CvTacticalAI::PlotDefensiveAirlifts()
 
 	// Mark units processed
 	vector<int>::const_iterator unitIt;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (unitIt = aProcessedUnits.begin(); unitIt != aProcessedUnits.end(); ++unitIt)
+#else
 	for (unitIt = aProcessedUnits.begin(); unitIt != aProcessedUnits.end(); unitIt++)
+#endif
 	{
 		UnitProcessed(*unitIt);
 	}
@@ -3997,7 +4057,11 @@ void CvTacticalAI::PlotEscortEmbarkedMoves()
 	CvTacticalUnit unit;
 
 	// Loop through all recruited units
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		UnitHandle pUnit = m_pPlayer->getUnit(*it);
 		if(pUnit)
@@ -4326,7 +4390,11 @@ void CvTacticalAI::PlotWithdrawMoves()
 	CvTacticalDominanceZone* pZone = m_pMap->GetZone(m_iCurrentZoneIndex);
 
 	// Loop through all recruited units
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		UnitHandle pUnit = m_pPlayer->getUnit(*it);
 		if(pUnit)
@@ -4477,7 +4545,11 @@ void CvTacticalAI::ReviewUnassignedUnits()
 	list<int>::iterator it;
 
 	// Loop through all remaining units
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		UnitHandle pUnit = m_pPlayer->getUnit(*it);
 		if(pUnit)
@@ -5888,7 +5960,11 @@ void CvTacticalAI::ExecuteFormationMoves(CvArmyAI* pArmy, CvPlot *pClosestCurren
 
 	int iMeleeUnits = 0;
 	int iRangedUnits = 0;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_OperationUnits.begin(); it != m_OperationUnits.end(); ++it)
+#else
 	for(it = m_OperationUnits.begin(); it != m_OperationUnits.end(); it++)
+#endif
 	{
 		CvUnit *pOpUnit = m_pPlayer->getUnit(it->GetUnitID());
 		if (pOpUnit->IsCanAttackRanged())
@@ -6341,7 +6417,11 @@ void CvTacticalAI::ExecuteNavalFormationMoves(CvArmyAI* pArmy, CvPlot* pTurnTarg
 
 	int iNavalUnits = 0;
 	int iEscortedUnits = 0;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_OperationUnits.begin(); it != m_OperationUnits.end(); ++it)
+#else
 	for(it = m_OperationUnits.begin(); it != m_OperationUnits.end(); it++)
+#endif
 	{
 		CvUnit *pOpUnit = m_pPlayer->getUnit(it->GetUnitID());
 		if (pOpUnit)
@@ -8374,7 +8454,11 @@ void CvTacticalAI::ExecuteAttack(CvTacticalTarget* pTarget, CvPlot* pTargetPlot,
 						{
 							// Find spaces adjacent to target we can move into with MP left
 							std::vector<CvPlot *>::iterator it;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+							for (it = plotList.begin(); it != plotList.end(); ++it)
+#else
 							for (it = plotList.begin(); it != plotList.end(); it++)
+#endif
 							{
 								if (TurnsToReachTarget(pUnit, *it, false /*bReusePaths*/, false /*bIgnoreUnits*/, true /*bIgnoreStacking*/) == 0)
 								{
@@ -10141,7 +10225,7 @@ bool CvTacticalAI::ExecuteSafeBombards(CvTacticalTarget& kTarget)
 	// If so, bombs away!
 	m_CurrentMoveUnits.clear();
 	list<int>::iterator it;
-#ifdef AUI_TACTICAL_FIX_EXECUTE_SAFE_BOMBARDS_CHECK_RANGE
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
 	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
 #else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
@@ -10912,7 +10996,11 @@ void CvTacticalAI::ExecuteCloseOnTarget(CvTacticalTarget& kTarget, CvTacticalDom
 	m_OperationUnits.clear();
 	m_GeneralsToMove.clear();
 
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		UnitHandle pUnit = m_pPlayer->getUnit(*it);
 		if(pUnit)
@@ -11071,7 +11159,11 @@ void CvTacticalAI::ExecuteHedgehogDefense(CvTacticalTarget& kTarget, CvTacticalD
 	m_OperationUnits.clear();
 	m_GeneralsToMove.clear();
 
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		UnitHandle pUnit = m_pPlayer->getUnit(*it);
 		if(pUnit)
@@ -11601,7 +11693,11 @@ void CvTacticalAI::TurnOffMove(TacticalAIMoveTypes eType)
 {
 	FStaticVector<CvTacticalMove, 256, true, c_eCiv5GameplayDLL >::iterator it;
 
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_MovePriorityList.begin(); it != m_MovePriorityList.end(); ++it)
+#else
 	for(it = m_MovePriorityList.begin(); it != m_MovePriorityList.end(); it++)
+#endif
 	{
 		if(it->m_eMoveType == eType)
 		{
@@ -11622,7 +11718,11 @@ bool CvTacticalAI::FindUnitsForThisMove(TacticalAIMoveTypes eMove, CvPlot* pTarg
 	m_CurrentMoveHighPriorityUnits.clear();
 
 	// Loop through all units available to tactical AI this turn
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		pLoopUnit = m_pPlayer->getUnit(*it);
 		if(pLoopUnit && pLoopUnit->getDomainType() != DOMAIN_AIR && pLoopUnit->IsCombatUnit())
@@ -11793,7 +11893,11 @@ bool CvTacticalAI::FindUnitsWithinStrikingDistance(CvPlot* pTarget, int iNumTurn
 #endif
 
 	// Loop through all units available to tactical AI this turn
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		pLoopUnit = m_pPlayer->getUnit(*it);
 		if(pLoopUnit)
@@ -12086,7 +12190,11 @@ bool CvTacticalAI::FindParatroopersWithinStrikingDistance(CvPlot* pTarget)
 	m_CurrentMoveUnits.clear();
 
 	// Loop through all units available to tactical AI this turn
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		pLoopUnit = m_pPlayer->getUnit(*it);
 		if(pLoopUnit && pLoopUnit->canParadropAt(pLoopUnit->plot(), pTarget->getX(), pTarget->getY()))
@@ -12124,7 +12232,11 @@ bool CvTacticalAI::FindClosestUnit(CvPlot* pTarget, int iNumTurnsAway, bool bMus
 	m_CurrentMoveUnits.clear();
 
 	// Loop through all units available to tactical AI this turn
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); ++it)
+#else
 	for(it = m_CurrentTurnUnits.begin(); it != m_CurrentTurnUnits.end(); it++)
+#endif
 	{
 		pLoopUnit = m_pPlayer->getUnit(*it);
 		if(pLoopUnit)
@@ -12315,7 +12427,11 @@ bool CvTacticalAI::FindClosestOperationUnit(CvPlot* pTarget, bool bSafeForRanged
 	m_CurrentMoveUnits.clear();
 
 	// Loop through all units available to operation
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_OperationUnits.begin(); it != m_OperationUnits.end(); ++it)
+#else
 	for(it = m_OperationUnits.begin(); it != m_OperationUnits.end(); it++)
+#endif
 	{
 		pLoopUnit = m_pPlayer->getUnit(it->GetUnitID());
 		if(pLoopUnit)
@@ -12419,7 +12535,11 @@ bool CvTacticalAI::FindClosestNavalOperationUnit(CvPlot* pTarget, bool bEscorted
 	m_CurrentMoveUnits.clear();
 
 	// Loop through all units available to operation
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_OperationUnits.begin(); it != m_OperationUnits.end(); ++it)
+#else
 	for(it = m_OperationUnits.begin(); it != m_OperationUnits.end(); it++)
+#endif
 	{
 		pLoopUnit = m_pPlayer->getUnit(it->GetUnitID());
 		if(pLoopUnit)

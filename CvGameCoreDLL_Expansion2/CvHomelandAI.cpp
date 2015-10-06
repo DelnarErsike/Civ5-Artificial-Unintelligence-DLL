@@ -2285,7 +2285,11 @@ void CvHomelandAI::PlotAirliftMoves()
 	CvTacticalAnalysisMap* pMap = GC.getGame().GetTacticalAnalysisMap();
 	CvTacticalDominanceZone *pZone;
 	vector<CvCity *>::const_iterator it;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = aAirliftCities.begin(); it != aAirliftCities.end(); ++it)
+#else
 	for (it = aAirliftCities.begin(); it != aAirliftCities.end(); it++)
+#endif
 	{
 		pZone = pMap->GetZoneByCity(*it, false);
 		if (pZone && (pZone->GetDominanceFlag() == TACTICAL_DOMINANCE_FRIENDLY || pZone->GetDominanceFlag() == TACTICAL_DOMINANCE_NO_UNITS_VISIBLE))
@@ -2320,7 +2324,11 @@ void CvHomelandAI::PlotAirliftMoves()
 	}
 
 	vector<CvPlot *>::const_iterator plotIt;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (plotIt = aAirliftPlots.begin(); plotIt != aAirliftPlots.end(); ++plotIt)
+#else
 	for (plotIt = aAirliftPlots.begin(); plotIt != aAirliftPlots.end(); plotIt++)
+#endif
 	{
 		FindUnitsForThisMove(AI_HOMELAND_MOVE_MOBILE_RESERVE, true);
 
@@ -6767,7 +6775,11 @@ CvPlot* CvHomelandAI::FindArchaeologistTarget(CvUnit *pUnit)
 
 	// Reverse the logic from most of the Homeland moves; for this we'll loop through units and find the best targets for them (instead of vice versa)
 	std::vector<CvHomelandTarget>::iterator it;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_TargetedAntiquitySites.begin(); it != m_TargetedAntiquitySites.end(); ++it)
+#else
 	for (it = m_TargetedAntiquitySites.begin(); it != m_TargetedAntiquitySites.end(); it++)
+#endif
 	{
 		CvPlot* pTarget = GC.getMap().plot(it->GetTargetX(), it->GetTargetY());
 #ifdef AUI_DANGER_PLOTS_REMADE
@@ -6789,7 +6801,11 @@ CvPlot* CvHomelandAI::FindArchaeologistTarget(CvUnit *pUnit)
 	// Erase this site from future contention
 	if (pBestTarget)
 	{
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+		for (it = m_TargetedAntiquitySites.begin(); it != m_TargetedAntiquitySites.end(); ++it)
+#else
 		for (it = m_TargetedAntiquitySites.begin(); it != m_TargetedAntiquitySites.end(); it++)
+#endif
 		{
 			if (it->GetTargetX() == pBestTarget->getX() && it->GetTargetY() == pBestTarget->getY())
 			{

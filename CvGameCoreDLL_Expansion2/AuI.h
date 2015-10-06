@@ -40,6 +40,8 @@
 #define AUI_WARNING_FIXES
 /// Changes the scopes of certain functions to fall in line with other functions of the same type (eg. CvUnit::CanFallBackFromMelee() is public instead of protected)
 #define AUI_SCOPE_FIXES
+/// Replaces all instances of iterators with postfix incrementors to have prefix incrementors, increasing performance
+#define AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
 /// Adds a few extra functions that can be used for 128-bit SSE types like __m128i and __m128d
 #define AUI_SIMD_ADDITIONS
 /// Caches certain modifiers that were not cached before to help with performance and stability

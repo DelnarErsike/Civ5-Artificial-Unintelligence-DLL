@@ -484,7 +484,11 @@ int CvPolicyAI::ChooseNextPolicy(CvPlayer* pPlayer)
 		}
 #else
 		vector<int>::const_iterator it;
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+		for (it = aLevel3Tenets.begin(); it != aLevel3Tenets.end(); ++it)
+#else
 		for (it = aLevel3Tenets.begin(); it != aLevel3Tenets.end(); it++)
+#endif
 		{
 			CvPolicyEntry *pEntry;
 			pEntry = m_pCurrentPolicies->GetPolicies()->GetPolicyEntry(*it);

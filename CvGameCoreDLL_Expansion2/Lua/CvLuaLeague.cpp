@@ -237,7 +237,11 @@ int CvLuaLeague::lGetChoicesForDecision(lua_State* L)
 	int iIndex = 1;
 
 	std::vector<int> v = pLeague->GetChoicesForDecision(eDecision, eDecider);
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (std::vector<int>::iterator it = v.begin(); it != v.end(); ++it)
+#else
 	for (std::vector<int>::iterator it = v.begin(); it != v.end(); it++)
+#endif
 	{
 		const int iChoice = (*it);
 		lua_pushinteger(L, iChoice);

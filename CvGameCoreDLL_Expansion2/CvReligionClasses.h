@@ -574,26 +574,34 @@ private:
 #endif
 #ifdef AUI_RELIGION_SCORE_BELIEF_AT_PLOT_REMADE
 	double ScoreBeliefAtPlot(const CvBeliefEntry* pEntry, const CvPlot* pPlot, const CvCity* pForCity) const;
-#else
-#ifdef AUI_RELIGION_USE_DOUBLES
-	double ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot);
+#elif defined(AUI_RELIGION_USE_DOUBLES)
+	double ScoreBeliefAtPlot(const CvBeliefEntry* pEntry, const CvPlot* pPlot) const;
+#elif defined(AUI_CONSTIFY)
+	int ScoreBeliefAtPlot(const CvBeliefEntry* pEntry, const CvPlot* pPlot) const;
 #else
 	int ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot);
 #endif
 #endif
 #if defined(AUI_RELIGION_SCORE_BELIEF_AT_CITY_REMADE) || defined(AUI_RELIGION_USE_DOUBLES)
 	double ScoreBeliefAtCity(const CvBeliefEntry* pEntry, const CvCity* pCity) const;
+#elif defined(AUI_CONSTIFY)
+	int ScoreBeliefAtCity(const CvBeliefEntry* pEntry, const CvCity* pCity) const;
 #else
 	int ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity);
 #endif
 #ifdef AUI_RELIGION_USE_DOUBLES
 	double ScoreBeliefForPlayer(const CvBeliefEntry* pEntry) const;
+#elif defined(AUI_CONSTIFY)
+	int ScoreBeliefForPlayer(const CvBeliefEntry* pEntry) const;
 #else
 	int ScoreBeliefForPlayer(CvBeliefEntry* pEntry);
 #endif
 
 #ifdef AUI_RELIGION_TWEAKED_MISSIONARY_INQUISITOR_SCORING
 	int ScoreCityForMissionary(const CvCity* pCity, UnitHandle pUnit, const CvPlot* pUnitPlot = NULL, int iMissionaryMoves = 2, int iMissionaryStrength = 0) const;
+	int ScoreCityForInquisitor(const CvCity* pCity, UnitHandle pUnit) const;
+#elif defined(AUI_CONSTIFY)
+	int ScoreCityForMissionary(const CvCity* pCity, UnitHandle pUnit) const;
 	int ScoreCityForInquisitor(const CvCity* pCity, UnitHandle pUnit) const;
 #else
 	int ScoreCityForMissionary(CvCity* pCity, UnitHandle pUnit);

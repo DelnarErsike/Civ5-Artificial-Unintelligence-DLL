@@ -297,6 +297,15 @@ void CvFlavorManager::AddFlavorRecipient(CvFlavorRecipient* pTargetObject, bool 
 /// Remove the recipient
 void CvFlavorManager::RemoveFlavorRecipient(CvFlavorRecipient* pTargetObject)
 {
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (Flavor_List::iterator iter = m_FlavorTargetList.begin(); iter != m_FlavorTargetList.end(); ++iter)
+	{
+		if (*iter == pTargetObject)
+		{
+			m_FlavorTargetList.erase(iter);
+			return;
+		}
+#else
 	Flavor_List::iterator iter = m_FlavorTargetList.begin();
 	Flavor_List::iterator end  = m_FlavorTargetList.end();
 
@@ -308,6 +317,7 @@ void CvFlavorManager::RemoveFlavorRecipient(CvFlavorRecipient* pTargetObject)
 			return;
 		}
 		iter++;
+#endif
 	}
 }
 
@@ -579,7 +589,11 @@ void CvFlavorManager::BroadcastFlavors(int* piDeltaFlavorValues, bool bPlayerLev
 {
 	Flavor_List::iterator it;
 
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_FlavorTargetList.begin(); it != m_FlavorTargetList.end(); ++it)
+#else
 	for(it = m_FlavorTargetList.begin(); it != m_FlavorTargetList.end(); it++)
+#endif
 	{
 		if(bPlayerLevelUpdate && !(*it)->IsCity())
 		{
@@ -597,7 +611,11 @@ void CvFlavorManager::BroadcastBaseFlavors()
 {
 	Flavor_List::iterator it;
 
+#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+	for (it = m_FlavorTargetList.begin(); it != m_FlavorTargetList.end(); ++it)
+#else
 	for(it = m_FlavorTargetList.begin(); it != m_FlavorTargetList.end(); it++)
+#endif
 	{
 		(*it)->SetFlavors(m_piPersonalityFlavor);
 	}
