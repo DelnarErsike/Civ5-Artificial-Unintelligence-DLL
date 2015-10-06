@@ -582,18 +582,14 @@ BuildingTypes CvWonderProductionAI::ChooseWonder(bool bUseAsyncRandom, bool bAdj
 
 
 /// Recommend highest-weighted wonder and what city to build it at
-#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
-#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+#if defined(AUI_PER_CITY_WONDER_PRODUCTION_AI) && defined(AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST)
 BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(CvUnit* pUnit, bool bUseAsyncRandom, int iExtraTurns, int& iWonderWeight)
-#else
+#elif defined(AUI_PER_CITY_WONDER_PRODUCTION_AI)
 BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncRandom, int iExtraTurns, int& iWonderWeight)
-#endif
-#else
-#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST
+#elif defined(AUI_WONDER_PRODUCTION_CHOOSE_WONDER_FOR_GREAT_ENGINEER_WEIGH_COST)
 BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(CvUnit* pUnit, bool bUseAsyncRandom, int& iWonderWeight, CvCity*& pCityToBuildAt)
 #else
 BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncRandom, int& iWonderWeight, CvCity*& pCityToBuildAt)
-#endif
 #endif
 {
 #ifdef AUI_WARNING_FIXES
@@ -660,20 +656,16 @@ BuildingTypes CvWonderProductionAI::ChooseWonderForGreatEngineer(bool bUseAsyncR
 		{
 			CvBuildingEntry& kBuilding = *pkBuildingInfo;
 			// Make sure this wonder can be built now
-#ifdef AUI_PER_CITY_WONDER_PRODUCTION_AI
-#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_NO_NATIONAL_WONDERS
+#if defined(AUI_PER_CITY_WONDER_PRODUCTION_AI) && defined(AUI_WONDER_PRODUCTION_CHOOSE_WONDER_NO_NATIONAL_WONDERSs)
 			const CvBuildingClassInfo& kBuildingClassInfo = kBuilding.GetBuildingClassInfo();
 			if (::isWorldWonderClass(kBuildingClassInfo) && m_pCity->canConstruct(eBuilding))
-#else
+#elif defined(AUI_PER_CITY_WONDER_PRODUCTION_AI)
 			if(IsWonder(kBuilding) && m_pCity->canConstruct(eBuilding))
-#endif
-#else
-#ifdef AUI_WONDER_PRODUCTION_CHOOSE_WONDER_NO_NATIONAL_WONDERS
+#elif defined(AUI_WONDER_PRODUCTION_CHOOSE_WONDER_NO_NATIONAL_WONDERS)
 			const CvBuildingClassInfo& kBuildingClassInfo = kBuilding.GetBuildingClassInfo();
 			if (::isWorldWonderClass(kBuildingClassInfo) && HaveCityToBuild((BuildingTypes)iBldgLoop))
 #else
 			if (IsWonder(kBuilding) && HaveCityToBuild((BuildingTypes)iBldgLoop))
-#endif
 #endif
 			{
 				iWeight = m_WonderAIWeights.GetWeight((UnitTypes)iBldgLoop); // use raw weight since this wonder is essentially free

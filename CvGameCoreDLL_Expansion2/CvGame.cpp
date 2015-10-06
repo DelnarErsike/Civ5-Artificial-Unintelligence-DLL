@@ -2012,9 +2012,7 @@ bool CvGame::hasTurnTimerExpired(PlayerTypes playerID)
 				float fGameTurnEnd = static_cast<float>(*piCurMaxTurnLength);
 #else
 				float gameTurnEnd = static_cast<float>(getMaxTurnLen());
-#endif
 
-#ifndef AUI_GAME_PLAYER_BASED_TURN_LENGTH
 				//NOTE:  These times exclude the time used for AI processing.
 				//Time since the current player's turn started.  Used for measuring time for players in sequential turn mode.
 				float timeSinceCurrentTurnStart = m_curTurnTimer.Peek() + m_fCurrentTurnTimerPauseDelta; 
@@ -3067,7 +3065,7 @@ bool CvGame::canHandleAction(int iAction, CvPlot* pPlot, bool bTestVisible)
 		if(pkHeadSelectedUnit->getOwner() == getActivePlayer())
 		{
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
-			if(GET_PLAYER(pkHeadSelectedUnit->getOwner()).getTurnOrder() == m_iCurrentTurnOrderActive || !isAnySimultaneousTurns() || GET_PLAYER(pkHeadSelectedUnit->getOwner()).isTurnActive())
+			if ((GET_PLAYER(pkHeadSelectedUnit->getOwner()).getTurnOrder() == m_iCurrentTurnOrderActive && isAnySimultaneousTurns()) || GET_PLAYER(pkHeadSelectedUnit->getOwner()).isTurnActive())
 #else
 			if(GET_PLAYER(pkHeadSelectedUnit->getOwner()).isSimultaneousTurns() || GET_PLAYER(pkHeadSelectedUnit->getOwner()).isTurnActive())
 #endif
@@ -3479,7 +3477,7 @@ void CvGame::doControl(ControlTypes eControl)
 				if(pUnit->getOwner() == getActivePlayer())
 				{
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
-					if (!GET_PLAYER(pUnit->getOwner()).getTurnOrder() != m_iCurrentTurnOrderActive || !isAnySimultaneousTurns() || getTurnSlice() - pUnit->getLastMoveTurn() > GC.getMIN_TIMER_UNIT_DOUBLE_MOVES())
+					if (GET_PLAYER(pUnit->getOwner()).getTurnOrder() != m_iCurrentTurnOrderActive || !isAnySimultaneousTurns() || getTurnSlice() - pUnit->getLastMoveTurn() > GC.getMIN_TIMER_UNIT_DOUBLE_MOVES())
 #else
 					if(!GET_PLAYER(pUnit->getOwner()).isSimultaneousTurns() || getTurnSlice() - pUnit->getLastMoveTurn() > GC.getMIN_TIMER_UNIT_DOUBLE_MOVES())
 #endif
