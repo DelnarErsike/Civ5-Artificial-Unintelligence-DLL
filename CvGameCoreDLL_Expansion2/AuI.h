@@ -46,8 +46,8 @@
 #define AUI_SIMD_ADDITIONS
 /// Caches certain modifiers that were not cached before to help with performance and stability
 #define AUI_CACHED_MODIFIERS
-/// Replaces Firaxis' low-quality Linear Congruential Random Number Generator with a higher-quality SIMD-oriented Fast Mersenne Twister Random Number Generator
-#define AUI_USE_SFMT_RNG
+/// Replaces Firaxis' low-quality Linear Congruential Random Number Generator with a higher-quality SIMD-oriented Fast Mersenne Twister Random Number Generator (disabled for now)
+//#define AUI_USE_SFMT_RNG
 /// Civilizations that are marked as coastal get the same coastal bias as maritime city-states
 #define AUI_STARTPOSITIONER_COASTAL_CIV_WATER_BIAS
 /// When calculating the founding value of a tile, tailor the SiteEvaluation function to the current player instead of the first one
