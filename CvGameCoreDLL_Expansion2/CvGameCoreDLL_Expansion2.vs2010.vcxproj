@@ -11,12 +11,13 @@
     <ProjectGuid>{F58F230D-EE4A-40E0-91D5-93626E790055}</ProjectGuid>
     <RootNamespace>CvGameCoreDLL_Expansion2</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Mod|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
-    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
     <PlatformToolset>v90</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -49,34 +50,45 @@
       <ExceptionHandling>
       </ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <FloatingPointModel>Strict</FloatingPointModel>
+      <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>CvGameCoreDLLPCH.h</PrecompiledHeaderFile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <EnablePREfast>true</EnablePREfast>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <SDLCheck>true</SDLCheck>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <StringPooling>true</StringPooling>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <DisableSpecificWarnings>4512;4201;4505</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>CvWorldBuilderMapWin32.lib;CvGameCoreDLLUtilWin32.lib;CvLocalizationWin32.lib;CvGameDatabaseWin32.lib;FireWorksWin32.lib;FLuaWin32.lib;lua51_Win32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)$(ProjectName)$(Platform)$(Configuration).dll</OutputFile>
-      <SuppressStartupBanner>false</SuppressStartupBanner>
+      <OutputFile>$(OutDir)\CvGameCore_Expansion2.dll</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>$(SolutionDir)\CvWorldBuilderMap\lib\;$(SolutionDir)\CvGameCoreDLLUtil\lib\;$(SolutionDir)\CvLocalization\lib\;$(SolutionDir)\CvGameDatabase\lib\;$(SolutionDir)FirePlace\lib\;$(SolutionDir)ThirdPartyLibs\Lua51\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(OutDir)\CvGameCore_Expansion2.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <LargeAddressAware>true</LargeAddressAware>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <DataExecutionPrevention>
-      </DataExecutionPrevention>
-      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <ImportLibrary>$(OutDir)\CvGameCore_Expansion2.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>$(ProjectDir)CvGameCoreDLL.def</ModuleDefinitionFile>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <LinkStatus>false</LinkStatus>
+      <ProfileGuidedDatabase>$(TargetDir)\CvGameCore_Expansion2.pgd</ProfileGuidedDatabase>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
