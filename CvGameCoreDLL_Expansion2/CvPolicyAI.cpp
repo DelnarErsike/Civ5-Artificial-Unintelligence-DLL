@@ -1230,35 +1230,27 @@ int CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
 					if(pkLoopPolicyInfo->GetPolicyBranchType() == eBranch)
 					{
 #ifdef AUI_POLICY_WEIGH_BRANCH_COUNT_POLICIES_WITH_PREREQ
-#ifdef AUI_POLICY_USE_DOUBLES
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#if defined(AUI_POLICY_USE_DOUBLES) && defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE)
 						dWeight += (m_PolicyAIWeights.GetWeight(iPolicyLoop) / dDivider);
-#else
+#elif defined(AUI_POLICY_USE_DOUBLES)
 						dWeight += m_PolicyAIWeights.GetWeight(iPolicyLoop);
-#endif
-#else
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#elif defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE)
 						iWeight += int(m_PolicyAIWeights.GetWeight(iPolicyLoop) / dDivider + 0.5);
 #else
 						iWeight += m_PolicyAIWeights.GetWeight(iPolicyLoop);
-#endif
 #endif
 #else
 						// With no prereqs?
 						if(pkLoopPolicyInfo->GetPrereqAndPolicies(0) == NO_POLICY)
 						{
-#ifdef AUI_POLICY_USE_DOUBLES
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#if defined(AUI_POLICY_USE_DOUBLES) && defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE)
 							dWeight += (m_PolicyAIWeights.GetWeight(iPolicyLoop) / dDivider);
-#else
+#elif defined(AUI_POLICY_USE_DOUBLES)
 							dWeight += m_PolicyAIWeights.GetWeight(iPolicyLoop);
-#endif
-#else
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#elif defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE)
 							iWeight += int(m_PolicyAIWeights.GetWeight(iPolicyLoop) / dDivider + 0.5);
 #else
 							iWeight += m_PolicyAIWeights.GetWeight(iPolicyLoop);
-#endif
 #endif
 						}
 #endif
@@ -1268,19 +1260,15 @@ int CvPolicyAI::WeighBranch(PolicyBranchTypes eBranch)
 		}
 
 		// Add weight of free policy from branch
-#ifdef AUI_POLICY_USE_DOUBLES
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#if defined(AUI_POLICY_USE_DOUBLES) && defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE)
 		dWeight += (m_PolicyAIWeights.GetWeight(pkPolicyBranchInfo->GetFreePolicy()) / dDivider);
-#else
+#elif defined(AUI_POLICY_USE_DOUBLES)
 		dWeight += m_PolicyAIWeights.GetWeight(pkPolicyBranchInfo->GetFreePolicy());
-#endif
-#else
-#ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE
+#elif defined(AUI_POLICY_WEIGH_BRANCH_INCLUDES_ERA_DIFFERENCE)
 		iWeight += int(m_PolicyAIWeights.GetWeight(pkPolicyBranchInfo->GetFreePolicy()) / dDivider + 0.5);
 #else
 		iWeight += m_PolicyAIWeights.GetWeight(pkPolicyBranchInfo->GetFreePolicy());
 #endif
-#endif AUI_POLICY_USE_DOUBLES
 
 #ifdef AUI_POLICY_WEIGH_BRANCH_INCLUDES_WONDER
 		// Add weight from wonder for this branch

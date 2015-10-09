@@ -5020,7 +5020,12 @@ void CvPlot::setOwner(PlayerTypes eNewValue, int iAcquiringCityID, bool bCheckUn
 					// Maintenance change!
 					if(MustPayMaintenanceHere(getOwner()))
 					{
+#ifdef AUI_WARNING_FIXES
+						if (pImprovementInfo)
+							GET_PLAYER(getOwner()).GetTreasury()->ChangeBaseImprovementGoldMaintenance(-pImprovementInfo->GetGoldMaintenance());
+#else
 						GET_PLAYER(getOwner()).GetTreasury()->ChangeBaseImprovementGoldMaintenance(-GC.getImprovementInfo(getImprovementType())->GetGoldMaintenance());
+#endif
 					}
 				}
 
@@ -5030,7 +5035,13 @@ void CvPlot::setOwner(PlayerTypes eNewValue, int iAcquiringCityID, bool bCheckUn
 					// Maintenance change!
 					if(MustPayMaintenanceHere(getOwner()))
 					{
+#ifdef AUI_WARNING_FIXES
+						CvRouteInfo* pRouteInfo = GC.getRouteInfo(getRouteType());
+						if (pRouteInfo)
+							GET_PLAYER(getOwner()).GetTreasury()->ChangeBaseImprovementGoldMaintenance(-pRouteInfo->GetGoldMaintenance());
+#else
 						GET_PLAYER(getOwner()).GetTreasury()->ChangeBaseImprovementGoldMaintenance(-GC.getRouteInfo(getRouteType())->GetGoldMaintenance());
+#endif
 					}
 				}
 
@@ -5185,7 +5196,12 @@ void CvPlot::setOwner(PlayerTypes eNewValue, int iAcquiringCityID, bool bCheckUn
 					// Maintenance change!
 					if(MustPayMaintenanceHere(eNewValue))
 					{
+#ifdef AUI_WARNING_FIXES
+						if (pImprovementInfo)
+							GET_PLAYER(eNewValue).GetTreasury()->ChangeBaseImprovementGoldMaintenance(pImprovementInfo->GetGoldMaintenance());
+#else
 						GET_PLAYER(eNewValue).GetTreasury()->ChangeBaseImprovementGoldMaintenance(GC.getImprovementInfo(getImprovementType())->GetGoldMaintenance());
+#endif
 					}
 				}
 
@@ -5195,7 +5211,13 @@ void CvPlot::setOwner(PlayerTypes eNewValue, int iAcquiringCityID, bool bCheckUn
 					// Maintenance change!
 					if(MustPayMaintenanceHere(eNewValue))
 					{
+#ifdef AUI_WARNING_FIXES
+						CvRouteInfo* pRouteInfo = GC.getRouteInfo(getRouteType());
+						if (pRouteInfo)
+							GET_PLAYER(eNewValue).GetTreasury()->ChangeBaseImprovementGoldMaintenance(pRouteInfo->GetGoldMaintenance());
+#else
 						GET_PLAYER(eNewValue).GetTreasury()->ChangeBaseImprovementGoldMaintenance(GC.getRouteInfo(getRouteType())->GetGoldMaintenance());
+#endif
 					}
 				}
 
@@ -6119,7 +6141,11 @@ void CvPlot::setImprovementType(ImprovementTypes eNewValue, PlayerTypes eBuilder
 				// Maintenance change!
 				if(MustPayMaintenanceHere(owningPlayerID))
 				{
+#ifdef AUI_WARNING_FIXES
+					GET_PLAYER(owningPlayerID).GetTreasury()->ChangeBaseImprovementGoldMaintenance(-oldImprovementEntry.GetGoldMaintenance());
+#else
 					GET_PLAYER(owningPlayerID).GetTreasury()->ChangeBaseImprovementGoldMaintenance(-GC.getImprovementInfo(getImprovementType())->GetGoldMaintenance());
+#endif
 				}
 
 				// Siphon resource changes
@@ -6149,7 +6175,11 @@ void CvPlot::setImprovementType(ImprovementTypes eNewValue, PlayerTypes eBuilder
 				// Maintenance change!
 				if(MustPayMaintenanceHere(GetPlayerResponsibleForImprovement()))
 				{
+#ifdef AUI_WARNING_FIXES
+					GET_PLAYER(GetPlayerResponsibleForImprovement()).GetTreasury()->ChangeBaseImprovementGoldMaintenance(-oldImprovementEntry.GetGoldMaintenance());
+#else
 					GET_PLAYER(GetPlayerResponsibleForImprovement()).GetTreasury()->ChangeBaseImprovementGoldMaintenance(-GC.getImprovementInfo(getImprovementType())->GetGoldMaintenance());
+#endif
 				}
 
 				SetPlayerResponsibleForImprovement(NO_PLAYER);
@@ -6529,7 +6559,11 @@ void CvPlot::setRouteType(RouteTypes eNewValue)
 				// Maintenance change!
 				if(MustPayMaintenanceHere(getOwner()))
 				{
+#ifdef AUI_WARNING_FIXES
+					GET_PLAYER(getOwner()).GetTreasury()->ChangeBaseImprovementGoldMaintenance(-oldRouteInfo.GetGoldMaintenance());
+#else
 					GET_PLAYER(getOwner()).GetTreasury()->ChangeBaseImprovementGoldMaintenance(-GC.getRouteInfo(getRouteType())->GetGoldMaintenance());
+#endif
 				}
 
 				// Update the amount of a Resource used up by a Route which was previously here
@@ -6871,7 +6905,7 @@ void CvPlot::setPlotCity(CvCity* pNewValue)
 #ifdef AUI_WARNING_FIXES
 					CvRouteInfo* pRouteInfo = GC.getRouteInfo(getRouteType());
 					if (pRouteInfo)
-						GET_PLAYER(getOwner()).GetTreasury()->ChangeBaseImprovementGoldMaintenance(-pRouteInfo->GetGoldMaintenance());
+						GET_PLAYER(getOwner()).GetTreasury()->ChangeBaseImprovementGoldMaintenance(pRouteInfo->GetGoldMaintenance());
 #else
 					GET_PLAYER(getOwner()).GetTreasury()->ChangeBaseImprovementGoldMaintenance(GC.getRouteInfo(getRouteType())->GetGoldMaintenance());
 #endif

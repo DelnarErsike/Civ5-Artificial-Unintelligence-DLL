@@ -24281,14 +24281,12 @@ int CvPlayer::getGrowthThreshold(int iPopulation) const
 void CvPlayer::InitPlots(void)
 {
 #ifdef AUI_WARNING_FIXES
-	int iNumPlots = GC.getMap().numPlots();
-	// in case we're loading
-	if (iNumPlots != int(m_aiPlots.size()))
+	uint iNumPlots = GC.getMap().numPlots();
 #else
 	int iNumPlots = GC.getMap().getGridHeight() * GC.getMap().getGridHeight();
+#endif
 	// in case we're loading
 	if(iNumPlots != m_aiPlots.size())
-#endif
 	{
 		m_aiPlots.clear();
 		m_aiPlots.push_back_copy(-1, iNumPlots);

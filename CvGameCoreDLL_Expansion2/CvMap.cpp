@@ -303,13 +303,13 @@ void CvMap::InitPlots()
 
 
 #ifdef AUI_WARNING_FIXES
-	int* pYields = m_pYields;
-	int*   pFoundValue = m_pFoundValue;
-	int*  pPlayerCityRadiusCount = m_pPlayerCityRadiusCount;
-	int* pVisibilityCount = m_pVisibilityCount;
-	int*  pRevealedOwner = m_pRevealedOwner;
-	int* pRevealedImprovementType = m_pRevealedImprovementType;
-	int* pRevealedRouteType = m_pRevealedRouteType;
+	int* pYields					= m_pYields;
+	int* pFoundValue				= m_pFoundValue;
+	int* pPlayerCityRadiusCount		= m_pPlayerCityRadiusCount;
+	int* pVisibilityCount			= m_pVisibilityCount;
+	int* pRevealedOwner				= m_pRevealedOwner;
+	int* pRevealedImprovementType	= m_pRevealedImprovementType;
+	int* pRevealedRouteType			= m_pRevealedRouteType;
 #else
 	short* pYields					= m_pYields;
 	int*   pFoundValue				= m_pFoundValue;
@@ -743,13 +743,11 @@ void CvMap::setupGraphical()
 
 	if(m_pMapPlots != NULL)
 	{
-#ifdef AUI_WARNING_FIXES
-#ifdef AUI_USE_OPENMP
+#if defined(AUI_WARNING_FIXES) && defined(AUI_USE_OPENMP)
 #pragma omp parallel for
 		for (int iI = 0; iI < (int)numPlots(); iI++)
-#else
+#elif defined(AUI_WARNING_FIXES)
 		for (uint iI = 0; iI < numPlots(); iI++)
-#endif
 #elif defined (AUI_USE_OPENMP)
 #pragma omp parallel for
 		for (int iI = 0; iI < numPlots(); iI++)
@@ -832,13 +830,11 @@ void CvMap::doTurn()
 //	--------------------------------------------------------------------------------
 void CvMap::updateFog()
 {
-#ifdef AUI_WARNING_FIXES
-#ifdef AUI_USE_OPENMP
+#if defined(AUI_WARNING_FIXES) && defined(AUI_USE_OPENMP)
 #pragma omp parallel for
 	for (int iI = 0; iI < (int)numPlots(); iI++)
-#else
+#elif defined(AUI_WARNING_FIXES)
 	for (uint iI = 0; iI < numPlots(); iI++)
-#endif
 #elif defined(AUI_USE_OPENMP)
 #pragma omp parallel for
 	for (int iI = 0; iI < numPlots(); iI++)
@@ -867,13 +863,11 @@ void CvMap::updateDeferredFog()
 //	--------------------------------------------------------------------------------
 void CvMap::updateVisibility()
 {
-#ifdef AUI_WARNING_FIXES
-#ifdef AUI_USE_OPENMP
+#if defined(AUI_WARNING_FIXES) && defined(AUI_USE_OPENMP)
 #pragma omp parallel for
 	for (int iI = 0; iI < (int)numPlots(); iI++)
-#else
+#elif defined(AUI_WARNING_FIXES)
 	for (uint iI = 0; iI < numPlots(); iI++)
-#endif
 #elif defined(AUI_USE_OPENMP)
 #pragma omp parallel for
 	for (int iI = 0; iI < numPlots(); iI++)
@@ -925,13 +919,11 @@ void CvMap::updateSight(bool bIncrement)
 //	--------------------------------------------------------------------------------
 void CvMap::updateCenterUnit()
 {
-#ifdef AUI_WARNING_FIXES
-#ifdef AUI_USE_OPENMP
+#if defined(AUI_WARNING_FIXES) && defined(AUI_USE_OPENMP)
 #pragma omp parallel for
 	for (int iI = 0; iI < (int)numPlots(); iI++)
-#else
+#elif defined(AUI_WARNING_FIXES)
 	for (uint iI = 0; iI < numPlots(); iI++)
-#endif
 #elif defined(AUI_USE_OPENMP)
 #pragma omp parallel for
 	for (int iI = 0; iI < numPlots(); iI++)
@@ -1008,13 +1000,11 @@ void CvMap::updateYield()
 //	Update the adjacency cache values
 void CvMap::updateAdjacency()
 {
-#ifdef AUI_WARNING_FIXES
-#ifdef AUI_USE_OPENMP
+#if defined(AUI_WARNING_FIXES) && defined(AUI_USE_OPENMP)
 #pragma omp parallel for
 	for (int iI = 0; iI < (int)numPlots(); iI++)
-#else
+#elif defined(AUI_WARNING_FIXES)
 	for (uint iI = 0; iI < numPlots(); iI++)
-#endif
 #elif defined(AUI_USE_OPENMP)
 #pragma omp parallel for
 	for (int iI = 0; iI < numPlots(); iI++)
