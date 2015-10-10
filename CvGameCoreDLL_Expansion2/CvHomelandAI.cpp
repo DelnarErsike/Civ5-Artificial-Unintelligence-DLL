@@ -6576,7 +6576,7 @@ bool CvHomelandAI::GetClosestUnitByTurnsToTarget(CvHomelandAI::MoveUnitsArray &k
 			if (iDistance == MAX_INT)
 				continue;
 #ifdef AUI_ASTAR_TURN_LIMITER
-			int iMaxRange = MIN(iDistance, FASTMIN(iMaxTurns, iMinTurns - 1));
+			int iMaxRange = MIN(iDistance, MIN(iMaxTurns, iMinTurns - 1));
 			int iMoves = TurnsToReachTarget(pLoopUnit.pointer(), pTarget, false, false, false, iMaxRange);
 #else
 			int iMoves = TurnsToReachTarget(pLoopUnit.pointer(), pTarget);

@@ -601,21 +601,42 @@ public:
 	void SetBuildingYieldChange(BuildingClassTypes eBuildingClass, YieldTypes eYield, int iChange);
 	void ChangeBuildingYieldChange(BuildingClassTypes eBuildingClass, YieldTypes eYield, int iChange);
 
+#ifdef AUI_WARNING_FIXES
+	int GetBuildingGreatWork(BuildingClassTypes eBuildingClass, uint iSlot) const;
+	void SetBuildingGreatWork(BuildingClassTypes eBuildingClass, uint iSlot, int iGreatWorkIndex);
+#else
 	int GetBuildingGreatWork(BuildingClassTypes eBuildingClass, int iSlot) const;
 	void SetBuildingGreatWork(BuildingClassTypes eBuildingClass, int iSlot, int iGreatWorkIndex);
+#endif
 	bool IsHoldingGreatWork(BuildingClassTypes eBuildingClass) const;
+#ifdef AUI_WARNING_FIXES
+	uint GetNumGreatWorksInBuilding(BuildingClassTypes eBuildingClass) const;
+#else
 	int GetNumGreatWorksInBuilding(BuildingClassTypes eBuildingClass) const;
+#endif
   
 	bool HasAnyAvailableGreatWorkSlot() const;
 	bool HasAvailableGreatWorkSlot(GreatWorkSlotType eGreatWorkSlot) const;
+#ifdef AUI_WARNING_FIXES
+	uint GetNumAvailableGreatWorkSlots() const;
+	uint GetNumAvailableGreatWorkSlots(GreatWorkSlotType eGreatWorkSlot) const;
+	bool GetNextAvailableGreatWorkSlot(BuildingClassTypes *eBuildingClass, uint *iSlot) const;
+	bool GetNextAvailableGreatWorkSlot(GreatWorkSlotType eGreatWorkSlot, BuildingClassTypes *eBuildingClass, uint *iSlot) const;
+#else
 	int GetNumAvailableGreatWorkSlots() const;
 	int GetNumAvailableGreatWorkSlots(GreatWorkSlotType eGreatWorkSlot) const;
 	bool GetNextAvailableGreatWorkSlot(BuildingClassTypes *eBuildingClass, int *iSlot) const;
 	bool GetNextAvailableGreatWorkSlot(GreatWorkSlotType eGreatWorkSlot, BuildingClassTypes *eBuildingClass, int *iSlot) const;
+#endif
 
 	int GetCultureFromGreatWorks() const;
+#ifdef AUI_WARNING_FIXES
+	uint GetNumGreatWorks() const;
+	uint GetNumGreatWorks(GreatWorkSlotType eGreatWorkSlot) const;
+#else
 	int GetNumGreatWorks() const;
 	int GetNumGreatWorks(GreatWorkSlotType eGreatWorkSlot) const;
+#endif
 
 	int GetLandmarksTourismPercent() const;
 	void ChangeLandmarksTourismPercent(int iChange);

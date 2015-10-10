@@ -581,7 +581,6 @@ private:
 #else
 	int ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot);
 #endif
-#endif
 #if defined(AUI_RELIGION_SCORE_BELIEF_AT_CITY_REMADE) || defined(AUI_RELIGION_USE_DOUBLES)
 	double ScoreBeliefAtCity(const CvBeliefEntry* pEntry, const CvCity* pCity) const;
 #elif defined(AUI_CONSTIFY)

@@ -173,13 +173,21 @@ struct BuildingGreatWork
 {
 	BuildingGreatWork()
 		: eBuildingClass(NO_BUILDINGCLASS)
+#ifdef AUI_WARNING_FIXES
+		, iSlot(MAX_UNSIGNED_INT)
+#else
 		, iSlot(-1)
+#endif
 		, iGreatWorkIndex(-1)
 	{
 	}
 
 	BuildingClassTypes eBuildingClass;
+#ifdef AUI_WARNING_FIXES
+	uint iSlot;
+#else
 	int iSlot;
+#endif
 	int iGreatWorkIndex;
 };
 

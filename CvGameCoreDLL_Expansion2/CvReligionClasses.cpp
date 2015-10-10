@@ -3508,7 +3508,11 @@ void CvCityReligions::AddReligiousPressure(CvReligiousFollowChangeReason eReason
 		//  If this is pressure from a real religion, reduce presence of pantheon by the same amount
 		else if(eReligion > RELIGION_PANTHEON && it->m_eReligion == RELIGION_PANTHEON)
 		{
+#ifdef AUI_FAST_COMP
+			it->m_iPressure = MAX(0, (it->m_iPressure - iPressure));
+#else
 			it->m_iPressure = max(0, (it->m_iPressure - iPressure));
+#endif
 		}
 
 		else if (it->m_eReligion > RELIGION_PANTHEON && eReason == FOLLOWER_CHANGE_MISSIONARY)
@@ -3518,7 +3522,11 @@ void CvCityReligions::AddReligiousPressure(CvReligiousFollowChangeReason eReason
 			if (iPressureErosion > 0)
 			{
 				int iErosionAmount = iPressureErosion * iPressure / 100;
+#ifdef AUI_FAST_COMP
+				it->m_iPressure = MAX(0, (it->m_iPressure - iErosionAmount));
+#else
 				it->m_iPressure = max(0, (it->m_iPressure - iErosionAmount));
+#endif
 			}
 		}
 	}
@@ -3613,7 +3621,11 @@ void CvCityReligions::SimulateReligiousPressure(ReligionTypes eReligion, int iPr
 		//  If this is pressure from a real religion, reduce presence of pantheon by the same amount
 		else if(eReligion > RELIGION_PANTHEON && it->m_eReligion == RELIGION_PANTHEON)
 		{
+#ifdef AUI_FAST_COMP
+			it->m_iPressure = MAX(0, (it->m_iPressure - iPressure));
+#else
 			it->m_iPressure = max(0, (it->m_iPressure - iPressure));
+#endif
 		}
 
 		else if (it->m_eReligion > RELIGION_PANTHEON)
@@ -3623,7 +3635,11 @@ void CvCityReligions::SimulateReligiousPressure(ReligionTypes eReligion, int iPr
 			if (iPressureErosion > 0)
 			{
 				int iErosionAmount = iPressureErosion * iPressure / 100;
+#ifdef AUI_FAST_COMP
+				it->m_iPressure = MAX(0, (it->m_iPressure - iErosionAmount));
+#else
 				it->m_iPressure = max(0, (it->m_iPressure - iErosionAmount));
+#endif
 			}
 		}
 	}
@@ -6874,11 +6890,15 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 		if (pEntry->GetMaxYieldModifierPerFollower(iI) > 0)
 		{
 #ifdef AUI_RELIGION_USE_DOUBLES
-			dTempValue = min(pEntry->GetMaxYieldModifierPerFollower(iI), pCity->getPopulation());
+			dTempValue = MIN(pEntry->GetMaxYieldModifierPerFollower(iI), pCity->getPopulation());
 			dTempValue /= 2.0;
 			dRtnValue += dTempValue;
 #else
+#ifdef AUI_FAST_COMP
+			iTempValue = MIN(pEntry->GetMaxYieldModifierPerFollower(iI), pCity->getPopulation());
+#else
 			iTempValue = min(pEntry->GetMaxYieldModifierPerFollower(iI), pCity->getPopulation());
+#endif
 			iTempValue /= 2;
 			iRtnValue += iTempValue;
 #endif

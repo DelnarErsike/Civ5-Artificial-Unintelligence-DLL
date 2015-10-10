@@ -386,7 +386,11 @@ bool CvGameTrade::CreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, Domai
 	int iCircuitsToComplete = 1; // how many circuits do we want this trade route to run to reach the target turns
 	if (iTurnsPerCircuit != 0)
 	{
+#ifdef AUI_FAST_COMP
+		iCircuitsToComplete = MAX(iTargetTurns / iTurnsPerCircuit, 2);
+#else
 		iCircuitsToComplete = max(iTargetTurns / iTurnsPerCircuit, 2);
+#endif
 	}
 
 	m_aTradeConnections[iNewTradeRouteIndex].m_iCircuitsCompleted = 0;
@@ -1982,7 +1986,11 @@ int CvPlayerTrade::GetTradeConnectionBaseValueTimes100(const TradeConnection& kT
 				if (iTechDifference > 0)
 				{
 					int iCeilTechDifference = (int)ceil(iTechDifference / 2.0f);
+#ifdef AUI_FAST_COMP
+					iAdjustedTechDifference = MAX(iCeilTechDifference, 1);
+#else
 					iAdjustedTechDifference = max(iCeilTechDifference, 1);
+#endif
 				}
 
 				// Cultural influence bump
@@ -2002,7 +2010,11 @@ int CvPlayerTrade::GetTradeConnectionBaseValueTimes100(const TradeConnection& kT
 			if (iTechDifference > 0)
 			{
 				int iCeilTechDifference = (int)ceil(iTechDifference / 2.0f);
+#ifdef AUI_FAST_COMP
+				iAdjustedTechDifference = MAX(iCeilTechDifference, 1);
+#else
 				iAdjustedTechDifference = max(iCeilTechDifference, 1);
+#endif
 			}
 
 			return  iAdjustedTechDifference * 100;
@@ -2503,7 +2515,11 @@ int CvPlayerTrade::GetTradeConnectionValueTimes100 (const TradeConnection& kTrad
 
 					iValue *= iModifier;
 					iValue /= 100;
+#ifdef AUI_FAST_COMP
+					iValue = MAX(100, iValue);
+#else
 					iValue = max(100, iValue);
+#endif
 				}
 				break;
 			case YIELD_SCIENCE:

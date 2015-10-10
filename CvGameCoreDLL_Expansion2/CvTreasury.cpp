@@ -512,7 +512,11 @@ int CvTreasury::CalculateUnitCost(int& iFreeUnits, int& iPaidUnits, int& iBaseUn
 	iFreeUnits += m_pPlayer->GetNumMaintenanceFreeUnits();
 	iFreeUnits += m_pPlayer->getBaseFreeUnits();
 
+#ifdef AUI_FAST_COMP
+	iPaidUnits = MAX(0, m_pPlayer->getNumUnits() - iFreeUnits);
+#else
 	iPaidUnits = max(0, m_pPlayer->getNumUnits() - iFreeUnits);
+#endif
 
 	iBaseUnitCost = iPaidUnits * m_pPlayer->getGoldPerUnitTimes100();
 
@@ -599,7 +603,11 @@ int CvTreasury::CalculateUnitCost(int& iFreeUnits, int& iPaidUnits, int& iBaseUn
 
 	//iFinalCost /= 100;
 
+#ifdef AUI_FAST_COMP
+	return MAX(0, int(dFinalCost));
+#else
 	return std::max(0, int(dFinalCost));
+#endif
 }
 
 /// Compute unit supply for the turn (returns component info)
@@ -607,7 +615,11 @@ int CvTreasury::CalculateUnitSupply(int& iPaidUnits, int& iBaseSupplyCost)
 {
 	int iSupply;
 
+#ifdef AUI_FAST_COMP
+	iPaidUnits = MAX(0, (m_pPlayer->getNumOutsideUnits() - /*3*/ GC.getINITIAL_FREE_OUTSIDE_UNITS()));
+#else
 	iPaidUnits = std::max(0, (m_pPlayer->getNumOutsideUnits() - /*3*/ GC.getINITIAL_FREE_OUTSIDE_UNITS()));
+#endif
 
 	// JON: This is set to 0 right now, which pretty much means it's disabled
 	iBaseSupplyCost = iPaidUnits* /*0*/ GC.getINITIAL_OUTSIDE_UNIT_GOLD_PERCENT();
@@ -624,7 +636,11 @@ int CvTreasury::CalculateUnitSupply(int& iPaidUnits, int& iBaseSupplyCost)
 		//iSupply *= gameHandicap->getAIUnitSupplyPercent();	// This is no longer valid
 		//iSupply /= 100;
 
+#ifdef AUI_FAST_COMP
+		iSupply *= MAX(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * m_pPlayer->GetCurrentEra()) + 100));
+#else
 		iSupply *= std::max(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * m_pPlayer->GetCurrentEra()) + 100));
+#endif
 		iSupply /= 100;
 	}
 
@@ -699,13 +715,21 @@ int CvTreasury::CalculateInflationRate()
 	if(!m_pPlayer->isHuman() && !m_pPlayer->isBarbarian())
 	{
 		int iAIModifier = gameHandicap.getAIInflationPercent();
+#ifdef AUI_FAST_COMP
+		iAIModifier *= MAX(0, ((gameHandicap.getAIPerEraModifier() * m_pPlayer->GetCurrentEra()) + 100));
+#else
 		iAIModifier *= std::max(0, ((gameHandicap.getAIPerEraModifier() * m_pPlayer->GetCurrentEra()) + 100));
+#endif
 		iAIModifier /= 100;
 
 		iModifier += iAIModifier - 100;
 	}
 
+#ifdef AUI_FAST_COMP
+	iInflationPerTurnTimes10000 *= MAX(0, 100 + iModifier);
+#else
 	iInflationPerTurnTimes10000 *= std::max(0, 100 + iModifier);
+#endif
 	iInflationPerTurnTimes10000 /= 100;
 
 	// Keep up to second order terms in binomial series
@@ -722,7 +746,11 @@ int CvTreasury::CalculateInflatedCosts()
 {
 	int iCosts = CalculatePreInflatedCosts();
 
+#ifdef AUI_FAST_COMP
+	//iCosts *= MAX(0, (CalculateInflationRate() + 100));
+#else
 	//iCosts *= std::max(0, (CalculateInflationRate() + 100));
+#endif
 	//iCosts /= 100;
 
 	return iCosts;

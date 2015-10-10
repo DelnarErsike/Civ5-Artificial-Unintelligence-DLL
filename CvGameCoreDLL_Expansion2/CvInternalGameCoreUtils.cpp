@@ -64,7 +64,11 @@ int getWorldSizeMaxConscript(const CvPolicyEntry& kPolicy)
 {
 	int iMaxConscript = kPolicy.GetMaxConscript();
 
+#ifdef AUI_FAST_COMP
+	iMaxConscript *= MAX(0, (GC.getMap().getWorldInfo().getMaxConscriptModifier() + 100));
+#else
 	iMaxConscript *= std::max(0, (GC.getMap().getWorldInfo().getMaxConscriptModifier() + 100));
+#endif
 	iMaxConscript /= 100;
 
 	return iMaxConscript;

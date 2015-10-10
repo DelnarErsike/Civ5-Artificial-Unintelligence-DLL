@@ -3709,7 +3709,11 @@ int CvLuaCity::lGetBuildingGreatWork(lua_State* L)
 {
 	CvCity* pkCity = GetInstance(L);
 	const BuildingClassTypes iIndex = toValue<BuildingClassTypes>(L, 2);
+#ifdef AUI_WARNING_FIXES
+	const uint iSlot = lua_tointeger(L, 3);
+#else
 	const int iSlot = lua_tointeger(L, 3);
+#endif
 	const int iResult = pkCity->GetCityBuildings()->GetBuildingGreatWork(iIndex, iSlot);
 	lua_pushinteger(L, iResult);
 	return 1;
@@ -3720,7 +3724,11 @@ int CvLuaCity::lSetBuildingGreatWork(lua_State* L)
 {
 	CvCity* pkCity = GetInstance(L);
 	const BuildingClassTypes iIndex = toValue<BuildingClassTypes>(L, 2);
+#ifdef AUI_WARNING_FIXES
+	const uint iSlot = lua_tointeger(L, 3);
+#else
 	const int iSlot = lua_tointeger(L, 3);
+#endif
 	const int iGreatWorkIndex = lua_tointeger(L, 4);
 	if(iIndex != NO_BUILDING)
 	{
@@ -3752,7 +3760,11 @@ int CvLuaCity::lGetNumGreatWorksInBuilding(lua_State* L)
 {
 	CvCity* pkCity = GetInstance(L);
 	const BuildingClassTypes iIndex = toValue<BuildingClassTypes>(L, 2);
+#ifdef AUI_WARNING_FIXES
+	const uint iResult = (int)pkCity->GetCityBuildings()->GetNumGreatWorksInBuilding(iIndex);
+#else
 	const int iResult = pkCity->GetCityBuildings()->GetNumGreatWorksInBuilding(iIndex);
+#endif
 	lua_pushinteger(L, iResult);
 	return 1;
 }

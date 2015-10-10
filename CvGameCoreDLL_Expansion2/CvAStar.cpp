@@ -1263,15 +1263,15 @@ int PathDestValid(int iToX, int iToY, const void* pointer, CvAStar* finder)
 #endif
 	FAssert(pToPlot != NULL);
 
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
 #ifdef AUI_ASTAR_USE_DELEGATES
 	const CvUnit* pUnit = m_pData;
-#else
-	CvUnit* pUnit = (CvUnit*)m_pData;
-#endif
 	const UnitPathCacheData* pCacheData = reinterpret_cast<const UnitPathCacheData*>(GetScratchBuffer());
 #else
+#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+	CvUnit* pUnit = (CvUnit*)pointer;
+#else
 	pUnit = ((CvUnit*)pointer);
+#endif
 	const UnitPathCacheData* pCacheData = reinterpret_cast<const UnitPathCacheData*>(finder->GetScratchBuffer());
 #endif
 
@@ -3019,7 +3019,11 @@ int IgnoreUnitsValid(CvAStarNode* parent, CvAStarNode* node, int data, const voi
 		kToNodeCacheData.bIsWater = (pToPlot->isWater() && !pToPlot->IsAllowsWalkWater());
 		// Recycling bIsMountain for Borders check (only for IgnoreUnits Pathfinder!)
 #ifdef AUI_ASTAR_FIX_IGNORE_UNITS_PATHFINDER_TERRITORY_CHECK
+#ifdef AUI_ASTAR_USE_DELEGATES
 		kToNodeCacheData.bIsMountain = pUnit->canEnterTerritory(pToPlot->getTeam(), false, false, pUnit->IsDeclareWar() || (GetInfo() & MOVE_DECLARE_WAR));
+#else
+		kToNodeCacheData.bIsMountain = pUnit->canEnterTerritory(pToPlot->getTeam(), false, false, pUnit->IsDeclareWar() || (finder->GetInfo() & MOVE_DECLARE_WAR));
+#endif
 #else
 		kToNodeCacheData.bIsMountain = pUnit->canEnterTerritory(eUnitTeam);
 #endif
@@ -3620,7 +3624,7 @@ int InfluenceCost(CvAStarNode* parent, CvAStarNode* node, int data, const void* 
 	{
 		iCost = 1;
 	}
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_FAST_COMP
 	iCost = MAX(1,iCost);
 	iCost = MIN(3,iCost);
 #else
@@ -4652,7 +4656,7 @@ CvPlot* CvStepPathFinder::GetXPlotsFromEnd(PlayerTypes ePlayer, PlayerTypes eEne
 #ifdef AUI_ASTAR_MINOR_OPTIMIZATION
 	// Generate step path
 	int iPathLen = GC.getStepFinder().GetStepDistanceBetweenPoints(ePlayer, eEnemy, pStartPlot, pEndPlot);
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_FAST_COMP
 	int iNumSteps = MIN(iPlotsFromEnd, iPathLen);
 #else
 	int iNumSteps = ::min(iPlotsFromEnd, iPathLen);
@@ -4663,7 +4667,7 @@ CvPlot* CvStepPathFinder::GetXPlotsFromEnd(PlayerTypes ePlayer, PlayerTypes eEne
 
 	// Generate step path
 	iPathLen = GC.getStepFinder().GetStepDistanceBetweenPoints(ePlayer, eEnemy, pStartPlot, pEndPlot);
-#ifdef AUI_ASTAR_MINOR_OPTIMIZATION
+#ifdef AUI_FAST_COMP
 	iNumSteps = MIN(iPlotsFromEnd, iPathLen);
 #else
 	iNumSteps = ::min(iPlotsFromEnd, iPathLen);

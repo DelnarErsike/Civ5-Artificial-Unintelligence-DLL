@@ -806,7 +806,11 @@ int CvStartPositioner::StartingPlotRange() const
 	iNumMinors = GC.getGame().countCivPlayersAlive() - iNumMajors;
 	iExpectedCities = GC.getMap().getWorldInfo().getTargetNumCities() * iNumMajors;
 	iExpectedCities += iNumMinors;
+#ifdef AUI_FAST_COMP
+	iExpectedCities = MAX(1, iExpectedCities);
+#else
 	iExpectedCities = std::max(1,iExpectedCities);
+#endif
 
 	// Adjust range compared to how many plots we have per city
 	iRange *= GC.getMap().getLandPlots();
@@ -815,7 +819,11 @@ int CvStartPositioner::StartingPlotRange() const
 
 	// Used to be a Python hook (minStartingDistanceModifier) here
 
+#ifdef AUI_FAST_COMP
+	return MAX(iRange, GC.getMIN_CIV_STARTING_DISTANCE());
+#else
 	return std::max(iRange, GC.getMIN_CIV_STARTING_DISTANCE());
+#endif
 }
 
 /// Log current status of the operation

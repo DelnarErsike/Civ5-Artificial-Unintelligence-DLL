@@ -3855,7 +3855,11 @@ int CvGame::getAdjustedPopulationPercent(VictoryTypes eVictory) const
 		}
 	}
 
+#ifdef AUI_FAST_COMP
+	return MIN(100, (((iNextBestPopulation * 100) / getTotalPopulation()) + pkVictoryInfo->getPopulationPercentLead()));
+#else
 	return std::min(100, (((iNextBestPopulation * 100) / getTotalPopulation()) + pkVictoryInfo->getPopulationPercentLead()));
+#endif
 }
 
 
@@ -3889,7 +3893,11 @@ int CvGame::getAdjustedLandPercent(VictoryTypes eVictory) const
 
 	iPercent -= (countCivTeamsEverAlive() * 2);
 
+#ifdef AUI_FAST_COMP
+	return MAX(iPercent, pkVictoryInfo->getMinLandPercent());
+#else
 	return std::max(iPercent, pkVictoryInfo->getMinLandPercent());
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -5139,7 +5147,11 @@ void CvGame::initScoreCalculation()
 			iMaxFood += pPlot->calculateBestNatureYield(YIELD_FOOD, NO_TEAM);
 		}
 	}
+#ifdef AUI_FAST_COMP
+	m_iMaxPopulation = getPopulationScore(iMaxFood / MAX(1, GC.getFOOD_CONSUMPTION_PER_POPULATION()));
+#else
 	m_iMaxPopulation = getPopulationScore(iMaxFood / std::max(1, GC.getFOOD_CONSUMPTION_PER_POPULATION()));
+#endif
 	if(NO_ERA != getStartEra())
 	{
 		CvEraInfo& kStartEra = getStartEraInfo();
@@ -5214,7 +5226,11 @@ void CvGame::setAIAutoPlay(int iNewValue, PlayerTypes eReturnAsPlayer)
 
 	if(iOldValue != iNewValue)
 	{
+#ifdef AUI_FAST_COMP
+		m_iAIAutoPlay = MAX(0, iNewValue);
+#else
 		m_iAIAutoPlay = std::max(0, iNewValue);
+#endif
 		m_eAIAutoPlayReturnPlayer = eReturnAsPlayer;
 
 		if((iOldValue == 0) && (getAIAutoPlay() > 0))
@@ -6044,7 +6060,11 @@ int CvGame::getBestLandUnitCombat()
 	CvUnitEntry* pkUnitInfo = GC.getUnitInfo(eBestLandUnit);
 	if(pkUnitInfo)
 	{
+#ifdef AUI_FAST_COMP
+		return MAX(1, pkUnitInfo->GetCombat());
+#else
 		return std::max(1, pkUnitInfo->GetCombat());
+#endif
 	}
 
 	return 1;
@@ -9586,8 +9606,8 @@ int CvGame::getAsyncRandNum(int iNum, const char* pszLog)
 //	--------------------------------------------------------------------------------
 int CvGame::calculateSyncChecksum()
 {
-#ifdef AUI_GAME_FIX_SYNC_CHECKSUM_USE_UNSIGNED
 	CvUnit* pLoopUnit;
+#if defined(AUI_WARNING_FIXES) || defined(AUI_GAME_FIX_SYNC_CHECKSUM_USE_UNSIGNED)
 	uint uiMultiplier;
 	uint uiValue = 0;
 	int iLoop;
@@ -9683,7 +9703,6 @@ int CvGame::calculateSyncChecksum()
 
 	return (int)uiValue;
 #else
-	CvUnit* pLoopUnit;
 	int iMultiplier;
 	int iValue;
 	int iLoop;
@@ -11015,7 +11034,11 @@ int CvGame::GetResearchAgreementCost(PlayerTypes ePlayer1, PlayerTypes ePlayer2)
 
 	EraTypes ePlayer1Era = GET_TEAM(GET_PLAYER(ePlayer1).getTeam()).GetCurrentEra();
 	EraTypes ePlayer2Era = GET_TEAM(GET_PLAYER(ePlayer2).getTeam()).GetCurrentEra();
+#ifdef AUI_FAST_COMP
+	EraTypes eHighestEra = MAX(ePlayer1Era, ePlayer2Era);
+#else
 	EraTypes eHighestEra = max(ePlayer1Era, ePlayer2Era);
+#endif
 
 	int iCost = GC.getEraInfo(eHighestEra)->getResearchAgreementCost();
 
@@ -12175,7 +12198,11 @@ void CvGame::SpawnArchaeologySitesHistorically()
 
 	int iApproxNumHiddenSites = iIdealNumDigSites * GC.getPERCENT_SITES_HIDDEN() / 100;
 	int iNumDesiredWritingSites = iApproxNumHiddenSites * GC.getPERCENT_HIDDEN_SITES_WRITING() / 100;
+#ifdef AUI_FAST_COMP
+	int iNumWritingSites = MIN((int)aWorksWriting.size(), iNumDesiredWritingSites);
+#else
 	int iNumWritingSites = min((int)aWorksWriting.size(), iNumDesiredWritingSites);
+#endif
 
 	// while we are not in the proper range of number of dig sites
 	while (iHowManyChosenDigSites < iIdealNumDigSites)

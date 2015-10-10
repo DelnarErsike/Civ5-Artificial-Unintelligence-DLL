@@ -927,7 +927,11 @@ void CvTeam::DoBarbarianTech()
 
 	// 75% of majors (rounded down) need the tech for the Barbs to get it
 	int iTechPercent = /*75*/ GC.getBARBARIAN_TECH_PERCENT();
+#ifdef AUI_FAST_COMP
+	int iTeamsNeeded = MAX(1, iPossibleCount * iTechPercent / 100);
+#else
 	int iTeamsNeeded = max(1, iPossibleCount * iTechPercent / 100);
+#endif
 
 #ifdef AUI_WARNING_FIXES
 	for (uint iTechLoop = 0; iTechLoop < GC.getNumTechInfos(); iTechLoop++)
@@ -997,7 +1001,11 @@ void CvTeam::DoMinorCivTech()
 
 	// 40% of majors (rounded down) need the tech for the Minors to get it
 	int iTechPercent = /*40*/ GC.getMINOR_CIV_TECH_PERCENT();
+#ifdef AUI_FAST_COMP
+	int iTeamsNeeded = MAX(1, iPossibleCount * iTechPercent / 100);
+#else
 	int iTeamsNeeded = max(1, iPossibleCount * iTechPercent / 100);
+#endif
 
 #ifdef AUI_WARNING_FIXES
 	for (uint iTechLoop = 0; iTechLoop < GC.getNumTechInfos(); iTechLoop++)
@@ -6068,13 +6076,21 @@ void CvTeam::updateTechShare(TechTypes eTech)
 		return;
 	}
 
+#ifdef AUI_FAST_COMP
+	iBestShare = MAX_INT;
+#else
 	iBestShare = numeric_limits<int>::max();
+#endif
 
 	for(iI = 0; iI < MAX_TEAMS; iI++)
 	{
 		if(isTechShare(iI))
 		{
+#ifdef AUI_FAST_COMP
+			iBestShare = MIN(iBestShare, (iI + 1));
+#else
 			iBestShare = std::min(iBestShare, (iI + 1));
+#endif
 		}
 	}
 

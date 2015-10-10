@@ -1131,8 +1131,13 @@ CvPlot* CvAIOperation::ComputeCenterOfMassForTurn(CvArmyAI* pArmy, CvPlot **ppCl
 
 					// Move back up path from best node a number of spaces equal to army's movement rate + 1
 					int iJumpAhead = pArmy->GetMovementRate() + 1;
+#ifdef AUI_FAST_COMP
+					int iNode1Index = MAX(0, iLastNodeIndex - iJumpAhead);
+					int iNode2Index = MIN(iNode1Index + 2, iLastNodeIndex);
+#else
 					int iNode1Index = max(0, iLastNodeIndex - iJumpAhead);
 					int iNode2Index = min(iNode1Index + 2, iLastNodeIndex);
+#endif
 					pNode1 = m_NodesOnPath[iNode1Index];
 					pNode2 = m_NodesOnPath[iNode2Index];
 					

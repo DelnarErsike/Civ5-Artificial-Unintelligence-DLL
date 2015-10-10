@@ -1338,7 +1338,11 @@ int CvPlayerEspionage::CalcPerTurn(int iSpyState, CvCity* pCity, int iSpyIndex)
 			int iMyPoliciesEspionageModifier = m_pPlayer->GetPlayerPolicies()->GetNumericModifier(POLICYMOD_STEAL_TECH_FASTER_MODIFIER);
 			int iFinalModifier = (iBaseYieldRate * (100 + iCityEspionageModifier + iPlayerEspionageModifier + iTheirPoliciesEspionageModifier + iMyPoliciesEspionageModifier)) / 100;
 
+#ifdef AUI_FAST_COMP
+			int iResult = MAX(iFinalModifier, 1);
+#else
 			int iResult = max(iFinalModifier, 1);
+#endif
 			if(iSpyIndex >= 0)
 			{
 				int iSpyRank = m_aSpyList[iSpyIndex].m_eRank;
@@ -1867,7 +1871,11 @@ bool CvPlayerEspionage::AttemptCoup(uint uiSpyIndex)
 			if(aiNewInfluenceValueTimes100[ui] > 0)
 			{
 				int iNewInfluence = aiNewInfluenceValueTimes100[ui] - (GC.getESPIONAGE_COUP_OTHER_PLAYERS_INFLUENCE_DROP() * 100);
+#ifdef AUI_FAST_COMP
+				iNewInfluence = MAX(iNewInfluence, 0);
+#else
 				iNewInfluence = max(iNewInfluence, 0);
+#endif
 				aiNewInfluenceValueTimes100[ui] = iNewInfluence;
 			}
 		}
@@ -4637,7 +4645,11 @@ void CvEspionageAI::FindTargetSpyNumbers(int* piTargetOffensiveSpies, int* piTar
 
 		// assign spies to be diplomats
 		int iNumDiplomats = (int)floor(fNumDiplomats);
+#ifdef AUI_FAST_COMP
+		*piTargetDiplomatSpies = MIN(iNumRemainingSpies, iNumDiplomats);
+#else
 		*piTargetDiplomatSpies = min(iNumRemainingSpies, iNumDiplomats);
+#endif
 		bAllocatedDiplomatSpies = true;
 		iNumRemainingSpies -= *piTargetDiplomatSpies;
 
@@ -4672,7 +4684,11 @@ void CvEspionageAI::FindTargetSpyNumbers(int* piTargetOffensiveSpies, int* piTar
 			}
 		}
 
+#ifdef AUI_FAST_COMP
+		*piTargetCityStateSpies = MIN(iNumRemainingSpies, iNumCityStates);
+#else
 		*piTargetCityStateSpies = min(iNumRemainingSpies, iNumCityStates);
+#endif
 		bAllocatedCityStateSpies = true;
 	}
 	else if (pDiploAI->IsGoingForWorldConquest())
@@ -4710,14 +4726,23 @@ void CvEspionageAI::FindTargetSpyNumbers(int* piTargetOffensiveSpies, int* piTar
 			}
 		}
 
+#ifdef AUI_FAST_COMP
+		*piTargetCityStateSpies = MIN(iNumRemainingSpies, iNumMilitaristicCityStates);
+#else
 		*piTargetCityStateSpies = min(iNumRemainingSpies, iNumMilitaristicCityStates);
+#endif
 		bAllocatedCityStateSpies = true;
 	}
 	else if (pDiploAI->IsGoingForCultureVictory())
 	{
 		// assign two spies to be diplomats
+#ifdef AUI_FAST_COMP
+		int iNumDiplomats = MIN(iNumRemainingSpies, 2);
+		iNumDiplomats = MIN(iNumDiplomats, m_pPlayer->GetCulture()->GetMaxPropagandaDiplomatsWanted());
+#else
 		int iNumDiplomats = min(iNumRemainingSpies, 2);
 		iNumDiplomats = min(iNumDiplomats, m_pPlayer->GetCulture()->GetMaxPropagandaDiplomatsWanted());
+#endif
 		*piTargetDiplomatSpies = iNumDiplomats;
 
 		if (iNumDiplomats > 0)
@@ -5182,7 +5207,11 @@ void CvEspionageAI::BuildMinorCityList(EspionageCityList& aMinorCityList)
 					// Nearly everyone likes to grow
 					if(pMinorInfo->GetMinorCivTrait() == MINOR_CIV_TRAIT_MARITIME && !m_pPlayer->IsEmpireUnhappy())
 					{
+#ifdef AUI_FAST_COMP
+						iValue += /*20*/ GC.getMC_GIFT_WEIGHT_MARITIME_GROWTH() * iGrowthFlavor * MAX(1, m_pPlayer->getNumCities() / 3);
+#else
 						iValue += /*20*/ GC.getMC_GIFT_WEIGHT_MARITIME_GROWTH() * iGrowthFlavor * max(1, m_pPlayer->getNumCities() / 3);
+#endif
 					}
 
 					// Slight negative weight towards militaristic

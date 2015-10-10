@@ -36,6 +36,9 @@ inline int range(int iNum, int iLow, int iHigh)
 	{
 		return iLow;
 	}
+#ifdef AUI_FAST_COMP
+	return MIN(iNum, iHigh);
+#else
 	else if(iNum > iHigh)
 	{
 		return iHigh;
@@ -44,6 +47,7 @@ inline int range(int iNum, int iLow, int iHigh)
 	{
 		return iNum;
 	}
+#endif
 }
 
 inline float range(float fNum, float fLow, float fHigh)
@@ -54,6 +58,9 @@ inline float range(float fNum, float fLow, float fHigh)
 	{
 		return fLow;
 	}
+#ifdef AUI_FAST_COMP
+	return MIN(fNum, fHigh);
+#else
 	else if(fNum > fHigh)
 	{
 		return fHigh;
@@ -62,6 +69,7 @@ inline float range(float fNum, float fLow, float fHigh)
 	{
 		return fNum;
 	}
+#endif
 }
 
 inline int wrapCoordDifference(int iDiff, uint uiRange, bool bWrap)

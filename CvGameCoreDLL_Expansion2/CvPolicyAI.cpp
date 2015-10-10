@@ -584,14 +584,19 @@ void CvPolicyAI::DoChooseIdeology(CvPlayer *pPlayer)
 
 	// First consideration is our victory type
 #ifdef AUI_GS_PRIORITY_OVERHAUL
-	int iConquestPriority = max(0.0f, pPlayer->GetGrandStrategyAI()->GetConquestETAPriority()
+	int iConquestPriority = MAX(0.0f, pPlayer->GetGrandStrategyAI()->GetConquestETAPriority()
 		+ pPlayer->GetGrandStrategyAI()->GetBaseGrandStrategyPriority((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST")));
-	int iDiploPriority = max(0.0f, pPlayer->GetGrandStrategyAI()->GetUnitedNationsETAPriority()
+	int iDiploPriority = MAX(0.0f, pPlayer->GetGrandStrategyAI()->GetUnitedNationsETAPriority()
 		+ pPlayer->GetGrandStrategyAI()->GetBaseGrandStrategyPriority((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")));
-	int iTechPriority = max(0.0f, pPlayer->GetGrandStrategyAI()->GetSpaceshipETAPriority()
+	int iTechPriority = MAX(0.0f, pPlayer->GetGrandStrategyAI()->GetSpaceshipETAPriority()
 		+ pPlayer->GetGrandStrategyAI()->GetBaseGrandStrategyPriority((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP")));
-	int iCulturePriority = max(0.0f, pPlayer->GetGrandStrategyAI()->GetCultureETAPriority()
+	int iCulturePriority = MAX(0.0f, pPlayer->GetGrandStrategyAI()->GetCultureETAPriority()
 		+ pPlayer->GetGrandStrategyAI()->GetBaseGrandStrategyPriority((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")));
+#elif defined(AUI_FAST_COMP)
+	int iConquestPriority = MAX(0, pPlayer->GetGrandStrategyAI()->GetConquestPriority());
+	int iDiploPriority = MAX(0, pPlayer->GetGrandStrategyAI()->GetUnitedNationsPriority());
+	int iTechPriority = MAX(0, pPlayer->GetGrandStrategyAI()->GetSpaceshipPriority());
+	int iCulturePriority = MAX(0, pPlayer->GetGrandStrategyAI()->GetCulturePriority());
 #else
 	int iConquestPriority = max(0, pPlayer->GetGrandStrategyAI()->GetConquestPriority());
 	int iDiploPriority = max(0, pPlayer->GetGrandStrategyAI()->GetUnitedNationsPriority());
@@ -779,11 +784,19 @@ void CvPolicyAI::DoChooseIdeology(CvPlayer *pPlayer)
 	LogIdeologyChoice(stage, iFreedomPriority, iAutocracyPriority, iOrderPriority);
 
 	// -- Happiness we'd lose through Public Opinion
+#ifdef AUI_FAST_COMP
+	iHappinessDelta = MAX(0, 100 - pPlayer->GetCulture()->ComputeHypotheticalPublicOpinionUnhappiness(eFreedomBranch));
+	iFreedomPriority += iHappinessDelta * iHappinessModifier;
+	iHappinessDelta = MAX(0, 100 - pPlayer->GetCulture()->ComputeHypotheticalPublicOpinionUnhappiness(eAutocracyBranch));
+	iAutocracyPriority += iHappinessDelta * iHappinessModifier;
+	iHappinessDelta = MAX(0, 100 - pPlayer->GetCulture()->ComputeHypotheticalPublicOpinionUnhappiness(eOrderBranch));
+#else
 	iHappinessDelta = max (0, 100 - pPlayer->GetCulture()->ComputeHypotheticalPublicOpinionUnhappiness(eFreedomBranch));
 	iFreedomPriority += iHappinessDelta * iHappinessModifier;
 	iHappinessDelta = max (0, 100 - pPlayer->GetCulture()->ComputeHypotheticalPublicOpinionUnhappiness(eAutocracyBranch));
 	iAutocracyPriority += iHappinessDelta * iHappinessModifier;
 	iHappinessDelta = max (0, 100 - pPlayer->GetCulture()->ComputeHypotheticalPublicOpinionUnhappiness(eOrderBranch));
+#endif
 	iOrderPriority += iHappinessDelta * iHappinessModifier;
 
 	stage = "After Public Opinion Happiness";
@@ -876,13 +889,13 @@ void CvPolicyAI::DoConsiderIdeologySwitch(CvPlayer* pPlayer)
 		bool bDontSwitchOrder = false;
 		bool bDontSwitchAutocracy = false;
 #ifdef AUI_GS_PRIORITY_OVERHAUL
-		int iConquestPriority = max(0.0f, pPlayer->GetGrandStrategyAI()->GetConquestETAPriority()
+		int iConquestPriority = MAX(0.0f, pPlayer->GetGrandStrategyAI()->GetConquestETAPriority()
 			+ pPlayer->GetGrandStrategyAI()->GetBaseGrandStrategyPriority((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST")));
-		int iDiploPriority = max(0.0f, pPlayer->GetGrandStrategyAI()->GetUnitedNationsETAPriority()
+		int iDiploPriority = MAX(0.0f, pPlayer->GetGrandStrategyAI()->GetUnitedNationsETAPriority()
 			+ pPlayer->GetGrandStrategyAI()->GetBaseGrandStrategyPriority((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_UNITED_NATIONS")));
-		int iTechPriority = max(0.0f, pPlayer->GetGrandStrategyAI()->GetSpaceshipETAPriority()
+		int iTechPriority = MAX(0.0f, pPlayer->GetGrandStrategyAI()->GetSpaceshipETAPriority()
 			+ pPlayer->GetGrandStrategyAI()->GetBaseGrandStrategyPriority((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_SPACESHIP")));
-		int iCulturePriority = max(0.0f, pPlayer->GetGrandStrategyAI()->GetCultureETAPriority()
+		int iCulturePriority = MAX(0.0f, pPlayer->GetGrandStrategyAI()->GetCultureETAPriority()
 			+ pPlayer->GetGrandStrategyAI()->GetBaseGrandStrategyPriority((AIGrandStrategyTypes)GC.getInfoTypeForString("AIGRANDSTRATEGY_CULTURE")));
 #else
 		int iConquestPriority = pPlayer->GetGrandStrategyAI()->GetConquestPriority();

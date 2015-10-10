@@ -517,7 +517,11 @@ int CvCombatInfo::getMaxDamageMemberCount() const
 void CvCombatInfo::setDamageMemberCount(int iDamageMemberCount)
 {
 	CvAssertMsg(iDamageMemberCount >=0 && iDamageMemberCount <= MAX_DAMAGE_MEMBER_COUNT, "Invalid damage member count!");
+#ifdef AUI_FAST_COMP
+	m_iDamageMemberCount = MIN(iDamageMemberCount, (int)MAX_DAMAGE_MEMBER_COUNT);
+#else
 	m_iDamageMemberCount = std::min(iDamageMemberCount, (int)MAX_DAMAGE_MEMBER_COUNT);
+#endif
 }
 
 //------------------------------------------------------------------------------------------------

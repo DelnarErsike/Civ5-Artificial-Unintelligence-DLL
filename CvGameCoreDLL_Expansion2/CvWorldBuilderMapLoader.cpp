@@ -404,7 +404,7 @@ void CvWorldBuilderMapLoader::SetupPlayers()
 	}
 
 #ifdef AUI_WARNING_FIXES
-	const byte uiCityStateCount = std::min(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
+	const byte uiCityStateCount = MIN(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
 #else
 	const uint uiCityStateCount = std::min(sg_kSave.GetCityStateCount(), (byte)MAX_MINOR_CIVS);
 #endif
@@ -1090,7 +1090,11 @@ bool CvWorldBuilderMapLoader::InitMap()
 		}
 	}
 
+#ifdef AUI_FAST_COMP
+	const uint uiTeamCount = MIN(sg_kSave.GetTeamCount(), (byte)MAX_TEAMS);
+#else
 	const uint uiTeamCount = std::min(sg_kSave.GetTeamCount(), (byte)MAX_TEAMS);
+#endif
 
 	// HACK: Call SetInitialItems early.  It has to be called later too :_(
 	// This is because of what is essentially a circular dependency.  Techs

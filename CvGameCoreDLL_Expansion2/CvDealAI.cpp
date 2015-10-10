@@ -422,7 +422,11 @@ DemandResponseTypes CvDealAI::DoHumanDemand(CvDeal* pDeal)
 					else
 						iModdedGoldValue = 0;
 
+#ifdef AUI_FAST_COMP
+					iValueDemanded += MAX(iTempGold, iModdedGoldValue);
+#else
 					iValueDemanded += max(iTempGold, iModdedGoldValue);
+#endif
 					break;
 				}
 
@@ -1489,7 +1493,11 @@ int CvDealAI::GetResourceValue(ResourceTypes eResource, int iResourceQuantity, i
 			}
 			else
 			{
+#ifdef AUI_FAST_COMP
+				iResourceQuantity = MIN(MAX(5, GetPlayer()->getNumCities()), iResourceQuantity);
+#else
 				iResourceQuantity = min(max(5,GetPlayer()->getNumCities()), iResourceQuantity);
+#endif
 			}
 		}
 		if(!GET_TEAM(GetPlayer()->getTeam()).IsResourceObsolete(eResource))
@@ -1889,8 +1897,13 @@ int CvDealAI::GetCityValue(int iX, int iY, bool bFromMe, PlayerTypes eOtherPlaye
 								iHappinessValueGained = -iHappinessValueGained;
 							iGoldValueOfResourcePlots += (iResourceQuantity * iHappinessValueGained * iNumTurns * 2);	// Ex: 1 Silk for 4 Happiness * 30 turns * 2 = 240
 #else
+#ifdef AUI_FAST_COMP
+							int iNumTurns = MIN(1, GC.getGame().getMaxTurns() - GC.getGame().getGameTurn());
+							iNumTurns = MAX(120, iNumTurns); // let's not go hog wild here
+#else
 							int iNumTurns = min(1,GC.getGame().getMaxTurns() - GC.getGame().getGameTurn());
 							iNumTurns = max(120,iNumTurns); // let's not go hog wild here
+#endif
 							int iHappinessFromResource = pkResourceInfo->getHappiness();
 							iGoldValueOfResourcePlots += (iResourceQuantity * iHappinessFromResource * iNumTurns * 2);	// Ex: 1 Silk for 4 Happiness * 30 turns * 2 = 240
 							// If we only have 1 of a Luxury then we value it much more
@@ -2595,7 +2608,11 @@ int CvDealAI::GetResearchAgreementValue(bool bFromMe, PlayerTypes eOtherPlayer, 
 		EraTypes eMyEra = GET_TEAM(GetPlayer()->getTeam()).GetCurrentEra();
 		EraTypes eTheirEra = GET_TEAM(GET_PLAYER(eOtherPlayer).getTeam()).GetCurrentEra();
 
+#ifdef AUI_FAST_COMP
+		int iAdditionalValue = iItemValue * MAX(0, (int)(eTheirEra - eMyEra));
+#else
 		int iAdditionalValue = iItemValue * max(0,(int)(eTheirEra-eMyEra));
+#endif
 		iItemValue += iAdditionalValue;
 #endif
 
@@ -3503,7 +3520,11 @@ void CvDealAI::DoAddResourceToThem(CvDeal* pDeal, PlayerTypes eThem, bool bDontC
 					continue;
 
 				// Quantity is always 1 if it's a Luxury, 5 if Strategic
+#ifdef AUI_FAST_COMP
+				iResourceQuantity = MIN(5, iResourceQuantity);	// 5 or what they have, whichever is less
+#else
 				iResourceQuantity = min(5, iResourceQuantity);	// 5 or what they have, whichever is less
+#endif
 
 				// See if they can actually trade it to us
 				if(pDeal->IsPossibleToTradeItem(eThem, eMyPlayer, TRADE_ITEM_RESOURCES, eResource, iResourceQuantity))
@@ -3577,7 +3598,11 @@ void CvDealAI::DoAddResourceToUs(CvDeal* pDeal, PlayerTypes eThem, bool bDontCha
 				}
 				else
 				{
+#ifdef AUI_FAST_COMP
+					iResourceQuantity = MIN(5, iResourceQuantity);	// 5 or what we have, whichever is less
+#else
 					iResourceQuantity = min(5, iResourceQuantity);	// 5 or what we have, whichever is less
+#endif
 				}
 
 				// See if we can actually trade it to them
@@ -3881,8 +3906,13 @@ void CvDealAI::DoAddGoldToThem(CvDeal* pDeal, PlayerTypes eThem, bool bDontChang
 				int iNumGold = GetGoldForForValueExchange(-iTotalValue, /*bNumGoldFromValue*/ true, /*bFromMe*/ false, eThem, bUseEvenValue, /*bRoundUp*/ false);
 				int iNumGoldAlreadyInTrade = pDeal->GetGoldTrade(eThem);
 				iNumGold += iNumGoldAlreadyInTrade;
+#ifdef AUI_FAST_COMP
+				iNumGold = MIN(iNumGold, pDeal->GetGoldAvailable(eThem, TRADE_ITEM_GOLD));
+				//iNumGold = MIN(iNumGold, GET_PLAYER(eThem).GetTreasury()->GetGold());
+#else
 				iNumGold = min(iNumGold, pDeal->GetGoldAvailable(eThem, TRADE_ITEM_GOLD));
 				//iNumGold = min(iNumGold, GET_PLAYER(eThem).GetTreasury()->GetGold());
+#endif
 
 				if(iNumGold != iNumGoldAlreadyInTrade && !pDeal->ChangeGoldTrade(eThem, iNumGold))
 				{
@@ -3914,8 +3944,13 @@ void CvDealAI::DoAddGoldToUs(CvDeal* pDeal, PlayerTypes eThem, bool bDontChangeM
 				int iNumGold = GetGoldForForValueExchange(iTotalValue, /*bNumGoldFromValue*/ true, /*bFromMe*/ true, eThem, bUseEvenValue, /*bRoundUp*/ false);
 				int iNumGoldAlreadyInTrade = pDeal->GetGoldTrade(eMyPlayer);
 				iNumGold += iNumGoldAlreadyInTrade;
+#ifdef AUI_FAST_COMP
+				iNumGold = MIN(iNumGold, pDeal->GetGoldAvailable(eMyPlayer, TRADE_ITEM_GOLD));
+				//iNumGold = MIN(iNumGold, GET_PLAYER(eMyPlayer).GetTreasury()->GetGold());
+#else
 				iNumGold = min(iNumGold, pDeal->GetGoldAvailable(eMyPlayer, TRADE_ITEM_GOLD));
 				//iNumGold = min(iNumGold, GET_PLAYER(eMyPlayer).GetTreasury()->GetGold());
+#endif
 
 				if(iNumGold != iNumGoldAlreadyInTrade && !pDeal->ChangeGoldTrade(eMyPlayer, iNumGold))
 				{
@@ -3949,7 +3984,11 @@ void CvDealAI::DoAddGPTToThem(CvDeal* pDeal, PlayerTypes eThem, bool bDontChange
 					int iNumGPT = GetGPTforForValueExchange(-iTotalValue, /*bNumGPTFromValue*/ true, iDealDuration, /*bFromMe*/ false, eThem, bUseEvenValue, /*bRoundUp*/ false);
 					int iNumGPTAlreadyInTrade = pDeal->GetGoldPerTurnTrade(eThem);
 					iNumGPT += iNumGPTAlreadyInTrade;
+#ifdef AUI_FAST_COMP
+					iNumGPT = MIN(iNumGPT, GET_PLAYER(eThem).calculateGoldRate());
+#else
 					iNumGPT = min(iNumGPT, GET_PLAYER(eThem).calculateGoldRate());
+#endif
 
 					if(iNumGPT != iNumGPTAlreadyInTrade && !pDeal->ChangeGoldPerTurnTrade(eThem, iNumGPT, iDealDuration))
 					{
@@ -3984,7 +4023,11 @@ void CvDealAI::DoAddGPTToUs(CvDeal* pDeal, PlayerTypes eThem, bool bDontChangeMy
 					int iNumGPT = GetGPTforForValueExchange(iTotalValue, /*bNumGPTFromValue*/ true, iDealDuration, /*bFromMe*/ true, eThem, bUseEvenValue, /*bRoundUp*/ false);
 					int iNumGPTAlreadyInTrade = pDeal->GetGoldPerTurnTrade(eMyPlayer);
 					iNumGPT += iNumGPTAlreadyInTrade;
+#ifdef AUI_FAST_COMP
+					iNumGPT = MIN(iNumGPT, GET_PLAYER(eMyPlayer).calculateGoldRate());
+#else
 					iNumGPT = min(iNumGPT, GET_PLAYER(eMyPlayer).calculateGoldRate());
+#endif
 
 					if(iNumGPT != iNumGPTAlreadyInTrade && !pDeal->ChangeGoldPerTurnTrade(eMyPlayer, iNumGPT, iDealDuration))
 					{
@@ -4019,7 +4062,11 @@ void CvDealAI::DoRemoveGPTFromThem(CvDeal* pDeal, PlayerTypes eThem, int& iTotal
 			if(iNumGoldPerTurnInThisDeal > 0)
 			{
 				// Found some GoldPerTurn to remove
+#ifdef AUI_FAST_COMP
+				iNumGoldPerTurnToRemove = MIN(iNumGoldPerTurnToRemove, iNumGoldPerTurnInThisDeal);
+#else
 				iNumGoldPerTurnToRemove = min(iNumGoldPerTurnToRemove, iNumGoldPerTurnInThisDeal);
+#endif
 				iNumGoldPerTurnInThisDeal -= iNumGoldPerTurnToRemove;
 
 				// Removing ALL GoldPerTurn, so just erase the item from the deal
@@ -4066,7 +4113,11 @@ void CvDealAI::DoRemoveGPTFromUs(CvDeal* pDeal, PlayerTypes eThem, int& iTotalVa
 			if(iNumGoldPerTurnInThisDeal > 0)
 			{
 				// Found some GoldPerTurn to remove
+#ifdef AUI_FAST_COMP
+				iNumGoldPerTurnToRemove = MIN(iNumGoldPerTurnToRemove, iNumGoldPerTurnInThisDeal);
+#else
 				iNumGoldPerTurnToRemove = min(iNumGoldPerTurnToRemove, iNumGoldPerTurnInThisDeal);
+#endif
 				iNumGoldPerTurnInThisDeal -= iNumGoldPerTurnToRemove;
 
 				// Removing ALL GoldPerTurn, so just erase the item from the deal
@@ -4105,7 +4156,11 @@ void CvDealAI::DoRemoveGoldFromThem(CvDeal* pDeal, PlayerTypes eThem, int& iTota
 			if(iNumGoldInThisDeal > 0)
 			{
 				// Found some Gold to remove
+#ifdef AUI_FAST_COMP
+				int iNumGoldToRemove = MIN(iNumGoldInThisDeal, GetGoldForForValueExchange(iTotalValue, /*bNumGoldFromValue*/ true, /*bFromMe*/ false, eThem, bUseEvenValue, /*bRoundUp*/ true));
+#else
 				int iNumGoldToRemove = min(iNumGoldInThisDeal, GetGoldForForValueExchange(iTotalValue, /*bNumGoldFromValue*/ true, /*bFromMe*/ false, eThem, bUseEvenValue, /*bRoundUp*/ true));
+#endif
 				iNumGoldInThisDeal -= iNumGoldToRemove;
 
 				// Removing ALL Gold, so just erase the item from the deal
@@ -4146,7 +4201,11 @@ void CvDealAI::DoRemoveGoldFromUs(CvDeal* pDeal, PlayerTypes eThem, int& iTotalV
 			if(iNumGoldInThisDeal > 0)
 			{
 				// Found some Gold to remove
+#ifdef AUI_FAST_COMP
+				int iNumGoldToRemove = MIN(iNumGoldInThisDeal, GetGoldForForValueExchange(-iTotalValue, /*bNumGoldFromValue*/ true, /*bFromMe*/ true, eThem, bUseEvenValue, /*bRoundUp*/ true));
+#else
 				int iNumGoldToRemove = min(iNumGoldInThisDeal, GetGoldForForValueExchange(-iTotalValue, /*bNumGoldFromValue*/ true, /*bFromMe*/ true, eThem, bUseEvenValue, /*bRoundUp*/ true));
+#endif
 				iNumGoldInThisDeal -= iNumGoldToRemove;
 
 				// Removing ALL Gold, so just erase the item from the deal
@@ -4213,7 +4272,11 @@ bool CvDealAI::IsOfferPeace(PlayerTypes eOtherPlayer, CvDeal* pDeal, bool bEqual
 		// If we're both willing to give something up (for whatever reason) reduce the surrender level of both parties until White Peace is on one side
 		if(ePeaceTreatyImWillingToOffer > PEACE_TREATY_WHITE_PEACE && ePeaceTreatyTheyreWillingToOffer > PEACE_TREATY_WHITE_PEACE)
 		{
+#ifdef AUI_FAST_COMP
+			int iAmountToReduce = MIN(ePeaceTreatyImWillingToOffer, ePeaceTreatyTheyreWillingToOffer);
+#else
 			int iAmountToReduce = min(ePeaceTreatyImWillingToOffer, ePeaceTreatyTheyreWillingToOffer);
+#endif
 
 			ePeaceTreatyImWillingToOffer = PeaceTreatyTypes(ePeaceTreatyImWillingToOffer - iAmountToReduce);
 			ePeaceTreatyTheyreWillingToOffer = PeaceTreatyTypes(ePeaceTreatyTheyreWillingToOffer - iAmountToReduce);
@@ -4403,7 +4466,11 @@ void CvDealAI::DoAddItemsToDealForPeaceTreaty(PlayerTypes eOtherPlayer, CvDeal* 
 	int iGPT = 0;
 	if (iPercentGPTToGive > 0)
 	{
+#ifdef AUI_FAST_COMP
+		iGPT = MIN(pLosingPlayer->calculateGoldRate(), pWinningPlayer->calculateGoldRate() / /*3*/ GC.getARMISTICE_GPT_DIVISOR());
+#else
 		iGPT = min(pLosingPlayer->calculateGoldRate(), pWinningPlayer->calculateGoldRate() / /*3*/ GC.getARMISTICE_GPT_DIVISOR());
+#endif
 		if (iGPT > 0)
 		{
 			iGPT = iGPT * iPercentGPTToGive / 100;
@@ -4666,7 +4733,11 @@ bool CvDealAI::IsMakeDemand(PlayerTypes eOtherPlayer, CvDeal* pDeal)
 
 	// Don't ask for too much
 	int iMaxGold = 200 + (GET_TEAM(GET_PLAYER(eOtherPlayer).getTeam()).GetCurrentEra() * 150);
+#ifdef AUI_FAST_COMP
+	iGold = MIN(iMaxGold, iGold);
+#else
 	iGold = min(iMaxGold, iGold);
+#endif
 
 	if(pDeal->IsPossibleToTradeItem(eOtherPlayer, GetPlayer()->GetID(), TRADE_ITEM_GOLD, iGold))
 	{

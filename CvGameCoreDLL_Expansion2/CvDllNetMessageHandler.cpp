@@ -857,7 +857,11 @@ void CvDllNetMessageHandler::ResponseResearch(PlayerTypes ePlayer, TechTypes eTe
 					kPlayer.chooseTech(iDiscover - 1);
 				}
 			}
+#ifdef AUI_FAST_COMP
+			kPlayer.SetNumFreeTechs(MAX(0, iDiscover - 1));
+#else
 			kPlayer.SetNumFreeTechs(max(0, iDiscover - 1));
+#endif
 		}
 	}
 	// Stealing tech

@@ -687,7 +687,11 @@ int CvArea::GetAreaMaxLatitude()
 	int iTopLatitude, iBottomLatitude;
 	GetTopAndBottomLatitudes(iTopLatitude, iBottomLatitude);
 
+#ifdef AUI_FAST_COMP
+	return MAX(iTopLatitude, iBottomLatitude);
+#else
 	return max(iTopLatitude, iBottomLatitude);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -697,7 +701,11 @@ int CvArea::GetAreaMinLatitude()
 	int iTopLatitude, iBottomLatitude;
 	GetTopAndBottomLatitudes(iTopLatitude, iBottomLatitude);
 
+#ifdef AUI_FAST_COMP
+	return MIN(iTopLatitude, iBottomLatitude);
+#else
 	return min(iTopLatitude, iBottomLatitude);
+#endif
 }
 
 //	--------------------------------------------------------------------------------

@@ -872,7 +872,11 @@ EndLoop:
 
 		for (pCity = GET_PLAYER(eTempPlayer).firstCity(&iCityLoop); pCity != NULL; pCity = GET_PLAYER(eTempPlayer).nextCity(&iCityLoop))
 		{
+#ifdef AUI_WARNING_FIXES
+			for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 			for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 			{
 				CvCivilizationInfo& playerCivilizationInfo = GET_PLAYER(eTempPlayer).getCivilizationInfo();
 				BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)iBuildingClassLoop);
@@ -1049,12 +1053,20 @@ CvGreatWorkInMyEmpire::CvGreatWorkInMyEmpire()
 : m_iGreatWorkIndex(-1)
 , m_iCityID(-1)
 , m_eBuilding(NO_BUILDING)
+#ifdef AUI_WARNING_FIXES
+, m_iSlot(MAX_UNSIGNED_INT)
+#else
 , m_iSlot(-1)
+#endif
 {
 }
 
 /// Constructor
+#ifdef AUI_WARNING_FIXES
+CvGreatWorkInMyEmpire::CvGreatWorkInMyEmpire(int iIndex, int iCityID, BuildingTypes eBuilding, uint iSlot, PlayerTypes ePlayer, EraTypes eEra)
+#else
 CvGreatWorkInMyEmpire::	CvGreatWorkInMyEmpire(int iIndex, int iCityID, BuildingTypes eBuilding, int iSlot, PlayerTypes ePlayer, EraTypes eEra)
+#endif
 : m_iGreatWorkIndex(iIndex)
 , m_iCityID(iCityID)
 , m_eBuilding(eBuilding)
@@ -1143,10 +1155,17 @@ bool CvPlayerCulture::HasAvailableGreatWorkSlot(GreatWorkSlotType eGreatWorkSlot
 }
 
 /// How many open Great Work slots do we have of a certain type?
+#ifdef AUI_WARNING_FIXES
+uint CvPlayerCulture::GetNumAvailableGreatWorkSlots(GreatWorkSlotType eGreatWorkSlot) const
+{
+	int iLoop;
+	uint iCount = 0;
+#else
 int CvPlayerCulture::GetNumAvailableGreatWorkSlots(GreatWorkSlotType eGreatWorkSlot) const
 {
 	int iLoop;
 	int iCount = 0;
+#endif
 
 	for (CvCity* pCity = m_pPlayer->firstCity(&iLoop); pCity != NULL; pCity = m_pPlayer->nextCity(&iLoop))
 	{
@@ -1156,13 +1175,21 @@ int CvPlayerCulture::GetNumAvailableGreatWorkSlots(GreatWorkSlotType eGreatWorkS
 }
 
 /// Return the city (and building/slot) of the city that can provide the closest Great Work slot)
+#ifdef AUI_WARNING_FIXES
+CvCity *CvPlayerCulture::GetClosestAvailableGreatWorkSlot(int iX, int iY, GreatWorkSlotType eGreatWorkSlot, BuildingClassTypes *eBuildingClass, uint *iSlot) const
+#else
 CvCity *CvPlayerCulture::GetClosestAvailableGreatWorkSlot(int iX, int iY, GreatWorkSlotType eGreatWorkSlot, BuildingClassTypes *eBuildingClass, int *iSlot) const
+#endif
 {
 	int iLoop;
 	int iBestDistance = MAX_INT;
 	CvCity *pBestCity = NULL;
 	BuildingClassTypes eBuildingClassReturned = NO_BUILDINGCLASS; // Passed by reference below
+#ifdef AUI_WARNING_FIXES
+	uint iSlotReturned = MAX_UNSIGNED_INT; // Passed by reference below
+#else
 	int iSlotReturned = -1; // Passed by reference below
+#endif
 
 	for (CvCity* pCity = m_pPlayer->firstCity(&iLoop); pCity != NULL; pCity = m_pPlayer->nextCity(&iLoop))
 	{
@@ -1184,11 +1211,19 @@ CvCity *CvPlayerCulture::GetClosestAvailableGreatWorkSlot(int iX, int iY, GreatW
 }
 
 /// How many Great Works are in the entire empure?
+#ifdef AUI_WARNING_FIXES
+uint CvPlayerCulture::GetNumGreatWorks() const
+#else
 int CvPlayerCulture::GetNumGreatWorks() const
+#endif
 {
 	CvCity* pLoopCity = NULL;
 	int iLoop = 0;
+#ifdef AUI_WARNING_FIXES
+	uint iRtnValue = 0;
+#else
 	int iRtnValue = 0;
+#endif
 
 	for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 	{
@@ -1199,11 +1234,19 @@ int CvPlayerCulture::GetNumGreatWorks() const
 }
 
 /// How many Great Work slots are in the entire empire?
+#ifdef AUI_WARNING_FIXES
+uint CvPlayerCulture::GetNumGreatWorkSlots() const
+#else
 int CvPlayerCulture::GetNumGreatWorkSlots() const
+#endif
 {
 	CvCity* pLoopCity = NULL;
 	int iLoop = 0;
+#ifdef AUI_WARNING_FIXES
+	uint iRtnValue = 0;
+#else
 	int iRtnValue = 0;
+#endif
 
 	for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 	{
@@ -1214,11 +1257,19 @@ int CvPlayerCulture::GetNumGreatWorkSlots() const
 }
 
 /// How many Great Work slots of a particular type?
+#ifdef AUI_WARNING_FIXES
+uint CvPlayerCulture::GetNumGreatWorkSlots(GreatWorkSlotType eSlotType) const
+#else
 int CvPlayerCulture::GetNumGreatWorkSlots(GreatWorkSlotType eSlotType) const
+#endif
 {
 	CvCity* pLoopCity = NULL;
 	int iLoop = 0;
+#ifdef AUI_WARNING_FIXES
+	uint iRtnValue = 0;
+#else
 	int iRtnValue = 0;
+#endif
 
 	for(pLoopCity = m_pPlayer->firstCity(&iLoop); pLoopCity != NULL; pLoopCity = m_pPlayer->nextCity(&iLoop))
 	{
@@ -1269,7 +1320,11 @@ bool CvPlayerCulture::ControlsGreatWork (int iIndex)
 	return false;	
 }
 
+#ifdef AUI_WARNING_FIXES
+bool CvPlayerCulture::GetGreatWorkLocation(int iSearchIndex, int &iReturnCityID, BuildingTypes &eReturnBuilding, uint &iReturnSlot)
+#else
 bool CvPlayerCulture::GetGreatWorkLocation(int iSearchIndex, int &iReturnCityID, BuildingTypes &eReturnBuilding, int &iReturnSlot)
+#endif
 {
 	CvCity* pLoopCity = NULL;
 	int iLoop = 0;
@@ -1291,8 +1346,12 @@ bool CvPlayerCulture::GetGreatWorkLocation(int iSearchIndex, int &iReturnCityID,
 				{
 					if (pLoopCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0)
 					{
+#ifdef AUI_WARNING_FIXES
+						for (uint iI = 0; iI < pkBuilding->GetGreatWorkCount(); iI++)
+#else
 						int iNumSlots = pkBuilding->GetGreatWorkCount();
 						for (int iI = 0; iI < iNumSlots; iI++)
+#endif
 						{
 							int iGreatWorkIndex = pLoopCity->GetCityBuildings()->GetBuildingGreatWork((BuildingClassTypes)iBuildingClassLoop, iI);
 							if (iGreatWorkIndex == iSearchIndex)
@@ -1355,7 +1414,11 @@ void CvPlayerCulture::DoSwapGreatWorks()
 				if (pkBuilding && pkBuilding->GetGreatWorkCount() > 0)
 				{
 #else
+#ifdef AUI_WARNING_FIXES
+		for (uint iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#else
 		for(int iBuildingClassLoop = 0; iBuildingClassLoop < GC.getNumBuildingClassInfos(); iBuildingClassLoop++)
+#endif
 		{
 			CvCivilizationInfo& playerCivilizationInfo = m_pPlayer->getCivilizationInfo();
 			BuildingTypes eBuilding = (BuildingTypes)playerCivilizationInfo.getCivilizationBuildings((BuildingClassTypes)iBuildingClassLoop);
@@ -3069,13 +3132,21 @@ bool CvPlayerCulture::FillBuilding(vector<CvGreatWorkBuildingInMyEmpire>::const_
 #endif
 
 /// Lower-level routine to perform the swap between two Great Works within your own empire
+#ifdef AUI_WARNING_FIXES
+void CvPlayerCulture::MoveWorkIntoSlot(CvGreatWorkInMyEmpire kWork, int iCityID, BuildingTypes eBuilding, uint iSlot)
+#else
 void CvPlayerCulture::MoveWorkIntoSlot (CvGreatWorkInMyEmpire kWork, int iCityID, BuildingTypes eBuilding, int iSlot)
+#endif
 {
 	CvBuildingEntry *pkToEntry = GC.getBuildingInfo(eBuilding);
 
 	int iFromCityID;
 	BuildingTypes eFromBuildingType;
+#ifdef AUI_WARNING_FIXES
+	uint iFromSlot;
+#else
 	int iFromSlot;
+#endif
 	GetGreatWorkLocation(kWork.m_iGreatWorkIndex, iFromCityID, eFromBuildingType, iFromSlot);
 
 	CvBuildingEntry *pkFromEntry = GC.getBuildingInfo(eFromBuildingType);
@@ -3308,7 +3379,11 @@ ArchaeologyChoiceType CvPlayerCulture::GetArchaeologyChoice(CvPlot *pPlot)
 		int iNumArchaeologists = m_pPlayer->GetNumUnitsWithUnitAI(UNITAI_ARCHAEOLOGIST, true) - 1 /* For this one that just completed work */;
 		int iNumSites = m_pPlayer->GetEconomicAI()->GetVisibleAntiquitySites() - 1 /* For this one then just was completed */;
 		int iNumGreatWorkSlots = m_pPlayer->GetCulture()->GetNumAvailableGreatWorkSlots(eArtArtifactSlot);
+#ifdef AUI_FAST_COMP
+		int iLimitingFactor = MIN(iNumArchaeologists, iNumSites);
+#else
 		int iLimitingFactor = min(iNumArchaeologists, iNumSites);
+#endif
 
 		if (iNumGreatWorkSlots <= iLimitingFactor)
 		{
@@ -3345,7 +3420,11 @@ void CvPlayerCulture::DoArchaeologyChoice (ArchaeologyChoiceType eChoice)
 {
 	CvGameCulture *pCulture = GC.getGame().GetGameCulture();
 	BuildingClassTypes eBuildingToHouse;
+#ifdef AUI_WARNING_FIXES
+	uint iSlot;
+#else
 	int iSlot;
+#endif
 	CvCity *pHousingCity;
 	CvPlot *pPlot;
 	CvUnit *pUnit = GetNextDigCompleteArchaeologist(&pPlot);
@@ -4508,7 +4587,11 @@ int CvPlayerCulture::GetTourismBlastStrength(int iMultiplier)
 	iStrength *= GC.getGame().getGameSpeedInfo().getCulturePercent();
 	iStrength /= 100;
 
+#ifdef AUI_FAST_COMP
+	return MAX(iStrength, GC.getMINIUMUM_TOURISM_BLAST_STRENGTH());
+#else
 	return max(iStrength, GC.getMINIUMUM_TOURISM_BLAST_STRENGTH());
+#endif
 }
 
 /// Add tourism with all known civs
@@ -5119,7 +5202,11 @@ int CvPlayerCulture::ComputePublicOpinionUnhappiness(int iDissatisfaction, int &
 		iUnhappyPerXPop = 3;
 	}
 
+#ifdef AUI_FAST_COMP
+	return MAX(m_pPlayer->getNumCities() * iPerCityUnhappy, m_pPlayer->getTotalPopulation() / iUnhappyPerXPop);
+#else
 	return max(m_pPlayer->getNumCities() * iPerCityUnhappy, m_pPlayer->getTotalPopulation() / iUnhappyPerXPop);
+#endif
 }
 
 // LOGGING FUNCTIONS
@@ -5179,7 +5266,7 @@ void CvPlayerCulture::LogCultureData()
 		AppendToLog(strHeader, strLog, "Writers' Guild", (pCity != NULL ? pCity->getName() : ""));
 		iSpecialists = (pCity != NULL) ? pCity->GetCityCitizens()->GetNumSpecialistsInBuilding(eWritersGuild) : 0;
 		AppendToLog(strHeader, strLog, "Spclsts", iSpecialists);
-		AppendToLog(strHeader, strLog, "Slots", GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_LITERATURE()));
+		AppendToLog(strHeader, strLog, "Slots", (int)GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_LITERATURE()));
 	}
 
 	if (eArtistsGuildClass != NO_BUILDINGCLASS && eArtistsGuild != NO_BUILDING)
@@ -5189,7 +5276,7 @@ void CvPlayerCulture::LogCultureData()
 		AppendToLog(strHeader, strLog, "Artists' Guild", (pCity != NULL ? pCity->getName() : ""));
 		iSpecialists = (pCity != NULL) ? pCity->GetCityCitizens()->GetNumSpecialistsInBuilding(eArtistsGuild) : 0;
 		AppendToLog(strHeader, strLog, "Spclsts", iSpecialists);
-		AppendToLog(strHeader, strLog, "Slots", GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT()));
+		AppendToLog(strHeader, strLog, "Slots", (int)GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT()));
 	}
 
 	if (eMusiciansGuildClass != NO_BUILDINGCLASS && eMusiciansGuild != NO_BUILDING)
@@ -5199,10 +5286,10 @@ void CvPlayerCulture::LogCultureData()
 		AppendToLog(strHeader, strLog, "Musicians' Guild", (pCity != NULL ? pCity->getName() : ""));
 		iSpecialists = (pCity != NULL) ? pCity->GetCityCitizens()->GetNumSpecialistsInBuilding(eMusiciansGuild) : 0;
 		AppendToLog(strHeader, strLog, "Spclsts", iSpecialists);
-		AppendToLog(strHeader, strLog, "Slots", GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_MUSIC()));
+		AppendToLog(strHeader, strLog, "Slots", (int)GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_MUSIC()));
 	}
 
-	AppendToLog(strHeader, strLog, "Great Works", GetNumGreatWorks());
+	AppendToLog(strHeader, strLog, "Great Works", (int)GetNumGreatWorks());
 	AppendToLog(strHeader, strLog, "Tourism", GetTourism());
 	AppendToLog(strHeader, strLog, "Theming Bonuses", GetTotalThemingBonuses());
 
@@ -5508,19 +5595,31 @@ void CvCityCulture::Init(CvCity* pCity)
 }
 
 /// How many Great Works are in the city?
+#ifdef AUI_WARNING_FIXES
+uint CvCityCulture::GetNumGreatWorks() const
+#else
 int CvCityCulture::GetNumGreatWorks() const
+#endif
 {
 	return m_pCity->GetCityBuildings()->GetNumGreatWorks();
 }
 
 /// How many Great Works slots are available in the city? (counting both open and filled and counting all types)
+#ifdef AUI_WARNING_FIXES
+uint CvCityCulture::GetNumGreatWorkSlots() const
+#else
 int CvCityCulture::GetNumGreatWorkSlots() const
+#endif
 {
 	return (m_pCity->GetCityBuildings()->GetNumAvailableGreatWorkSlots() + GetNumGreatWorks());
 }
 
 /// How many OPEN Great Works slots of a particular type are available in the city?
+#ifdef AUI_WARNING_FIXES
+uint CvCityCulture::GetNumAvailableGreatWorkSlots(GreatWorkSlotType eSlotType) const
+#else
 int CvCityCulture::GetNumAvailableGreatWorkSlots(GreatWorkSlotType eSlotType) const
+#endif
 {
 	return (m_pCity->GetCityBuildings()->GetNumAvailableGreatWorkSlots(eSlotType));
 }
@@ -5878,9 +5977,15 @@ CvString CvCityCulture::GetTourismTooltip()
 	ReligionTypes ePlayerReligion = kCityPlayer.GetReligions()->GetReligionInMostCities();
 
 	// Great Works
+#ifdef AUI_WARNING_FIXES
+	int iGWTourism = (int)GetNumGreatWorks() * GC.getBASE_TOURISM_PER_GREAT_WORK();
+	iGWTourism += (m_pCity->GetCityBuildings()->GetGreatWorksTourismModifier() * iGWTourism / 100);
+	szRtnValue = GetLocalizedText("TXT_KEY_CO_CITY_TOURISM_GREAT_WORKS", iGWTourism, (int)m_pCity->GetCityCulture()->GetNumGreatWorks());
+#else
 	int iGWTourism = GetNumGreatWorks() * GC.getBASE_TOURISM_PER_GREAT_WORK();
 	iGWTourism += (m_pCity->GetCityBuildings()->GetGreatWorksTourismModifier() * iGWTourism / 100);
 	szRtnValue = GetLocalizedText("TXT_KEY_CO_CITY_TOURISM_GREAT_WORKS", iGWTourism, m_pCity->GetCityCulture()->GetNumGreatWorks());
+#endif
 
 	int iThemingBonuses = m_pCity->GetCityBuildings()->GetThemingBonuses();
 	if (iThemingBonuses > 0)
@@ -6543,14 +6648,22 @@ int CvCityCulture::GetThemingBonusIndex(BuildingClassTypes eBuildingClass) const
 				CvBuildingEntry *pkBuilding = GC.getBuildingInfo(eBuilding);
 				if (pkBuilding)
 				{
+#ifdef AUI_WARNING_FIXES
+					uint iNumSlots = pkBuilding->GetGreatWorkCount();
+#else
 					int iNumSlots = pkBuilding->GetGreatWorkCount();
+#endif
 					if (m_pCity->GetCityBuildings()->GetNumGreatWorksInBuilding(eBuildingClass) < iNumSlots)
 					{
 						return -1;  // No theming bonus if some slots still empty
 					}
 
 					// Store info on the attributes of all our Great Works
+#ifdef AUI_WARNING_FIXES
+					for (uint iI = 0; iI < iNumSlots; iI++)
+#else
 					for (int iI = 0; iI < iNumSlots; iI++)
+#endif
 					{
 						int iGreatWork = m_pCity->GetCityBuildings()->GetBuildingGreatWork(eBuildingClass, iI);
 						aGreatWorkIndices.push_back(iGreatWork);
