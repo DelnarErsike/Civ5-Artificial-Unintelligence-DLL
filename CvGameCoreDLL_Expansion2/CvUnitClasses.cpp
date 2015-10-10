@@ -1780,9 +1780,15 @@ void CvUnitEntry::DoUpdatePower()
 // ***************
 
 	int iTemp;
+#ifdef AUI_WARNING_FIXES
+	uint iLoop;
+
+	for (uint iPromotionLoop = 0; iPromotionLoop < GC.getNumPromotionInfos(); iPromotionLoop++)
+#else
 	int iLoop;
 
 	for(int iPromotionLoop = 0; iPromotionLoop < GC.getNumPromotionInfos(); iPromotionLoop++)
+#endif
 	{
 		CvPromotionEntry* kPromotion = GC.getPromotionInfo((PromotionTypes)iPromotionLoop);
 		if(kPromotion == NULL)

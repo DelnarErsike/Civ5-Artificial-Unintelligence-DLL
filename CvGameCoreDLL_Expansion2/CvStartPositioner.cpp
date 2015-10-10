@@ -338,7 +338,9 @@ void CvStartPositioner::ComputeTileFertilityValues()
 	CvArea* pLoopArea(NULL);
 	int iLoop;
 	CvPlot* pLoopPlot(NULL);
-#ifndef AUI_WARNING_FIXES
+#ifdef AUI_WARNING_FIXES
+	uint iI;
+#else
 	int iI;
 #endif
 	int uiFertility;
@@ -350,11 +352,7 @@ void CvStartPositioner::ComputeTileFertilityValues()
 	}
 
 	// Now process through the map
-#ifdef AUI_WARNING_FIXES
-	for (uint iI = 0; iI < GC.getMap().numPlots(); iI++)
-#else
 	for(iI = 0; iI < GC.getMap().numPlots(); iI++)
-#endif
 	{
 		pLoopPlot = GC.getMap().plotByIndexUnchecked(iI);
 		CvAssert(pLoopPlot);

@@ -24387,7 +24387,11 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	int iValue = 0;
 	int iTemp;
 	int iExtra;
+#ifdef AUI_WARNING_FIXES
+	uint iI;
+#else
 	int iI;
+#endif
 
 	// Get flavor info we can use
 	CvFlavorManager* pFlavorMgr = GET_PLAYER(m_eOwner).GetFlavorManager();

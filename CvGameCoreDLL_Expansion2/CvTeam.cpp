@@ -409,8 +409,8 @@ void CvTeam::addTeam(TeamTypes eTeam)
 	CvPlot* pLoopPlot;
 	CvString strBuffer;
 #ifdef AUI_WARNING_FIXES
-	uint iI;
-	int iJ;
+	int iI;
+	uint iJ;
 #else
 	int iI, iJ;
 #endif
@@ -426,11 +426,7 @@ void CvTeam::addTeam(TeamTypes eTeam)
 			{
 				if(GET_TEAM(GET_PLAYER((PlayerTypes)iI).getTeam()).isHasMet(GetID()) && GET_TEAM(GET_PLAYER((PlayerTypes)iI).getTeam()).isHasMet(eTeam))
 				{
-#ifdef AUI_WARNING_FIXES
-					if ((PlayerTypes)iI == GC.getGame().getActivePlayer())
-#else
 					if(iI == GC.getGame().getActivePlayer())
-#endif
 					{
 						strBuffer = GetLocalizedText("TXT_KEY_MISC_PLAYER_PERMANENT_ALLIANCE", getName().GetCString(), GET_TEAM(eTeam).getName().GetCString());
 						DLLUI->AddMessage(0, ((PlayerTypes)iI), false, GC.getEVENT_MESSAGE_TIME(), strBuffer/*, "AS2D_THEIRALLIANCE", MESSAGE_TYPE_MINOR_EVENT, NULL, (ColorTypes)GC.getInfoTypeForString("COLOR_HIGHLIGHT_TEXT")*/);
@@ -450,11 +446,7 @@ void CvTeam::addTeam(TeamTypes eTeam)
 
 	for(iI = 0; iI < MAX_TEAMS; iI++)
 	{
-#ifdef AUI_WARNING_FIXES
-		if ((TeamTypes)iI != GetID() && (TeamTypes)iI != eTeam)
-#else
 		if((iI != GetID()) && (iI != eTeam))
-#endif
 		{
 			if(GET_TEAM((TeamTypes)iI).isAlive())
 			{
@@ -472,11 +464,7 @@ void CvTeam::addTeam(TeamTypes eTeam)
 
 	for(iI = 0; iI < MAX_TEAMS; iI++)
 	{
-#ifdef AUI_WARNING_FIXES
-		if ((TeamTypes)iI != GetID() && (TeamTypes)iI != eTeam)
-#else
 		if((iI != GetID()) && (iI != eTeam))
-#endif
 		{
 			if(GET_TEAM((TeamTypes)iI).isAlive())
 			{
@@ -494,11 +482,7 @@ void CvTeam::addTeam(TeamTypes eTeam)
 
 	for(iI = 0; iI < MAX_TEAMS; iI++)
 	{
-#ifdef AUI_WARNING_FIXES
-		if ((TeamTypes)iI != GetID() && (TeamTypes)iI != eTeam)
-#else
 		if((iI != GetID()) && (iI != eTeam))
-#endif
 		{
 			if(GET_TEAM((TeamTypes)iI).isAlive())
 			{
@@ -516,11 +500,7 @@ void CvTeam::addTeam(TeamTypes eTeam)
 
 	for(iI = 0; iI < MAX_TEAMS; iI++)
 	{
-#ifdef AUI_WARNING_FIXES
-		if ((TeamTypes)iI != GetID() && (TeamTypes)iI != eTeam)
-#else
 		if((iI != GetID()) && (iI != eTeam))
-#endif
 		{
 			if(GET_TEAM((TeamTypes)iI).isAlive())
 			{
@@ -538,11 +518,7 @@ void CvTeam::addTeam(TeamTypes eTeam)
 
 	for(iI = 0; iI < MAX_TEAMS; iI++)
 	{
-#ifdef AUI_WARNING_FIXES
-		if ((TeamTypes)iI != GetID() && (TeamTypes)iI != eTeam)
-#else
 		if((iI != GetID()) && (iI != eTeam))
-#endif
 		{
 			if(GET_TEAM((TeamTypes)iI).isAlive())
 			{
@@ -562,11 +538,7 @@ void CvTeam::addTeam(TeamTypes eTeam)
 
 	for(iI = 0; iI < MAX_TEAMS; iI++)
 	{
-#ifdef AUI_WARNING_FIXES
-		if ((TeamTypes)iI != GetID() && (TeamTypes)iI != eTeam)
-#else
 		if((iI != GetID()) && (iI != eTeam))
-#endif
 		{
 			if(GET_TEAM((TeamTypes)iI).isAlive())
 			{
@@ -586,11 +558,7 @@ void CvTeam::addTeam(TeamTypes eTeam)
 
 	for(iI = 0; iI < MAX_TEAMS; iI++)
 	{
-#ifdef AUI_WARNING_FIXES
-		if ((TeamTypes)iI != GetID() && (TeamTypes)iI != eTeam)
-#else
 		if((iI != GetID()) && (iI != eTeam))
-#endif
 		{
 			if(GET_TEAM((TeamTypes)iI).isAlive())
 			{
@@ -620,15 +588,27 @@ void CvTeam::addTeam(TeamTypes eTeam)
 	}
 
 	const int iNumInvisibleInfos = NUM_INVISIBLE_TYPES;
+#ifdef AUI_WARNING_FIXES
+	for (iJ = 0; iJ < GC.getMap().numPlots(); iJ++)
+	{
+		pLoopPlot = GC.getMap().plotByIndexUnchecked(iJ);
+#else
 	for(iI = 0; iI < GC.getMap().numPlots(); iI++)
 	{
 		pLoopPlot = GC.getMap().plotByIndexUnchecked(iI);
+#endif
 
 		pLoopPlot->changeVisibilityCount(GetID(), pLoopPlot->getVisibilityCount(eTeam), NO_INVISIBLE, true, false);
 
+#ifdef AUI_WARNING_FIXES
+		for(iI = 0; iI < iNumInvisibleInfos; iI++)
+		{
+			pLoopPlot->changeInvisibleVisibilityCount(GetID(), ((InvisibleTypes)iI), pLoopPlot->getInvisibleVisibilityCount(eTeam, ((InvisibleTypes)iI)));
+#else
 		for(iJ = 0; iJ < iNumInvisibleInfos; iJ++)
 		{
 			pLoopPlot->changeInvisibleVisibilityCount(GetID(), ((InvisibleTypes)iJ), pLoopPlot->getInvisibleVisibilityCount(eTeam, ((InvisibleTypes)iJ)));
+#endif
 		}
 
 		if(pLoopPlot->isRevealed(eTeam))

@@ -6410,8 +6410,12 @@ int CvReligionAI::ScoreBeliefAtPlot(CvBeliefEntry* pEntry, CvPlot* pPlot)
 #endif
 
 			// Improvement
+#ifdef AUI_WARNING_FIXES
+			for (uint jJ = 0; jJ < GC.getNumImprovementInfos(); jJ++)
+#else
 			int iNumImprovementInfos = GC.getNumImprovementInfos();
 			for(int jJ = 0; jJ < iNumImprovementInfos; jJ++)
+#endif
 			{
 				if(pPlot->canHaveImprovement((ImprovementTypes)jJ, m_pPlayer->getTeam()))
 				{
@@ -6725,7 +6729,11 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 #endif
 
 	// Building class happiness
+#ifdef AUI_WARNING_FIXES
+	for (uint jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#else
 	for(int jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#endif
 	{
 #ifdef AUI_RELIGION_USE_DOUBLES
 		dTempValue = pEntry->GetBuildingClassHappiness(jJ) * dHappinessMultiplier;
@@ -6825,7 +6833,11 @@ int CvReligionAI::ScoreBeliefAtCity(CvBeliefEntry* pEntry, CvCity* pCity)
 #endif
 
 		// Building class yield change
+#ifdef AUI_WARNING_FIXES
+		for (uint jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#else
 		for(int jJ = 0; jJ < GC.getNumBuildingClassInfos(); jJ++)
+#endif
 		{
 			CvBuildingClassInfo* pkBuildingClassInfo = GC.getBuildingClassInfo((BuildingClassTypes)jJ);
 			if(!pkBuildingClassInfo)
@@ -7074,6 +7086,8 @@ int CvReligionAI::ScoreBeliefForPlayer(CvBeliefEntry* pEntry)
 	// Unlocks units?
 #ifdef AUI_RELIGION_FIX_SCORE_BELIEF_FOR_PLAYER_UNLOCKS_UNITS_DISREGARD_OLD_ERAS
 	for (uint i = (uint)m_pPlayer->GetCurrentEra(); i < GC.getNumEraInfos(); i++)
+#elif defined(AUI_WARNING_FIXES)
+	for (uint i = 0; i < GC.getNumEraInfos(); i++)
 #else
 	for(int i = 0; i < GC.getNumEraInfos(); i++)
 #endif

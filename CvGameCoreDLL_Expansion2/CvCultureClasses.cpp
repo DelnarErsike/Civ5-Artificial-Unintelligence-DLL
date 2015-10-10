@@ -2594,8 +2594,13 @@ bool CvPlayerCulture::ThemeBuilding(vector<CvGreatWorkBuildingInMyEmpire>::const
 		}
 
 		// If not enough works, try other theming bonuses
+#ifdef AUI_WARNING_FIXES
+		uint iCountSlots = pkEntry->GetGreatWorkCount();
+		if (worksToConsider.size() < iCountSlots)
+#else
 		int iCountSlots = pkEntry->GetGreatWorkCount();
 		if (worksToConsider.size() < (unsigned int)iCountSlots)
+#endif
 		{
 			continue;
 		}
@@ -2627,7 +2632,9 @@ bool CvPlayerCulture::ThemeBuilding(vector<CvGreatWorkBuildingInMyEmpire>::const
 
 			// Loop through the rest looking for works that will match up
 			it2 = it;
-#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+#ifdef AUI_WARNING_FIXES
+			for (++it2; it2 != worksToConsider.end() && aWorksChosen.size() < iCountSlots; ++it2)
+#elif defined(AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS)
 			for (++it2; it2 != worksToConsider.end() && aWorksChosen.size() < (unsigned int)iCountSlots; ++it2)
 #else
 			for (it2++; it2 != worksToConsider.end() && aWorksChosen.size() < (unsigned int)iCountSlots; it2++)
@@ -2799,7 +2806,11 @@ bool CvPlayerCulture::ThemeBuilding(vector<CvGreatWorkBuildingInMyEmpire>::const
 }
 
 /// Specialized version of ThemeBuilding() that handles those buildings that are split between Art and Artifact
+#ifdef AUI_WARNING_FIXES
+bool CvPlayerCulture::ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg, int iThemingBonusIndex, uint iNumSlots, vector<CvGreatWorkInMyEmpire> &works1, vector<CvGreatWorkInMyEmpire> &works2, bool /*bConsiderOtherPlayers*/)
+#else
 bool CvPlayerCulture::ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg, int iThemingBonusIndex, int iNumSlots, vector<CvGreatWorkInMyEmpire> &works1, vector<CvGreatWorkInMyEmpire> &works2, bool /*bConsiderOtherPlayers*/)
+#endif
 {
 	CvGameCulture *pkGameCulture = GC.getGame().GetGameCulture();
 
@@ -2811,8 +2822,13 @@ bool CvPlayerCulture::ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg,
 	vector<PlayerTypes> aArtifactsPlayersSeen;
 	vector<EraTypes> aArtifactsErasSeen;
 
+#ifdef AUI_WARNING_FIXES
+	uint iWorksInHalf = iNumSlots >> 1;
+	if (iWorksInHalf >> 1 != 0 || works1.size() < iWorksInHalf || works2.size() < iWorksInHalf)
+#else
 	int iWorksInHalf = iNumSlots / 2;
 	if (iWorksInHalf % 2 != 0 || (int)works1.size() < iWorksInHalf || (int)works2.size() < iWorksInHalf)
+#endif
 	{
 		return false;
 	}
@@ -2852,7 +2868,9 @@ bool CvPlayerCulture::ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg,
 
 		// Loop through the rest looking for works that will match up
 		vector<CvGreatWorkInMyEmpire>::const_iterator it2 = it;
-#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+#ifdef AUI_WARNING_FIXES
+		for (++it2; it2 != works2.end() && aArtifactsChosen.size() < iWorksInHalf; ++it2)
+#elif defiend(AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS)
 		for (++it2; it2 != works2.end() && aArtifactsChosen.size() < (unsigned int)iWorksInHalf; ++it2)
 #else
 		for (it2++; it2 != works2.end() && aArtifactsChosen.size() < (unsigned int)iWorksInHalf; it2++)
@@ -2875,7 +2893,9 @@ bool CvPlayerCulture::ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg,
 
 			// Now see if we can get the right number of art works to work as well
 			vector<CvGreatWorkInMyEmpire>::const_iterator it3;
-#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+#ifdef AUI_WARNING_FIXES
+			for (it3 = works1.begin(); it3 != works1.end() && aWorksChosen.size() < iNumSlots; ++it3)
+#elif defiend(AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS)
 			for (it3 = works1.begin(); it3 != works1.end() && aWorksChosen.size() < (unsigned int)iNumSlots; ++it3)
 #else
 			for (it3 = works1.begin(); it3 != works1.end() && aWorksChosen.size() < (unsigned int)iNumSlots; it3++)
@@ -2909,7 +2929,9 @@ bool CvPlayerCulture::ThemeEqualArtArtifact(CvGreatWorkBuildingInMyEmpire kBldg,
 
 				// Loop through the rest looking for works that will match up
 				vector<CvGreatWorkInMyEmpire>::const_iterator it4 = it3;
-#ifdef AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS
+#ifdef AUI_WARNING_FIXES
+				for (++it4; it4 != works1.end() && aWorksChosen.size() < iNumSlots; ++it4)
+#elif defiend(AUI_ITERATOR_POSTFIX_INCREMENT_OPTIMIZATIONS)
 				for (++it4; it4 != works1.end() && aWorksChosen.size() < (unsigned int)iNumSlots; ++it4)
 #else
 				for (it4++; it4 != works1.end() && aWorksChosen.size() < (unsigned int)iNumSlots; it4++)
@@ -5266,7 +5288,11 @@ void CvPlayerCulture::LogCultureData()
 		AppendToLog(strHeader, strLog, "Writers' Guild", (pCity != NULL ? pCity->getName() : ""));
 		iSpecialists = (pCity != NULL) ? pCity->GetCityCitizens()->GetNumSpecialistsInBuilding(eWritersGuild) : 0;
 		AppendToLog(strHeader, strLog, "Spclsts", iSpecialists);
+#ifdef AUI_WARNING_FIXES
 		AppendToLog(strHeader, strLog, "Slots", (int)GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_LITERATURE()));
+#else
+		AppendToLog(strHeader, strLog, "Slots", GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_LITERATURE()));
+#endif
 	}
 
 	if (eArtistsGuildClass != NO_BUILDINGCLASS && eArtistsGuild != NO_BUILDING)
@@ -5276,7 +5302,11 @@ void CvPlayerCulture::LogCultureData()
 		AppendToLog(strHeader, strLog, "Artists' Guild", (pCity != NULL ? pCity->getName() : ""));
 		iSpecialists = (pCity != NULL) ? pCity->GetCityCitizens()->GetNumSpecialistsInBuilding(eArtistsGuild) : 0;
 		AppendToLog(strHeader, strLog, "Spclsts", iSpecialists);
+#ifdef AUI_WARNING_FIXES
 		AppendToLog(strHeader, strLog, "Slots", (int)GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT()));
+#else
+		AppendToLog(strHeader, strLog, "Slots", GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_ART_ARTIFACT()));
+#endif
 	}
 
 	if (eMusiciansGuildClass != NO_BUILDINGCLASS && eMusiciansGuild != NO_BUILDING)
@@ -5286,10 +5316,18 @@ void CvPlayerCulture::LogCultureData()
 		AppendToLog(strHeader, strLog, "Musicians' Guild", (pCity != NULL ? pCity->getName() : ""));
 		iSpecialists = (pCity != NULL) ? pCity->GetCityCitizens()->GetNumSpecialistsInBuilding(eMusiciansGuild) : 0;
 		AppendToLog(strHeader, strLog, "Spclsts", iSpecialists);
+#ifdef AUI_WARNING_FIXES
 		AppendToLog(strHeader, strLog, "Slots", (int)GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_MUSIC()));
+#else
+		AppendToLog(strHeader, strLog, "Slots", GetNumAvailableGreatWorkSlots(CvTypes::getGREAT_WORK_SLOT_MUSIC()));
+#endif
 	}
 
+#ifdef AUI_WARNING_FIXES
 	AppendToLog(strHeader, strLog, "Great Works", (int)GetNumGreatWorks());
+#else
+	AppendToLog(strHeader, strLog, "Great Works", GetNumGreatWorks());
+#endif
 	AppendToLog(strHeader, strLog, "Tourism", GetTourism());
 	AppendToLog(strHeader, strLog, "Theming Bonuses", GetTotalThemingBonuses());
 
@@ -5643,8 +5681,12 @@ void CvCityCulture::ClearGreatWorks()
 			{
 				if (m_pCity->GetCityBuildings()->GetNumBuilding(eBuilding) > 0)
 				{
+#ifdef AUI_WARNING_FIXES
+					for (uint iI = 0; iI < pkBuilding->GetGreatWorkCount(); iI++)
+#else
 					int iNumSlots = pkBuilding->GetGreatWorkCount();
 					for (int iI = 0; iI < iNumSlots; iI++)
+#endif
 					{
 						m_pCity->GetCityBuildings()->SetBuildingGreatWork((BuildingClassTypes)iBuildingClassLoop, iI, -1);
 					}
