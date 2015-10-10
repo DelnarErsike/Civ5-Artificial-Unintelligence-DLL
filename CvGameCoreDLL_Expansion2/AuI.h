@@ -186,6 +186,8 @@
 #define AUI_CITY_FIX_DO_GROWTH_USE_FOOD_AFTER_POP_CHANGE
 /// Food and production earned from a newly constructed building is added into the city's food and production pools, just like how new buildings add onto all other yields the turn they are constructed
 #define AUI_CITY_FIX_DO_PRODUCTION_CONSIDER_FOOD_HAMMERS_FROM_NEW_BUILDING
+/// Domain modifiers to trade route yields now stack multiplicatively with other modifiers instead of additively. Among other things, this fixes Iron Curtain giving a lower-than-expected bonus to naval trade routes
+#define AUI_TRADE_FIX_CONNECTION_VALUE_MULTIPLICATIVE_STACKING_DOMAIN_MODIFIERS
 
 // Multiplayer-specific fixes/changes
 /// First Contact notifications now happen properly in multiplayer
