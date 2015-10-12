@@ -1753,7 +1753,11 @@ void CvUnitEntry::DoUpdatePower()
 	}
 
 	// We want Movement rate to be important, but not a dominating factor; a Unit with double the moves of a similarly-strengthed Unit should be ~1.5x as Powerful
+#ifdef AUI_FAST_COMP
+	iPower = int((float)iPower * pow(MIN(1.0, (double)GetMoves()), 0.3));
+#else
 	iPower = int((float) iPower * pow(min(1.0,(double) GetMoves()), 0.3));
+#endif
 
 // ***************
 // Other modifiers
@@ -1776,9 +1780,15 @@ void CvUnitEntry::DoUpdatePower()
 // ***************
 
 	int iTemp;
+#ifdef AUI_WARNING_FIXES
+	uint iLoop;
+
+	for (uint iPromotionLoop = 0; iPromotionLoop < GC.getNumPromotionInfos(); iPromotionLoop++)
+#else
 	int iLoop;
 
 	for(int iPromotionLoop = 0; iPromotionLoop < GC.getNumPromotionInfos(); iPromotionLoop++)
+#endif
 	{
 		CvPromotionEntry* kPromotion = GC.getPromotionInfo((PromotionTypes)iPromotionLoop);
 		if(kPromotion == NULL)

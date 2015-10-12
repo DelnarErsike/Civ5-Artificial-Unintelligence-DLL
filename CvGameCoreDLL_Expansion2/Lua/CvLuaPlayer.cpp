@@ -2509,7 +2509,11 @@ int CvLuaPlayer::lGetCityOfClosestGreatWorkSlot(lua_State* L)
 	int iY = lua_tointeger(L, 3);
 	GreatWorkSlotType eGreatWorkSlot = static_cast<GreatWorkSlotType>(lua_tointeger(L, 4));
 	BuildingClassTypes eBuildingClass;
+#ifdef AUI_WARNING_FIXES
+	uint iSlot = MAX_UNSIGNED_INT; // Passed by reference below
+#else
 	int iSlot;
+#endif
 	CvCity* pkCity = pkPlayer->GetCulture()->GetClosestAvailableGreatWorkSlot(iX, iY, eGreatWorkSlot, &eBuildingClass, &iSlot);
 	if (pkCity)
 	{
@@ -2530,7 +2534,11 @@ int CvLuaPlayer::lGetBuildingOfClosestGreatWorkSlot(lua_State* L)
 	int iY = lua_tointeger(L, 3);
 	GreatWorkSlotType eGreatWorkSlot = static_cast<GreatWorkSlotType>(lua_tointeger(L, 4));
 	BuildingClassTypes eBuildingClass;
+#ifdef AUI_WARNING_FIXES
+	uint iSlot = MAX_UNSIGNED_INT; // Passed by reference below
+#else
 	int iSlot;
+#endif
 	CvCity* pkCity = pkPlayer->GetCulture()->GetClosestAvailableGreatWorkSlot(iX, iY, eGreatWorkSlot, &eBuildingClass, &iSlot);
 	CvCivilizationInfo *pkCivInfo = GC.getCivilizationInfo(pkPlayer->getCivilizationType());
 	if (pkCity && pkCivInfo)

@@ -3613,11 +3613,18 @@ std::vector<CvActionInfo*>& CvGlobals::getActionInfo()
 	return m_paActionInfo;
 }
 
+#ifdef AUI_WARNING_FIXES
+CvActionInfo* CvGlobals::getActionInfo(uint i)
+{
+	CvAssertMsg(i < getNumActionInfos(), "Index out of bounds");
+	if (i < m_paActionInfo.size())
+#else
 CvActionInfo* CvGlobals::getActionInfo(int i)
 {
 	CvAssertMsg(i < getNumActionInfos(), "Index out of bounds");
 	CvAssertMsg(i > -1, "Index out of bounds");
 	if(i > -1 && i < (int)m_paActionInfo.size())
+#endif
 		return m_paActionInfo[i];
 	else
 		return NULL;

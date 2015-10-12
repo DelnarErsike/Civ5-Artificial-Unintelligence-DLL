@@ -1932,7 +1932,11 @@ void CvCityStrategyAI::UpdateBestYields()
 
 	ResetBestYields();
 
+#ifdef AUI_FAST_COMP
+	int iPopulationToEvaluate = MIN(m_pCity->getPopulation() + 2, NUM_CITY_PLOTS);
+#else
 	int iPopulationToEvaluate = min(m_pCity->getPopulation() + 2, NUM_CITY_PLOTS);
+#endif
 	CvPlot* pPlot = NULL;
 	uint uiPlotsEvaluated = 0;
 
@@ -2666,7 +2670,11 @@ bool CityStrategyAIHelpers::IsTestCityStrategy_NeedTileImprovers(AICityStrategyT
 	}
 	else
 	{
+#ifdef AUI_FAST_COMP
+		int iNumCities = MAX(1, (iCurrentNumCities * 3) / 4);
+#else
 		int iNumCities = max(1, (iCurrentNumCities * 3) / 4);
+#endif
 		if(iNumWorkers >= iNumCities)
 			return false;
 		// If we're losing at war, return false

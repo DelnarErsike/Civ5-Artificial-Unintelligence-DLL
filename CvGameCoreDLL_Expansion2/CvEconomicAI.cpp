@@ -1758,7 +1758,11 @@ void CvEconomicAI::DoHurry()
 #ifndef AUI_ECONOMIC_FIX_DO_HURRY_REENABLED_AND_REWORKED
 	int iHurryAmount = 0;
 	int iHurryAmountAvailable = 0;
+#ifdef AUI_WARNING_FIXES
+	uint iI = 0;
+#else
 	int iI = 0;
+#endif
 #endif
 
 	CvCity* pBestHurryCity = NULL;
@@ -2459,7 +2463,11 @@ void CvEconomicAI::DisbandExtraWorkers()
 	bool bInDeficit = m_pPlayer->GetEconomicAI()->IsUsingStrategy(eStrategyLosingMoney);
 
 	int iGoldSpentOnUnits = m_pPlayer->GetTreasury()->GetExpensePerTurnUnitMaintenance();
+#ifdef AUI_FAST_COMP
+	int iAverageGoldPerUnit = iGoldSpentOnUnits / (MAX(1, m_pPlayer->getNumUnits()));
+#else
 	int iAverageGoldPerUnit = iGoldSpentOnUnits / (max(1,m_pPlayer->getNumUnits()));
+#endif
 
 	if(!bInDeficit && iAverageGoldPerUnit <= 4)
 	{
@@ -3471,11 +3479,17 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 #endif
 
 #ifndef AUI_ECONOMIC_EARLY_EXPANSION_TWEAKED_FLAVOR_APPLICATION
+#ifdef AUI_FAST_COMP
+	iDesiredCities = (iDesiredCities * iFlavorExpansion) / MAX(iFlavorGrowth, 1);
+#else
 	iDesiredCities = (iDesiredCities * iFlavorExpansion) / max(iFlavorGrowth, 1);
+#endif
 #endif
 
 #ifdef AUI_ECONOMIC_USE_DOUBLES
 	double dDifficulty = MAX(0, GC.getGame().getHandicapInfo().GetID() - 3);
+#elif defined(AUI_FAST_COMP)
+	int iDifficulty = MAX(0, GC.getGame().getHandicapInfo().GetID() - 3);
 #else
 	int iDifficulty = max(0,GC.getGame().getHandicapInfo().GetID() - 3);
 #endif
@@ -3538,7 +3552,11 @@ bool EconomicAIHelpers::IsTestStrategy_EarlyExpansion(CvPlayer* pPlayer)
 			{
 				int iNumOwnedTiles = pArea->getNumOwnedTiles();
 				int iNumUnownedTiles = pArea->getNumUnownedTiles();
+#ifdef AUI_FAST_COMP
+				int iNumTiles = MAX(1, pArea->getNumTiles());
+#else
 				int iNumTiles = max(1,pArea->getNumTiles());
+#endif
 
 				int iOwnageRatio = iNumOwnedTiles * 100 / iNumTiles;
 				int iNumCities = pPlayer->getNumCities() - pPlayer->GetNumPuppetCities();

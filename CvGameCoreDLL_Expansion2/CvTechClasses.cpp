@@ -1404,7 +1404,11 @@ int CvPlayerTechs::GetResearchTurnsLeft(TechTypes eTech, bool bOverflow) const
 
 	iTurnsLeft = (iTurnsLeft + 99) / 100; // round up
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iTurnsLeft);
+#else
 	return std::max(1, iTurnsLeft);
+#endif
 }
 
 /// Accessor: How many turns of research left? (in hundredths)
@@ -1445,7 +1449,11 @@ int CvPlayerTechs::GetResearchTurnsLeftTimes100(TechTypes eTech, bool bOverflow)
 	// Get the team progress
 	int iResearchProgress = GET_TEAM(m_pPlayer->getTeam()).GetTeamTechs()->GetResearchProgress(eTech);
 	// Get the raw amount left
+#ifdef AUI_FAST_COMP
+	int iResearchLeft = MAX(0, (iResearchCost - iResearchProgress));
+#else
 	int iResearchLeft = std::max(0, (iResearchCost - iResearchProgress));
+#endif
 
 	// Removed any current overflow if requested.
 	if(bOverflow)
@@ -1462,7 +1470,11 @@ int CvPlayerTechs::GetResearchTurnsLeftTimes100(TechTypes eTech, bool bOverflow)
 		++iTurnsLeft;
 	}
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iTurnsLeft);
+#else
 	return std::max(1, iTurnsLeft);
+#endif
 }
 
 /// How many techs can we research at present?
@@ -1500,7 +1512,11 @@ int CvPlayerTechs::GetResearchCost(TechTypes eTech) const
 	int iResearchCost = GET_TEAM(m_pPlayer->getTeam()).GetTeamTechs()->GetResearchCost(eTech);
 	
 	// Adjust to the player's research modifier
+#ifdef AUI_FAST_COMP
+	int iResearchMod = MAX(1, m_pPlayer->calculateResearchModifier(eTech));
+#else
 	int iResearchMod = std::max(1, m_pPlayer->calculateResearchModifier(eTech));
+#endif
 	iResearchCost = ((iResearchCost * 10000) / iResearchMod);
 
 	// Mod for City Count
@@ -1593,7 +1609,11 @@ void CvPlayerTechs::AddFlavorAsStrategies(int iPropagatePercent)
 
 	// Now populate the AI with the current flavor information
 	int iGameProgressFactor = (GC.getGame().getElapsedGameTurns() * 1000) / GC.getGame().getDefaultEstimateEndTurn();
+#ifdef AUI_FAST_COMP
+	iGameProgressFactor = MIN(900, MAX(100, iGameProgressFactor));
+#else
 	iGameProgressFactor = min(900,max(100,iGameProgressFactor));
+#endif
 	for(int iFlavor = 0; iFlavor < GC.getNumFlavorTypes(); iFlavor++)
 	{
 		int iCurrentFlavorValue = GetLatestFlavorValue((FlavorTypes) iFlavor);
@@ -2065,7 +2085,11 @@ void CvTeamTechs::SetResearchProgressTimes100(TechTypes eIndex, int iNewValue, P
 		int iResearchCost = GetResearchCost(eIndex) * 100;
 
 		// Player modifiers to cost
+#ifdef AUI_FAST_COMP
+		int iResearchMod = MAX(1, GET_PLAYER(ePlayer).calculateResearchModifier(eIndex));
+#else
 		int iResearchMod = std::max(1, GET_PLAYER(ePlayer).calculateResearchModifier(eIndex));
+#endif
 		iResearchCost = (iResearchCost * 100) / iResearchMod;
 		int iNumCitiesMod = GC.getMap().getWorldInfo().GetNumCitiesTechCostMod();	// Default is 40, gets smaller on larger maps
 		iNumCitiesMod = iNumCitiesMod * GET_PLAYER(ePlayer).GetMaxEffectiveCities(/*bIncludePuppets*/ true);
@@ -2168,16 +2192,28 @@ int CvTeamTechs::GetResearchCost(TechTypes eTech) const
 	iCost *= GC.getGame().getStartEraInfo().getResearchPercent();
 	iCost /= 100;
 
+#ifdef AUI_FAST_COMP
+	iCost *= MAX(0, ((GC.getTECH_COST_EXTRA_TEAM_MEMBER_MODIFIER() * (m_pTeam->getNumMembers() - 1)) + 100));
+#else
 	iCost *= std::max(0, ((GC.getTECH_COST_EXTRA_TEAM_MEMBER_MODIFIER() * (m_pTeam->getNumMembers() - 1)) + 100));
+#endif
 	iCost /= 100;
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iCost);
+#else
 	return std::max(1, iCost);
+#endif
 }
 
 /// Accessor: how many beakers of research to go for this tech?
 int CvTeamTechs::GetResearchLeft(TechTypes eTech) const
 {
+#ifdef AUI_FAST_COMP
+	return MAX(0, (GetResearchCost(eTech) - GetResearchProgress(eTech)));
+#else
 	return std::max(0, (GetResearchCost(eTech) - GetResearchProgress(eTech)));
+#endif
 }
 
 /// Return the tech data (from XML)
@@ -2207,11 +2243,19 @@ int CvTeamTechs::ChangeResearchProgressPercent(TechTypes eIndex, int iPercent, P
 	{
 		if(iPercent > 0)
 		{
+#ifdef AUI_FAST_COMP
+			iBeakers = MIN(GetResearchLeft(eIndex), (GetResearchCost(eIndex) * iPercent) / 100);
+		}
+		else
+		{
+			iBeakers = MAX(GetResearchLeft(eIndex) - GetResearchCost(eIndex), (GetResearchCost(eIndex) * iPercent) / 100);
+#else
 			iBeakers = std::min(GetResearchLeft(eIndex), (GetResearchCost(eIndex) * iPercent) / 100);
 		}
 		else
 		{
 			iBeakers = std::max(GetResearchLeft(eIndex) - GetResearchCost(eIndex), (GetResearchCost(eIndex) * iPercent) / 100);
+#endif
 		}
 
 		ChangeResearchProgress(eIndex, iBeakers, ePlayer);
@@ -2238,7 +2282,11 @@ int CvTeamTechs::GetMaxResearchOverflow(TechTypes eTech, PlayerTypes ePlayer) co
 
 	int iCost = pkTechInfo->GetResearchCost() * 100;
 
+#ifdef AUI_FAST_COMP
+	return MAX(iCost, iReturnValue);
+#else
 	iReturnValue = max(iCost, iReturnValue);
 
 	return iReturnValue;
+#endif
 }

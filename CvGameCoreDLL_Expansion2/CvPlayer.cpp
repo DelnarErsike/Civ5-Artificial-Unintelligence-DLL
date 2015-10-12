@@ -2256,7 +2256,11 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 		int iInfluenceReduction = GetCulture()->GetInfluenceCityConquestReduction(eOldOwner);
 		iPercentPopulationRetained += (iInfluenceReduction * (100 - iPercentPopulationRetained) / 100);
 
+#ifdef AUI_FAST_COMP
+		iPopulation = MAX(1, iPopulation * iPercentPopulationRetained / 100);
+#else
 		iPopulation = max(1, iPopulation * iPercentPopulationRetained / 100);
+#endif
 	}
 
 	pNewCity->setPopulation(iPopulation);
@@ -2567,7 +2571,11 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 		if (!paGreatWorkData[jJ].m_bTransferred)
 		{
 			BuildingClassTypes eBuildingClass = NO_BUILDINGCLASS; // Passed by reference below
+#ifdef AUI_WARNING_FIXES
+			uint iSlot = MAX_UNSIGNED_INT; // Passed by reference below
+#else
 			int iSlot = -1; // Passed by reference below
+#endif
 			GreatWorkType eType = GC.getGame().GetGameCulture()->m_CurrentGreatWorks[paGreatWorkData[jJ].m_iGreatWork].m_eType;
 			GreatWorkSlotType eGreatWorkSlot = CultureHelpers::GetGreatWorkSlot(eType);
 			if (pNewCity->GetCityBuildings()->GetNextAvailableGreatWorkSlot(eGreatWorkSlot, &eBuildingClass, &iSlot))
@@ -2579,7 +2587,11 @@ void CvPlayer::acquireCity(CvCity* pOldCity, bool bConquest, bool bGift)
 			else
 			{
 				BuildingClassTypes eGWBuildingClass;
+#ifdef AUI_WARNING_FIXES
+				uint iGWSlot;
+#else
 				int iGWSlot;
+#endif
 				CvCity *pGWCity = GetCulture()->GetClosestAvailableGreatWorkSlot(pCityPlot->getX(), pCityPlot->getY(), eGreatWorkSlot, &eGWBuildingClass, &iGWSlot);
 				if (pGWCity)
 				{
@@ -3296,7 +3308,11 @@ void CvPlayer::DoLiberatePlayer(PlayerTypes ePlayer, int iOldCityID)
 			// Have I met the player who conquered the city?
 			if(GET_TEAM(GET_PLAYER(eMajor).getTeam()).isHasMet(getTeam()))
 			{
+#ifdef AUI_FAST_COMP
+				int iNumCities = MAX(GET_PLAYER(ePlayer).getNumCities(), 1);
+#else
 				int iNumCities = max(GET_PLAYER(ePlayer).getNumCities(), 1);
+#endif
 				int iWarmongerOffset = CvDiplomacyAIHelpers::GetWarmongerOffset(iNumCities, GET_PLAYER(ePlayer).isMinorCiv());
 				GET_PLAYER(eMajor).GetDiplomacyAI()->ChangeOtherPlayerWarmongerAmount(GetID(), -iWarmongerOffset);
 			}
@@ -8148,13 +8164,21 @@ int CvPlayer::getProductionNeeded(UnitTypes eUnit) const
 			iProductionNeeded /= 100;
 		}
 
+#ifdef AUI_FAST_COMP
+		iProductionNeeded *= MAX(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GetCurrentEra()) + 100));
+#else
 		iProductionNeeded *= std::max(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GetCurrentEra()) + 100));
+#endif
 		iProductionNeeded /= 100;
 	}
 
 	iProductionNeeded += getUnitExtraCost(eUnitClass);
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iProductionNeeded);
+#else
 	return std::max(1, iProductionNeeded);
+#endif
 }
 
 
@@ -8249,11 +8273,19 @@ int CvPlayer::getProductionNeeded(BuildingTypes eBuilding) const
 			iProductionNeeded /= 100;
 		}
 
+#ifdef AUI_FAST_COMP
+		iProductionNeeded *= MAX(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GetCurrentEra()) + 100));
+#else
 		iProductionNeeded *= std::max(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GetCurrentEra()) + 100));
+#endif
 		iProductionNeeded /= 100;
 	}
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iProductionNeeded);
+#else
 	return std::max(1, iProductionNeeded);
+#endif
 }
 
 
@@ -8292,11 +8324,19 @@ int CvPlayer::getProductionNeeded(ProjectTypes eProject) const
 			iProductionNeeded /= 100;
 		}
 
+#ifdef AUI_FAST_COMP
+		iProductionNeeded *= MAX(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GetCurrentEra()) + 100));
+#else
 		iProductionNeeded *= std::max(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GetCurrentEra()) + 100));
+#endif
 		iProductionNeeded /= 100;
 	}
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iProductionNeeded);
+#else
 	return std::max(1, iProductionNeeded);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -8325,7 +8365,11 @@ int CvPlayer::getProductionNeeded(SpecialistTypes eSpecialist) const
 	iProductionNeeded *= GC.getGame().getStartEraInfo().getCreatePercent();
 	iProductionNeeded /= 100;
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iProductionNeeded);
+#else
 	return std::max(1, iProductionNeeded);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -8559,7 +8603,11 @@ int CvPlayer::getBuildingClassPrereqBuilding(BuildingTypes eBuilding, BuildingCl
 	}
 	else
 	{
+#ifdef AUI_FAST_COMP
+		iPrereqs *= MAX(0, GC.getMap().getWorldInfo().getBuildingClassPrereqModifier() + 100);
+#else
 		iPrereqs *= std::max(0, GC.getMap().getWorldInfo().getBuildingClassPrereqModifier() + 100);
+#endif
 		iPrereqs /= 100;
 	}
 
@@ -8571,7 +8619,11 @@ int CvPlayer::getBuildingClassPrereqBuilding(BuildingTypes eBuilding, BuildingCl
 
 	if(GC.getGame().isOption(GAMEOPTION_ONE_CITY_CHALLENGE) && isHuman())
 	{
+#ifdef AUI_FAST_COMP
+		iPrereqs = MIN(1, iPrereqs);
+#else
 		iPrereqs = std::min(1, iPrereqs);
+#endif
 	}
 
 	return iPrereqs;
@@ -8654,7 +8706,11 @@ void CvPlayer::processBuilding(BuildingTypes eBuilding, int iChange, bool bFirst
 						{
 							for(pLoopCity = GET_PLAYER((PlayerTypes)iI).firstCity(&iLoop); pLoopCity != NULL; pLoopCity = GET_PLAYER((PlayerTypes)iI).nextCity(&iLoop))
 							{
+#ifdef AUI_FAST_COMP
+								pLoopCity->setPopulation(MAX(1, (pLoopCity->getPopulation() + iChange * GC.getBuildingInfo(eBuilding)->GetGlobalPopulationChange())));
+#else
 								pLoopCity->setPopulation(std::max(1, (pLoopCity->getPopulation() + iChange * GC.getBuildingInfo(eBuilding)->GetGlobalPopulationChange())));
+#endif
 							}
 						}
 					}
@@ -8989,7 +9045,11 @@ bool CvPlayer::canBuild(const CvPlot* pPlot, BuildTypes eBuild, bool bTestEra, b
 
 		if(bTestGold)
 		{
+#ifdef AUI_FAST_COMP
+			if (MAX(0, GetTreasury()->GetGold()) < getBuildCost(pPlot, eBuild))
+#else
 			if(std::max(0, GetTreasury()->GetGold()) < getBuildCost(pPlot, eBuild))
+#endif
 			{
 				return false;
 			}
@@ -9075,7 +9135,11 @@ int CvPlayer::getBuildCost(const CvPlot* pPlot, BuildTypes eBuild) const
 	iBuildCost *= GC.getGame().getGameSpeedInfo().getImprovementPercent();
 	iBuildCost /= 100;
 
+#ifdef AUI_FAST_COMP
+	return MAX(0, iBuildCost);
+#else
 	return std::max(0, iBuildCost);
+#endif
 }
 
 
@@ -9133,7 +9197,11 @@ int CvPlayer::getImprovementUpgradeRate() const
 
 	iRate = 100; // XXX
 
+#ifdef AUI_FAST_COMP
+	iRate *= MAX(0, (getImprovementUpgradeRateModifier() + 100));
+#else
 	iRate *= std::max(0, (getImprovementUpgradeRateModifier() + 100));
+#endif
 	iRate /= 100;
 
 	return iRate;
@@ -9214,7 +9282,11 @@ int CvPlayer::calculateUnitProductionMaintenanceMod() const
 	int iPaidUnits = GetNumUnitsOutOfSupply();
 
 	// Example: Player can support 8 Units, he has 12. 4 * 10 means he loses 40% of his Production
+#ifdef AUI_FAST_COMP
+	int iMaintenanceMod = MIN(/*70*/ GC.getMAX_UNIT_SUPPLY_PRODMOD(), iPaidUnits * 10);
+#else
 	int iMaintenanceMod = min(/*70*/ GC.getMAX_UNIT_SUPPLY_PRODMOD(), iPaidUnits * 10);
+#endif
 	iMaintenanceMod = -iMaintenanceMod;
 
 	return iMaintenanceMod;
@@ -9278,7 +9350,11 @@ int CvPlayer::GetNumUnitsOutOfSupply() const
 	}
 
 	int iNumUnitsToSupply = iNumUnits - iNumTradeUnits;
+#ifdef AUI_FAST_COMP
+	return MAX(0, iNumUnitsToSupply - iFreeUnits);
+#else
 	return std::max(0, iNumUnitsToSupply - iFreeUnits);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -9462,15 +9538,27 @@ int CvPlayer::greatGeneralThreshold() const
 {
 	int iThreshold;
 
+#ifdef AUI_FAST_COMP
+	iThreshold = ((/*200*/ GC.getGREAT_GENERALS_THRESHOLD() * MAX(0, (getGreatGeneralsThresholdModifier() + 100))) / 100);
+#else
 	iThreshold = ((/*200*/ GC.getGREAT_GENERALS_THRESHOLD() * std::max(0, (getGreatGeneralsThresholdModifier() + 100))) / 100);
+#endif
 
 	iThreshold *= GC.getGame().getGameSpeedInfo().getGreatPeoplePercent();
+#ifdef AUI_FAST_COMP
+	iThreshold /= MAX(1, GC.getGame().getGameSpeedInfo().getTrainPercent());
+#else
 	iThreshold /= std::max(1, GC.getGame().getGameSpeedInfo().getTrainPercent());
+#endif
 
 	iThreshold *= GC.getGame().getStartEraInfo().getGreatPeoplePercent();
 	iThreshold /= 100;
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iThreshold);
+#else
 	return std::max(1, iThreshold);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -9478,15 +9566,27 @@ int CvPlayer::greatAdmiralThreshold() const
 {
 	int iThreshold;
 
+#ifdef AUI_FAST_COMP
+	iThreshold = ((/*200*/ GC.getGREAT_GENERALS_THRESHOLD() * MAX(0, (getGreatAdmiralsThresholdModifier() + 100))) / 100);
+#else
 	iThreshold = ((/*200*/ GC.getGREAT_GENERALS_THRESHOLD() * std::max(0, (getGreatAdmiralsThresholdModifier() + 100))) / 100);
+#endif
 
 	iThreshold *= GC.getGame().getGameSpeedInfo().getGreatPeoplePercent();
+#ifdef AUI_FAST_COMP
+	iThreshold /= MAX(1, GC.getGame().getGameSpeedInfo().getTrainPercent());
+#else
 	iThreshold /= std::max(1, GC.getGame().getGameSpeedInfo().getTrainPercent());
+#endif
 
 	iThreshold *= GC.getGame().getStartEraInfo().getGreatPeoplePercent();
 	iThreshold /= 100;
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iThreshold);
+#else
 	return std::max(1, iThreshold);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -10333,7 +10433,11 @@ void CvPlayer::DoYieldBonusFromKill(YieldTypes eYield, UnitTypes eAttackingUnitT
 	CvUnitEntry* pkKilledUnitInfo = GC.getUnitInfo(eKilledUnitType);
 	if(pkKilledUnitInfo)
 	{
+#ifdef AUI_FAST_COMP
+		int iCombatStrength = MAX(pkKilledUnitInfo->GetCombat(), pkKilledUnitInfo->GetRangedCombat());
+#else
 		int iCombatStrength = max(pkKilledUnitInfo->GetCombat(), pkKilledUnitInfo->GetRangedCombat());
+#endif
 		if(iCombatStrength > 0)
 		{	
 			switch(eYield)
@@ -10437,7 +10541,11 @@ void CvPlayer::DoUnresearchedTechBonusFromKill(UnitTypes eKilledUnitType, int iX
 				CvTechEntry* pkTechInfo = GC.getTechInfo(ePrereq);
 				if (pkTechInfo && !GET_TEAM(getTeam()).GetTeamTechs()->HasTech(ePrereq))
 				{
+#ifdef AUI_FAST_COMP
+					int iCombatStrength = MAX(pkUnitInfo->GetCombat(), pkUnitInfo->GetRangedCombat());
+#else
 					int iCombatStrength = max(pkUnitInfo->GetCombat(), pkUnitInfo->GetRangedCombat());
+#endif
 					if (iCombatStrength > 0)
 					{
 						int iTechCost = GetPlayerTechs()->GetResearchCost(ePrereq);
@@ -13736,7 +13844,11 @@ void CvPlayer::DoSeedGreatPeopleSpawnCounter()
 	{
 		int iExtraAlliesChange = iExtraAllies* /*-1*/ GC.getMINOR_ADDITIONAL_ALLIES_GP_CHANGE();
 
+#ifdef AUI_FAST_COMP
+		iExtraAlliesChange = MAX(/*-10*/ GC.getMAX_MINOR_ADDITIONAL_ALLIES_GP_CHANGE(), iExtraAlliesChange);
+#else
 		iExtraAlliesChange = max(/*-10*/ GC.getMAX_MINOR_ADDITIONAL_ALLIES_GP_CHANGE(), iExtraAlliesChange);
+#endif
 
 		iNumTurns += iExtraAlliesChange;
 	}
@@ -17413,7 +17525,11 @@ int CvPlayer::GetScienceTimes100() const
 	// If we have a negative Treasury + GPT then it gets removed from Science
 	iValue += GetScienceFromBudgetDeficitTimes100();
 
+#ifdef AUI_FAST_COMP
+	return MAX(iValue, 0);
+#else
 	return max(iValue, 0);
+#endif
 }
 
 
@@ -17939,11 +18055,19 @@ void CvPlayer::DoUpdateProximityToPlayer(PlayerTypes ePlayer)
 
 	// Only two players left, the farthest we can be considered is "Close"
 	if(iNumMajorsLeft == 2)
+#ifdef AUI_FAST_COMP
+		eProximity = MAX(eProximity, PLAYER_PROXIMITY_CLOSE);
+#else
 		eProximity = max(eProximity, PLAYER_PROXIMITY_CLOSE);
+#endif
 
 	// Four or fewer players left, the farthest we can be considered is "Far"
 	else if(iNumMajorsLeft <= 4)
+#ifdef AUI_FAST_COMP
+		eProximity = MAX(eProximity, PLAYER_PROXIMITY_FAR);
+#else
 		eProximity = max(eProximity, PLAYER_PROXIMITY_FAR);
+#endif
 
 	SetProximityToPlayer(ePlayer, eProximity);
 }
@@ -20615,7 +20739,11 @@ void CvPlayer::doResearch()
 		TechTypes eCurrentTech = GetPlayerTechs()->GetCurrentResearch();
 		if(eCurrentTech == NO_TECH)
 		{
+#ifdef AUI_FAST_COMP
+			int iOverflow = (GetScienceTimes100()) / MAX(1, calculateResearchModifier(eCurrentTech));
+#else
 			int iOverflow = (GetScienceTimes100()) / std::max(1, calculateResearchModifier(eCurrentTech));
+#endif
 			changeOverflowResearchTimes100(iOverflow);
 		}
 		else
@@ -21193,7 +21321,11 @@ int CvPlayer::getAdvancedStartUnitCost(UnitTypes eUnit, bool bAdd, CvPlot* pPlot
 			}
 
 			iCost *= 100;
+#ifdef AUI_FAST_COMP
+			iCost /= MAX(1, 100 + pCity->getProductionModifier(eUnit));
+#else
 			iCost /= std::max(1, 100 + pCity->getProductionModifier(eUnit));
+#endif
 		}
 		else
 		{
@@ -21203,7 +21335,11 @@ int CvPlayer::getAdvancedStartUnitCost(UnitTypes eUnit, bool bAdd, CvPlot* pPlot
 			}
 
 			iCost *= 100;
+#ifdef AUI_FAST_COMP
+			iCost /= MAX(1, 100 + getProductionModifier(eUnit));
+#else
 			iCost /= std::max(1, 100 + getProductionModifier(eUnit));
+#endif
 		}
 
 
@@ -21477,7 +21613,11 @@ int CvPlayer::getAdvancedStartBuildingCost(BuildingTypes eBuilding, bool bAdd, C
 		}
 
 		iCost *= 100;
+#ifdef AUI_FAST_COMP
+		iCost /= MAX(1, 100 + pCity->getProductionModifier(eBuilding));
+#else
 		iCost /= std::max(1, 100 + pCity->getProductionModifier(eBuilding));
+#endif
 
 		if(bAdd)
 		{
@@ -24212,7 +24352,11 @@ int CvPlayer::getNewCityProductionValue() const
 					{
 						if(GC.getGame().getStartEra() >= pkBuildingInfo->GetFreeStartEra())
 						{
+#ifdef AUI_FAST_COMP
+							iValue += (100 * getProductionNeeded(eBuilding)) / MAX(1, 100 + getProductionModifier(eBuilding));
+#else
 							iValue += (100 * getProductionNeeded(eBuilding)) / std::max(1, 100 + getProductionModifier(eBuilding));
+#endif
 						}
 					}
 				}
@@ -24269,11 +24413,19 @@ int CvPlayer::getGrowthThreshold(int iPopulation) const
 		iThreshold *= GC.getGame().getHandicapInfo().getAIGrowthPercent();
 		iThreshold /= 100;
 
+#ifdef AUI_FAST_COMP
+		iThreshold *= MAX(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GetCurrentEra()) + 100));
+#else
 		iThreshold *= std::max(0, ((GC.getGame().getHandicapInfo().getAIPerEraModifier() * GetCurrentEra()) + 100));
+#endif
 		iThreshold /= 100;
 	}
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iThreshold);
+#else
 	return std::max(1, iThreshold);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -24979,7 +25131,11 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 	const int iDefaultNumTiles = 80*52;
 	int iDefaultEvalDistance = iEvalDistance;
 	iEvalDistance = (iEvalDistance * GC.getMap().numPlots()) / iDefaultNumTiles;
+#ifdef AUI_FAST_COMP
+	iEvalDistance = MAX(iDefaultEvalDistance, iEvalDistance);
+#else
 	iEvalDistance = max(iDefaultEvalDistance,iEvalDistance);
+#endif
 
 	if(bEscorted && GC.getMap().GetAIMapHint() & 5)  // this is primarily a naval map or at the very least an offshore expansion map
 	{
@@ -25132,8 +25288,7 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 				if (iSettlerDistance < MAX_INT)
 					iSettlerDistance *= pUnit->maxMoves() / GC.getMOVE_DENOMINATOR();
 #endif
-#else
-#ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY
+#elif defined(AUI_PLAYER_GET_BEST_SETTLE_PLOT_EVALDISTANCE_FOR_CLOSEST_CITY)
 				iLoop = 0;
 				iBestDistance = MAX_INT;
 				for (pLoopCity = firstCity(&iLoop); pLoopCity != NULL; pLoopCity = nextCity(&iLoop))
@@ -25153,7 +25308,6 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 #else
 				int iSettlerDistance = ::plotDistance(pPlot->getX(), pPlot->getY(), iSettlerX, iSettlerY);
 #endif
-#endif
 #ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_CONSIDER_ENEMY_CAPITALS
 				for (int iI = 0; iI < MAX_MAJOR_CIVS; iI++)
 				{
@@ -25168,8 +25322,13 @@ CvPlot* CvPlayer::GetBestSettlePlot(CvUnit* pUnit, bool bEscorted, int iArea) co
 					}
 				}
 #endif
+#ifdef AUI_FAST_COMP
+				int iDistanceDropoff = MIN(99, (iDistanceDropoffMod * iSettlerDistance) / iEvalDistance);
+				iDistanceDropoff = MAX(0, iDistanceDropoff);
+#else
 				int iDistanceDropoff = min(99,(iDistanceDropoffMod * iSettlerDistance) / iEvalDistance);
 				iDistanceDropoff = max(0,iDistanceDropoff);
+#endif
 				iValue = iValue * (100 - iDistanceDropoff) / 100;
 #ifdef AUI_PLAYER_GET_BEST_SETTLE_PLOT_PATHFINDER_CALL
 				if (iTurnsToDestination > iEvalDistance)

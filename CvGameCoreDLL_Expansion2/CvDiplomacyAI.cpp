@@ -2910,10 +2910,17 @@ int CvDiplomacyAI::GetMajorCivOpinionWeight(PlayerTypes ePlayer)
 
 	// Beging TraitorOpinion bit
 	int iTraitorOpinion = GetFriendDenouncementScore(ePlayer);
+#ifdef AUI_FAST_COMP
+	iTraitorOpinion = MAX(iTraitorOpinion, GetWeDenouncedFriendScore(ePlayer));
+	iTraitorOpinion = MAX(iTraitorOpinion, GetFriendDenouncedUsScore(ePlayer));
+	iTraitorOpinion = MAX(iTraitorOpinion, GetWeDeclaredWarOnFriendScore(ePlayer));
+	iTraitorOpinion = MAX(iTraitorOpinion, GetFriendDeclaredWarOnUsScore(ePlayer));
+#else
 	iTraitorOpinion = max(iTraitorOpinion, GetWeDenouncedFriendScore(ePlayer));
 	iTraitorOpinion = max(iTraitorOpinion, GetFriendDenouncedUsScore(ePlayer));
 	iTraitorOpinion = max(iTraitorOpinion, GetWeDeclaredWarOnFriendScore(ePlayer));
 	iTraitorOpinion = max(iTraitorOpinion, GetFriendDeclaredWarOnUsScore(ePlayer));
+#endif
 	iOpinionWeight += iTraitorOpinion;
 	// End TraitorOpinion bit
 
@@ -5412,7 +5419,11 @@ bool CvDiplomacyAI::IsGoldRequest(PlayerTypes ePlayer, CvDeal* pDeal, int& iWeig
 	if(iGoldToAskFor > iTheirGold)
 	{
 		iGoldToAskFor = 0;
+#ifdef AUI_FAST_COMP
+		iGPTToAskFor = MAX(1, iTheirGPT / 6);
+#else
 		iGPTToAskFor = max(1, iTheirGPT / 6);
+#endif
 	}
 
 	// Now seed the deal
@@ -6769,7 +6780,11 @@ int CvDiplomacyAI::GetWarScore(PlayerTypes ePlayer)
 	// Decrease war score if we've been fighting for a long time - after 60 turns the effect is -20 on the WarScore
 	int iTurnsAtWar = GetPlayerNumTurnsAtWar(ePlayer);
 	iTurnsAtWar /= 3;
+#ifdef AUI_FAST_COMP
+	iWarScore -= MIN(iTurnsAtWar, /*20*/ GC.getWAR_PROJECTION_WAR_DURATION_SCORE_CAP());
+#else
 	iWarScore -= min(iTurnsAtWar, /*20*/ GC.getWAR_PROJECTION_WAR_DURATION_SCORE_CAP());
+#endif
 
 	return iWarScore;
 }
@@ -9520,7 +9535,11 @@ void CvDiplomacyAI::DoWarDamageDecay()
 					iValue /= 20;
 
 					// Make sure it's changing by at least 1
+#ifdef AUI_FAST_COMP
+					iValue = MAX(1, iValue);
+#else
 					iValue = max(1, iValue);
+#endif
 
 					ChangeWarValueLost(eLoopPlayer, -iValue);
 				}
@@ -9543,7 +9562,11 @@ void CvDiplomacyAI::DoWarDamageDecay()
 						iValue /= 20;
 
 						// Make sure it's changing by at least 1
+#ifdef AUI_FAST_COMP
+						iValue = MAX(1, iValue);
+#else
 						iValue = max(1, iValue);
+#endif
 
 						ChangeOtherPlayerWarValueLost(eLoopPlayer, eLoopThirdPlayer, -iValue);
 					}
@@ -9680,7 +9703,11 @@ void CvDiplomacyAI::DoUpdateOtherPlayerWarDamageLevel()
 							}
 
 							// Prevents divide by 0
+#ifdef AUI_FAST_COMP
+							iCurrentValue = MAX(1, iCurrentValue);
+#else
 							iCurrentValue = max(1,iCurrentValue);
+#endif
 
 							iValueLostRatio = iValueLost * 100 / iCurrentValue;
 
@@ -10691,7 +10718,11 @@ int CvDiplomacyAI::GetOtherPlayerWarmongerAmount(PlayerTypes ePlayer)
 void CvDiplomacyAI::ChangeOtherPlayerWarmongerAmount(PlayerTypes ePlayer, int iChangeAmount)
 {
 	int iNewValue = m_paiOtherPlayerWarmongerAmount[ePlayer] + (iChangeAmount * GC.getEraInfo(GC.getGame().getCurrentEra())->getWarmongerPercent()) / 100;
+#ifdef AUI_FAST_COMP
+	iNewValue = MAX(0, iNewValue);
+#else
 	iNewValue = max(0, iNewValue);
+#endif
 	m_paiOtherPlayerWarmongerAmount[ePlayer] = iNewValue;
 }
 
@@ -12811,7 +12842,11 @@ void CvDiplomacyAI::DoContactMinorCivs()
 					sGiftInfo.iGoldAmount = 0;
 
 					// if we are rich we are more likely to, conversely if we are poor...
+#ifdef AUI_FAST_COMP
+					iValue += MIN(MAX(0, m_pPlayer->calculateGoldRate() - 50), 100);
+#else
 					iValue += min(max(0, m_pPlayer->calculateGoldRate() - 50),100);
+#endif
 
 					pMinorInfo = GC.getMinorCivInfo(pMinorCivAI->GetMinorCivType());
 
@@ -12858,7 +12893,11 @@ void CvDiplomacyAI::DoContactMinorCivs()
 					// Nearly everyone likes to grow
 					if(pMinorInfo->GetMinorCivTrait() == MINOR_CIV_TRAIT_MARITIME && !GetPlayer()->IsEmpireUnhappy())
 					{
+#ifdef AUI_FAST_COMP
+						iValue += /*20*/ GC.getMC_GIFT_WEIGHT_MARITIME_GROWTH() * iGrowthFlavor * MAX(1, GetPlayer()->getNumCities() / 3);
+#else
 						iValue += /*20*/ GC.getMC_GIFT_WEIGHT_MARITIME_GROWTH() * iGrowthFlavor * max(1, GetPlayer()->getNumCities() / 3);
+#endif
 					}
 
 					// Slight negative weight towards militaristic
@@ -27020,7 +27059,11 @@ int CvDiplomacyAIHelpers::GetWarmongerOffset(int iNumCitiesRemaining, bool bIsMi
 {
 	int iEstimatedCitiesOnMap = GC.getMap().getWorldInfo().GetEstimatedNumCities();
 	int iActualCitiesOnMap = GC.getGame().getNumCities();
+#ifdef AUI_FAST_COMP
+	int iWarmongerOffset = (1000 * iEstimatedCitiesOnMap) / (MAX(iActualCitiesOnMap, 1) * iNumCitiesRemaining);
+#else
 	int iWarmongerOffset = (1000 * iEstimatedCitiesOnMap) / (max(iActualCitiesOnMap, 1) * iNumCitiesRemaining);
+#endif
 
 	// Minor power targeted, half penalty
 	if (bIsMinor)
@@ -27036,7 +27079,11 @@ CvString CvDiplomacyAIHelpers::GetWarmongerPreviewString(PlayerTypes eCurrentOwn
 	CvString szRtnValue;
 
 	CvPlayer &kPlayer = GET_PLAYER(eCurrentOwner);
+#ifdef AUI_FAST_COMP
+	int iNumCities = MAX(kPlayer.getNumCities(), 1);
+#else
 	int iNumCities = max(kPlayer.getNumCities(), 1);
+#endif
 	int iWarmongerOffset = CvDiplomacyAIHelpers::GetWarmongerOffset(iNumCities, kPlayer.isMinorCiv());
 	iWarmongerOffset = iWarmongerOffset * GC.getEraInfo(GC.getGame().getCurrentEra())->getWarmongerPercent() / 100;
 
@@ -27094,7 +27141,11 @@ void CvDiplomacyAIHelpers::ApplyWarmongerPenalties(PlayerTypes eConqueror, Playe
 			CvTeam &kAffectedTeam = GET_TEAM(GET_PLAYER(eMajor).getTeam());
 			if (kAffectedTeam.isHasMet(kConqueringPlayer.getTeam()))
 			{
+#ifdef AUI_FAST_COMP
+				int iNumCities = MAX(GET_PLAYER(eConquered).getNumCities(), 1);
+#else
 				int iNumCities = max(GET_PLAYER(eConquered).getNumCities(), 1);
+#endif
 				int iWarmongerOffset = CvDiplomacyAIHelpers::GetWarmongerOffset(iNumCities, GET_PLAYER(eConquered).isMinorCiv());
 
 				// Half penalty if I'm also at war with conquered civ

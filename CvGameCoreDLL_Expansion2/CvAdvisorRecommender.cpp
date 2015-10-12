@@ -266,7 +266,11 @@ void CvAdvisorRecommender::UpdateTechRecommendations(PlayerTypes ePlayer)
 		}
 		else
 		{
+#ifdef AUI_FAST_COMP
+			iNewWeight = m_aResearchableTechs.GetWeight(iI) * MAX(iTurnsLeft / 2, 1);
+#else
 			iNewWeight = m_aResearchableTechs.GetWeight(iI) * max(iTurnsLeft / 2, 1);
+#endif
 		}
 
 		// Now actually change the weight

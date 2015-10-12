@@ -1825,13 +1825,21 @@ int CvUnitMission::CalculateMissionTimer(UnitHandle hUnit, int iSteps)
 			}
 			else
 			{
+#ifdef AUI_FAST_COMP
+				iTime = MIN(iTime, 2);
+#else
 				iTime = std::min(iTime, 2);
+#endif
 			}
 		}
 
 		if(hUnit->isHuman() && (hUnit->IsAutomated() /*|| (GET_PLAYER((GC.getGame().isNetworkMultiPlayer()) ? hUnit->getOwner() : GC.getGame().getActivePlayer()).isOption(PLAYEROPTION_QUICK_MOVES))*/))
 		{
+#ifdef AUI_FAST_COMP
+			iTime = MIN(iTime, 1);
+#else
 			iTime = std::min(iTime, 1);
+#endif
 		}
 	}
 	else
@@ -1993,7 +2001,11 @@ void CvUnitMission::DeactivateHeadMission(UnitHandle hUnit, int iUnitCycleTimer)
 			if(hUnit->IsSelected())
 			{
 				if(GET_PLAYER(hUnit->getOwner()).isOption(PLAYEROPTION_QUICK_MOVES))
+#ifdef AUI_FAST_COMP
+					iUnitCycleTimer = MIN(1, iUnitCycleTimer);
+#else
 					iUnitCycleTimer = min(1, iUnitCycleTimer);
+#endif
 
 				GC.GetEngineUserInterface()->changeCycleSelectionCounter(iUnitCycleTimer);
 			}

@@ -58,7 +58,11 @@ void CvBuilderTaskingAI::Init(CvPlayer* pPlayer)
 	// special case code so Brazil doesn't remove jungle
 	m_bKeepJungle = false;
 
+#ifdef AUI_WARNING_FIXES
+	for (uint i = 0; i < GC.getNumBuildInfos(); i++)
+#else
 	for(int i = 0; i < GC.getNumBuildInfos(); i++)
+#endif
 	{
 		BuildTypes eBuild = (BuildTypes)i;
 		CvBuildInfo* pkBuild = GC.getBuildInfo(eBuild);
@@ -2809,7 +2813,11 @@ int CvBuilderTaskingAI::GetBuildTimeWeight(CvUnit* pUnit, CvPlot* pPlot, BuildTy
 
 	int iBuildTimeNormal = pPlot->getBuildTime(eBuild, m_pPlayer->GetID());
 	int iBuildTurnsLeft = pPlot->getBuildTurnsLeft(eBuild, m_pPlayer->GetID(), pUnit->workRate(true), pUnit->workRate(true));
+#ifdef AUI_FAST_COMP
+	int iBuildTime = MIN(iBuildTimeNormal, iBuildTurnsLeft);
+#else
 	int iBuildTime = min(iBuildTimeNormal, iBuildTurnsLeft);
+#endif
 	if(iBuildTime <= 0)
 	{
 		iBuildTime = 1;
@@ -3838,7 +3846,11 @@ void CvBuilderTaskingAI::UpdateProjectedPlotYields(CvPlot* pPlot, BuildTypes eBu
 	for(uint ui = 0; ui < NUM_YIELD_TYPES; ui++)
 	{
 		m_aiProjectedPlotYields[ui] = pPlot->getYieldWithBuild(eBuild, (YieldTypes)ui, false, m_pPlayer->GetID());
+#ifdef AUI_FAST_COMP
+		m_aiProjectedPlotYields[ui] = MAX(m_aiProjectedPlotYields[ui], 0);
+#else
 		m_aiProjectedPlotYields[ui] = max(m_aiProjectedPlotYields[ui], 0);
+#endif
 #ifdef AUI_WORKER_FIX_CELTIC_IMPROVE_UNIMPROVED_FORESTS
 		if (ui == YIELD_FAITH && m_pPlayer->GetPlayerTraits()->IsFaithFromUnimprovedForest() && pPlot->getImprovementType() == NO_IMPROVEMENT)
 		{

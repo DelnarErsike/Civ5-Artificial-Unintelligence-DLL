@@ -1202,7 +1202,11 @@ CvMilitaryTarget CvMilitaryAI::FindBestAttackTarget(AIOperationTypes eAIOperatio
 	{
 		RandomNumberDelegate fcn;
 		fcn = MakeDelegate(&GC.getGame(), &CvGame::getJonRandNum);
+#ifdef AUI_FAST_COMP
+		int iNumChoices = MAX(1, (weightedTargetList.size() * 25 / 100));
+#else
 		int iNumChoices = max (1, (weightedTargetList.size() * 25 / 100));
+#endif
 		chosenTarget = weightedTargetList.ChooseFromTopChoices(iNumChoices, &fcn, "Choosing attack target from top 25%% of choices");
 		// if we need the winning score
 		if (piWinningScore)
@@ -1400,11 +1404,20 @@ int CvMilitaryAI::ScoreTarget(CvMilitaryTarget& target, AIOperationTypes eAIOper
 
 	int iFriendlyStrength = target.iMusterNearbyUnitPower;
 	int iEnemyStrength = target.iTargetNearbyUnitPower + (target.m_pTargetCity->getStrengthValue() / 50);
+#ifdef AUI_FAST_COMP
+	iFriendlyStrength = MAX(1, iFriendlyStrength);
+	iEnemyStrength = MAX(1, iEnemyStrength);
+#else
 	iFriendlyStrength = max(1, iFriendlyStrength);
 	iEnemyStrength = max(1, iEnemyStrength);
+#endif
 	int iRatio = 1;
 	iRatio = (iFriendlyStrength * 100) / iEnemyStrength;
+#ifdef AUI_FAST_COMP
+	iRatio = MIN(1000, iRatio);
+#else
 	iRatio = min(1000, iRatio);
+#endif
 	uliRtnValue *= iRatio;
 
 	if (target.m_pTargetCity->IsOriginalCapital())
@@ -1472,7 +1485,11 @@ int CvMilitaryAI::ScoreTarget(CvMilitaryTarget& target, AIOperationTypes eAIOper
 	uliRtnValue /= 10;
 #endif
 
+#ifdef AUI_FAST_COMP
+	return MIN(10000000, (int)uliRtnValue & 0x7fffffff);
+#else
 	return min(10000000, (int)uliRtnValue & 0x7fffffff);
+#endif
 }
 
 /// How open an approach do we have to this city if we want to attack it?
@@ -2260,19 +2277,32 @@ void CvMilitaryAI::UpdateBaseData()
 	m_iMandatoryReserveSize = (int)(dNumUnitsWanted * dMultiplier + 0.5);
 
 	// add in a few for the difficulty level (all above Chieftain are boosted)
+#ifdef AUI_FAST_COMP
+	int iDifficulty = MAX(0, GC.getGame().getHandicapInfo().GetID() - 1);
+#else
 	int iDifficulty = max(0, GC.getGame().getHandicapInfo().GetID() - 1);
+#endif
 	m_iMandatoryReserveSize += iDifficulty;
 
-	m_iMandatoryReserveSize = max(1, m_iMandatoryReserveSize);
+#ifndef AUI_FAST_COMP
+	m_iMandatoryReserveSize = MAX(1, m_iMandatoryReserveSize);
+#endif
 
 	// now we add in the strike forces we think we will need
 	if(m_pPlayer->isMinorCiv())
 	{
+#ifdef AUI_FAST_COMP
+		m_iMandatoryReserveSize = MAX(1, m_iMandatoryReserveSize / 2);
+#else
 		m_iMandatoryReserveSize = max(1, m_iMandatoryReserveSize / 2);
+#endif
 		dNumUnitsWanted = 0.0;
 	}
 	else
 	{
+#ifdef AUI_FAST_COMP
+		m_iMandatoryReserveSize = MAX(1, m_iMandatoryReserveSize);
+#endif
 		dNumUnitsWanted = 7.0; // size of a basic attack
 
 		// if we are going for conquest we want at least one more task force
@@ -2344,19 +2374,32 @@ void CvMilitaryAI::UpdateBaseData()
 	m_iMandatoryReserveSize = (int)((float)iNumUnitsWanted * fMultiplier);
 
 	// add in a few for the difficulty level (all above Chieftain are boosted)
+#ifdef AUI_FAST_COMP
+	int iDifficulty = MAX(0, GC.getGame().getHandicapInfo().GetID() - 1);
+#else
 	int iDifficulty = max(0, GC.getGame().getHandicapInfo().GetID() - 1);
+#endif
 	m_iMandatoryReserveSize += iDifficulty;
 
+#ifndef AUI_FAST_COMP
 	m_iMandatoryReserveSize = max(1, m_iMandatoryReserveSize);
+#endif
 
 	// now we add in the strike forces we think we will need
 	if (m_pPlayer->isMinorCiv())
 	{
+#ifdef AUI_FAST_COMP
+		m_iMandatoryReserveSize = MAX(1, m_iMandatoryReserveSize / 2);
+#else
 		m_iMandatoryReserveSize = max(1, m_iMandatoryReserveSize / 2);
+#endif
 		iNumUnitsWanted = 0;
 	}
 	else
 	{
+#ifdef AUI_FAST_COMP
+		m_iMandatoryReserveSize = MAX(1, m_iMandatoryReserveSize);
+#endif
 		iNumUnitsWanted = 7; // size of a basic attack
 
 		// if we are going for conquest we want at least one more task force
@@ -2382,7 +2425,11 @@ void CvMilitaryAI::UpdateBaseData()
 
 		iNumUnitsWanted = (int)((float)iNumUnitsWanted * fMultiplier);
 
+#ifdef AUI_FAST_COMP
+		iNumUnitsWanted = MAX(1, iNumUnitsWanted);
+#else
 		iNumUnitsWanted = max(1,iNumUnitsWanted);
+#endif
 	}
 
 	if (bNavalMap)
@@ -3718,7 +3765,11 @@ void CvMilitaryAI::DisbandObsoleteUnits()
 	bInDeficit = m_pPlayer->GetEconomicAI()->IsUsingStrategy(eStrategyLosingMoney);
 
 	int iGoldSpentOnUnits = m_pPlayer->GetTreasury()->GetExpensePerTurnUnitMaintenance();
+#ifdef AUI_FAST_COMP
+	int iAverageGoldPerUnit = iGoldSpentOnUnits / (MAX(1, m_pPlayer->getNumUnits()));
+#else
 	int iAverageGoldPerUnit = iGoldSpentOnUnits / (max(1,m_pPlayer->getNumUnits()));
+#endif
 
 	// if our units maintenance cost is high we may want to scrap some obsolete stuff
 	bInDeficit = bInDeficit || iAverageGoldPerUnit > 5;
@@ -3918,6 +3969,8 @@ UnitHandle CvMilitaryAI::FindBestUnitToScrap(bool bLand, bool bDeficitForcedDisb
 				{
 #ifdef AUI_MILITARY_FIND_BEST_UNIT_TO_SCRAP_TWEAKED
 					for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos(); iResourceLoop++)
+#elif defined(AUI_WARNING_FIXES)
+					for (uint iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos() && !bSkipThisOne; iResourceLoop++)
 #else
 					for(int iResourceLoop = 0; iResourceLoop < GC.getNumResourceInfos() && !bSkipThisOne; iResourceLoop++)
 #endif
@@ -4491,7 +4544,11 @@ CvPlot *CvMilitaryAI::GetBestAirSweepTarget(CvUnit* pFighter) const
 						{
 							int iCountFighters = 0;
 
+#ifdef AUI_WARNING_FIXES
+							for (uint iUnitLoop = 0; iUnitLoop < pCityPlot->getNumUnits(); iUnitLoop++)
+#else
 							for (int iUnitLoop = 0; iUnitLoop < pCityPlot->getNumUnits(); iUnitLoop++)
+#endif
 							{
 								CvUnit *pUnit = pCityPlot->getUnitByIndex(iUnitLoop);
 								{
@@ -5231,7 +5288,11 @@ bool MilitaryAIHelpers::IsTestStrategy_LosingWars(CvPlayer* pPlayer)
 bool MilitaryAIHelpers::IsTestStrategy_EnoughRangedUnits(CvPlayer* pPlayer, int iNumRanged, int iNumMelee)
 {
 	int iFlavorRange = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RANGED"));
+#ifdef AUI_FAST_COMP
+	int iRatio = iNumRanged * 10 / MAX(1, iNumMelee + iNumRanged);
+#else
 	int iRatio = iNumRanged * 10 / max(1,iNumMelee+iNumRanged);
+#endif
 	return (iRatio >= iFlavorRange);
 }
 
@@ -5239,7 +5300,11 @@ bool MilitaryAIHelpers::IsTestStrategy_EnoughRangedUnits(CvPlayer* pPlayer, int 
 bool MilitaryAIHelpers::IsTestStrategy_NeedRangedUnits(CvPlayer* pPlayer, int iNumRanged, int iNumMelee)
 {
 	int iFlavorRange = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_RANGED"));
+#ifdef AUI_FAST_COMP
+	int iRatio = iNumRanged * 10 / MAX(1, iNumMelee + iNumRanged);
+#else
 	int iRatio = iNumRanged * 10 / max(1,iNumMelee+iNumRanged);
+#endif
 	return (iRatio <= iFlavorRange / 2);
 }
 
@@ -5261,7 +5326,11 @@ bool MilitaryAIHelpers::IsTestStrategy_NeedRangedDueToEarlySneakAttack(CvPlayer*
 bool MilitaryAIHelpers::IsTestStrategy_EnoughMobileUnits(CvPlayer* pPlayer, int iNumMobile, int iNumMelee)
 {
 	int iFlavorMobile = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_MOBILE"));
+#ifdef AUI_FAST_COMP
+	int iRatio = iNumMobile * 10 / MAX(1, iNumMelee + iNumMobile);
+#else
 	int iRatio = iNumMobile * 10 / max(1,iNumMelee+iNumMobile);
+#endif
 	return (iRatio >= iFlavorMobile);
 }
 
@@ -5269,7 +5338,11 @@ bool MilitaryAIHelpers::IsTestStrategy_EnoughMobileUnits(CvPlayer* pPlayer, int 
 bool MilitaryAIHelpers::IsTestStrategy_NeedMobileUnits(CvPlayer* pPlayer, int iNumMobile, int iNumMelee)
 {
 	int iFlavorMobile = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_MOBILE"));
+#ifdef AUI_FAST_COMP
+	int iRatio = iNumMobile * 10 / MAX(1, iNumMelee + iNumMobile);
+#else
 	int iRatio = iNumMobile * 10 / max(1,iNumMelee+iNumMobile);
+#endif
 	return (iRatio <= iFlavorMobile / 2);
 }
 
@@ -5277,7 +5350,11 @@ bool MilitaryAIHelpers::IsTestStrategy_NeedMobileUnits(CvPlayer* pPlayer, int iN
 bool MilitaryAIHelpers::IsTestStrategy_EnoughAirUnits(CvPlayer* pPlayer, int iNumAir, int iNumMelee)
 {
 	int iFlavorAir = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_AIR"));
+#ifdef AUI_FAST_COMP
+	int iRatio = iNumAir * 10 / MAX(1, iNumMelee + iNumAir);
+#else
 	int iRatio = iNumAir * 10 / max(1,iNumMelee+iNumAir);
+#endif
 	return (iRatio >= iFlavorAir);
 }
 
@@ -5285,7 +5362,11 @@ bool MilitaryAIHelpers::IsTestStrategy_EnoughAirUnits(CvPlayer* pPlayer, int iNu
 bool MilitaryAIHelpers::IsTestStrategy_NeedAirUnits(CvPlayer* pPlayer, int iNumAir, int iNumMelee)
 {
 	int iFlavorAir = pPlayer->GetGrandStrategyAI()->GetPersonalityAndGrandStrategy((FlavorTypes)GC.getInfoTypeForString("FLAVOR_AIR"));
+#ifdef AUI_FAST_COMP
+	int iRatio = iNumAir * 10 / MAX(1, iNumMelee + iNumAir);
+#else
 	int iRatio = iNumAir * 10 / max(1,iNumMelee+iNumAir);
+#endif
 	return (iRatio <= iFlavorAir / 2);
 }
 
@@ -5323,7 +5404,11 @@ bool MilitaryAIHelpers::IsTestStrategy_EnoughAntiAirUnits(CvPlayer* pPlayer, int
 
 	if(bAnyAirforce)
 	{
+#ifdef AUI_FAST_COMP
+		int iRatio = iNumAA * 10 / MAX(1, iNumMelee + iNumAA);
+#else
 		int iRatio = (iNumAA * 10) / max(1,iNumMelee+iNumAA);
+#endif
 		return (iRatio > 2);
 	}
 	else
@@ -5352,7 +5437,11 @@ bool MilitaryAIHelpers::IsTestStrategy_NeedAntiAirUnits(CvPlayer* pPlayer, int i
 
 	if(bAnyAirforce)
 	{
+#ifdef AUI_FAST_COMP
+		int iRatio = iNumAA * 10 / MAX(1, iNumMelee + iNumAA);
+#else
 		int iRatio = (iNumAA * 10) / max(1,iNumMelee+iNumAA);
+#endif
 		return (iRatio <= 2);
 	}
 	else
@@ -5513,7 +5602,11 @@ int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 	dMultiplier = (double)0.75 + ((double)pPlayer->GetMilitaryAI()->GetHighestThreat() / (double)4.0) + ((double)(iFlavorNaval) / (double)40.0);
 	iNumUnitsWanted = (int)((double)iNumUnitsWanted * dMultiplier* /*0.67*/ GC.getAI_STRATEGY_NAVAL_UNITS_PER_CITY());
 
+#ifdef AUI_FAST_COMP
+	iNumUnitsWanted = MAX(1, iNumUnitsWanted);
+#else
 	iNumUnitsWanted = max(1,iNumUnitsWanted);
+#endif
 
 	EconomicAIStrategyTypes eStrategyNavalMap = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_NAVAL_MAP");
 	EconomicAIStrategyTypes eExpandOtherContinents = (EconomicAIStrategyTypes) GC.getInfoTypeForString("ECONOMICAISTRATEGY_EXPAND_TO_OTHER_CONTINENTS");
@@ -5531,7 +5624,11 @@ int MilitaryAIHelpers::ComputeRecommendedNavySize(CvPlayer* pPlayer)
 
 	// if we are going for conquest we want at least one more task force
 	int iGT = GC.getGame().getGameTurn();
+#ifdef AUI_FAST_COMP
+	iGT = MIN(iGT, 200);
+#else
 	iGT = min(iGT,200);
+#endif
 	AIGrandStrategyTypes eConquestGrandStrategy = (AIGrandStrategyTypes) GC.getInfoTypeForString("AIGRANDSTRATEGY_CONQUEST");
 	if(eConquestGrandStrategy != NO_AIGRANDSTRATEGY)
 	{

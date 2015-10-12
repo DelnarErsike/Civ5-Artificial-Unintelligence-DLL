@@ -2507,7 +2507,11 @@ int CvLuaGame::lIsProcessingMessages(lua_State* L)
 //------------------------------------------------------------------------------
 int CvLuaGame::lGetGreatWorkTooltip(lua_State* L)
 {
+#ifdef AUI_WARNING_FIXES
+	const uint iIndex = lua_tointeger(L, 1);
+#else
 	const int iIndex = lua_tointeger(L, 1);
+#endif
 	PlayerTypes eOwner = (PlayerTypes)lua_tointeger(L, 2);
 	if (iIndex < GC.getGame().GetGameCulture()->GetNumGreatWorks())
 	{
@@ -2520,7 +2524,11 @@ int CvLuaGame::lGetGreatWorkTooltip(lua_State* L)
 //------------------------------------------------------------------------------
 int CvLuaGame::lGetGreatWorkName(lua_State* L)
 {
+#ifdef AUI_WARNING_FIXES
+	const uint iIndex = lua_tointeger(L, 1);
+#else
 	const int iIndex = lua_tointeger(L, 1);
+#endif
 	if (iIndex < GC.getGame().GetGameCulture()->GetNumGreatWorks())
 	{
 		CvString szTooltip = GC.getGame().GetGameCulture()->GetGreatWorkName(iIndex);
@@ -2532,7 +2540,11 @@ int CvLuaGame::lGetGreatWorkName(lua_State* L)
 //------------------------------------------------------------------------------
 int CvLuaGame::lGetGreatWorkType(lua_State* L)
 {
+#ifdef AUI_WARNING_FIXES
+	const uint iIndex = lua_tointeger(L, 1);
+#else
 	const int iIndex = lua_tointeger(L, 1);
+#endif
 	if (iIndex < GC.getGame().GetGameCulture()->GetNumGreatWorks())
 	{
 		GreatWorkType eGreatWork = GC.getGame().GetGameCulture()->GetGreatWorkType(iIndex);
@@ -2545,7 +2557,11 @@ int CvLuaGame::lGetGreatWorkType(lua_State* L)
 //------------------------------------------------------------------------------
 int CvLuaGame::lGetGreatWorkClass(lua_State* L)
 {
+#ifdef AUI_WARNING_FIXES
+	const uint iIndex = lua_tointeger(L, 1);
+#else
 	const int iIndex = lua_tointeger(L, 1);
+#endif
 	if (iIndex < GC.getGame().GetGameCulture()->GetNumGreatWorks())
 	{
 		GreatWorkClass eGreatWork = GC.getGame().GetGameCulture()->GetGreatWorkClass(iIndex);
@@ -2558,7 +2574,11 @@ int CvLuaGame::lGetGreatWorkClass(lua_State* L)
 //------------------------------------------------------------------------------
 int CvLuaGame::lGetGreatWorkArtist(lua_State* L)
 {
+#ifdef AUI_WARNING_FIXES
+	const uint iIndex = lua_tointeger(L, 1);
+#else
 	const int iIndex = lua_tointeger(L, 1);
+#endif
 	if (iIndex < GC.getGame().GetGameCulture()->GetNumGreatWorks())
 	{
 		CvString szTooltip = GC.getGame().GetGameCulture()->GetGreatWorkArtist(iIndex);
@@ -2570,7 +2590,11 @@ int CvLuaGame::lGetGreatWorkArtist(lua_State* L)
 //------------------------------------------------------------------------------
 int CvLuaGame::lGetGreatWorkEra(lua_State* L)
 {
+#ifdef AUI_WARNING_FIXES
+	const uint iIndex = lua_tointeger(L, 1);
+#else
 	const int iIndex = lua_tointeger(L, 1);
+#endif
 	if (iIndex < GC.getGame().GetGameCulture()->GetNumGreatWorks())
 	{
 		CvString szTooltip = GC.getGame().GetGameCulture()->GetGreatWorkEra(iIndex);
@@ -2582,7 +2606,11 @@ int CvLuaGame::lGetGreatWorkEra(lua_State* L)
 //------------------------------------------------------------------------------
 int CvLuaGame::lGetGreatWorkEraAbbreviation(lua_State* L)
 {
+#ifdef AUI_WARNING_FIXES
+	const uint iIndex = lua_tointeger(L, 1);
+#else
 	const int iIndex = lua_tointeger(L, 1);
+#endif
 	if (iIndex < GC.getGame().GetGameCulture()->GetNumGreatWorks())
 	{
 		CvString szTooltip = GC.getGame().GetGameCulture()->GetGreatWorkEraAbbreviation(iIndex);
@@ -2595,7 +2623,11 @@ int CvLuaGame::lGetGreatWorkEraAbbreviation(lua_State* L)
 //------------------------------------------------------------------------------
 int CvLuaGame::lGetGreatWorkEraShort(lua_State* L)
 {
+#ifdef AUI_WARNING_FIXES
+	const uint iIndex = lua_tointeger(L, 1);
+#else
 	const int iIndex = lua_tointeger(L, 1);
+#endif
 	if (iIndex < GC.getGame().GetGameCulture()->GetNumGreatWorks())
 	{
 		CvString szTooltip = GC.getGame().GetGameCulture()->GetGreatWorkEraShort(iIndex);
@@ -2608,7 +2640,11 @@ int CvLuaGame::lGetGreatWorkEraShort(lua_State* L)
 //------------------------------------------------------------------------------
 int CvLuaGame::lGetGreatWorkCreator(lua_State* L)
 {
+#ifdef AUI_WARNING_FIXES
+	const uint iIndex = lua_tointeger(L, 1);
+#else
 	const int iIndex = lua_tointeger(L, 1);
+#endif
 	if (iIndex < GC.getGame().GetGameCulture()->GetNumGreatWorks())
 	{
 		PlayerTypes ePlayer = GC.getGame().GetGameCulture()->GetGreatWorkCreator(iIndex);
@@ -2621,7 +2657,11 @@ int CvLuaGame::lGetGreatWorkCreator(lua_State* L)
 //------------------------------------------------------------------------------
 int CvLuaGame::lGetGreatWorkController(lua_State* L)
 {
+#ifdef AUI_WARNING_FIXES
+	const uint iIndex = lua_tointeger(L, 1);
+#else
 	const int iIndex = lua_tointeger(L, 1);
+#endif
 	if (iIndex < GC.getGame().GetGameCulture()->GetNumGreatWorks())
 	{
 		PlayerTypes ePlayer = GC.getGame().GetGameCulture()->GetGreatWorkController(iIndex);
@@ -2634,7 +2674,11 @@ int CvLuaGame::lGetGreatWorkController(lua_State* L)
 //------------------------------------------------------------------------------
 int CvLuaGame::lGetGreatWorkCurrentThemingBonus(lua_State* L)
 {
+#ifdef AUI_WARNING_FIXES
+	const uint iIndex = lua_tointeger(L, 1);
+#else
 	const int iIndex = lua_tointeger(L, 1);
+#endif
 	if (iIndex < GC.getGame().GetGameCulture()->GetNumGreatWorks())
 	{
 		int iBonus = GC.getGame().GetGameCulture()->GetGreatWorkCurrentThemingBonus(iIndex);

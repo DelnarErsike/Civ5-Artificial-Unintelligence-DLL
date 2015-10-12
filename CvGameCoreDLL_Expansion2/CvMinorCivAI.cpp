@@ -3892,7 +3892,11 @@ int CvMinorCivAI::GetMinPlayersNeededForQuest(MinorCivQuestTypes eQuest) const
 	}
 
 	int iMajorsEverAlive = GC.getGame().countMajorCivsEverAlive();
+#ifdef AUI_FAST_COMP
+	iPlayersNeeded = MIN(iPlayersNeeded, iMajorsEverAlive);
+#else
 	iPlayersNeeded = min(iPlayersNeeded, iMajorsEverAlive);
+#endif
 
 	return iPlayersNeeded;
 }
@@ -6465,8 +6469,13 @@ void CvMinorCivAI::DoLiberationByMajor(PlayerTypes eLiberator, TeamTypes eConque
 	}
 
 	// Influence for liberator - raise to ally status
+#ifdef AUI_FAST_COMP
+	int iNewInfluence = MAX(iHighestOtherMajorInfluence + GC.getMINOR_LIBERATION_FRIENDSHIP(), GetBaseFriendshipWithMajor(eLiberator) + GC.getMINOR_LIBERATION_FRIENDSHIP());
+	iNewInfluence = MAX(GetAlliesThreshold(), iNewInfluence); // Must be at least enough to make us allies
+#else
 	int iNewInfluence = max(iHighestOtherMajorInfluence + GC.getMINOR_LIBERATION_FRIENDSHIP(), GetBaseFriendshipWithMajor(eLiberator) + GC.getMINOR_LIBERATION_FRIENDSHIP());
 	iNewInfluence = max(GetAlliesThreshold(), iNewInfluence); // Must be at least enough to make us allies
+#endif
 	SetFriendshipWithMajor(eLiberator, iNewInfluence);
 
 	// Notification for liberator
@@ -8760,7 +8769,11 @@ void CvMinorCivAI::DoElection()
 
 				if (GetEffectiveFriendshipWithMajorTimes100(ePlayer) > 0)
 				{
+#ifdef AUI_FAST_COMP
+					int iDiminishAmount = MIN(GC.getESPIONAGE_INFLUENCE_LOST_FOR_RIGGED_ELECTION() * 100, GetEffectiveFriendshipWithMajorTimes100(ePlayer));
+#else
 					int iDiminishAmount = min(GC.getESPIONAGE_INFLUENCE_LOST_FOR_RIGGED_ELECTION() * 100, GetEffectiveFriendshipWithMajorTimes100(ePlayer));
+#endif
 					ChangeFriendshipWithMajorTimes100(ePlayer, -iDiminishAmount, false);
 				}
 			}
@@ -8925,7 +8938,11 @@ int CvMinorCivAI::GetFriendshipFromGoldGift(PlayerTypes eMajor, int iGold)
 
 	// Game progress factor based on how far into the game we are
 	double fGameProgressFactor = float(GC.getGame().getElapsedGameTurns()) / GC.getGame().getEstimateEndTurn();
+#ifdef AUI_FAST_COMP
+	fGameProgressFactor = MIN(fGameProgressFactor, 1.0); // Don't count above 1.0, otherwise it will end up negative!
+#else
 	fGameProgressFactor = min(fGameProgressFactor, 1.0); // Don't count above 1.0, otherwise it will end up negative!
+#endif
 	
 	// Tweak factor slightly, otherwise Gold will do literally NOTHING once we reach the end of the game!
 	fGameProgressFactor *= /*2*/ GC.getMINOR_CIV_GOLD_GIFT_GAME_MULTIPLIER();
@@ -8957,7 +8974,11 @@ int CvMinorCivAI::GetFriendshipFromGoldGift(PlayerTypes eMajor, int iGold)
 	}
 
 	// Friendship gained should always be positive
+#ifdef AUI_FAST_COMP
+	iFriendship = MAX(iFriendship, /*5*/ GC.getMINOR_CIV_GOLD_GIFT_MINIMUM_FRIENDSHIP_REWARD());
+#else
 	iFriendship = max(iFriendship, /*5*/ GC.getMINOR_CIV_GOLD_GIFT_MINIMUM_FRIENDSHIP_REWARD());
+#endif
 
 	// Round the number so it's pretty
 	int iVisibleDivisor = /*5*/ GC.getMINOR_CIV_GOLD_GIFT_VISIBLE_DIVISOR();

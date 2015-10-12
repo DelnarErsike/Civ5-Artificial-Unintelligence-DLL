@@ -117,7 +117,11 @@ void CvFractal::fracInitInternal(int iNewXs, int iNewYs, int iGrain, CvRandom& r
 	m_iXInc = ((m_iFracX * FLOAT_PRECISION) / m_iXs);
 	m_iYInc = ((m_iFracY * FLOAT_PRECISION) / m_iYs);
 
+#ifdef AUI_FAST_COMP
+	int iMinExp = MIN(m_iFracXExp, m_iFracYExp);
+#else
 	int iMinExp = std::min(m_iFracXExp, m_iFracYExp);
+#endif
 	iSmooth = range(iMinExp - iGrain, 0, iMinExp);
 
 	int iHintsWidth = (1 << (m_iFracXExp - iSmooth)) + ((m_iFlags & FRAC_WRAP_X) ? 0 : 1);
@@ -256,7 +260,11 @@ void CvFractal::fracInitInternal(int iNewXs, int iNewYs, int iGrain, CvRandom& r
 							iSum += random.get(1 << (8 - iSmooth + iPass), "Fractal Gen 4");
 							iSum -= 1 << (7 - iSmooth + iPass);
 							iSum = range(iSum, 0, 255);
+#ifdef AUI_WARNING_FIXES
+							m_aaiFrac[iX << iPass][iY << iPass] = iSum;
+#else
 							m_aaiFrac[iX << iPass][iY << iPass] = (BYTE) iSum;
+#endif
 						}
 						else
 						{
@@ -440,7 +448,11 @@ void CvFractal::ridgeBuilder(CvRandom& random, int iNumVoronoiSeeds, int iRidgeF
 {
 	// this will use a modified Voronoi system to give the appearance of mountain ranges
 
+#ifdef AUI_FAST_COMP
+	iNumVoronoiSeeds = MAX(iNumVoronoiSeeds, 3); // make sure that we have at least 3
+#else
 	iNumVoronoiSeeds = std::max(iNumVoronoiSeeds,3); // make sure that we have at least 3
+#endif
 
 	// randomly place the seed points of each region ??? do we want a way for an advanced script to pass this in ???
 	FStaticVector<VoronoiSeed,256, true, c_eCiv5GameplayDLL, 0> vVoronoiSeeds;
@@ -455,6 +467,8 @@ void CvFractal::ridgeBuilder(CvRandom& random, int iNumVoronoiSeeds, int iRidgeF
 		thisVoronoiSeed.m_iWeakness = MAX(0, int(random.getBinom(7, "Ridge Gen 3")) - 3); // ??? do we want to parameterize this???
 #elif defined(AUI_USE_SFMT_RNG) || defined(AUI_WARNING_FIXES)
 		thisVoronoiSeed.m_iWeakness = MAX(0, int(random.get(7, "Ridge Gen 3")) - 3); // ??? do we want to parameterize this???
+#elif defined(AUI_FAST_COMP)
+		thisVoronoiSeed.m_iWeakness = MAX(0, random.get(7, "Ridge Gen 3") - 3); // ??? do we want to parameterize this???
 #else
 		thisVoronoiSeed.m_iWeakness = std::max(0,random.get(7, "Ridge Gen 3")-3); // ??? do we want to parameterize this???
 #endif
@@ -463,6 +477,8 @@ void CvFractal::ridgeBuilder(CvRandom& random, int iNumVoronoiSeeds, int iRidgeF
 		thisVoronoiSeed.m_iDirectionalBiasStrength = MAX(0, int(random.getBinom(8, "Ridge Gen 5")) - 4); // ??? do we want to parameterize this???
 #elif defined(AUI_USE_SFMT_RNG) || defined(AUI_WARNING_FIXES)
 		thisVoronoiSeed.m_iDirectionalBiasStrength = MAX(0, int(random.get(8, "Ridge Gen 5")) - 4); // ??? do we want to parameterize this???
+#elif defined(AUI_FAST_COMP)
+		thisVoronoiSeed.m_iDirectionalBiasStrength = MAX(0, random.get(8, "Ridge Gen 5") - 4); // ??? do we want to parameterize this???
 #else
 		thisVoronoiSeed.m_iDirectionalBiasStrength = std::max(0,random.get(8, "Ridge Gen 5") - 4); // ??? do we want to parameterize this???
 #endif
@@ -512,7 +528,11 @@ void CvFractal::ridgeBuilder(CvRandom& random, int iNumVoronoiSeeds, int iRidgeF
 				if(iRidgeFlags)  // we may decide to add more control later
 				{
 					iModifiedHexspaceDistance += vVoronoiSeeds[iThisVoronoiSeedIndex].m_iWeakness;
+#ifdef AUI_FRACTAL_RIDGE_USE_BINOM_RNG
+					iModifiedHexspaceDistance += random.getBinom(3, "Ridge Gen 8");
+#else
 					iModifiedHexspaceDistance += random.get(3, "Ridge Gen 8");
+#endif
 					DirectionTypes eRelativeDirection = estimateDirection(vVoronoiSeeds[iThisVoronoiSeedIndex].m_iHexspaceX-iThisHexX,vVoronoiSeeds[iThisVoronoiSeedIndex].m_iHexspaceY-iThisHexY);
 					if(eRelativeDirection == vVoronoiSeeds[iThisVoronoiSeedIndex].m_eBiasDirection)
 					{
@@ -522,7 +542,11 @@ void CvFractal::ridgeBuilder(CvRandom& random, int iNumVoronoiSeeds, int iRidgeF
 					{
 						iModifiedHexspaceDistance += vVoronoiSeeds[iThisVoronoiSeedIndex].m_iDirectionalBiasStrength;
 					}
+#ifdef AUI_FAST_COMP
+					iModifiedHexspaceDistance = MAX(1, iModifiedHexspaceDistance);
+#else
 					iModifiedHexspaceDistance = std::max(1,iModifiedHexspaceDistance);
+#endif
 				}
 				//vDistances.push_back(iModifiedHexspaceDistance);
 				if(iModifiedHexspaceDistance < iClosestSeed)
@@ -543,7 +567,11 @@ void CvFractal::ridgeBuilder(CvRandom& random, int iNumVoronoiSeeds, int iRidgeF
 			int iRidgeHeight = (255 * iClosestSeed) / iNextClosestSeed;
 
 			// blend the new ridge height with the previous fractal height
+#ifdef AUI_FAST_COMP
+			m_aaiFrac[iX][iY] = (iRidgeHeight * iBlendRidge + m_aaiFrac[iX][iY] * iBlendFract) / MAX(iBlendRidge + iBlendFract, 1);
+#else
 			m_aaiFrac[iX][iY] = (iRidgeHeight * iBlendRidge + m_aaiFrac[iX][iY] * iBlendFract) / std::max(iBlendRidge + iBlendFract, 1);
+#endif
 		}
 	}
 }

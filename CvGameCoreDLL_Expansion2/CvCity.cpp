@@ -3544,7 +3544,11 @@ int CvCity::getFoodTurnsLeft() const
 		iTurnsLeft++;
 	}
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iTurnsLeft);
+#else
 	return std::max(1, iTurnsLeft);
+#endif
 }
 
 
@@ -3752,7 +3756,11 @@ int CvCity::getProductionExperience(UnitTypes eUnit)
 		}
 	}
 
+#ifdef AUI_FAST_COMP
+	return MAX(0, iExperience);
+#else
 	return std::max(0, iExperience);
+#endif
 }
 
 
@@ -4658,7 +4666,11 @@ int CvCity::getProductionTurnsLeft(int iProductionNeeded, int iProduction, int i
 	int iProductionLeft;
 	int iTurnsLeft;
 
+#ifdef AUI_FAST_COMP
+	iProductionLeft = MAX(0, (iProductionNeeded - iProduction - iFirstProductionDifference));
+#else
 	iProductionLeft = std::max(0, (iProductionNeeded - iProduction - iFirstProductionDifference));
+#endif
 
 	if(iProductionDifference == 0)
 	{
@@ -4674,7 +4686,11 @@ int CvCity::getProductionTurnsLeft(int iProductionNeeded, int iProduction, int i
 
 	iTurnsLeft++;
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, iTurnsLeft);
+#else
 	return std::max(1, iTurnsLeft);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -5866,7 +5882,11 @@ int CvCity::getConscriptPopulation() const
 		return 0;
 	}
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, ((pkUnitInfo->GetProductionCost()) / iConscriptPopulationPerCost));
+#else
 	return std::max(1, ((pkUnitInfo->GetProductionCost()) / iConscriptPopulationPerCost));
+#endif
 }
 
 
@@ -6940,7 +6960,11 @@ int CvCity::foodDifferenceTimes100(bool bBottom, CvString* toolTipSink) const
 #endif
 	if(isFoodProduction())
 	{
+#ifdef AUI_FAST_COMP
+		iDifference = MIN(0, GetFoodProduction(getYieldRate(YIELD_FOOD, false) - foodConsumption()) * 100);
+#else
 		iDifference = std::min(0, GetFoodProduction(getYieldRate(YIELD_FOOD, false) - foodConsumption()) * 100);
+#endif
 	}
 	else
 	{
@@ -6951,7 +6975,11 @@ int CvCity::foodDifferenceTimes100(bool bBottom, CvString* toolTipSink) const
 	{
 		if((getPopulation() == 1) && (getFood() == 0))
 		{
+#ifdef AUI_FAST_COMP
+			iDifference = MAX(0, iDifference);
+#else
 			iDifference = std::max(0, iDifference);
+#endif
 		}
 	}
 
@@ -7121,12 +7149,20 @@ int CvCity::getHurryCostModifier(HurryTypes eHurry, int iBaseModifier, int iProd
 {
 	VALIDATE_OBJECT
 	int iModifier = 100;
+#ifdef AUI_FAST_COMP
+	iModifier *= MAX(0, iBaseModifier + 100);
+#else
 	iModifier *= std::max(0, iBaseModifier + 100);
+#endif
 	iModifier /= 100;
 
 	if(iProduction == 0 && !bIgnoreNew)
 	{
+#ifdef AUI_FAST_COMP
+		iModifier *= MAX(0, (GC.getNEW_HURRY_MODIFIER() + 100));
+#else
 		iModifier *= std::max(0, (GC.getNEW_HURRY_MODIFIER() + 100));
+#endif
 		iModifier /= 100;
 	}
 
@@ -7187,7 +7223,11 @@ int CvCity::getHurryCost(bool bExtra, int iProductionLeft, int iHurryModifier, i
 		}
 	}
 
+#ifdef AUI_FAST_COMP
+	return MAX(0, iProduction);
+#else
 	return std::max(0, iProduction);
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -7234,7 +7274,11 @@ int CvCity::getHurryPopulation(HurryTypes eHurry, int iHurryCost) const
 
 	int iPopulation = (iHurryCost - 1) / GC.getGame().getProductionPerPopulation(eHurry);
 
+#ifdef AUI_FAST_COMP
+	return MAX(1, (iPopulation + 1));
+#else
 	return std::max(1, (iPopulation + 1));
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -7248,7 +7292,11 @@ int CvCity::hurryProduction(HurryTypes eHurry) const
 	{
 		if(pkHurryInfo->getProductionPerPopulation() > 0)
 		{
+#ifdef AUI_FAST_COMP
+			iProduction = (100 * getExtraProductionDifference(hurryPopulation(eHurry) * GC.getGame().getProductionPerPopulation(eHurry))) / MAX(1, getHurryCostModifier(eHurry));
+#else
 			iProduction = (100 * getExtraProductionDifference(hurryPopulation(eHurry) * GC.getGame().getProductionPerPopulation(eHurry))) / std::max(1, getHurryCostModifier(eHurry));
+#endif
 			CvAssert(iProduction >= productionLeft());
 		}
 		else
@@ -7515,7 +7563,11 @@ void CvCity::setPopulation(int iNewValue, bool bReassignPop /* = true */)
 				// Fixup the unassigned workers
 				int iUnassignedWorkers = GetCityCitizens()->GetNumUnassignedCitizens();
 				CvAssert(iUnassignedWorkers >= -iPopChange);
+#ifdef AUI_FAST_COMP
+				GetCityCitizens()->ChangeNumUnassignedCitizens(MAX(iPopChange, -iUnassignedWorkers));
+#else
 				GetCityCitizens()->ChangeNumUnassignedCitizens(std::max(iPopChange, -iUnassignedWorkers));
+#endif
 			}
 		}
 
@@ -7683,7 +7735,11 @@ int CvCity::getTotalGreatPeopleRateModifier() const
 		iModifier += GC.getGOLDEN_AGE_GREAT_PEOPLE_MODIFIER();
 	}
 
+#ifdef AUI_FAST_COMP
+	return MAX(0, (iModifier + 100));
+#else
 	return std::max(0, (iModifier + 100));
+#endif
 }
 
 
@@ -7859,7 +7915,11 @@ int CvCity::GetJONSCultureThreshold() const
 	int iModifier = GET_PLAYER(getOwner()).GetPlotCultureCostModifier() + m_iPlotCultureCostModifier + iReligionMod;
 	if(iModifier != 0)
 	{
+#ifdef AUI_FAST_COMP
+		iModifier = MAX(iModifier, /*-85*/ GC.getCULTURE_PLOT_COST_MOD_MINIMUM());	// value cannot reduced by more than 85%
+#else
 		iModifier = max(iModifier, /*-85*/ GC.getCULTURE_PLOT_COST_MOD_MINIMUM());	// value cannot reduced by more than 85%
+#endif
 		iCultureThreshold *= (100 + iModifier);
 		iCultureThreshold /= 100;
 	}
@@ -9705,7 +9765,11 @@ int CvCity::getBaseYieldRateModifier(YieldTypes eIndex, int iExtra, CvString* to
 		if (iReligionYieldMaxFollowers > 0)
 		{
 			int iFollowers = GetCityReligions()->GetNumFollowers(eMajority);
+#ifdef AUI_FAST_COMP
+			iTempMod = MIN(iFollowers, iReligionYieldMaxFollowers);
+#else
 			iTempMod = min(iFollowers, iReligionYieldMaxFollowers);
+#endif
 			iModifier += iTempMod;
 			if(toolTipSink)
 				GC.getGame().BuildProdModHelpText(toolTipSink, "TXT_KEY_PRODMOD_YIELD_BELIEF", iTempMod);
@@ -9745,7 +9809,11 @@ int CvCity::getBaseYieldRateModifier(YieldTypes eIndex, int iExtra, CvString* to
 	// note: player->invalidateYieldRankCache() must be called for anything that is checked here
 	// so if any extra checked things are added here, the cache needs to be invalidated
 
+#ifdef AUI_FAST_COMP
+	return MAX(0, (iModifier + 100));
+#else
 	return std::max(0, (iModifier + 100));
+#endif
 }
 
 //	--------------------------------------------------------------------------------
@@ -9773,12 +9841,20 @@ int CvCity::getHappinessModifier(YieldTypes eIndex) const
 		if(eIndex == YIELD_PRODUCTION)
 		{
 			iModifier = iUnhappy * GC.getVERY_UNHAPPY_PRODUCTION_PENALTY_PER_UNHAPPY();
+#ifdef AUI_FAST_COMP
+			iModifier = MAX(iModifier, GC.getVERY_UNHAPPY_MAX_PRODUCTION_PENALTY());
+#else
 			iModifier = max (iModifier, GC.getVERY_UNHAPPY_MAX_PRODUCTION_PENALTY());
+#endif
 		}
 		else if (eIndex == YIELD_GOLD)
 		{
 			iModifier = iUnhappy * GC.getVERY_UNHAPPY_GOLD_PENALTY_PER_UNHAPPY();
+#ifdef AUI_FAST_COMP
+			iModifier = MAX(iModifier, GC.getVERY_UNHAPPY_MAX_GOLD_PENALTY());
+#else
 			iModifier = max (iModifier, GC.getVERY_UNHAPPY_MAX_GOLD_PENALTY());
+#endif
 		}
 	}
 
@@ -10325,7 +10401,11 @@ int CvCity::getDomainFreeExperienceFromGreatWorks(DomainTypes eIndex) const
 		{
 			if (pInfo->GetDomainFreeExperiencePerGreatWork(eIndex) != 0)
 			{
+#ifdef AUI_WARNING_FIXES
+				int iGreatWorks = (int)GetCityBuildings()->GetNumGreatWorksInBuilding((BuildingClassTypes)pInfo->GetBuildingClassType());
+#else
 				int iGreatWorks = GetCityBuildings()->GetNumGreatWorksInBuilding((BuildingClassTypes)pInfo->GetBuildingClassType());
+#endif
 				iXP += (iGreatWorks * pInfo->GetDomainFreeExperiencePerGreatWork(eIndex));
 			}
 		}
@@ -12463,9 +12543,15 @@ void CvCity::popOrder(int iNum, bool bFinish, bool bChoose)
 
 				// max overflow is the value of the item produced (to eliminate prebuild exploits)
 				int iOverflow = getUnitProductionTimes100(eTrainUnit) - iProductionNeeded;
+#ifdef AUI_FAST_COMP
+				int iMaxOverflow = MAX(iProductionNeeded, getCurrentProductionDifferenceTimes100(false, false));
+				int iLostProduction = MAX(0, iOverflow - iMaxOverflow);
+				iOverflow = MIN(iMaxOverflow, iOverflow);
+#else
 				int iMaxOverflow = std::max(iProductionNeeded, getCurrentProductionDifferenceTimes100(false, false));
 				int iLostProduction = std::max(0, iOverflow - iMaxOverflow);
 				iOverflow = std::min(iMaxOverflow, iOverflow);
+#endif
 				if(iOverflow > 0)
 				{
 					changeOverflowProductionTimes100(iOverflow);
@@ -12533,9 +12619,15 @@ void CvCity::popOrder(int iNum, bool bFinish, bool bChoose)
 				iProductionNeeded = getProductionNeeded(eConstructBuilding) * 100;
 				// max overflow is the value of the item produced (to eliminate prebuild exploits)
 				int iOverflow = m_pCityBuildings->GetBuildingProductionTimes100(eConstructBuilding) - iProductionNeeded;
+#ifdef AUI_FAST_COMP
+				int iMaxOverflow = MAX(iProductionNeeded, getCurrentProductionDifferenceTimes100(false, false));
+				int iLostProduction = MAX(0, iOverflow - iMaxOverflow);
+				iOverflow = MIN(iMaxOverflow, iOverflow);
+#else
 				int iMaxOverflow = std::max(iProductionNeeded, getCurrentProductionDifferenceTimes100(false, false));
 				int iLostProduction = std::max(0, iOverflow - iMaxOverflow);
 				iOverflow = std::min(iMaxOverflow, iOverflow);
+#endif
 				if(iOverflow > 0)
 				{
 					changeOverflowProductionTimes100(iOverflow);
@@ -12612,9 +12704,15 @@ void CvCity::popOrder(int iNum, bool bFinish, bool bChoose)
 			iProductionNeeded = getProductionNeeded(eCreateProject) * 100;
 			// max overflow is the value of the item produced (to eliminate prebuild exploits)
 			int iOverflow = getProjectProductionTimes100(eCreateProject) - iProductionNeeded;
+#ifdef AUI_FAST_COMP
+			int iMaxOverflow = MAX(iProductionNeeded, getCurrentProductionDifferenceTimes100(false, false));
+			int iLostProduction = MAX(0, iOverflow - iMaxOverflow);
+			iOverflow = MIN(iMaxOverflow, iOverflow);
+#else
 			int iMaxOverflow = std::max(iProductionNeeded, getCurrentProductionDifferenceTimes100(false, false));
 			int iLostProduction = std::max(0, iOverflow - iMaxOverflow);
 			iOverflow = std::min(iMaxOverflow, iOverflow);
+#endif
 			if(iOverflow > 0)
 			{
 				changeOverflowProductionTimes100(iOverflow);
@@ -12639,8 +12737,13 @@ void CvCity::popOrder(int iNum, bool bFinish, bool bChoose)
 
 			// max overflow is the value of the item produced (to eliminate prebuild exploits)
 			int iOverflow = getSpecialistProductionTimes100(eSpecialist) - iProductionNeeded;
+#ifdef AUI_FAST_COMP
+			int iMaxOverflow = MAX(iProductionNeeded, getCurrentProductionDifferenceTimes100(false, false));
+			iOverflow = MIN(iMaxOverflow, iOverflow);
+#else
 			int iMaxOverflow = std::max(iProductionNeeded, getCurrentProductionDifferenceTimes100(false, false));
 			iOverflow = std::min(iMaxOverflow, iOverflow);
+#endif
 			if(iOverflow > 0)
 			{
 				changeOverflowProductionTimes100(iOverflow);

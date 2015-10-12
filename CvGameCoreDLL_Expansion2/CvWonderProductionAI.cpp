@@ -457,18 +457,16 @@ BuildingTypes CvWonderProductionAI::ChooseWonder(bool bUseAsyncRandom, bool bAdj
 			if(IsWonder(kBuilding) && HaveCityToBuild((BuildingTypes)iBldgLoop))
 #endif
 			{
-#ifdef AUI_WONDER_PRODUCTION_FIX_CONSIDER_PRODUCTION_MODIFIERS
-#ifdef AUI_WONDER_PRODUCTION_FIX_CHOOSE_WONDER_TURNS_REQUIRED_USES_PLAYER_MOD
-				iTurnsRequired = std::max(1, m_pPlayer->getProductionNeeded((BuildingTypes)iBldgLoop) / pWonderCity->getProductionDifference(0, 0, pWonderCity->getProductionModifier(eBuilding), true, false));
-#else
-				iTurnsRequired = std::max(1, kBuilding.GetProductionCost() / pWonderCity->getProductionDifference(0, 0, pWonderCity->getProductionModifier(eBuilding), true, false));
-#endif
-#else
-#ifdef AUI_WONDER_PRODUCTION_FIX_CHOOSE_WONDER_TURNS_REQUIRED_USES_PLAYER_MOD
-				iTurnsRequired = std::max(1, m_pPlayer->getProductionNeeded((BuildingTypes)iBldgLoop) / iEstimatedProductionPerTurn);
+#if defined(AUI_WONDER_PRODUCTION_FIX_CONSIDER_PRODUCTION_MODIFIERS) && defined(AUI_WONDER_PRODUCTION_FIX_CHOOSE_WONDER_TURNS_REQUIRED_USES_PLAYER_MOD)
+				iTurnsRequired = MAX(1, m_pPlayer->getProductionNeeded((BuildingTypes)iBldgLoop) / pWonderCity->getProductionDifference(0, 0, pWonderCity->getProductionModifier(eBuilding), true, false));
+#elif defined(AUI_WONDER_PRODUCTION_FIX_CONSIDER_PRODUCTION_MODIFIERS)
+				iTurnsRequired = MAX(1, kBuilding.GetProductionCost() / pWonderCity->getProductionDifference(0, 0, pWonderCity->getProductionModifier(eBuilding), true, false));
+#elif defined(AUI_WONDER_PRODUCTION_FIX_CHOOSE_WONDER_TURNS_REQUIRED_USES_PLAYER_MOD)
+				iTurnsRequired = MAX(1, m_pPlayer->getProductionNeeded((BuildingTypes)iBldgLoop) / iEstimatedProductionPerTurn);
+#elif defined(AUI_FAST_COMP)
+				iTurnsRequired = MAX(1, kBuilding.GetProductionCost() / iEstimatedProductionPerTurn);
 #else
 				iTurnsRequired = std::max(1, kBuilding.GetProductionCost() / iEstimatedProductionPerTurn);
-#endif
 #endif
 #endif
 

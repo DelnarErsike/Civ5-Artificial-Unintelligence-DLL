@@ -117,7 +117,11 @@ void CvBarbarians::DoCampActivationNotice(CvPlot* pPlot)
 	int iNumUnitsSpawned = m_aiPlotBarbCampNumUnitsSpawned[pPlot->GetPlotIndex()];
 
 	// Reduce turns between spawn if we've pumped out more guys (meaning we're further into the game)
+#ifdef AUI_FAST_COMP
+	iNumTurnsToSpawn -= MIN(3, iNumUnitsSpawned);	// -1 turns if we've spawned one Unit, -3 turns if we've spawned three
+#else
 	iNumTurnsToSpawn -= min(3, iNumUnitsSpawned);	// -1 turns if we've spawned one Unit, -3 turns if we've spawned three
+#endif
 
 	// Increment # of barbs spawned from this camp
 	m_aiPlotBarbCampNumUnitsSpawned[pPlot->GetPlotIndex()]++;	// This starts at -1 so when a camp is first created it will bump up to 0, which is correct

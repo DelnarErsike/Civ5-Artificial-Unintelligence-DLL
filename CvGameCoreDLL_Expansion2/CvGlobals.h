@@ -549,7 +549,11 @@ public:
 	int getNumActionInfos();
 #endif
 	std::vector<CvActionInfo*>& getActionInfo();
+#ifdef AUI_WARNING_FIXES
+	CvActionInfo* getActionInfo(uint i);
+#else
 	CvActionInfo* getActionInfo(int i);
+#endif
 
 	std::vector<CvMissionInfo*>& getMissionInfo();
 	_Ret_maybenull_ CvMissionInfo* getMissionInfo(MissionTypes eMissionNum);

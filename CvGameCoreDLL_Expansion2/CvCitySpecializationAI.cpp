@@ -518,7 +518,11 @@ void CvCitySpecializationAI::WeightSpecializations()
 				iScienceYieldWeight += int(m_pPlayer->GetGrandStrategyAI()->GetGrandStrategyPriorityRatio((AIGrandStrategyTypes)iGrandStrategyLoop)
 					* grandStrategy->GetSpecializationBoost(YIELD_SCIENCE) + 0.5);
 #else
+#ifdef AUI_WARNING_FIXES
+				if(iGrandStrategyLoop == (uint)m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy())
+#else
 				if(iGrandStrategyLoop == m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy())
+#endif
 				{
 					iFoodYieldWeight += grandStrategy->GetSpecializationBoost(YIELD_FOOD);
 					iGoldYieldWeight += grandStrategy->GetSpecializationBoost(YIELD_GOLD);
@@ -620,8 +624,13 @@ int CvCitySpecializationAI::WeightProductionSubtypes(int iFlavorWonder, int iFla
 	// Wonder is MIN between weight of wonders available to build and value from flavors (but not less than zero)
 	int iWonderFlavorWeight = iFlavorWonder * GC.getAI_CITY_SPECIALIZATION_PRODUCTION_WEIGHT_FLAVOR_WONDER() /* 200 */;
 	int iWeightOfWonders = (int)(m_iNextWonderWeight * GC.getAI_CITY_SPECIALIZATION_PRODUCTION_WEIGHT_NEXT_WONDER()); /* 0.2 */
+#ifdef AUI_FAST_COMP
+	iWonderWeight = MIN(iWonderFlavorWeight, iWeightOfWonders);
+	iWonderWeight = MAX(iWonderWeight, 0);
+#else
 	iWonderWeight = min(iWonderFlavorWeight, iWeightOfWonders);
 	iWonderWeight = max(iWonderWeight, 0);
+#endif
 
 	// One-half of normal weight if critical defense is on
 	if(bCriticalDefenseOn)
@@ -658,7 +667,11 @@ int CvCitySpecializationAI::WeightProductionSubtypes(int iFlavorWonder, int iFla
 				}
 			}
 #else
+#ifdef AUI_WARNING_FIXES
+			if (iGrandStrategyLoop == (uint)m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy())
+#else
 			if(iGrandStrategyLoop == m_pPlayer->GetGrandStrategyAI()->GetActiveGrandStrategy())
+#endif
 			{
 				if(grandStrategy->GetSpecializationBoost(YIELD_PRODUCTION) > 0)
 				{

@@ -338,7 +338,9 @@ void CvStartPositioner::ComputeTileFertilityValues()
 	CvArea* pLoopArea(NULL);
 	int iLoop;
 	CvPlot* pLoopPlot(NULL);
-#ifndef AUI_WARNING_FIXES
+#ifdef AUI_WARNING_FIXES
+	uint iI;
+#else
 	int iI;
 #endif
 	int uiFertility;
@@ -350,11 +352,7 @@ void CvStartPositioner::ComputeTileFertilityValues()
 	}
 
 	// Now process through the map
-#ifdef AUI_WARNING_FIXES
-	for (uint iI = 0; iI < GC.getMap().numPlots(); iI++)
-#else
 	for(iI = 0; iI < GC.getMap().numPlots(); iI++)
-#endif
 	{
 		pLoopPlot = GC.getMap().plotByIndexUnchecked(iI);
 		CvAssert(pLoopPlot);
@@ -806,7 +804,11 @@ int CvStartPositioner::StartingPlotRange() const
 	iNumMinors = GC.getGame().countCivPlayersAlive() - iNumMajors;
 	iExpectedCities = GC.getMap().getWorldInfo().getTargetNumCities() * iNumMajors;
 	iExpectedCities += iNumMinors;
+#ifdef AUI_FAST_COMP
+	iExpectedCities = MAX(1, iExpectedCities);
+#else
 	iExpectedCities = std::max(1,iExpectedCities);
+#endif
 
 	// Adjust range compared to how many plots we have per city
 	iRange *= GC.getMap().getLandPlots();
@@ -815,7 +817,11 @@ int CvStartPositioner::StartingPlotRange() const
 
 	// Used to be a Python hook (minStartingDistanceModifier) here
 
+#ifdef AUI_FAST_COMP
+	return MAX(iRange, GC.getMIN_CIV_STARTING_DISTANCE());
+#else
 	return std::max(iRange, GC.getMIN_CIV_STARTING_DISTANCE());
+#endif
 }
 
 /// Log current status of the operation

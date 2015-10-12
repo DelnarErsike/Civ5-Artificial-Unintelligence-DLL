@@ -386,7 +386,11 @@ bool CvGameTrade::CreateTradeRoute(CvCity* pOriginCity, CvCity* pDestCity, Domai
 	int iCircuitsToComplete = 1; // how many circuits do we want this trade route to run to reach the target turns
 	if (iTurnsPerCircuit != 0)
 	{
+#ifdef AUI_FAST_COMP
+		iCircuitsToComplete = MAX(iTargetTurns / iTurnsPerCircuit, 2);
+#else
 		iCircuitsToComplete = max(iTargetTurns / iTurnsPerCircuit, 2);
+#endif
 	}
 
 	m_aTradeConnections[iNewTradeRouteIndex].m_iCircuitsCompleted = 0;
@@ -1982,7 +1986,11 @@ int CvPlayerTrade::GetTradeConnectionBaseValueTimes100(const TradeConnection& kT
 				if (iTechDifference > 0)
 				{
 					int iCeilTechDifference = (int)ceil(iTechDifference / 2.0f);
+#ifdef AUI_FAST_COMP
+					iAdjustedTechDifference = MAX(iCeilTechDifference, 1);
+#else
 					iAdjustedTechDifference = max(iCeilTechDifference, 1);
+#endif
 				}
 
 				// Cultural influence bump
@@ -2002,7 +2010,11 @@ int CvPlayerTrade::GetTradeConnectionBaseValueTimes100(const TradeConnection& kT
 			if (iTechDifference > 0)
 			{
 				int iCeilTechDifference = (int)ceil(iTechDifference / 2.0f);
+#ifdef AUI_FAST_COMP
+				iAdjustedTechDifference = MAX(iCeilTechDifference, 1);
+#else
 				iAdjustedTechDifference = max(iCeilTechDifference, 1);
+#endif
 			}
 
 			return  iAdjustedTechDifference * 100;
@@ -2486,6 +2498,10 @@ int CvPlayerTrade::GetTradeConnectionValueTimes100 (const TradeConnection& kTrad
 
 					int iModifier = 100;
 					int iDomainModifier = GetTradeConnectionDomainValueModifierTimes100(kTradeConnection, eYield);
+#ifdef AUI_TRADE_FIX_CONNECTION_VALUE_MULTIPLICATIVE_STACKING_DOMAIN_MODIFIERS
+					iValue *= iDomainModifier + 100;
+					iValue /= 100;
+#endif
 					int iOriginRiverModifier = GetTradeConnectionRiverValueModifierTimes100(kTradeConnection, eYield, bAsOriginPlayer);
 
 					iValue = iBaseValue;
@@ -2498,12 +2514,18 @@ int CvPlayerTrade::GetTradeConnectionValueTimes100 (const TradeConnection& kTrad
 					iValue += iPolicyBonus;
 					iValue += iTraitBonus;
 
+#ifndef AUI_TRADE_FIX_CONNECTION_VALUE_MULTIPLICATIVE_STACKING_DOMAIN_MODIFIERS
 					iModifier += iDomainModifier;
+#endif
 					iModifier += iOriginRiverModifier;
 
 					iValue *= iModifier;
 					iValue /= 100;
+#ifdef AUI_FAST_COMP
+					iValue = MAX(100, iValue);
+#else
 					iValue = max(100, iValue);
+#endif
 				}
 				break;
 			case YIELD_SCIENCE:
@@ -2535,6 +2557,10 @@ int CvPlayerTrade::GetTradeConnectionValueTimes100 (const TradeConnection& kTrad
 
 						int iModifier = 100;
 						int iDomainModifier = GetTradeConnectionDomainValueModifierTimes100(kTradeConnection, eYield);
+#ifdef AUI_TRADE_FIX_CONNECTION_VALUE_MULTIPLICATIVE_STACKING_DOMAIN_MODIFIERS
+						iValue *= iDomainModifier + 100;
+						iValue /= 100;
+#endif
 						int iDestRiverModifier = GetTradeConnectionRiverValueModifierTimes100(kTradeConnection, eYield, false);
 						int iTraitBonus = GetTradeConnectionOtherTraitValueTimes100(kTradeConnection, eYield, false);
 
@@ -2579,7 +2605,12 @@ int CvPlayerTrade::GetTradeConnectionValueTimes100 (const TradeConnection& kTrad
 
 					int iModifier = 100;
 					int iDomainModifier = GetTradeConnectionDomainValueModifierTimes100(kTradeConnection, eYield);
+#ifdef AUI_TRADE_FIX_CONNECTION_VALUE_MULTIPLICATIVE_STACKING_DOMAIN_MODIFIERS
+					iValue *= iDomainModifier + 100;
+					iValue /= 100;
+#else
 					iModifier += iDomainModifier;
+#endif
 					iModifier += GET_PLAYER(kTradeConnection.m_eDestOwner).GetPlayerPolicies()->GetNumericModifier(POLICYMOD_INTERNAL_TRADE_MODIFIER);
 					iValue *= iModifier;
 					iValue /= 100;
@@ -2595,7 +2626,12 @@ int CvPlayerTrade::GetTradeConnectionValueTimes100 (const TradeConnection& kTrad
 
 					int iModifier = 100;
 					int iDomainModifier = GetTradeConnectionDomainValueModifierTimes100(kTradeConnection, eYield);
+#ifdef AUI_TRADE_FIX_CONNECTION_VALUE_MULTIPLICATIVE_STACKING_DOMAIN_MODIFIERS
+					iValue *= iDomainModifier + 100;
+					iValue /= 100;
+#else
 					iModifier += iDomainModifier;
+#endif
 					iModifier += GET_PLAYER(kTradeConnection.m_eDestOwner).GetPlayerPolicies()->GetNumericModifier(POLICYMOD_INTERNAL_TRADE_MODIFIER);
 					iValue *= iModifier;
 					iValue /= 100;

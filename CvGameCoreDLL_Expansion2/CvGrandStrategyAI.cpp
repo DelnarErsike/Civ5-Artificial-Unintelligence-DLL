@@ -508,7 +508,11 @@ int CvGrandStrategyAI::GetConquestPriority()
 	int iGeneralDeceptiveness = GetPlayer()->GetDiplomacyAI()->GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_DECEPTIVE);
 	int iGeneralFriendliness = GetPlayer()->GetDiplomacyAI()->GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_FRIENDLY);
 
+#ifdef AUI_FAST_COMP
+	int iGeneralApproachModifier = MAX(MAX(iGeneralDeceptiveness, iGeneralHostility), iGeneralWarlikeness) - iGeneralFriendliness;
+#else
 	int iGeneralApproachModifier = max(max(iGeneralDeceptiveness, iGeneralHostility),iGeneralWarlikeness) - iGeneralFriendliness;
+#endif
 	// Boldness gives the base weight for Conquest (no flavors added earlier)
 #ifdef AUI_GS_CONQUEST_TWEAKED_ERAS
 	dPriority += (GetPlayer()->GetDiplomacyAI()->GetBoldness() + iGeneralApproachModifier) * (12 - sqrt(m_pPlayer->GetCurrentEra() + 1.0)); // make a little less likely as time goes on
@@ -682,7 +686,11 @@ int CvGrandStrategyAI::GetConquestPriority()
 	int iGeneralDeceptiveness = GetPlayer()->GetDiplomacyAI()->GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_DECEPTIVE);
 	int iGeneralFriendliness = GetPlayer()->GetDiplomacyAI()->GetPersonalityMajorCivApproachBias(MAJOR_CIV_APPROACH_FRIENDLY);
 
+#ifdef AUI_FAST_COMP
+	int iGeneralApproachModifier = MAX(MAX(iGeneralDeceptiveness, iGeneralHostility), iGeneralWarlikeness) - iGeneralFriendliness;
+#else
 	int iGeneralApproachModifier = max(max(iGeneralDeceptiveness, iGeneralHostility),iGeneralWarlikeness) - iGeneralFriendliness;
+#endif
 	// Boldness gives the base weight for Conquest (no flavors added earlier)
 	iPriority += ((GetPlayer()->GetDiplomacyAI()->GetBoldness() + iGeneralApproachModifier) * (12 - m_pPlayer->GetCurrentEra())); // make a little less likely as time goes on
 
@@ -2214,8 +2222,12 @@ int CvGrandStrategyAI::GetPersonalityAndGrandStrategy(FlavorTypes eFlavorType)
 	{
 		CvAIGrandStrategyXMLEntry* pGrandStrategy = GetAIGrandStrategies()->GetEntry(m_eActiveGrandStrategy);
 		int iModdedFlavor = pGrandStrategy->GetFlavorModValue(eFlavorType) + m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
+#ifdef AUI_FAST_COMP
+		return MAX(0, iModdedFlavor);
+#else
 		iModdedFlavor = max(0, iModdedFlavor);
 		return iModdedFlavor;
+#endif
 	}
 	return m_pPlayer->GetFlavorManager()->GetPersonalityIndividualFlavor(eFlavorType);
 #endif

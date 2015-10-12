@@ -6771,7 +6771,11 @@ bool CvUnit::createGreatWork()
 	
 	CvPlayer &kPlayer = GET_PLAYER(m_eOwner);
 	BuildingClassTypes eBuildingClass = NO_BUILDINGCLASS; // Passed by reference below
+#ifdef AUI_WARNING_FIXES
+	uint iSlot = MAX_UNSIGNED_INT; // Passed by reference below
+#else
 	int iSlot = -1; // Passed by reference below
+#endif
 	GreatWorkType eGreatWorkType = GetGreatWork();
 	GreatWorkClass eClass = CultureHelpers::GetGreatWorkClass(eGreatWorkType);
 	GreatWorkSlotType eGreatWorkSlot = CultureHelpers::GetGreatWorkSlot(eGreatWorkType);
@@ -24385,7 +24389,11 @@ int CvUnit::AI_promotionValue(PromotionTypes ePromotion)
 	int iValue = 0;
 	int iTemp;
 	int iExtra;
+#ifdef AUI_WARNING_FIXES
+	uint iI;
+#else
 	int iI;
+#endif
 
 	// Get flavor info we can use
 	CvFlavorManager* pFlavorMgr = GET_PLAYER(m_eOwner).GetFlavorManager();
