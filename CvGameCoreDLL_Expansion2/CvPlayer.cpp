@@ -26064,7 +26064,11 @@ void CvPlayer::disconnected()
 			// Load leaderhead for this new AI player
 			gDLL->NotifySpecificAILeaderInGame(GetID());
 			
+#ifdef AUI_GAME_BETTER_HYBRID_MODE
+			if (GC.getGame().isAnySimultaneousTurns())
+#else
 			if(!GC.getGame().isOption(GAMEOPTION_DYNAMIC_TURNS) && GC.getGame().isOption(GAMEOPTION_SIMULTANEOUS_TURNS))
+#endif
 			{//When in fully simultaneous turn mode, having a player disconnect might trigger the automove phase for all human players.
 				checkRunAutoMovesForEveryone();
 			}
