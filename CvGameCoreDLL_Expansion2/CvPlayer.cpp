@@ -16285,7 +16285,7 @@ void CvPlayer::setAlive(bool bNewValue, bool bNotify)
 
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
 			CvGame& kCurGame = GC.getGame();
-			if (kCurGame.getCurrentTurnOrderActive() == getTurnOrder() || (kCurGame.getNumGameTurnActive() == 0) || (kCurGame.isAnySimultaneousTurns() && GET_TEAM(getTeam()).isTurnActive()))
+			if ((kCurGame.getNumGameTurnActive() == 0) || (isSimultaneousTurns() && (GET_TEAM(getTeam()).isTurnActive() || kCurGame.getCurrentTurnOrderActive() == getTurnOrder())))
 #else
 			if(isSimultaneousTurns() || (GC.getGame().getNumGameTurnActive() == 0) || (GC.getGame().isSimultaneousTeamTurns() && GET_TEAM(getTeam()).isTurnActive()))
 #endif
@@ -16633,7 +16633,7 @@ void CvPlayer::setTurnActive(bool bNewValue, bool bDoTurn)
 bool CvPlayer::isSimultaneousTurns() const
 {
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
-	return GC.getGame().isAnySimultaneousTurns();
+	return (GC.getGame().isAnySimultaneousTurns() && isHuman());
 #else
 	if(GC.getGame().isOption(GAMEOPTION_DYNAMIC_TURNS))
 	{//in dynamic turns mode, our turn mode varies
@@ -16732,7 +16732,7 @@ void CvPlayer::setEndTurn(bool bNewValue)
 	CvGame& game = GC.getGame();
 
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
-	if (bNewValue && game.isAnySimultaneousTurns() && !game.isAllActivePlayersTurnAllComplete())
+	if (bNewValue && isSimultaneousTurns() && !game.isAllActivePlayersTurnAllComplete())
 #else
 	if(isSimultaneousTurns()
 		&& bNewValue 

@@ -1688,7 +1688,7 @@ void CvGame::CheckPlayerTurnDeactivate()
 						// and the AI players will be activated all at once in CvGame::doTurn, once we have received
 						// all the moves from the other human players
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
-						if (!isAnySimultaneousTurns())
+						if (!isAnySimultaneousTurns() || !kPlayer.isHuman())
 #else
 						if(!kPlayer.isSimultaneousTurns())
 #endif
@@ -2927,7 +2927,7 @@ void CvGame::selectGroup(CvUnit* pUnit, bool bShift, bool bCtrl, bool bAlt)
 				{
 					CvPlayerAI* pOwnerPlayer = &(GET_PLAYER(pLoopUnit->getOwner()));
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
-					if(!pOwnerPlayer->getTurnOrder() != m_iCurrentTurnOrderActive || !isAnySimultaneousTurns() || getTurnSlice() - pLoopUnit->getLastMoveTurn() > GC.getMIN_TIMER_UNIT_DOUBLE_MOVES())
+					if (!pOwnerPlayer->isHuman() || !isAnySimultaneousTurns() || pOwnerPlayer->getTurnOrder() != m_iCurrentTurnOrderActive || getTurnSlice() - pLoopUnit->getLastMoveTurn() > GC.getMIN_TIMER_UNIT_DOUBLE_MOVES())
 #else
 					if( !pOwnerPlayer->isSimultaneousTurns() || getTurnSlice() - pLoopUnit->getLastMoveTurn() > GC.getMIN_TIMER_UNIT_DOUBLE_MOVES())
 #endif
@@ -3065,7 +3065,8 @@ bool CvGame::canHandleAction(int iAction, CvPlot* pPlot, bool bTestVisible)
 		if(pkHeadSelectedUnit->getOwner() == getActivePlayer())
 		{
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
-			if ((GET_PLAYER(pkHeadSelectedUnit->getOwner()).getTurnOrder() == m_iCurrentTurnOrderActive && isAnySimultaneousTurns()) || GET_PLAYER(pkHeadSelectedUnit->getOwner()).isTurnActive())
+			CvPlayer& kSelectedUnitOwner = GET_PLAYER(pkHeadSelectedUnit->getOwner());
+			if ((isAnySimultaneousTurns() && (!kSelectedUnitOwner.isHuman() || kSelectedUnitOwner.getTurnOrder() == m_iCurrentTurnOrderActive)) || kSelectedUnitOwner.isTurnActive())
 #else
 			if(GET_PLAYER(pkHeadSelectedUnit->getOwner()).isSimultaneousTurns() || GET_PLAYER(pkHeadSelectedUnit->getOwner()).isTurnActive())
 #endif
@@ -3477,7 +3478,8 @@ void CvGame::doControl(ControlTypes eControl)
 				if(pUnit->getOwner() == getActivePlayer())
 				{
 #ifdef AUI_GAME_BETTER_HYBRID_MODE
-					if (GET_PLAYER(pUnit->getOwner()).getTurnOrder() != m_iCurrentTurnOrderActive || !isAnySimultaneousTurns() || getTurnSlice() - pUnit->getLastMoveTurn() > GC.getMIN_TIMER_UNIT_DOUBLE_MOVES())
+					CvPlayer& kUnitOwner = GET_PLAYER(pUnit->getOwner());
+					if (!kUnitOwner.isHuman() || kUnitOwner.getTurnOrder() != m_iCurrentTurnOrderActive || !isAnySimultaneousTurns() || getTurnSlice() - pUnit->getLastMoveTurn() > GC.getMIN_TIMER_UNIT_DOUBLE_MOVES())
 #else
 					if(!GET_PLAYER(pUnit->getOwner()).isSimultaneousTurns() || getTurnSlice() - pUnit->getLastMoveTurn() > GC.getMIN_TIMER_UNIT_DOUBLE_MOVES())
 #endif
