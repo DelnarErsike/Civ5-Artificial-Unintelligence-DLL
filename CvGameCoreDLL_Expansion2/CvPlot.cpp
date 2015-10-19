@@ -1701,7 +1701,7 @@ bool CvPlot::canSeePlot(const CvPlot* pPlot, TeamTypes eTeam, int iRange, Direct
 	int iDistance = plotDistance(startX, startY, destX,  destY);
 
 #ifdef AUI_PLOT_VISIBILITY_OPTIMIZATIONS
-	if (iDistance < iRange)
+	if (iDistance <= iRange + 1)
 #else
 	if(iDistance <= iRange)
 #endif
